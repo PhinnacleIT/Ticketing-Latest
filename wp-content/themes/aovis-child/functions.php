@@ -31,6 +31,8 @@ function aovis_enqueue_styles() {
     $parenthandle = 'aovis-style'; // This is 'twentyfifteen-style' for the Twenty Fifteen theme.
 
     $theme = wp_get_theme();
+    $child_style_path = get_stylesheet_directory() . '/style.css';
+    $child_style_ver  = file_exists( $child_style_path ) ? filemtime( $child_style_path ) : $theme->get('Version');
 
     wp_enqueue_style( $parenthandle, get_template_directory_uri() . '/style.css', 
 
@@ -44,7 +46,7 @@ function aovis_enqueue_styles() {
 
         array( $parenthandle ),
 
-        $theme->get('Version') // this only works if you have Version in the style header
+        $child_style_ver
 
     );
 
@@ -57,11 +59,14 @@ function aovis_enqueue_mb_checkout_loader_fix() {
         return;
     }
 
+    $script_path = get_stylesheet_directory() . '/js/mb-checkout-loader-fix.js';
+    $script_ver  = file_exists( $script_path ) ? filemtime( $script_path ) : wp_get_theme()->get( 'Version' );
+
     wp_enqueue_script(
         'aovis-mb-checkout-loader-fix',
         get_stylesheet_directory_uri() . '/js/mb-checkout-loader-fix.js',
         array( 'jquery' ),
-        wp_get_theme()->get( 'Version' ),
+        $script_ver,
         true
     );
 }
