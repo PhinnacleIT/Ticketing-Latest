@@ -130,3 +130,51 @@ function wdm_disable_cod( $available_gateways ) {
 }
 
 add_filter('woocommerce_available_payment_gateways', 'wdm_disable_cod', 10, 1);
+
+function aovis_mb_get_fee_exempt_roles() {
+    return apply_filters( 'aovis_mb_fee_exempt_roles', array( 'administrator', 'promoter' ) );
+}
+
+function aovis_mb_is_fee_exempt_user() {
+    if ( ! is_user_logged_in() ) {
+        return false;
+    }
+
+    $user = wp_get_current_user();
+
+    if ( ! $user || empty( $user->roles ) || ! is_array( $user->roles ) ) {
+        return false;
+    }
+
+    $exempt_roles = aovis_mb_get_fee_exempt_roles();
+
+    return (bool) array_intersect( $user->roles, $exempt_roles );
+}
+
+function aovis_mb_zero_fees_for_exempt_users( $meta_input ) {
+    if ( ! aovis_mb_is_fee_exempt_user() || ! is_array( $meta_input ) ) {
+        return $meta_input;
+    }
+
+    $prefix = defined( 'MB_PLUGIN_PREFIX_BOOKING' ) ? MB_PLUGIN_PREFIX_BOOKING : 'ova_mb_booking_';
+
+    $subtotal = isset( $meta_input[ $prefix . 'subtotal' ] ) ? (float) $meta_input[ $prefix . 'subtotal' ] : 0;
+    $discount = isset( $meta_input[ $prefix . 'discount' ] ) ? (float) $meta_input[ $prefix . 'discount' ] : 0;
+    $total    = $subtotal - $discount;
+
+    if ( $total < 0 ) {
+        $total = 0;
+    }
+
+    $meta_input[ $prefix . 'tax' ]        = 0;
+    $meta_input[ $prefix . 'ticket_fee' ] = 0;
+    $meta_input[ $prefix . 'total' ]      = $total;
+    $meta_input[ $prefix . 'incl_tax' ]   = 'no';
+
+    unset( $meta_input[ $prefix . 'tax_type' ] );
+    unset( $meta_input[ $prefix . 'tax_fee' ] );
+
+    return $meta_input;
+}
+
+add_filter( 'mb_ft_booking_metabox_input', 'aovis_mb_zero_fees_for_exempt_users', 20 );
