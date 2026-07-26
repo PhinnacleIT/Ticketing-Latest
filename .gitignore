@@ -57,3 +57,4 @@ wp-includes/
 /xmlrpc.php
 .well-known/apple-developer-merchantid-domain-association
 Default.html
+php_errorlog
