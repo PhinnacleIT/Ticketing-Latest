@@ -50,6 +50,22 @@ function aovis_enqueue_styles() {
 
 }
 
+add_action( 'wp_enqueue_scripts', 'aovis_enqueue_mb_checkout_loader_fix', 99 );
+
+function aovis_enqueue_mb_checkout_loader_fix() {
+    if ( is_admin() ) {
+        return;
+    }
+
+    wp_enqueue_script(
+        'aovis-mb-checkout-loader-fix',
+        get_stylesheet_directory_uri() . '/js/mb-checkout-loader-fix.js',
+        array( 'jquery' ),
+        wp_get_theme()->get( 'Version' ),
+        true
+    );
+}
+
 function wk_save_custom_user_profile_fields( $user_id ) {
     if ( current_user_can( 'edit_user', $user_id ) ) {
         update_user_meta( $user_id, 'movie_access', sanitize_text_field( $_POST['movie_access'] ) );
