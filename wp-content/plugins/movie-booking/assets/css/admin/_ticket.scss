@@ -1,0 +1,148 @@
+// Ticket
+.mb_ticket_detail {
+	.ova_row {
+		input::placeholder {
+			opacity: 0.5;
+		}
+
+		a {
+			text-decoration: none;
+		}
+
+		label {
+			strong {
+				display: inline-block;
+    			min-width: 150px;
+			}
+
+			input {
+				min-width: 177px;
+				min-height: 30px;
+			}
+		}
+	}
+}
+
+.wp-admin {
+	&.mb_ticket_page_tickets_exporter {
+		.notice-warning {
+			display: none;
+		}
+
+		.mb-export-tickets {
+			.export-form {
+				max-width: 90%;
+    			margin: 30px;
+
+    			form.export-tickets {
+				    background-color: #FFFFFF;
+				    overflow: hidden;
+				    margin: 0 0 16px;
+				    padding: 24px;
+				    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.13);
+				    color: #555;
+				    text-align: left;
+
+				    .title {
+			    	    margin: 0 0 15px;
+					    color: #555;
+					    font-size: 20px;
+					    font-weight: 400;
+					    line-height: 1em;
+				    }
+
+				    .export-fields {
+				    	.fields {
+				    		margin-top: 5px;
+
+				    		.container {
+				    			display: inline-block;
+								position: relative;
+								padding-left: 25px;
+								margin-right: 20px;
+								margin-bottom: 20px;
+								cursor: pointer;
+								font-size: 16px;
+								line-height: 1.3em;
+								-webkit-user-select: none;
+								-moz-user-select: none;
+								-ms-user-select: none;
+								user-select: none;
+
+								&:hover {
+									input ~ .checkmark {
+										background-color: #CCCCCC;
+									}
+								}
+
+								input {
+									position: absolute;
+									opacity: 0;
+									cursor: pointer;
+
+									&:checked ~ .checkmark {
+										background-color: #2196F3;
+
+										&::after {
+											display: block;
+										}
+									}
+								}
+
+								.checkmark {
+									position: absolute;
+									top: 0;
+									left: 0;
+									height: 18px;
+									width: 18px;
+									display: flex;
+									align-items: center;
+									justify-content: center;
+									background-color: #EEEEEE;
+									border-radius: 50%;
+									-o-transition: all .3s ease;
+									-ms-transition: all .3s ease;
+									-webkit-transition: all .3s ease;
+									transition: all .3s ease;
+
+									&:after {
+										content: "";
+										display: none;
+										width: 6px;
+										height: 6px;
+										border-radius: 50%;
+										background: white;
+									}
+								}
+				    		}
+				    	}
+				    }
+
+				    .filter-export {
+				    	&.mb-showtimes-filter {
+				    		display: flex;
+				    		flex-wrap: wrap;
+
+				    		select, input {
+				    			width: 200px !important;
+				    			height: 30px !important;
+				    			min-height: 30px;
+				    			padding: 0 8px !important;
+				    			margin-bottom: 20px;
+				    		}
+
+				    		select {
+				    			margin-right: 10px;
+				    		}
+
+				    		.datepicker-showtimes-filter {
+				    			max-width: 100%;
+				    			margin-right: 10px;
+				    		}
+				    	}
+				    }
+				}
+			}
+		}
+	}
+}

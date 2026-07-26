@@ -1,0 +1,428 @@
+.mb-movie-main-slider-wrapper{
+	opacity: 0;
+	visibility: hidden;
+}
+   
+// main slider
+.mb-movie-main-slider {
+
+	& > .movie-main-item-wrapper:not(:first-child) {
+	    display: none;
+	}
+    
+    // template2
+	&.main-template2 {
+		.movie-main-item-wrapper {
+			img {
+	    		mix-blend-mode: luminosity;
+	    	}
+		}
+		.movie-main-item {
+			margin: 0 auto;
+			max-width: 1100px;
+			text-align: center;
+			.movie-heading {
+				width: fit-content;
+				margin-left: auto;
+				margin-right: auto;
+			}
+			.movie-title {
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+			}
+			.button-wrapper {
+				margin-bottom: 310px;
+				@media (max-width: 1024px) {
+	    			margin-bottom: 230px;
+	    		}
+	    		@media (max-width: 767px) {
+	    			margin-bottom: 165px;
+	    		}
+			}
+		}
+	}
+
+	 // template3
+	&.main-template3 {
+		.movie-main-item-container {
+			.movie-release {
+				right: 25%;
+				@media (max-width: 1200px) {
+					right: 20px;
+				}
+			}
+		}
+	}
+
+	.movie-main-item-wrapper {
+    	position: relative;
+    	background-color: #000;
+    	img {
+    		position: absolute;
+    		left: 0;
+    		right: 0;
+    		width: 100%;
+    		height: 100%;
+    		object-fit: cover;
+    		opacity: 0.5!important;
+    		visibility: hidden;
+    	}
+    }
+    
+    .movie-social-sharing {
+    	position: absolute;
+		top: 50%;
+		left: 30px;
+		transform: translateY(-50%); 
+		line-height: 1;
+
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+
+		@media (max-width: 1320px) {
+			display: none;
+		}
+
+    	.text-share {
+    		display: inline-block;
+    		writing-mode: vertical-lr;
+    		color: #fff;
+    		margin: 0 -3px 10px 0;
+    	}
+    	.line {
+    		display: inline-block; 
+    		width: 1px;
+    		height: 100px;
+    		background-color: rgba(255,255,255,0.3);	
+    	}
+    	.share-social-icons {
+			margin: 0;
+			padding: 0;
+			list-style-type: none;
+			li {
+				padding: 20px 0 0 0;
+				i {
+					color: rgba(255,255,255,0.3);
+					&:hover {
+						color: #fff;
+					}
+				}
+			} 
+		}
+    }
+
+    .movie-main-item-container {
+    	position: relative;
+    	&.row_site {
+    		@media (max-width: 1023px) {
+    			padding-left: 20px;
+    			padding-right: 20px;
+    		}
+    	}
+		.movie-release {
+	   		position: absolute;
+	   		right: 20px;
+	   		bottom: 115%;
+	   	    .text {
+	   	    	color: #fff;
+	   	    }	
+	   	    .time {
+	   	    	position: relative;
+	   	    	margin: 0;
+	   	    	color: #fff;
+	   	    	font-size: 30px;
+	   	    	line-height: 1.2;
+	   	    	@media (max-width: 767px) {
+	   	    		font-size: 24px;
+	   	    	}
+	   	    	&:after {
+	   	    		content: "";
+	   	    		position: absolute;
+	   	    		left: -5px;
+	   	    		bottom: -10px;
+	   	    		width: 110%;
+	   	    		height: 15px;
+	   	    		background-image: url('../../img/underline-heading-entire.png');
+			  		background-position: bottom;
+			  		background-repeat: no-repeat;
+			  		background-size: cover;
+	   	    	}
+	   	    }
+	    }
+    }
+
+	.movie-main-item {
+		position: relative;
+		max-width: 650px;
+
+		.movie-heading {
+		 	position: relative;
+		 	margin-top: 320px;
+		 	@media (max-width: 1024px) {
+				margin-top: 250px;
+			}
+		 	@media (max-width: 767px) {
+				margin-top: 220px;
+			}
+		}
+        
+        .movie-category {
+    		position: absolute;
+    		bottom: 92%;
+    		left: 18%;
+    		width: fit-content;
+    		z-index: 1;
+    		margin: 0;
+    		font-family: "Covered By Your Grace";
+    		font-size: 40px;
+    		color: var(--primary);
+    		@media (max-width: 767px) {
+    			font-size: 28px;
+    		}	
+        }
+
+		.movie-title {
+			transition: all .5s ease;
+			margin: 0 0 25px 0;
+    		font-size: 90px;
+    		line-height: 1;
+    		color: #fff;
+    		text-transform: capitalize;
+    		@media (max-width: 1024px) {
+				font-size: 70px;
+			}
+			@media (max-width: 767px) {
+				font-size: 50px;
+			}
+			&:hover {
+				transition: all .5s ease;
+				color: var(--primary);
+			}
+    	}
+
+    	.movie-excerpt {
+    		margin: 0 0 36px 0;
+    		font-size: 18px;
+    		color: #fff;
+    	}
+
+    	.button-wrapper {
+    		margin-bottom: 230px;
+    		@media (max-width: 1024px) {
+    			margin-bottom: 260px;
+    		}
+    		.btn {
+    			margin: 0 15px 15px 0;
+    			padding: 17px 50px;
+    			font-size: 15px;
+    			min-width: 175px;
+    			border: none;
+    			&:hover {
+    				background-color: #fff;
+    				color: #000;
+    			}
+    		}
+    		.btn-more-info {
+    			background-color: #fff;
+    			color: #000;
+    			&:hover {
+    				background-color: var(--primary);
+    				color: #fff;
+    			}
+    		}
+    	}
+	}
+}
+
+// trailer slider
+.mb-movie-trailer-slider-wrapper {
+	position: absolute;
+	display: none;
+	right: 0;
+	bottom: 0;
+	max-width: 658px;
+	width: 100%;
+	padding: 60px 55px 50px 135px;
+	background-color: rgba(0,0,0,0.7);
+	box-shadow: 0px 10px 60px rgba(255,255,255,0.1);
+	@media (max-width: 1024px) {
+		padding: 30px 10px 20px 30px;
+	}
+
+	// tmeplate2
+	&.trailer-template2 {
+		right: 50%;
+		bottom: -120px;
+		transform: translateX(50%);
+		max-width: 1360px;
+		background-color: var(--primary);
+		.mb-movie-trailer-slider {
+			.slick-current {
+				.movie-trailer-item {
+					.movie-trailer-media {
+						img {
+							border: 2px solid #fff;
+						}
+						.btn-trailer-video {
+							background-color: var(--primary);
+							i {
+								color: #fff;
+							}
+						}
+					}
+				}
+			}
+			.movie-trailer-item {
+				.movie-trailer-media {
+					img {
+						height: 150px;
+						border: none;
+						@media (max-width: 767px) {
+							height: 104px;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// tmeplate3
+	&.trailer-template3 {
+		max-width: 350px;
+		padding: 77px 40px 40px 60px;
+		@media (max-width: 1200px) {
+			max-width: 658px;
+			padding: 30px 10px 20px 30px;
+		}
+		.mb-movie-trailer-slider {
+			.movie-trailer-item {
+				.movie-trailer-media {
+					margin-bottom: 15px;  
+				}
+			}
+			.slick-dots {
+				opacity: 0;
+				visibility: hidden;
+			}
+		}
+	}
+
+	.arrow-trailers-img {
+		position: absolute;
+		left: 55px;
+		@media (max-width: 1024px) {
+			display: none;
+		}
+	}
+
+	.text-trailer {
+		position: absolute;
+		font-size: 18px;
+		line-height: 1;
+		color: #fff;
+	}
+
+	.mb-movie-trailer-slider {
+		display: flex;
+		flex-direction: column;
+		& > .movie-trailer-item:not(:first-child) {
+		    display: none;
+		}
+
+		&.slick-dotted.slick-slider {
+			margin-bottom: 0;
+		}
+
+		.slick-current {
+			.movie-trailer-item {
+				.movie-trailer-media {
+					img {
+						border: 2px solid var(--primary);
+					}
+				}
+			}
+		}
+		.movie-trailer-item {
+			.movie-trailer-media {
+				position: relative;
+				margin-right: 20px;
+				img {
+					display: block;
+					width: 100%;
+					height: 104px;
+					object-fit: cover;
+					border: 2px solid #fff;
+				}
+				.btn-trailer-video {
+					transition: all .5s ease;
+					position: absolute;
+					top: 50%;
+					left: 50%;
+					transform: translate(-50%,-50%);
+					border-radius: 50%;
+					background-color: #fff;
+					box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					width: 36px;
+					height: 36px;
+					padding: 0;
+					cursor: pointer;
+					z-index: 2;
+					&:hover {
+						transition: all .5s ease;
+						background-color: var(--primary);
+						i {
+							transition: all .3s ease;
+							color: #fff;
+						}
+					}
+					
+					.text-trailer {
+						display: none;
+					}
+					i {
+						transition: all .3s ease;
+						display: inline-flex;
+						font-size: 12px;
+						color: #000;
+					}
+				}
+			}
+		}
+
+		.slick-list {
+			order: 2;
+		}
+
+		.slick-dots {
+			position: static;
+			width: auto;
+			order: 1;
+			line-height: 1;
+			margin: 0 15px 25px 0;
+			text-align: right;
+			@media (max-width: 767px) {
+				margin: 0 15px 15px 0;
+			}
+			li {
+				margin: 0;
+				&.slick-active {
+					button {
+						&:before {
+							opacity: 1;
+						}
+					}
+				}
+				button {
+					&:before {
+						font-size: 8px;
+						color: #fff;
+					}
+				}
+			}
+		}
+	}
+}

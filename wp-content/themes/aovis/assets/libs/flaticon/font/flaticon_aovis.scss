@@ -1,0 +1,117 @@
+$flaticon_aovis-font: "flaticon_aovis";
+
+@font-face {
+    font-family: $flaticon_aovis-font;
+    src: url("./flaticon_aovis.ttf?6b141341eb48ad2854f05c4331ffd48e") format("truetype"),
+url("./flaticon_aovis.woff?6b141341eb48ad2854f05c4331ffd48e") format("woff"),
+url("./flaticon_aovis.woff2?6b141341eb48ad2854f05c4331ffd48e") format("woff2"),
+url("./flaticon_aovis.eot?6b141341eb48ad2854f05c4331ffd48e#iefix") format("embedded-opentype"),
+url("./flaticon_aovis.svg?6b141341eb48ad2854f05c4331ffd48e#flaticon_aovis") format("svg");
+}
+
+i[class^="flaticon-"]:before, i[class*=" flaticon-"]:before {
+    font-family: flaticon_aovis !important;
+    font-style: normal;
+    font-weight: normal !important;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+$flaticon_aovis-map: (
+    "film-roll": "\f101",
+    "carnival-mask": "\f102",
+    "prize": "\f103",
+    "comedy": "\f104",
+    "tag": "\f105",
+    "time": "\f106",
+    "quotes": "\f107",
+    "clapperboard": "\f108",
+    "film": "\f109",
+    "video-camera": "\f10a",
+    "ribbon": "\f10b",
+    "trophy": "\f10c",
+    "director": "\f10d",
+    "user": "\f10e",
+    "badge": "\f10f",
+    "clipper": "\f110",
+    "movie-ticket": "\f111",
+    "clapperboard-1": "\f112",
+    "location": "\f113",
+    "call": "\f114",
+    "contact-us": "\f115",
+    "plus": "\f116",
+    "minus": "\f117",
+);
+
+.flaticon-film-roll:before {
+    content: map-get($flaticon_aovis-map, "film-roll");
+}
+.flaticon-carnival-mask:before {
+    content: map-get($flaticon_aovis-map, "carnival-mask");
+}
+.flaticon-prize:before {
+    content: map-get($flaticon_aovis-map, "prize");
+}
+.flaticon-comedy:before {
+    content: map-get($flaticon_aovis-map, "comedy");
+}
+.flaticon-tag:before {
+    content: map-get($flaticon_aovis-map, "tag");
+}
+.flaticon-time:before {
+    content: map-get($flaticon_aovis-map, "time");
+}
+.flaticon-quotes:before {
+    content: map-get($flaticon_aovis-map, "quotes");
+}
+.flaticon-clapperboard:before {
+    content: map-get($flaticon_aovis-map, "clapperboard");
+}
+.flaticon-film:before {
+    content: map-get($flaticon_aovis-map, "film");
+}
+.flaticon-video-camera:before {
+    content: map-get($flaticon_aovis-map, "video-camera");
+}
+.flaticon-ribbon:before {
+    content: map-get($flaticon_aovis-map, "ribbon");
+}
+.flaticon-trophy:before {
+    content: map-get($flaticon_aovis-map, "trophy");
+}
+.flaticon-director:before {
+    content: map-get($flaticon_aovis-map, "director");
+}
+.flaticon-user:before {
+    content: map-get($flaticon_aovis-map, "user");
+}
+.flaticon-badge:before {
+    content: map-get($flaticon_aovis-map, "badge");
+}
+.flaticon-clipper:before {
+    content: map-get($flaticon_aovis-map, "clipper");
+}
+.flaticon-movie-ticket:before {
+    content: map-get($flaticon_aovis-map, "movie-ticket");
+}
+.flaticon-clapperboard-1:before {
+    content: map-get($flaticon_aovis-map, "clapperboard-1");
+}
+.flaticon-location:before {
+    content: map-get($flaticon_aovis-map, "location");
+}
+.flaticon-call:before {
+    content: map-get($flaticon_aovis-map, "call");
+}
+.flaticon-contact-us:before {
+    content: map-get($flaticon_aovis-map, "contact-us");
+}
+.flaticon-plus:before {
+    content: map-get($flaticon_aovis-map, "plus");
+}
+.flaticon-minus:before {
+    content: map-get($flaticon_aovis-map, "minus");
+}

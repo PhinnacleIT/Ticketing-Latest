@@ -1,0 +1,143 @@
+.type2 {
+	position: relative;
+	overflow: hidden;
+
+	&:hover {
+		.desc {
+			.event-thumbnail {
+				&:before {
+		    		transition: all .5s ease;
+		    		opacity: 0.8;
+		    	}
+			}
+			.event_post {
+				transition: all .5s ease;
+				top: 0;
+				.time-event, .icon {
+					transition: all .5s ease;
+					opacity: 1;
+					visibility: visible;
+				}
+			}
+		}
+    }
+	
+	.date-event {
+		display: inline-block;
+		font-size: 12px;
+	    line-height: 1;
+	    font-weight: 500;
+	    color: #fff; 
+	    text-align: center;
+	    padding: 8px;
+	    background-color: var(--primary);
+	}
+
+	.desc {
+		.event-thumbnail {
+			background-size: cover;
+		    background-repeat: no-repeat;
+		    background-position: center;
+		    width: 100%;
+		    min-height: 430px;
+			img {
+				display: none;
+				width: 100%;
+			}
+			&:before {
+				transition: all .5s ease;
+			    content: "";
+			    position: absolute;
+			    top: 0;
+			    left: 0;
+			    width: 100%;
+			    height: 100%;
+			   	background-color: #000;
+			   	opacity: 0.4;
+			}
+		}
+
+		.event_post {
+			transition: all .5s ease;
+			position: absolute;
+		    left: 0;
+		    top: 55%;
+		    padding: 45px 30px 40px 30px;
+		    width: 100%;
+			
+			.event_title {
+				margin: 13px 0 0 0;
+				font-size: 24px;
+				line-height: 1.5;
+				max-height: 3em;
+				overflow: hidden;
+				color: #fff;
+				text-transform: capitalize;
+				a {
+					color: #fff;
+					&:hover {
+						color:var(--primary);
+					}
+				}
+			}
+
+			.time-event {
+				opacity: 0;
+				visibility: hidden;
+
+				font-size: 16px;
+				color: #fff;
+				line-height: 1;
+				font-weight: 500;
+				margin-top: 30px;
+				.wrapper {
+					margin-bottom: 30px;
+				}
+				.time, .venue {
+					display: flex;
+				}
+				label {
+					margin: 8px 0 0 22px;
+					display: block;
+					color:#797979;
+				}
+				svg,i {
+					color: var(--primary);
+					width: 16px;
+					margin-right: 6px;
+				}
+			}
+
+			.icon {
+				opacity: 0;
+				visibility: hidden;
+
+	    		display: flex;
+	    		justify-content: center;
+	    		align-items: center;
+	    		background-color: #fff;
+	    		width: 52px;
+	    		height: 52px;
+	    		border-radius: 50%;
+	    		margin-left: auto;
+	        	i {
+	        		transition: all .3s ease;
+	        		display: inline-flex;
+	        		font-size: 14px;
+	        		color: var(--heading);
+	        		&:before {
+	        			font-weight: 500!important;
+	        		}
+	        	}
+	        	&:hover {
+	        		transition: all .3s ease;
+	        		background-color: var(--primary);
+	        		i {
+	        			transition: all .3s ease;
+	        			color: #fff;
+	        		}
+	        	}
+	    	}
+		}
+	}
+}

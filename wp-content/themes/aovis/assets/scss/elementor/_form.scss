@@ -1,0 +1,155 @@
+// Contact Form 7
+// Style message error contact form
+.wpcf7 form.invalid .wpcf7-response-output, .wpcf7 form.unaccepted .wpcf7-response-output
+,.wpcf7 form.failed .wpcf7-response-output, .wpcf7 form.aborted .wpcf7-response-output {
+	border-color: red;
+	color: red;
+}
+.wpcf7 form.sent .wpcf7-response-output {
+    border-color: green;
+}
+
+.ova-ctform7{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+
+	@media(max-width: 767px){
+		align-items: flex-start;
+	}
+
+	.two-column{
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap:20px;
+		width: 100%;
+		margin-bottom: 20px;
+
+		@media(max-width: 767px){
+			grid-template-columns: 1fr;
+		}
+
+		.ova_wrap_input{
+			p{
+				margin: 0;
+			}
+		}
+	}
+
+	.ova_wrap_input{
+		width: 100%;
+
+		p{
+			margin: 0;
+		}
+	}
+
+	.ova-submit{
+		display: inline-block;
+		margin-top: 20px;
+
+		input[type='submit']{
+			font-size: 15px;
+			font-weight: 700;
+			line-height: 1.2;
+			padding: 18px 50px;
+			border: 2px solid transparent;
+			position: relative;
+
+			&:hover{
+				border-color: var(--primary);
+			}
+		}
+
+		.wpcf7-spinner {
+			position: absolute;
+		}
+	}
+
+	textarea {
+		height: 168px;
+	}
+
+	input, textarea{
+		border-radius: 0;
+		border: none;
+	}
+
+	input[type='text'],input[type='tel'],input[type='email'],textarea {
+		font-size: 14px;
+		line-height: 1.2;
+		color: var(--text);
+		width: 100%;
+		padding: 19px 30px;
+		background-color: #f3f3f3;
+
+		&::placeholder{
+			opacity:1;
+		}
+	}
+}
+
+// MC4WP
+.ova-subscribe-form-wrapper{
+	.ova-subscribe-form{
+		position: relative;
+		margin-bottom: 15px;
+
+		input[type="email"]{
+			width: 100%;
+			border-radius: 0;
+			background-color: #fff;
+			padding: 13px 20px;
+			font-size:14px;
+			font-weight: 500;
+			color: var(--text);
+			line-height: 2.1;
+		}
+
+		button{
+			position: absolute;
+		    right: 5px;
+		    bottom: 50%;
+		    background: #fff;
+		    border-color: #fff;
+		    display: inline-flex;
+		    padding:15px;
+		    transform: translateY(50%);
+
+		    &:hover{
+		    	i{
+		    		@include transaction( all, 0.3s, linear );
+		    		color: var(--primary);
+		    	}
+		    }
+
+		    i{
+		    	@include transaction( all, 0.3s, linear );
+		    	color: #000;
+		    	font-size: 14px;
+		    }
+		}
+	}
+
+	label {
+		display: inline-flex;
+		align-items:center;
+
+		input[type="radio"] {
+			min-width: 16px;
+    		width:16px;
+    		height: 16px;
+    		margin: 0 10px 0 0;
+    	} 
+    	a {
+    		@include transaction( all, 0.3s, linear );
+    		color: var(--text);
+    		line-height: 1.4;
+
+    		&:hover{
+    			@include transaction( all, 0.3s, linear );
+    			color: var(--primary);
+    		}
+    	}
+	}
+}

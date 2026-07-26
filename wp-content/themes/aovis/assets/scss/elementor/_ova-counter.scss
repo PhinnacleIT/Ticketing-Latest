@@ -1,0 +1,112 @@
+.ova-counter{
+	display: flex;
+
+	.icon{
+		display: inline-flex;
+		justify-content:center;
+		align-items:flex-end;
+		background-color: #f3f3f3;
+		min-width: 83px;
+
+		i{
+			font-size: 63px;
+			color: var(--primary);
+		}
+	}
+
+	.counter-content{
+		padding:50px 0 0 20px;
+
+		@media( max-width: 1024px){
+			padding: 0 0 0 20px;
+		}
+
+		.odometer{
+			font-size: 60px;
+			font-weight: 700;
+			line-height: 1;
+			color: var(--heading);
+		}
+
+		.suffix{
+			display: inline-block;
+			vertical-align: middle;
+			font-size: 20px;
+		    font-weight: 700;
+		    line-height: 1em;
+		    color: #D96C2C;
+		}
+
+		.content{
+			margin:5px 0 0 0;
+			line-height: 1.2;
+			white-space: pre-line;
+		}
+	}
+
+	&.template2{
+		.counter-content{
+			padding: 0;
+			text-align: center;
+
+			.odometer{
+				font-size: 45px;
+				color: var(--primary);
+			}
+
+			.content{
+				margin: 0;
+			}
+		}
+	}
+
+	&.template3{
+		padding-bottom: 25px;
+
+		.counter-content{
+			display: flex;
+			flex-direction:row;
+			align-items:center;
+			flex-wrap:wrap;
+			padding: 23px 30px 25px 25px;
+			background-color: #fff;
+			border: 4px solid var(--primary);
+			box-shadow: 0px 10px 60px 0px rgba(0, 0, 0, 0.1);
+			position: relative;
+
+			.odometer{
+				font-size: 40px;
+				margin-right: 15px;
+			}
+
+			.content{
+				margin: 0;
+			}
+
+			.triangle-1{
+				content: '';
+				position: absolute;
+				bottom:-25px;
+				right: -4px;
+			  	width: 35px;
+			  	height: 25px;
+			  	border-top: solid 25px var(--primary);
+			  	border-left: solid 40px transparent;
+			  	border-right: solid 0px transparent;
+			}
+
+			.triangle-2{
+				content: '';
+				position: absolute;
+				bottom:-17px;
+				right: 0;
+			  	width: 25px;
+			  	height: 17px;
+			  	border-top: solid 17px #fff;
+			  	border-left: solid 27px transparent;
+			  	border-right: solid 0px transparent;
+			 	z-index: 1;
+			}
+		}
+	}
+}

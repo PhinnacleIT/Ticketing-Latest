@@ -1,0 +1,52 @@
+.mb-movie-cast-list{
+	display: grid;
+	gap: 30px;
+
+	&.three_column{
+		grid-template-columns: 1fr 1fr 1fr;
+		@media( max-width: 1200px ){
+			grid-template-columns: 1fr 1fr;
+		}
+		@media( max-width: 567px ){
+			grid-template-columns: auto;	
+		}
+	}
+	&.four_column{
+		grid-template-columns: 1fr 1fr 1fr 1fr;
+		@media( max-width: 1200px ){
+			grid-template-columns: 1fr 1fr;
+		}
+		@media( max-width: 567px ){
+			grid-template-columns: auto;	
+		}
+	}
+
+	.movie-cast-item {
+		display: flex;
+		align-items: center;
+
+		.cast-thumbnail {
+			margin-right: 20px;
+			img {
+				display: block;
+				width: 100px;
+				min-width: 100px;
+				height: 100px;
+				object-fit: cover;
+				border-radius: 50%;
+			}
+		}
+		
+		.cast-info {
+			.cast-name {
+				margin: 0;
+				font-size: 18px;
+				line-height: 1.3;
+			}
+			.cast-description {
+				margin: 0;
+				font-size: 14px;
+			}
+		}
+	}
+}

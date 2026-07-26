@@ -1,0 +1,106 @@
+/***** Basic *****/
+#metabox-event-basic {
+	label {
+		min-width: 100px;
+		display: inline-block;
+		vertical-align: middle;
+	}
+	input, select {
+		min-width: 308px;
+		display: inline-block;
+	}
+	input[type=checkbox] {
+		min-width: 16px;
+	}
+	#ovaev_book_link {
+		height: 28px;
+		padding-top: 1px;
+	}
+}
+
+
+
+/***** Location *****/
+#metabox-event-location {
+	.ovaev_map {
+		#show_map {
+			width: 100%;
+			height: 400px;
+			display: block;
+		}
+		.controls {
+			background-color: #fff;
+			border-radius: 2px;
+			border: 1px solid transparent;
+			box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+			box-sizing: border-box;
+			font-family: Roboto;
+			font-size: 15px;
+			font-weight: 300;
+			height: 29px;
+			margin-left: 17px;
+			margin-top: 10px;
+			outline: none;
+			padding: 0 11px 0 13px;
+			text-overflow: ellipsis;
+			width: 400px;
+		}
+		#infowindow-content {
+			display: none;
+		}
+	}
+}
+
+/***** Contact *****/
+#metabox-event-contact {
+	label {
+		min-width: 120px;
+		display: inline-block;
+		vertical-align: middle;
+	}
+	input {
+		min-width: 330px;
+		display: inline-block;
+	}
+}
+
+/***** Gallery *****/
+#metabox-event-gallery {
+	ul#gallery-metabox-list {
+		display: flex;
+		flex-wrap: wrap;
+	}
+	li {
+		display: flex;
+		flex-direction: column;
+		margin-right: 15px;
+		margin-bottom: 15px;
+		margin-top: 10px;
+
+		div {
+			margin-top: 5px;
+			margin-bottom: 5px;
+		}
+		a.change-image {
+			text-align: center;
+			width: 120px;
+			margin: 10px auto 5px auto;
+		}
+		small {
+			text-align: center;
+		}
+	}
+}
+
+// Admin Settings
+.ovaev_admin_settings {
+	th {
+		font-weight: 400;
+	}
+
+	.ovaev_template_single {
+		.select2-selection {
+			min-width: 194px;
+		}
+	}
+}

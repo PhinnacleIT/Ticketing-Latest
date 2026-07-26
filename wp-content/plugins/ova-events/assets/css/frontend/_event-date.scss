@@ -1,0 +1,14 @@
+.ovaev-event-date {
+	font-size: 14px;
+	line-height: 1.2;
+	color: #fff;
+	padding: 8px;
+	background-color: var(--primary);
+	text-align: center;
+	i {
+		margin-right: 4px;
+	}
+	.separator {
+		display: inline-block;
+	}
+}

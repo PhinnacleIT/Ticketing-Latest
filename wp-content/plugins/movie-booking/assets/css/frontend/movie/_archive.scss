@@ -1,0 +1,39 @@
+.ova_movie_archive {
+    margin: 110px 0;
+    @media (max-width: 767px) {
+     	margin: 70px 0;
+    }
+    .movie_archive_content{
+
+        display: grid;
+        gap: 30px;
+
+        &.four_column{
+            grid-template-columns: 1fr 1fr 1fr 1fr; 
+            @media( max-width: 1200px ){
+                grid-template-columns: 1fr 1fr;
+            }
+            @media( max-width: 767px ){
+                grid-template-columns: auto;    
+            }
+        }
+
+        &.three_column{
+            grid-template-columns: 1fr 1fr 1fr; 
+            @media( max-width: 1200px ){
+                grid-template-columns: 1fr 1fr;
+            }
+            @media( max-width: 767px ){
+                grid-template-columns: auto;    
+            }
+        }
+
+        &.two_column{
+            grid-template-columns: 1fr 1fr; 
+            @media( max-width: 767px ){
+                grid-template-columns: auto;    
+            }
+        }      
+
+    }
+}

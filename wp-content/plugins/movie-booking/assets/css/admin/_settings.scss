@@ -1,0 +1,269 @@
+// Movie Settings
+.ova_mb_settings_wrapper {
+	h2.nav-tab-wrapper {
+		margin-bottom: 20px;
+
+		a {
+			&:focus {
+		    	outline: none;
+		    	box-shadow: none;
+		    }
+		}
+	}
+
+	.ova_mb_wrapper_content {
+		.mb-tab {
+			display: none;
+		    background-color: #fff;
+			border: 1px solid #ccd0d4;
+    		box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    		padding: 20px;
+    		border-radius: 5px;
+
+			&.mb-tab-active {
+				display: block;
+			}
+
+			h3 {
+				&:first-child {
+					margin: 0;
+				}
+
+				&:not(:first-child) {
+					border-top: 1px solid #ccd0d4;
+					padding-top: 20px;
+					margin-bottom: 0;
+				}
+
+				.mb_tab_group {
+					display: inline-block;
+					font-size: 14px;
+				    padding: 5px 10px;
+				    margin-bottom: 28px;
+				    text-decoration: none;
+				    outline: none;
+				    border: 1px solid #c3c4c7;
+				    border-radius: 5px;
+				    color: #50575e;
+				    background-color: #dcdcde;
+				    opacity: 0.7;
+				    -webkit-transition: all .3s ease;
+				    -moz-transition: all .3s ease;
+				    transition: all .3s ease;
+
+				    &:focus {
+				    	outline: none;
+				    	box-shadow: none;
+				    }
+
+				    &:not(:last-child) {
+				    	margin-right: 10px;
+				    }
+
+				    &.active {
+				    	color: #343434;
+				    	background-color: #FFF;
+				    	opacity: 1;
+				    }
+				}
+			}
+
+			p {
+				margin: 5px 0 20px;
+				font-style: italic;
+			}
+
+			.mb_tab_group_content  {
+				display: none;
+
+				&.active {
+					display: block;
+				}
+			}
+		}
+
+		table {
+			tr {
+				th {
+					text-align: left;
+					min-width: 300px;
+					max-width: 300px;
+					vertical-align: text-top;
+				}	
+				p {
+					small {
+						font-weight: normal;
+					}
+				}	
+			}
+		}
+
+		#tax_fee {
+			table {
+				tbody {
+					tr {
+						&:has(#type_tax), &:has(#pecent_tax), &:has(#amount_tax),
+						&:has(#type_ticket_fee), &:has(#pecent_ticket_fee), &:has(#amount_ticket_fee),
+						&:has(#prices_include_tax) {
+							display: none;
+						}
+
+						.mb-checkbox {
+							display: block;
+							position: relative;
+							padding-left: 35px;
+							margin: 15px 0;
+							cursor: pointer;
+							font-size: 14px;
+							-webkit-user-select: none;
+							-moz-user-select: none;
+							-ms-user-select: none;
+							user-select: none;
+
+							&:hover {
+								input ~ .checkmark {
+									background-color: #ccc;
+								}
+							}
+
+							input {
+								position: absolute;
+								opacity: 0;
+								cursor: pointer;
+
+								&:checked ~ .checkmark {
+									background-color: #2196F3;
+								}
+
+								&:checked ~ .checkmark:after {
+									display: block;
+								}
+							}
+
+							.checkmark {
+								position: absolute;
+								top: 0;
+								left: 0;
+								height: 20px;
+								width: 20px;
+								background-color: #eee;
+								border-radius: 50%;
+
+								&:after {
+									content: "";
+									position: absolute;
+									display: none;
+								    top: 7px;
+								    left: 7px;
+								    width: 6px;
+								    height: 6px;
+									border-radius: 50%;
+									background-color: white;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		#checkout {
+			table {
+				tbody {
+					tr {
+						&:has(#holding_per_seconds), &:has(#max_time_complete_payment) {
+							display: none;
+						}
+					}
+				}
+			}
+		}
+
+		#mail {
+			table {
+				tbody {
+					tr {
+						&:has(#mail_new_booking_sendmail), &:has(#mail_new_recipient),
+						&:has(#mail_new_subject), &:has(#mail_new_from_name),
+						&:has(#mail_new_admin_email), &:has(#wp-ova_mb_setting_mail_mail_new_template-wrap),
+						&:has(#remind_mail_before_xday), &:has(#remind_mail_send_per_seconds),
+						&:has(#remind_mail_subject), &:has(#remind_mail_from_name),
+						&:has(#remind_mail_admin_email), &:has(#wp-ova_mb_setting_mail_remind_mail_template-wrap),
+						&:has(#cancel_email_subject), &:has(#cancel_mail_from_name),
+						&:has(#cancel_mail_admin_email), &:has(#wp-ova_mb_setting_mail_cancel_mail_template-wrap) {
+							display: none;
+						}
+
+						#ova_mb_setting_mail_mail_new_template_ifr,
+						#ova_mb_setting_mail_remind_mail_template_ifr,
+						#ova_mb_setting_mail_cancel_mail_template_ifr,
+						#ova_mb_setting_mail_mail_new_template,
+						#ova_mb_setting_mail_remind_mail_template,
+						#ova_mb_setting_mail_cancel_mail_template {
+							min-height: 350px;
+						}
+
+						.mb-upload {
+							display: flex;
+
+							.upload_image_btn {
+								padding: 0 10px;
+								margin: 0 10px;
+								height: 30px;
+								border: none;
+								border-radius: 5px;
+								cursor: pointer;
+								@include mb-transition( all, 0.3s, ease );
+
+								&:hover {
+									color: #FFFFFF;
+									background-color: #FF1A1A;
+								}
+							}
+
+							.remove_image_btn {
+								height: 30px;
+								border: none;
+								border-radius: 5px;
+								background-color: #FF6666;
+								color: #FFFFFF;
+								cursor: pointer;
+								@include mb-transition( all, 0.3s, ease );
+
+								&:hover {
+									background-color: #FF1A1A;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		input {
+			height: 30px;
+		    border-radius: 3px;
+		    border: 1px solid #aaaaaa;
+		    padding: 0 8px;
+		    box-shadow: none;
+
+		    &::placeholder {
+		    	opacity: 0.3;
+		    }
+		}
+
+		.select2 {
+			min-width: 150px;
+			
+			.selection {
+				.select2-selection {
+					height: 30px;
+				}
+			}
+		}
+
+		select {
+			border-color: #aaa;
+		}
+	}
+}

@@ -1,0 +1,200 @@
+// Room
+.mb_room_detail {
+	.ova_row {
+		a {
+			text-decoration: none;
+		}
+
+		label {
+			vertical-align: top;
+
+			strong {
+				display: inline-block;
+				min-width: 150px;
+			}
+
+			input {
+				min-width: 177px;
+				min-height: 30px;
+
+				&::placeholder {
+					opacity: 0.5;
+				}
+			}
+		}
+
+		&:has(#room_description) {
+			margin-top: 20px;
+		}
+
+		.content {
+			display: inline-block;
+
+			.note {
+				display: block;
+				font-style: italic;
+				font-size: 12px;
+			}
+		}
+
+		span.select2 {
+			min-width: 177px;
+			min-height: 30px;
+
+			.selection {
+				.select2-selection {
+					&.select2-selection--single {
+						height: 30px;
+
+						.select2-selection__rendered {
+							line-height: 30px;
+							height: 30px;
+
+							.select2-selection__placeholder {
+								opacity: 0.5;
+							}
+						}
+					}
+					&.select2-selection--multiple {
+						.select2-search.select2-search--inline {
+							.select2-search__field::placeholder {
+								opacity: 0.5;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		.wrap_seat_map, .wrap_area_map {
+			.item-seat {
+				width: 450px;
+				@media screen and (max-width: 782px) {
+			    	width: 100%;
+			    	flex-wrap: wrap;
+			    }
+			}
+			.item-area {
+				width: 670px;
+				flex-wrap: wrap;
+				@media screen and (max-width: 1200px) {
+			    	width: 100%;
+			    }
+			}
+			.item-seat, .item-area {
+				position: relative;
+				display: flex;
+			    background-color: #fff;
+			    border: 1px solid #ccd0d4;
+			    box-shadow: 0 1px 4px rgb(0 0 0 / 15%);
+			    margin: 10px 0;
+			    border-radius: 5px;
+			    
+
+				.item-seat-field, .item-area-field {
+				    display: flex;
+				    flex-direction: column;
+				    padding: 10px 10px 15px;
+				    &.seat-type-field, &.seat-description-field, &.seat-color-field, &.area-type-field, &.area-description-field, &.area-color-field {
+				    	display: none;
+				    }
+				    label {
+				    	margin-bottom: 5px;
+				    }
+
+					.wp-picker-container {
+						position: relative;
+
+						.wp-color-result.button {
+							margin: 0;
+							vertical-align: middle;
+						}
+
+						&.wp-picker-active {
+							.wp-picker-input-wrap {
+								display: flex;
+							    vertical-align: top;
+							    position: absolute;
+							    left: 0;
+							    top: 36px;
+							}
+
+							.wp-picker-holder {
+								position: absolute;
+							    z-index: 1;
+							    left: 0;
+							    top: 66px;
+							}
+						}
+					}
+
+					&.seat-color-field, &.area-color-field {
+						margin-right: 30px;
+					}
+				}
+
+				.remove_seat_map, .remove_area_map {
+					position: absolute;
+					right: 0;
+					top: 0;
+				    display: flex;
+				    width: 30px;
+				    height: 30px;
+				    align-items: center;
+				    justify-content: center;
+				    background-color: #ff6666;
+				    color: #fff;
+				    border-radius: 0 5px;
+				    border: 1px solid #ff6666;
+				    box-sizing: border-box;
+				    -webkit-transition: all .3s ease;
+				    -moz-transition: all .3s ease;
+				    -ms-transition: all .3s ease;
+				    -o-transition: all .3s ease;
+				    transition: all .3s ease; 
+
+				    &:hover {
+				    	background-color: #ff1a1a;
+				    	border-color: #ff1a1a;
+				    }
+				}
+			}
+		}
+	}
+
+	.btn_add_seat_map, .btn_add_area_map {
+		display: flex;
+		align-items: center;
+		margin-top: 20px;
+
+		.add_seat_map, .add_area_map {
+			margin-right: 5px;
+		}
+	}
+
+	.mb_remove_person_type {
+		display: inline-flex;
+		align-items: center;
+	}
+
+	.el_extra_services {
+		margin: 20px 0px 0px 0px;
+		width: 100%;
+		max-width: 800px;
+		
+		.el_service_item {
+			margin-bottom: 10px;
+			padding: 10px;
+			border: 1px solid #c3c4c7;
+			position: relative;
+			.el_remove_service {
+				position: absolute;
+				top: 0;
+				right: 0;
+			}
+		}
+	}
+	#mb_add_services {
+		margin-top: 20px;
+	}
+}

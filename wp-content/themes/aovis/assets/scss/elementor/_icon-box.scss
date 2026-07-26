@@ -1,0 +1,252 @@
+.ova-icon-box{
+	background-color:var(--heading);
+	padding: 25px 25px 25px 45px;
+	position: relative;
+	overflow: hidden;
+
+	@media(max-width: 1500px){
+		padding: 25px 25px 25px 30px;
+	}
+	@media(max-width: 767px){
+		padding: 20px;
+	}
+
+	&:hover{
+		.content{
+			.title{
+				@include transaction( all, 0.3s, linear );
+			}
+		}
+			
+		.background{
+			@include transaction( all, 0.5s, linear );
+			transform: scale(1.07);
+		}
+
+		.overlay{
+			@include transaction( all, 0.5s, linear );
+		}
+
+		.icon{
+			@include transaction( all, 0.3s, linear );
+			i{
+				@include transaction( all, 0.3s, linear );
+			}
+		}
+	}
+
+
+	.background{
+    	@include transaction( all, 0.5s, linear );
+    	position: absolute;
+    	content: "";
+    	width: 100%;
+    	height: 100%;
+    	left: 0;
+    	top: 0;
+		background-position: center right;
+        background-size: cover;
+        background-repeat: no-repeat;
+        opacity: 0.15;
+        z-index: 1;
+	}
+
+	.overlay{
+		@include transaction( all, 0.5s, linear );
+    	position: absolute;
+    	content: "";
+    	width: 100%;
+    	height: 100%;
+    	left: 0;
+    	top: 0;
+    	background-color: #000;
+	}
+
+	.content{
+		margin: 20px 0;
+		position: relative;
+		z-index: 2;
+
+		@media(max-width: 767px){
+			margin: 10px 0 20px;
+		}
+
+		.sub-title{
+			margin: 0;
+			@media(max-width: 767px){
+				font-size: 14px;
+			}
+		}
+
+		a {
+			&:hover {
+				.title {
+					color: var(--primary);
+				}
+			}
+		}
+
+		.title{
+			@include transaction( all, 0.3s, linear );
+			margin: 0;
+			font-size: 36px;
+			line-height: 1.2;
+			color: #fff;
+			white-space: pre-line;
+
+			@media screen and (min-width: 1025px) and (max-width: 1480px) {
+				font-size: 32px;
+			}
+			@media(max-width: 767px){
+				font-size: 25px;
+			}
+		}
+	}
+
+	.icon{
+		@include transaction( all, 0.3s, linear );
+		position: relative;
+		background-color: var(--primary);
+		border-radius: 50%;
+  		width: 110px;
+  		height: 110px;
+  		display: flex;
+  		align-items:center;
+  		justify-content:center;
+  		z-index:2;
+
+  		@media(max-width: 1480px) {
+			width: 100px;
+  			height: 100px;
+		}
+  		@media(max-width: 767px){
+			width: 90px;
+  			height: 90px;
+		}
+
+		i{
+			@include transaction( all, 0.3s, linear );
+			display: inline-flex;
+			font-size: 64px;
+			color: #fff;
+
+			@media(max-width: 1480px) {
+				font-size: 55px;
+			}
+			@media(max-width: 767px){
+				font-size: 40px;
+			}
+		}
+	}
+
+	&.template1{
+		.content{
+			display: inline-block;
+			@media screen and (min-width: 1025px) and (max-width: 1480px) {
+				display: block;
+			}
+			@media(max-width: 380px){
+				display: block;
+			}
+		}
+		.icon{
+			float: right;
+			@media screen and (min-width: 1025px) and (max-width: 1480px) {
+				float: left;
+			}
+			@media(max-width: 380px){
+				float: left;
+			}
+		}
+	}
+
+	&.template2{
+		padding: 95px 0 60px 0;
+		display: flex;
+		flex-direction: column-reverse;
+		align-items:center;
+		-webkit-mask-image: url('assets/img/mask-image/mask-image-iconbox.png');
+		mask-image: url('assets/img/mask-image/mask-image-iconbox.png');
+		-webkit-mask-size: cover;
+    	-webkit-mask-position: center center;
+    	-webkit-mask-repeat: no-repeat;
+
+    	@media(max-width: 1024px){
+    		padding: 50px 0;
+    	}
+
+    	@media(max-width: 767px){
+    		-webkit-mask-size: auto;
+    	}
+
+		&:hover{
+
+			.icon{
+				background-color: var(--primary);
+
+				&:after{
+					@include transaction( all, 0.3s, linear );
+					width: 130%;
+					height: 130%;
+				}
+
+				i{
+				 	color: #fff;
+				}
+			}
+		}
+
+		.background{
+			background-position: center;
+			opacity: 0.5;
+		}
+
+		.content{
+			margin: 0;
+
+			.title{
+				font-size: 40px;
+				text-align: center;
+
+				@media(max-width: 1250px){
+		    		font-size: 30px;
+		    	}
+			}
+		}
+
+		.icon{
+			background-color: #fff;
+			width: 90px;
+			height: 90px;
+			margin: 0 0 30px 0;
+
+			@media(max-width: 767px){
+	    		width: 60px;
+				height: 60px;
+	    	}
+
+			&:after{
+				@include transaction( all, 0.3s, linear );
+				content: '';
+				position: absolute;
+				top: 50%;
+				right: 50%;
+				transform: translate( 50% , -50% );
+				background-color: transparent;
+				border: 1px solid rgba( 255, 255, 255, 0.3 );
+				width: 120%;
+				height: 120%;
+				border-radius: 50%;
+			}
+
+			i{
+				font-size: 32px;
+				color: var(--primary);
+
+				@media(max-width: 1024px){
+		    		font-size: 25px;
+		    	}
+			}
+		}
+	}
+}

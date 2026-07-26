@@ -1,0 +1,39 @@
+.header_sticky {
+    @include transaction( all, 0.3s, linear);
+
+    &.active_sticky{
+  	    position: fixed;
+  	    top: 0;
+  	    left: 0;
+  	    width: 100%;
+  	    z-index: 9999;
+        background-color: #fff;
+  	    @include transaction( all, 0.3s, linear );
+
+        -webkit-animation: sticky 0.7s;
+        animation: sticky 0.7s;
+    }
+
+    &.sticky_bg_dark {
+        &.active_sticky {
+            background-color: #000000;
+        }
+    }
+
+    @-webkit-keyframes sticky {
+        0% {
+            top: -100px;
+        }
+        100% {
+            top: 0;
+        }
+    }
+    @keyframes sticky {
+        0% {
+            top: -100px;
+        }
+        100% {
+            top: 0;
+        }
+    }
+}

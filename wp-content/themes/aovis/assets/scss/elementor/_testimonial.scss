@@ -1,0 +1,262 @@
+.ova-testimonial{
+	.slide-testimonials{
+		.item{
+			.author{
+				display: flex;
+    			align-items:center;
+    			flex-wrap:wrap;
+    			gap:30px;
+    			position: relative;
+    			margin-right: 60px;
+
+    			@media(max-width: 767px){
+					gap:15px;
+				}
+
+				.image{
+					display: flex;
+					justify-content: center;
+    				align-items: center;
+					width: 131px;
+					height: 131px;
+					border-radius: 50%;
+					background-color: #fff;
+					border: 6px solid var(--primary);
+
+					@media(max-width: 767px){
+						width: 80px;
+						height: 80px;
+						border-width: 3px;
+					}
+
+					img{
+						width: 106px;
+						height: 106px;
+						border-radius: 50%;
+						object-fit:cover;
+						object-position: 0 0;
+
+						@media(max-width: 767px){
+							width: 60px;
+							height: 60px;
+						}
+					}
+				}
+
+				.info{
+					.rating{
+						i{
+							color: var(--primary);
+							font-size: 14px;
+						}
+					}
+
+					.name{
+						margin: 0;
+						font-size: 26px;
+					}
+
+					.job{
+						margin: 0;
+					}
+				}
+			}
+
+			.content{
+				font-size: 18px;
+				margin: 20px 10px 0 0;
+			}
+		}
+	}
+
+	&.template1{
+		.owl-stage-outer{
+			.item{
+				position: relative;
+				z-index: 1;
+
+				.quote{
+					position: absolute;
+					right: 0;
+					bottom: 0;
+					z-index: -1;
+
+					i{
+						font-size: 200px;
+						display: inline-flex;
+						color: #fff;
+
+						@media(max-width: 1024px){
+							font-size: 150px;
+						}
+					}
+				}
+			}
+		}
+
+		.owl-dots{
+			position: absolute;
+			top: 15%;
+			right: 0;
+
+			@media(max-width: 767px){
+				top: 5%;
+			}
+
+			.owl-dot{
+				width: 6px;
+				height: 6px;
+				background-color: var(--text);
+				border-radius: 50%;
+				margin-left: 5px;
+
+				&.active{
+					background-color: var(--primary);
+				}
+			}
+		}
+	}
+
+	&.template2{
+		.slide-testimonials{
+			.item{
+				position: relative;
+
+				.wrap-content{
+					padding: 55px 45px 25px 55px;
+					background-color: #fff;
+					border:5px solid var(--heading);
+					z-index: 2;
+					margin-bottom: 35px;
+					position: relative;
+					overflow: hidden;
+
+					@media(max-width: 1150px){
+						padding: 30px;
+					}
+					@media(max-width: 767px){
+						padding: 20px;
+					}
+
+					.content{
+						margin: 0px 10px 20px 0;
+					}
+
+					.author{
+						flex-wrap: nowrap;
+						justify-content:space-between;
+						align-items:flex-end;
+						margin-right: 0;
+
+						.wrap-image-info{
+							display: flex;
+							flex-wrap: wrap;
+							align-items:center;
+							gap:30px;
+							margin-right: 20px;
+
+							@media(max-width: 767px){
+								gap:15px;
+							}
+
+							.image{
+								width: 99px;
+								height: 99px;
+								border-width: 2px;
+
+								@media(max-width: 767px){
+									width: 70px;
+									height: 70px;
+								}
+
+								img{
+									width: 75px;
+									height: 75px;
+
+									@media(max-width: 767px){
+										width: 50px;
+										height: 50px;
+									}
+								}
+							}
+
+							.info{
+
+								.name{
+									font-size: 18px;
+								}
+
+								.job{
+									color: var(--primary);
+								}
+							}
+						}
+
+						.quote{
+							i{
+								display: inline-flex;
+								font-size: 54px;
+								color: #fff;
+
+								@media(max-width: 767px){
+									font-size: 35px;
+								}
+							}
+						}
+
+						.background{
+							position: absolute;
+							bottom:-130px;
+							right: -130px;
+							width: 260px;
+							height: 260px;
+							background-color: var(--primary);
+							z-index: -1;
+							border-radius: 50%;
+
+							@media(max-width: 767px){
+								bottom:-150px;
+								right: -160px;
+							}
+						}
+					}
+				}
+
+				.triangle-1{
+					content: '';
+					position: absolute;
+					bottom:-35px;
+					left: 55px;
+				  	width: 60px;
+				  	height: 30px;
+				  	border-top: solid 40px rgb(0,0,0);
+				  	border-left: solid 50px transparent;
+				  	border-right: solid 50px transparent;
+				  	
+				  	@media(max-width: 767px){
+						bottom: -30px;
+    					left: 35px;
+					}
+				}
+
+				.triangle-2{
+					content: '';
+					position: absolute;
+					bottom:-28px;
+					left: 65px;
+				  	width: 60px;
+				  	height: 30px;
+				  	border-top: solid 33px rgb(255,255,255);
+				  	border-left: solid 40px transparent;
+				  	border-right: solid 40px transparent;
+				 	z-index: 2;
+
+				 	@media(max-width: 767px){
+						bottom: -24px;
+    					left: 45px;
+					}
+				}
+			}
+		}
+	}
+}

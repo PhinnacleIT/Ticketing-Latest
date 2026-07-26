@@ -1,0 +1,105 @@
+// Movie
+#metabox_movie {
+	.mb_movie_metabox {
+	    .mb_movie_coupons {
+	    	padding: 0 20px;
+
+	    	.title {
+	    		color: #000;
+			    font-weight: 600;
+			    font-size: 18px;
+			    padding: 0;
+			    margin-bottom: 20px;
+	    	}
+
+	    	.coupons {
+	    		.coupons_item {
+	    			position: relative;
+	    			overflow: hidden;
+	    			display: inline-flex;
+	    			flex-wrap: wrap;
+	    			background-color: #fff;
+				    border: 1px solid #ccd0d4;
+				    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+				    margin-bottom: 10px;
+				    border-radius: 5px;
+
+				    .ova_row {
+				    	display: flex;
+    					flex-direction: column;
+    					padding: 10px 10px 15px;
+
+    					label {
+    						margin-bottom: 5px;
+    					}
+
+    					input::placeholder {
+    						opacity: 0.5;
+    					}
+
+    					&:has(.coupon_percent), &:has(.coupon_amount) {
+    						display: none;
+    					}
+
+    					&:has(.coupon_quantity) {
+    						margin-right: 30px;
+    					}
+				    }
+
+				    .btn.remove_coupon {
+				    	position: absolute;
+					    right: 0;
+					    top: 0;
+					    display: flex;
+					    align-items: center;
+					    justify-content: center;
+					    width: 30px;
+					    height: 30px;
+					    color: #FFF;
+					    background-color: #ff6666;
+					    border-radius: 0 5px;
+					    box-sizing: border-box;
+					    @include mb-transition( all, 0.3s, ease );
+
+					    &:hover {
+					    	background-color: #ff1a1a;
+					    }
+				    }
+	    		}
+	    	}
+
+	    	.btn_add_coupon {
+	    		display: flex;
+	    		align-items: center;
+
+	    		.button.add_coupon {
+	    			margin-right: 5px;
+	    		}
+	    	}
+	    }
+
+
+	}
+}
+#movie_cast_thumbnail {
+	img {
+		object-fit: cover;
+	}
+}
+
+#room_description, #room_private_description {
+	width: 100%;
+}
+
+body {
+	&.rtl {
+		.mb_room_detail {
+			.seat-color-field, .area-color-field {
+				margin: 0 !important;
+			}
+			.seat-id-field, .area-id-field {
+				margin-right: 30px;
+			}
+		}
+	}
+}

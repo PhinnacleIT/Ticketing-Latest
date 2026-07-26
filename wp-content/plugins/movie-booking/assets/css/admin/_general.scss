@@ -1,0 +1,113 @@
+@mixin mb-transition( $property, $duration, $timing, $delay: 0s ) {
+	-webkit-transition: $property $duration $timing $delay;
+	-moz-transition: $property $duration $timing $delay;
+	-ms-transition: $property $duration $timing $delay;
+	-o-transition: $property $duration $timing $delay;
+	transition: $property $duration $timing $delay;
+}
+
+// Loading
+.mb-loading {
+	display: none;
+
+	i {
+		&:before {
+			animation: mb_spin 2s linear infinite;
+		}
+	}
+
+	@keyframes mb_spin {
+	  0% { transform: rotate(360deg); }
+	  100% { transform: rotate(0deg); }
+	}
+}
+
+// Datetimepicker
+.xdsoft_datetimepicker {
+  	border-radius: 5px;
+  	margin-top: 3px;
+
+  	.xdsoft_label > .xdsoft_select > div > .xdsoft_option.xdsoft_current {
+  		transition: all 0.3s ease;
+		-moz-transition: all 0.3s ease;
+		-webkit-transition: all 0.3s ease;
+		-o-transition: all 0.3s ease;
+		background: #33aaff;
+		box-shadow: 0px 4px 40px rgba(43, 89, 255, 0.08);
+  	}
+
+  	.xdsoft_label > .xdsoft_select > div > .xdsoft_option:hover {
+  		background: #33aaff;
+  	}
+
+  	.xdsoft_calendar {
+  		th {
+  			color: #000;
+  		}
+
+  		td {
+			transition: all 0.3s ease;
+			-moz-transition: all 0.3s ease;
+			-webkit-transition: all 0.3s ease;
+			-o-transition: all 0.3s ease;
+			color: #000;
+
+			& > div {
+				text-align: center;
+				padding: 0;
+			}
+
+			&.xdsoft_disabled {
+				color: #FFFFFF;
+				opacity: 1 !important;
+				cursor: not-allowed !important;
+				background: #FD4C5C !important;
+
+				&:hover {
+					background: #FD4C5C !important;
+					color: #FFFFFF !important;
+				}
+			}
+
+			&.xdsoft_other_month {
+				opacity: 1 !important;
+
+				&.xdsoft_disabled {
+					opacity: 1 !important;
+				}
+			}
+
+			&.xdsoft_current {
+				color: #FFFFFF !important;
+				background: #00BB98 !important;
+				box-shadow: 0px 4px 40px rgba(43, 89, 255, 0.08);
+			}
+
+			&.xdsoft_today {
+				color: #33aaff;
+			}
+
+			&:hover {
+				background: #00BB98 !important;
+			}
+  		}
+  	}
+
+  	.xdsoft_timepicker {
+  		.xdsoft_time_box {
+  			& > div > div {
+  				&:hover, &.xdsoft_current {
+  					color: #FFFFFF !important;
+					background: #00BB98 !important;
+					box-shadow: 0px 4px 40px rgba(43, 89, 255, 0.08);
+  				}
+  			}
+
+  			.xdsoft_scrollbar {
+  				& > .xdsoft_scroller {
+  					background: #FD4C5C !important;
+  				}
+  			}
+  		}
+  	}
+}

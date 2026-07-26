@@ -1,0 +1,24 @@
+.woocommerce-checkout {
+	.woocommerce {
+		.countdown-checkout {
+			position: fixed;
+		    z-index: 1;
+		    bottom: 0;
+		    left: 0;
+		    width: 100%;
+		    background-color: var(--primary);
+		    display: block;
+		    font-size: 16px;
+		    font-weight: 400;
+		    text-align: center;
+		    padding: 15px;
+		    color: #FFFFFF;
+		    .countdown-time {
+		    	.time {
+		    		font-size: 18px;
+		    		font-weight: bold;
+		    	}
+		    }
+		}
+	}
+}

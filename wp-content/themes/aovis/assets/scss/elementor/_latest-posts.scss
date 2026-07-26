@@ -1,0 +1,80 @@
+.ova-latest-posts{
+    
+    .item{
+    	@include transaction( all, 0.3s, ease);
+    	display: flex;
+	    padding: 20px;
+	    margin: 0 -10px 10px -10px;
+	    &:last-child {
+	    	margin-bottom: 0;
+	    }
+
+	    &:hover{
+	    	@include transaction( all, 0.3s, ease);
+	    	background-color: #fff;
+	    	box-shadow: 0px 0px 50px 0px rgba(0, 0, 0, 0.05);
+	    	.info{
+	    		.post-title{
+	    			a{
+	    				@include transaction( all, 0.3s, ease);
+    					color: var(--primary);
+	    			}
+	    		}
+	    	}
+	    }
+
+    	.media{
+    		margin-right: 15px;
+    		a{
+    			display: flex;
+				position: relative;
+    			overflow: hidden;
+    			height: 100%;
+    			img{
+    				width: 70px;
+    				min-width: 70px;
+				    height: 100%;
+				    object-fit: cover;
+				    object-position: center;
+    			}
+    		}
+    	}
+
+    	.info{
+			display: flex;
+			justify-content: space-between;
+			flex-flow: column;
+
+    		.post-title{
+    			margin: 0;
+    			font-size: 18px;
+    			font-weight: 700;
+    			line-height: 1.2;
+    			a{
+    				@include transaction( all, 0.3s, ease);
+    				color: var(--heading);
+    			}
+    			@media (max-width: 390px) {
+    				font-size: 16px;
+    			}
+    		}
+    		.item-meta{
+    			font-size: 14px;
+    			line-height: 1;
+    			margin-bottom: 5px;
+    			.left {
+    				color: var(--primary);
+    				margin-right: 3px;
+    			}
+	    		.right{
+	    			a{
+	    				color: var(--text);
+	    				&:hover{
+	    					color: var(--primary);
+	    				}
+	    			}
+	    		}
+    		}
+    	}
+    }
+}

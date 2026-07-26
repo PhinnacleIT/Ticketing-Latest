@@ -1,0 +1,312 @@
+// Showtime
+.mb_showtime_detail {
+	.ova_row {
+		a {
+			text-decoration: none;
+		}
+
+		label {
+			strong {
+				display: inline-block;
+    			min-width: 150px;
+			}
+		}
+
+		input {
+			min-width: 177px;
+			min-height: 30px;
+
+			&.showtime_address {
+				width: calc(100% - 200px);
+			}
+
+			&::placeholder {
+				opacity: 0.5;
+			}
+		}
+
+		.mb_generate_venue {
+			display: inline-block;
+		}
+
+		span.select2 {
+			min-width: 177px;
+			min-height: 30px;
+
+			.selection {
+				.select2-selection {
+					&.select2-selection--single {
+						height: 30px;
+
+						.select2-selection__rendered {
+							line-height: 30px;
+							height: 30px;
+
+							.select2-selection__placeholder {
+								opacity: 0.5;
+							}
+						}
+					}
+					&.select2-selection--multiple {
+						.select2-search.select2-search--inline {
+							.select2-search__field::placeholder {
+								opacity: 0.5;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		span.mb-error {
+			font-size: 14px;
+			font-style: italic;
+			color: #D63638;
+			margin-left: 10px;
+			display: none;
+		}
+	}
+}
+
+input.mb_datepicker, input.mb_datepicker_filter {
+	&::placeholder {
+		opacity: 0.5;
+	}
+}
+
+.mb-showtimes-filter {
+	.datepicker-showtimes-filter {
+		position: relative;
+	    max-width: 177px;
+    	display: inline-block;
+
+		a.btn {
+		    position: absolute;
+		    top: 0;
+		    right: 1px;
+		    width: 30px;
+		    height: 30px;
+		    display: flex;
+		    align-items: center;
+		    justify-content: center;
+		    background-color: #FF6666;
+		    color: #FFFFFF;
+		    border-radius: 0 3px 3px 0;
+		    border: 1px solid #FF6666;
+		    box-sizing: border-box;
+		    -webkit-transition: all 0.3s ease;
+		    -moz-transition: all 0.3s ease;
+		    -ms-transition: all 0.3s ease;
+		    -o-transition: all 0.3s ease;
+		    transition: all 0.3s ease;
+
+		    &:hover {
+		    	background-color: #ff1a1a;
+		    	border-color: #ff1a1a;
+		    }
+
+		    &:focus {
+		    	box-shadow: none;
+		    	outline: none;
+		    }
+		}
+	}
+
+	select[name="city_id"], select[name="venue_id"], select[name="room_id"] {
+		float: none;
+	}
+}
+
+.wp-admin {
+	&.showtime_page_showtimes_importer, &.showtime_page_showtimes_exporter {
+		.notice-warning {
+			display: none;
+		}
+	}
+
+	&.showtime_page_showtimes_importer {
+		.mb-import-showtimes {
+			.import-form {
+				text-align: center;
+    			max-width: 700px;
+    			margin: 100px auto;
+
+    			form.import-showtimes {
+				    background-color: #FFFFFF;
+				    overflow: hidden;
+				    margin: 0 0 16px;
+				    padding: 24px;
+				    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.13);
+				    color: #555;
+				    text-align: left;
+
+				    .title {
+			    	    margin: 0 0 24px;
+					    color: #555;
+					    font-size: 24px;
+					    font-weight: 400;
+					    line-height: 1em;
+				    }
+
+				    .import-showtimes-upload {
+				    	h4 {
+				    		font-size: 14px;
+						    font-weight: 600;
+						    color: #000;
+						    margin: 20px 0 5px;
+				    	}
+
+				    	input[name="showtimes_file"] {
+			    		    margin: 10px 0 12px;
+				    	}
+				    }
+
+				    .import-showtimes-submit {
+			    	    margin-top: 20px;
+				    }
+
+				    .note {
+				    	margin: 20px 0 5px;
+
+				    	label {
+				    		font-size: 14px;
+						    font-weight: 600;
+						    font-style: italic;
+						    color: #000;
+						    display: block;
+				    	}
+
+				    	.note-column {
+				    		font-size: 13px;
+						    font-weight: 600;
+						    min-width: 70px;
+						    display: inline-block;
+				    	}
+
+				    	.note-content {
+				    		font-style: italic;
+				    	}
+				    }
+    			}
+			}
+		}
+	}
+
+	&.showtime_page_showtimes_exporter {
+		.mb-export-showtimes {
+			.export-form {
+				max-width: 90%;
+    			margin: 30px;
+
+    			form.export-showtimes {
+				    background-color: #FFFFFF;
+				    overflow: hidden;
+				    margin: 0 0 16px;
+				    padding: 24px;
+				    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.13);
+				    color: #555;
+				    text-align: left;
+
+				    .title {
+			    	    margin: 0 0 15px;
+					    color: #555;
+					    font-size: 20px;
+					    font-weight: 400;
+					    line-height: 1em;
+				    }
+
+				    .export-fields {
+				    	.fields {
+				    		margin-top: 5px;
+
+				    		.container {
+				    			display: inline-block;
+								position: relative;
+								padding-left: 25px;
+								margin-right: 20px;
+								margin-bottom: 20px;
+								cursor: pointer;
+								font-size: 16px;
+								line-height: 1.3em;
+								-webkit-user-select: none;
+								-moz-user-select: none;
+								-ms-user-select: none;
+								user-select: none;
+
+								&:hover {
+									input ~ .checkmark {
+										background-color: #CCCCCC;
+									}
+								}
+
+								input {
+									position: absolute;
+									opacity: 0;
+									cursor: pointer;
+
+									&:checked ~ .checkmark {
+										background-color: #2196F3;
+
+										&::after {
+											display: block;
+										}
+									}
+								}
+
+								.checkmark {
+									position: absolute;
+									top: 0;
+									left: 0;
+									height: 18px;
+									width: 18px;
+									display: flex;
+									align-items: center;
+									justify-content: center;
+									background-color: #EEEEEE;
+									border-radius: 50%;
+									-o-transition: all .3s ease;
+									-ms-transition: all .3s ease;
+									-webkit-transition: all .3s ease;
+									transition: all .3s ease;
+
+									&:after {
+										content: "";
+										display: none;
+										width: 6px;
+										height: 6px;
+										border-radius: 50%;
+										background: white;
+									}
+								}
+				    		}
+				    	}
+				    }
+
+				    .filter-export {
+				    	&.mb-showtimes-filter {
+				    		display: flex;
+				    		flex-wrap: wrap;
+
+				    		select, input {
+				    			width: 200px !important;
+				    			height: 30px !important;
+				    			min-height: 30px;
+				    			padding: 0 8px !important;
+				    			margin-bottom: 20px;
+				    		}
+
+				    		select {
+				    			margin-right: 10px;
+				    		}
+
+				    		.datepicker-showtimes-filter {
+				    			max-width: 100%;
+				    			margin-right: 10px;
+				    		}
+				    	}
+				    }
+				}
+			}
+		}
+	}
+}

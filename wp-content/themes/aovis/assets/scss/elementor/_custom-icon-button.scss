@@ -1,0 +1,76 @@
+// button
+.elementor-button-wrapper {
+	.elementor-button {
+		font-size: 15px;
+		line-height: 1.4;
+		font-weight: 700;
+		background-color: var(--primary);
+		border-radius: 0;
+		padding: 17px 51px;	
+
+		&:hover {
+            background-color: var(--heading);
+		}
+
+		.elementor-button-content-wrapper {
+			align-items: center;
+		}
+
+		.elementor-button-icon {
+			display: inline-flex;
+		    z-index: 1;
+		    i {
+		    	display: inline-flex;
+		    }
+		}
+	}
+}
+
+/* custom scss icon list, icon box, icon widget default in elementor*/
+.elementor-icon-list-items {
+	.elementor-icon-list-icon {
+		color: var(--primary);
+	}
+}
+
+.elementor-view-stacked {
+	&.elementor-widget-icon, &.elementor-widget-icon-box {
+        .elementor-icon {
+			background-color: var(--primary); 
+		}
+	}
+} 
+
+.elementor-view-framed {
+	&.elementor-widget-icon, &.elementor-widget-icon-box {
+        .elementor-icon {
+        	color: var(--primary); 
+			border-color: var(--primary); 
+		}
+	}
+}
+
+.elementor-widget-icon, .elementor-widget-icon-box {
+	 .elementor-icon {
+		color: var(--primary); 
+	}
+}
+
+// Custom background square 38px - top:0 - left: -10px
+.background-square-38-top-left{
+	&:after{
+		display: inline-block;
+		content: '';
+		position: absolute;
+		top: 0;
+		left: -10px;
+		width: 38px;
+		height: 38px;
+		background-color: #f3f3f3;
+		z-index: -1;
+
+		@media(max-width: 767px){
+			width: 0;
+		}
+	}
+}

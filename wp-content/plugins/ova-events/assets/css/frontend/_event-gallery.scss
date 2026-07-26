@@ -1,0 +1,10 @@
+.ovaev-event-gallery {
+	.event_row {
+		display: grid;
+		grid-template-columns: 1fr 1fr; 
+		grid-gap: 30px;
+		@media (max-width: 767px) {
+			grid-template-columns: auto;
+		}
+	}
+}

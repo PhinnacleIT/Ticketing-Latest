@@ -1,0 +1,45 @@
+.ova-menu-footer{
+	ul{
+		list-style: none;
+
+		li{
+			margin-bottom: 3px;
+
+			&:hover{
+
+				a{
+					@include transaction( all, 0.3s, linear );
+					color: var(--primary);
+
+					&:after{
+						@include transaction( all, 0.3s, linear );
+						width:100%;
+					}
+				}
+			}
+
+			a{
+				@include transaction( all, 0.3s, linear );
+				font-size: 15px;
+				line-height: 2.4;
+				color: var(--text);
+				position: relative;
+
+				&:after{
+					@include transaction( all, 0.3s, linear );
+					content: '';
+					position: absolute;
+					left: 0;
+					bottom: 0;
+					width:0;
+					height: 1px;
+					background-color: var(--primary);
+				}
+			}
+		}
+
+		&.menu{
+			padding: 0;
+		}
+	}
+}

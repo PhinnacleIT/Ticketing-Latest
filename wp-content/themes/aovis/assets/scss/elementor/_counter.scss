@@ -1,0 +1,59 @@
+.elementor-widget-counter {
+	.elementor-counter {
+		position: relative;
+		display: flex;
+	    flex-direction: column;
+	    justify-content: center;
+	    align-items: center;
+		-webkit-transition: all .3s ease;
+		-moz-transition: all .3s ease;
+		-o-transition: all .3s ease;
+		transition: all .3s ease;
+
+		.elementor-counter-number-wrapper {
+			position: relative;
+			margin-bottom: 35px;
+			-webkit-transition: all .3s ease;
+			-moz-transition: all .3s ease;
+			-o-transition: all .3s ease;
+			transition: all .3s ease;
+
+			&:before {
+				position: absolute;
+				content: "";
+				width: 66px;
+				height: 4px;
+				bottom: -24px;
+				left: 50%;
+				margin-left: -33px;
+				background-color: var(--secondary);
+			}
+		}
+
+		.elementor-counter-title {
+			-webkit-transition: all .3s ease;
+			-moz-transition: all .3s ease;
+			-o-transition: all .3s ease;
+			transition: all .3s ease;
+		}
+
+		.ova-counter-behind {
+			position: absolute;
+			font-weight: bold;
+			font-size: 144px;
+			line-height: 180px;
+			color: rgba(0, 0, 0, 0.03);
+			top: 0;
+			-webkit-transition: all .3s ease;
+			-moz-transition: all .3s ease;
+			-o-transition: all .3s ease;
+			transition: all .3s ease;
+		}
+
+		&:hover {
+			.ova-counter-behind {
+				color: rgba(255, 255, 255, 0.06);
+			}
+		}
+	}
+}

@@ -1,0 +1,136 @@
+.ova-our-team{
+
+	&:hover{
+		.author-image{
+			&:before{
+				@include transaction( all, 0.3s, linear );
+				height: 230px;
+			}
+
+			&:after{
+				@include transaction( all, 0.3s, linear );
+				width: 230px;
+			}
+
+			.author{
+				@include transaction( all, 0.3s, linear );
+				filter: brightness(0.5);
+			}
+		}
+	}
+
+	.author-image{
+		position: relative;
+		padding: 0 20px 20px 20px;
+		margin: 0 0 18px 0;
+		z-index: 2;
+
+		&:before, &:after{
+			@include transaction( all, 0.3s, linear );
+			content: '';
+			background-color: var(--primary);
+			position: absolute;
+			bottom: 0;
+			right:0;
+			z-index: 2;
+		}
+
+		&:before{
+			width: 10px;
+			height: 184px;
+		}
+
+		&:after{
+			width: 194px;
+			height: 10px;
+		}
+
+		.author{
+			@include transaction( all, 0.3s, linear );
+			display: block;
+			width: 100%;
+			object-fit:cover;
+		}
+
+		.background{
+			position: absolute;
+			top: 26px;
+			left: 0;
+			width: 50%;
+			height: 85%;
+			z-index: -1;
+
+			background-repeat: no-repeat;
+			background-size: cover;
+			background-position: center;
+		}
+	}
+
+	.author-info{
+		display: flex;
+		justify-content:space-between;
+		align-items:center;
+		flex-wrap:wrap;
+
+		.name-job{
+			line-height: 1;
+			margin: 0 20px 15px 0;
+
+			a{
+				&:hover{
+					.name{
+						@include transaction( all, 0.3s, linear );
+						color: var(--primary);
+					}
+				}
+
+				.name{
+					@include transaction( all, 0.3s, linear );
+					color: var(--heading);
+				}
+			}
+
+			.name{
+				@include transaction( all, 0.3s, linear );
+				margin: 0;
+				font-size: 24px;
+			}
+
+			.job{
+				margin: 0;
+				font-size: 14px;
+			}
+		}
+
+		.socials{
+			display: flex;
+			flex-wrap:wrap;
+			gap:10px;
+			margin: 0 0 15px 0;
+
+			.icon{
+				display: inline-flex;
+				justify-content:center;
+				align-items:center;
+				width: 44px;
+				height: 44px;
+				border-radius: 50%;
+				background-color: #f3f3f3;
+
+				&:hover{
+					i{
+						@include transaction( all, 0.3s, linear );
+						color: var(--primary);
+					}
+				}
+
+				i{
+					@include transaction( all, 0.3s, linear );
+					font-size: 14px;
+					display: inline-flex;
+					color: var(--heading);
+				}
+			}
+		}
+	}
+}

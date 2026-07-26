@@ -1,0 +1,150 @@
+.search_archive_event {
+	background-color: #f3f3f3;
+	padding: 40px;
+	margin-bottom: 70px;
+	@media (max-width: 1190px) {
+		padding-left: 20px;
+		padding-right: 20px;
+	}
+
+	form {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-end;
+		@media (max-width: 768px) {
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+		}
+
+		input {
+			height: 50px;
+			display: inline-block;
+		}
+
+		.ovaev_cat_search {
+			width: 28%;
+			position: relative;
+			padding-right: 30px;
+			@media (max-width: 1024px) {
+				width: 25%;
+			}
+			@media (max-width: 768px) {
+				width: 310px;
+				margin-bottom: 20px;
+				padding-right: 0px;
+			}
+			i{
+				font-size: 22px;
+				color: #b0b8c6;
+				position: absolute;
+				top: 45px;
+				right: 50px;
+			}
+		}
+
+		.ova-label-search{
+			font-size: 16px;
+			line-height: 22px;
+			letter-spacing: 0.2px;
+			font-weight: 500;
+			color: var(--heading);
+			margin-bottom: 15px;
+		}
+
+		.select2-selection {
+            width: 100%;
+			outline: none;
+			height: 100%;
+			padding: 5px 30px 5px 10px;
+			border: none;
+			border-radius: 0;
+			&.select2-selection--single{
+				box-shadow: 0px 10px 40px 0px rgba(6, 22, 58, 0.05);
+				.select2-selection__rendered{
+					font-size: 17px;
+					line-height: 22px;
+					letter-spacing: 0.2px;
+					color: #b0b8c6;
+					line-height: 40px;
+					opacity: 1;
+				}
+			}
+			.select2-selection__arrow {
+				height: 100%;
+				top: 0;
+				display: none;
+			}
+		}
+		.start_date, .end_date {
+			width: 28%;
+			position: relative;
+			padding-right: 30px;
+			@media (max-width: 1024px) {
+				width: 25%;
+			}
+			@media (max-width: 768px) {
+				width: 310px;
+				margin-bottom: 20px;
+				padding-right: 0px;
+			}
+			input {
+				border: 0;
+				width: 100%;
+				padding-left: 20px;
+				padding-right: 0;
+				font-size: 17px;
+				color: #333;
+				line-height: 50px;
+			    box-shadow: 0px 10px 40px 0px rgba(6, 22, 58, 0.05);
+				&::placeholder{
+					font-size: 17px;
+					line-height: 50px;
+					letter-spacing: 0.2px;
+					color: #b0b8c6;
+					opacity: 1;
+				}
+			}
+			i{
+				font-size: 16px;
+				color: #b0b8c6;
+
+				position: absolute;
+				bottom: 17px;
+				right: 50px;
+			}
+		}
+		.wrap-ovaev_submit{
+			width: 16%;
+			margin-top: 39px;
+			@media(max-width: 767px){
+				width: 310px;
+				margin-top: 50px;
+				padding-right: 0px;
+			}
+			.ovaev_submit {
+				transition: 0.3s all linear;
+				width: 100%;
+			
+				font-size: 16px;
+				line-height: 1;
+				font-weight: 700;
+				text-decoration: none;
+				padding: 0;
+				cursor: pointer;
+
+				&:hover {
+					background-color: var(--heading);
+					color: #fff;
+					border: none;
+					transition: 0.3s all linear;
+				}
+			}
+		}
+
+	}
+}
+
+.select2-container--default{
+	width: 100%!important;
+}

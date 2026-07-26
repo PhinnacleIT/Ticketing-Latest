@@ -1,0 +1,19 @@
+.ovaev-event-related {
+	margin: 0;
+
+	.content-event {
+		margin: 0;
+
+		.event-related {
+			.archive_event {
+				grid-gap: 30px;
+
+				.ovaev-content {
+					&.content-grid {
+						padding: 0;
+					}
+				}
+			}
+		}
+	}
+}

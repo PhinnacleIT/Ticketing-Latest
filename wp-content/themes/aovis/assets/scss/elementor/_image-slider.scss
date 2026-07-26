@@ -1,0 +1,126 @@
+.ova-images-slider{
+	.slider-images{
+		&.owl-carousel{
+
+			.owl-stage-outer{
+				.item-images-slider{
+					@include transaction( all, 0.3s, linear );
+					padding: 30px;
+
+					&:hover{
+						@include transaction( all, 0.3s, linear );
+						background-color: #f3f3f3;
+
+						img{
+							@include transaction( all, 0.3s, linear );
+							opacity: 0.6;
+						}
+					}
+
+					img{
+						@include transaction( all, 0.3s, linear );
+						margin: auto;
+						width: auto;
+						max-height: 120px;
+						object-fit: cover;
+						opacity: 0.2;
+					}
+				}
+			}
+
+			.owl-dots{
+				text-align: center;
+
+				.owl-dot{
+					width: 7px;
+					height: 7px;
+					border-radius: 50%;
+					background-color: var(--text);
+					margin: 0 5px;
+
+					&.active{
+						background-color: var(--primary);
+					}
+				}
+			}
+		}
+	}
+
+	.customNavigation{
+		position: relative;
+		display: flex;
+		justify-content:center;
+		margin: 0 0 70px 0;
+
+		@media(max-width: 1024px){
+			margin: 0 0 40px 0;
+		}
+
+		&:before, &:after{
+	    	position: absolute;
+			top: 50%;
+			content: '';
+			width: calc( 50% - 55px );
+			height: 1px;
+			background-color: var(--light);
+			transform: translateY(-50%);
+	    }
+
+	    &:before{
+			left: 0;
+	    }
+
+	    &:after{
+			right: 0;
+	    }
+
+	    a{
+	    	@include transaction( all, 0.3s, linear );
+			width: 28px;
+		    height: 28px;
+		    border-radius: 0;
+		    display: inline-flex;
+		    justify-content: center;
+		    align-items: center;
+		    margin: 0 5px 0 0;
+
+			&.prev{
+				@include transaction( all, 0.3s, linear );
+		    	background: #f3f3f3;
+
+		    	i{
+		    		@include transaction( all, 0.3s, linear );
+		    		color: var(--text);
+		    	}
+			}
+
+			&.next{
+				@include transaction( all, 0.3s, linear );
+		    	background: var(--primary);
+		    	margin: 0;
+
+		    	i{
+		    		@include transaction( all, 0.3s, linear );
+		    		color: #fff;
+		    	}
+			}
+
+			i{
+				@include transaction( all, 0.3s, linear );
+				display: inline-flex;
+				font-size: 9px;
+			}
+
+			&:hover{
+		    	@include transaction( all, 0.3s, linear );
+		    	background-color: var(--heading);
+		    	cursor: pointer;
+
+		    	i{
+		    		@include transaction( all, 0.3s, linear );
+		    		color: #fff;
+		    	}
+		    }
+	    }
+	}
+}

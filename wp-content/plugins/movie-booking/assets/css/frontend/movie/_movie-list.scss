@@ -1,0 +1,46 @@
+.mb-movie-list{
+	display: grid;
+	gap: 30px;
+
+	&.mb-movie-list-template1 {
+		column-gap: 20px;
+	}
+
+	&.mb-movie-list-template3 {
+		row-gap: 60px;
+		&.three_column{
+			grid-template-columns: 1fr 1fr 1fr;
+			@media( max-width: 1600px ){
+				grid-template-columns: 1fr 1fr;
+			}
+			@media( max-width: 1170px ){
+				grid-template-columns: auto;	
+			}
+		}
+	}
+
+	&.two_column{
+		grid-template-columns: 1fr 1fr;
+		@media( max-width: 767px ){
+			grid-template-columns: auto;	
+		}
+	}
+	&.three_column{
+		grid-template-columns: 1fr 1fr 1fr;
+		@media( max-width: 1200px ){
+			grid-template-columns: 1fr 1fr;
+		}
+		@media( max-width: 767px ){
+			grid-template-columns: auto;	
+		}
+	}
+	&.four_column{
+		grid-template-columns: 1fr 1fr 1fr 1fr;
+		@media( max-width: 1200px ){
+			grid-template-columns: 1fr 1fr;
+		}
+		@media( max-width: 767px ){
+			grid-template-columns: auto;	
+		}
+	}
+}

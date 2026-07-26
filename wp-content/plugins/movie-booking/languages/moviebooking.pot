@@ -1,0 +1,3843 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Movie Booking\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-04-19 08:25+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: \n"
+"Language: \n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.6.7; wp-6.5.2\n"
+"X-Domain: moviebooking"
+
+#: includes/class-mb-woo-payment.php:435 includes/class-mb-woo-payment.php:736
+#: includes/class-mb-woo-payment.php:794
+#, php-format
+msgid " (%s)"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:1025
+msgid " minutes to complete your payment"
+msgstr ""
+
+#: includes/booking/class-mb-booking-metabox.php:229
+#, php-format
+msgid "#%s - %s"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:557
+#, php-format
+msgid "%1$s - %2$s Ticket #%3$s"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:156
+#: includes/admin/class-mb-admin-ajax.php:1031
+#: includes/admin/views/metaboxes/metabox-room.php:209
+#, php-format
+msgid "%1$s(%2$s)*"
+msgstr ""
+
+#: includes/room/class-mb-room-functions.php:217
+#, php-format
+msgid "%s doesn't exist!"
+msgstr ""
+
+#: includes/booking/class-mb-booking-functions.php:527
+#: includes/booking/class-mb-booking-functions.php:533
+#, php-format
+msgid "%s has been selected(pending payment)!"
+msgstr ""
+
+#: includes/booking/class-mb-booking-functions.php:469
+#: includes/booking/class-mb-booking-functions.php:490
+#, php-format
+msgid "%s out of stock!"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:57
+#: includes/email/class-mb-email-functions.php:64
+#, php-format
+msgid "%s(x%s)"
+msgstr ""
+
+#: elementor/widgets/movie_cast_list.php:63
+msgid "( set is 0 to get all movie cast )"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:372 includes/class-mb-woo-payment.php:412
+#: includes/class-mb-woo-payment.php:730 includes/class-mb-woo-payment.php:770
+#: includes/booking/class-mb-booking-register.php:152
+msgid "(ex. tax)"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:435 includes/class-mb-woo-payment.php:736
+#: includes/class-mb-woo-payment.php:794
+msgid "-"
+msgstr ""
+
+#: includes/admin/class-mb-admin-functions.php:35
+msgid "--- Select Product ---"
+msgstr ""
+
+#: includes/admin/views/settings/fields/select_page.php:27
+msgid "---Select page---"
+msgstr ""
+
+#: templates/movie/single-movie.php:75 templates/parts/item-template1.php:52
+msgid "/"
+msgstr ""
+
+#: templates/cart/cart_seat_info.php:38
+msgid "0"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:75
+#: includes/admin/class-mb-admin-ajax.php:161
+#: includes/admin/class-mb-admin-ajax.php:176
+#: includes/admin/class-mb-admin-ajax.php:357
+#: includes/admin/class-mb-admin-ajax.php:371
+#: includes/admin/class-mb-admin-ajax.php:385
+#: includes/admin/class-mb-admin-ajax.php:1036
+#: includes/admin/class-mb-admin-ajax.php:1072
+#: includes/admin/class-mb-admin-ajax.php:1080
+#: includes/admin/views/metaboxes/metabox-room.php:109
+#: includes/admin/views/metaboxes/metabox-room.php:214
+#: includes/admin/views/metaboxes/metabox-room.php:229
+#: includes/admin/views/metaboxes/metabox-room.php:320
+#: includes/admin/views/metaboxes/metabox-room.php:328
+#: includes/admin/views/metaboxes/metabox-movie.php:92
+#: includes/admin/views/metaboxes/metabox-movie.php:106
+#: includes/admin/views/metaboxes/metabox-movie.php:120
+msgid "10"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:189
+#: includes/admin/class-mb-admin-ajax.php:1076
+#: includes/admin/views/metaboxes/metabox-room.php:242
+#: includes/admin/views/metaboxes/metabox-room.php:324
+msgid "100"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:79
+#: elementor/widgets/movie_filter_ajax.php:163
+#: elementor/widgets/movie_list.php:114
+msgid "2 Column"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:80
+#: elementor/widgets/movie_filter_ajax.php:164
+#: elementor/widgets/movie_list.php:115
+#: elementor/widgets/movie_cast_list.php:51
+msgid "3 Column"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:81
+#: elementor/widgets/movie_filter_ajax.php:165
+#: elementor/widgets/movie_list.php:116
+#: elementor/widgets/movie_cast_list.php:52
+msgid "4 Column"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:74
+msgid "[shortcode_seat_map]"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:96
+msgid "A1, A2, A3, ..."
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:850
+msgid "Active"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:188
+msgid "Add Area*"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-movie.php:142
+msgid "Add Coupon"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:337
+msgid "Add Extra Service"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:40
+msgid "Add Listing"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:35
+#: includes/movie/class-mb-movie-register.php:36
+#: includes/movie/class-mb-movie-register.php:95
+#: includes/movie/class-mb-movie-register.php:132
+#: includes/movie/class-mb-movie-register.php:166
+#: includes/room/class-mb-room-register.php:30
+#: includes/room/class-mb-room-register.php:31
+#: includes/room/class-mb-room-register.php:90
+#: includes/booking/class-mb-booking-register.php:32
+#: includes/booking/class-mb-booking-register.php:33
+#: includes/showtime/class-mb-showtime-register.php:38
+#: includes/showtime/class-mb-showtime-register.php:39
+#: includes/showtime/class-mb-showtime-register.php:98
+#: includes/ticket/class-mb-ticket-register.php:33
+#: includes/ticket/class-mb-ticket-register.php:34
+msgid "Add New"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:296
+msgid "Add new area"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:162
+msgid "Add new seat"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:182
+msgid "Add person type"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:74
+msgid ""
+"Add recipient's email addresses (use comma seperated to add more email "
+"addresses)."
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:85
+msgid "Add Seat*"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:153
+msgid "Add ticket logo (.jpg, .png)<br>Recommended size: 130x50(px)"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:180
+#: elementor/widgets/movie_main_slider.php:297
+msgid "Additional Options"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:267 includes/class-mb-woo-payment.php:694
+#: includes/class-mb-woo-payment.php:706
+#: includes/admin/class-mb-admin-exporters.php:187
+#: includes/admin/class-mb-admin-exporters.php:481
+#: includes/admin/views/exporters/html-csv-showtimes.php:68
+#: includes/admin/views/exporters/html-csv-tickets.php:72
+#: includes/admin/views/metaboxes/metabox-showtime.php:176
+#: includes/admin/views/metaboxes/metabox-showtime.php:183
+#: includes/admin/views/metaboxes/metabox-ticket.php:124
+msgid "Address"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:375
+msgid "Address*:"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:77
+msgid "Address:"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:182
+#: templates/pdf/template.php:39
+msgid "Address: "
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:65
+msgid "Admin"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:30
+msgctxt "Admin menu name"
+msgid "Bookings"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:159
+msgctxt "Admin menu name"
+msgid "Cast"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:88
+msgctxt "Admin menu name"
+msgid "Categories"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:91
+msgctxt "Admin menu name"
+msgid "Locations"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:33
+msgctxt "Admin menu name"
+msgid "Movies"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:28
+msgctxt "Admin menu name"
+msgid "Rooms"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:36
+msgctxt "Admin menu name"
+msgid "Showtimes"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:125
+msgctxt "Admin menu name"
+msgid "Tags"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:31
+msgctxt "Admin menu name"
+msgid "Tickets"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:83
+msgctxt "Admin menu name"
+msgid "Types"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:167
+msgid "Albanian"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:87
+#: elementor/widgets/movie_main_slider.php:88
+#: elementor/widgets/movie_list.php:84
+msgid "All"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:31
+msgid "All Bookings"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:161
+msgid "All Cast"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:90
+msgid "All Categories"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:61
+#: elementor/widgets/movie_main_slider.php:62
+#: elementor/widgets/movie_list.php:58
+msgid "All categories"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:46
+msgid "All Cities"
+msgstr ""
+
+#: includes/admin/class-mb-admin-functions.php:77
+msgid "All cities"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:93
+msgid "All Locations"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:34
+msgid "All Movies"
+msgstr ""
+
+#: includes/admin/class-mb-admin-functions.php:53
+msgid "All movies"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:29
+msgid "All Rooms"
+msgstr ""
+
+#: includes/admin/class-mb-admin-functions.php:137
+msgid "All rooms"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:127
+msgid "All Tags"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:32
+msgid "All Tickets"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:37
+msgid "All Times"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:85
+msgid "All Types"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:437
+#: includes/admin/class-mb-admin-ajax.php:446
+#: includes/admin/class-mb-admin-ajax.php:451
+#: includes/admin/class-mb-admin-functions.php:107
+#: includes/admin/class-mb-admin-functions.php:118
+msgid "All venues"
+msgstr ""
+
+#: includes/setting/class-mb-setting-tax.php:159
+msgid "Allow customers to enter discount on Cart page"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:27
+msgid "Allow to Add ticket when Order status: "
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:28
+msgid "Allow to add ticket, send ticket to customer's email"
+msgstr ""
+
+#: includes/setting/class-mb-setting-tax.php:28
+msgid "Allow to calculate tax in order"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:42
+msgid "Allow to send an email after a customer books an event successfully."
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:84
+msgid ""
+"Allows to hold the ticket until the payment is completed after a period of "
+"time"
+msgstr ""
+
+#: includes/api/class-mb-api.php:244
+msgid "Already Checked In"
+msgstr ""
+
+#: templates/cart/cart_seat_discount.php:26
+#: includes/admin/views/metaboxes/metabox-booking.php:750
+msgid "Apply"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:126
+msgid "Arabic"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:36
+msgid "Archive"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:232 includes/class-mb-woo-payment.php:693
+#: includes/class-mb-woo-payment.php:704
+msgid "Area"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:141
+#: includes/admin/views/metaboxes/metabox-room.php:194
+msgid "Area*"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:180
+msgid "Area: "
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:86
+msgid "Areas"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:262
+msgid "Areas*:"
+msgstr ""
+
+#: templates/elementor/movie_main_slider.php:136
+msgid "Arrow watch trailer"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:203
+#: elementor/widgets/movie_slider.php:143
+#: elementor/widgets/movie_main_slider.php:143
+#: elementor/widgets/movie_list.php:154
+#: elementor/widgets/movie_cast_list.php:89
+#: includes/admin/views/exporters/html-csv-showtimes.php:129
+#: includes/admin/views/exporters/html-csv-tickets.php:157
+msgid "Ascending"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:362
+#: includes/room/class-mb-room-register.php:126
+#: includes/booking/class-mb-booking-register.php:94
+#: includes/showtime/class-mb-showtime-register.php:152
+#: includes/ticket/class-mb-ticket-register.php:95
+msgid "Author"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:108
+msgid "Automatically insert Sort Order if empty"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:246
+#: elementor/widgets/movie_main_slider.php:332
+msgid "Autoplay"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:260
+#: elementor/widgets/movie_main_slider.php:346
+msgid "Autoplay Speed"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:127
+msgid "Azerbaijanian"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:629
+msgid "Background"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:553
+#: elementor/widgets/movie_slider.php:560
+#: elementor/widgets/movie_slider.php:708
+#: elementor/widgets/movie_slider.php:739
+#: elementor/widgets/movie_main_slider.php:591
+#: elementor/widgets/movie_list.php:431
+msgid "Background Color"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:564
+#: elementor/widgets/movie_filter_ajax.php:578
+#: elementor/widgets/movie_slider.php:571
+#: elementor/widgets/movie_slider.php:585
+#: elementor/widgets/movie_main_slider.php:602
+#: elementor/widgets/movie_list.php:442 elementor/widgets/movie_list.php:456
+msgid "Background Color Hover"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:223
+msgid "Before x day"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:331
+msgid "Booking #[mb_booking] has been canceled.<br>Movie [mb_movie].<br>"
+msgstr ""
+
+#: includes/booking/class-mb-booking-metabox.php:12
+msgid "Booking Detail"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:469
+#: includes/ticket/class-mb-ticket-register.php:88
+#: includes/admin/views/exporters/html-csv-tickets.php:24
+msgid "Booking ID"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:139
+#: includes/admin/views/metaboxes/metabox-ticket.php:73
+msgid "Booking ID:"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:43
+msgid "Booking image"
+msgstr ""
+
+#: templates/cart/cart_seat_info.php:12
+msgid "Booking Information"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-ticket.php:74
+#, php-format
+msgctxt "booking link"
+msgid "%s"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:68
+msgctxt "Booking Slug"
+msgid "mb_booking"
+msgstr ""
+
+#: includes/admin/class-mb-admin-statistical.php:17
+#: includes/admin/class-mb-admin-statistical.php:18
+#: includes/admin/views/statistical/html-booking-statistics.php:13
+msgid "Booking Statistics"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:88
+#: includes/setting/class-mb-setting-mail.php:93
+#: includes/setting/class-mb-setting-mail.php:101
+#: includes/setting/class-mb-setting-mail.php:106
+msgid "Booking Ticket Success"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:238
+msgid "Booking Ticket Success!"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:114
+msgid ""
+"Booking will be deleted if the payment completion time is over x seconds"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:176
+msgid "Booking: "
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:51
+msgid "Bookings list"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:50
+msgid "Bookings navigation"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:337
+#: elementor/widgets/movie_slider.php:344 elementor/widgets/movie_list.php:215
+msgid "Border Color Hover"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:753
+#: elementor/widgets/movie_slider.php:836
+#: elementor/widgets/movie_slider.php:904
+msgid "Border Radius"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:129
+msgid "Bosanski"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:405
+msgid "Bottom"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:288
+#: elementor/widgets/movie_main_slider.php:686
+msgid "Bottom Spacing"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:128
+msgid "Bulgarian"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:498
+#: elementor/widgets/movie_slider.php:505
+#: elementor/widgets/movie_main_slider.php:553
+#: elementor/widgets/movie_list.php:376
+msgid "Button"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:96
+msgid "Calenadar Language"
+msgstr ""
+
+#: includes/api/class-mb-api.php:292
+msgid "Can't update ticket status"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:312
+msgid "Cancel"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:215
+msgid "Canceled"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:336
+#: includes/setting/class-mb-setting-mail.php:349
+#: includes/email/class-mb-email-functions.php:334
+#: includes/email/class-mb-email-functions.php:370
+msgid "Cancellation Booking"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:27
+msgid "Cart page"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:391
+msgid "Cart:"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:173
+msgid "Cast"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:184
+msgid "Cast Heading"
+msgstr ""
+
+#: elementor/widgets/movie_cast_list.php:144
+msgid "Cast Name"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:130
+msgid "Català"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:101
+msgid "Categories"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:74
+#: elementor/widgets/movie_main_slider.php:75
+#: elementor/widgets/movie_main_slider.php:374
+#: elementor/widgets/movie_list.php:71
+msgid "Category"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:211
+msgid "Category Suffix"
+msgstr ""
+
+#: includes/admin/views/statistical/html-booking-statistics.php:71
+msgid "Check"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:100
+msgid "Check every x seconds"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-tickets.php:104
+msgid "Checked in"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-tickets.php:103
+msgid "Checkin status"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:15
+msgid "Checkout"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:23
+msgid "Checkout options"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:22
+msgid "Checkout Settings"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:21
+msgid "Choose a CSV file from your computer:"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:44
+msgid "Choose a hidden product in Woocommerce"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:226
+#: includes/movie/class-mb-movie-register.php:316
+msgid "Choose an image"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-showtime.php:120
+#: includes/admin/views/metaboxes/metabox-showtime.php:121
+msgid "Choose city"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-showtimes.php:18
+#: includes/admin/views/exporters/html-csv-tickets.php:18
+msgid "Choose fields to export"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:100
+#: includes/setting/class-mb-setting-movie.php:161
+msgid "Choose Footer"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:88
+#: includes/setting/class-mb-setting-movie.php:149
+msgid "Choose Header"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:151
+#: includes/admin/views/metaboxes/metabox-showtime.php:38
+msgid "Choose movie"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:72
+msgid "Choose Number Column"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-showtimes.php:128
+#: includes/admin/views/exporters/html-csv-tickets.php:156
+msgid "Choose order"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-showtimes.php:133
+#: includes/admin/views/exporters/html-csv-tickets.php:161
+msgid "Choose orderby"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:188
+msgid "Choose room"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-showtime.php:88
+msgid "Choose rooms"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-showtimes.php:76
+#: includes/admin/views/statistical/html-booking-statistics.php:19
+#: includes/admin/views/metaboxes/metabox-booking.php:207
+msgid "Choose status"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:55
+msgid "Choose template"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:165
+msgid "Choose time"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:48
+msgid "Choose type"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:257
+#: includes/admin/views/metaboxes/metabox-showtime.php:149
+#: includes/admin/views/metaboxes/metabox-showtime.php:165
+msgid "Choose venue"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:184
+#: includes/admin/class-mb-admin-exporters.php:478
+#: includes/showtime/class-mb-showtime-register.php:149
+#: elementor/widgets/movie_filter_ajax.php:62
+#: includes/admin/views/exporters/html-csv-showtimes.php:56
+#: includes/admin/views/exporters/html-csv-tickets.php:60
+msgid "City"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:183
+#: includes/admin/class-mb-admin-exporters.php:477
+#: includes/admin/views/exporters/html-csv-showtimes.php:52
+#: includes/admin/views/exporters/html-csv-tickets.php:56
+msgid "City ID"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:69
+msgid "City ID:"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-showtime.php:118
+msgid "City*"
+msgstr ""
+
+#: includes/admin/class-mb-admin-hooks.php:38
+#: includes/admin/class-mb-admin-hooks.php:53
+#: includes/admin/views/exporters/html-csv-showtimes.php:93
+#: includes/admin/views/exporters/html-csv-showtimes.php:108
+#: includes/admin/views/exporters/html-csv-tickets.php:121
+#: includes/admin/views/exporters/html-csv-tickets.php:136
+#: includes/admin/views/statistical/html-booking-statistics.php:34
+#: includes/admin/views/statistical/html-booking-statistics.php:49
+msgid "Clear"
+msgstr ""
+
+#: includes/class-mb-checkout.php:43 includes/class-mb-checkout.php:66
+#: includes/class-mb-checkout.php:86
+#: includes/booking/class-mb-booking-functions.php:528
+#: includes/booking/class-mb-booking-functions.php:534
+#, php-format
+msgid ""
+"Click here to reload the page or the page will automatically reload after %s "
+"seconds."
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:121
+msgid "Closed Statement"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:107
+#: includes/admin/class-mb-admin-ajax.php:222
+#: elementor/widgets/movie_filter_ajax.php:378
+#: elementor/widgets/movie_filter_ajax.php:435
+#: elementor/widgets/movie_filter_ajax.php:514
+#: elementor/widgets/movie_slider.php:385
+#: elementor/widgets/movie_slider.php:442
+#: elementor/widgets/movie_slider.php:521
+#: elementor/widgets/movie_slider.php:697
+#: elementor/widgets/movie_slider.php:728
+#: elementor/widgets/movie_slider.php:789
+#: elementor/widgets/movie_slider.php:857
+#: elementor/widgets/movie_main_slider.php:394
+#: elementor/widgets/movie_main_slider.php:472
+#: elementor/widgets/movie_main_slider.php:526
+#: elementor/widgets/movie_main_slider.php:569
+#: elementor/widgets/movie_list.php:256 elementor/widgets/movie_list.php:313
+#: elementor/widgets/movie_list.php:392
+#: elementor/widgets/movie_cast_list.php:160
+#: elementor/widgets/movie_cast_list.php:203
+#: includes/admin/views/metaboxes/metabox-room.php:141
+#: includes/admin/views/metaboxes/metabox-room.php:275
+msgid "Color"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:389
+#: elementor/widgets/movie_filter_ajax.php:525
+#: elementor/widgets/movie_filter_ajax.php:539
+#: elementor/widgets/movie_slider.php:396
+#: elementor/widgets/movie_slider.php:532
+#: elementor/widgets/movie_slider.php:546
+#: elementor/widgets/movie_main_slider.php:483
+#: elementor/widgets/movie_main_slider.php:580
+#: elementor/widgets/movie_list.php:267 elementor/widgets/movie_list.php:403
+#: elementor/widgets/movie_list.php:417
+msgid "Color Hover"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:89
+#: elementor/widgets/movie_main_slider.php:90
+#: elementor/widgets/movie_list.php:86
+msgid "Coming soon"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:363
+msgid "Comments"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:36
+#: includes/admin/views/statistical/html-booking-statistics.php:20
+#: includes/admin/views/metaboxes/metabox-booking.php:209
+msgid "Completed"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:40
+#: elementor/widgets/movie_slider.php:43
+#: elementor/widgets/movie_main_slider.php:44
+#: elementor/widgets/movie_list.php:40 elementor/widgets/movie_cast_list.php:40
+msgid "Content"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:297
+#: includes/admin/views/metaboxes/metabox-movie.php:26
+msgid "Coupon Code"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-movie.php:18
+msgid "Coupons"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:778
+msgid "Create and send tickets"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:931
+msgid "Create Ticket and Send mail success!"
+msgstr ""
+
+#: includes/class-mb-checkout.php:65
+msgid "Created booking error!"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:226
+msgid "Current Date"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:191
+#: elementor/widgets/movie_slider.php:131
+#: elementor/widgets/movie_main_slider.php:131
+#: elementor/widgets/movie_list.php:142
+msgid "Custom Order"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:93
+#: includes/ticket/class-mb-ticket-register.php:91
+#: includes/setting/class-mb-setting-mail.php:66
+msgid "Customer"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:485
+#: includes/admin/views/exporters/html-csv-tickets.php:88
+msgid "Customer Address"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:382
+msgid "Customer address"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:483
+#: includes/admin/views/exporters/html-csv-tickets.php:80
+#: includes/admin/views/metaboxes/metabox-ticket.php:146
+#: includes/admin/views/metaboxes/metabox-ticket.php:153
+msgid "Customer Email"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:350
+msgid "Customer email"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:482
+#: includes/admin/views/exporters/html-csv-tickets.php:76
+#: includes/admin/views/metaboxes/metabox-ticket.php:131
+#: includes/admin/views/metaboxes/metabox-ticket.php:138
+msgid "Customer Name"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:484
+#: includes/admin/views/exporters/html-csv-tickets.php:84
+#: includes/admin/views/metaboxes/metabox-ticket.php:161
+#: includes/admin/views/metaboxes/metabox-ticket.php:168
+msgid "Customer Phone"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:366
+msgid "Customer phone"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:184
+msgid "Customer: "
+msgstr ""
+
+#: includes/setting/class-mb-setting-tax.php:101
+msgid "Customers have to pay extra for each ticket"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:113
+#: includes/setting/class-mb-setting-mail.php:276
+#: includes/setting/class-mb-setting-mail.php:361
+msgid "Customers will know them to receive mail from which email address is."
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:45
+#, php-format
+msgid "d-m-Y (%s)"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:48
+#, php-format
+msgid "d/m/Y (%s)"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:133
+msgid "Dansk"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:58
+msgid "Dashboard >> Movies"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:66
+msgid "Dashboard >> Rooms"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:74
+msgid "Dashboard >> Showtimes >> Locations (child of City ID)"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:70
+msgid "Dashboard >> Showtimes >> Locations (parent of Venue IDs)"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:190 includes/class-mb-woo-payment.php:690
+#: includes/class-mb-woo-payment.php:701
+#: includes/movie/class-mb-movie-register.php:364
+#: includes/room/class-mb-room-register.php:127
+#: includes/booking/class-mb-booking-register.php:95
+#: includes/admin/class-mb-admin-exporters.php:180
+#: includes/admin/class-mb-admin-exporters.php:472
+#: includes/showtime/class-mb-showtime-register.php:153
+#: includes/ticket/class-mb-ticket-register.php:96
+#: elementor/widgets/movie_filter_ajax.php:188
+#: elementor/widgets/movie_slider.php:128
+#: elementor/widgets/movie_main_slider.php:128
+#: elementor/widgets/movie_list.php:139
+#: elementor/widgets/movie_cast_list.php:76
+#: includes/admin/views/exporters/html-csv-showtimes.php:40
+#: includes/admin/views/exporters/html-csv-showtimes.php:137
+#: includes/admin/views/exporters/html-csv-tickets.php:36
+#: includes/admin/views/exporters/html-csv-tickets.php:164
+msgid "Date"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:117
+msgid "Date Filter Type"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:37
+msgid "Date Format"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-showtime.php:59
+msgid "Date*"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:61
+msgid "Date:"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:177
+msgid "Date: "
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:119
+msgid "Default"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:137
+msgid "Default or Other (made in Templates of Elementor)"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:85
+msgid "Default Time"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:212
+msgid "Demo Data Mode - Date Filter"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:36
+msgid "demo.csv"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:204
+#: elementor/widgets/movie_slider.php:144
+#: elementor/widgets/movie_main_slider.php:144
+#: elementor/widgets/movie_list.php:155
+#: elementor/widgets/movie_cast_list.php:90
+#: includes/admin/views/exporters/html-csv-showtimes.php:130
+#: includes/admin/views/exporters/html-csv-tickets.php:158
+msgid "Descending"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:95
+#: includes/admin/class-mb-admin-ajax.php:210
+#: elementor/widgets/movie_cast_list.php:187
+#: includes/admin/views/metaboxes/metabox-room.php:129
+#: includes/admin/views/metaboxes/metabox-room.php:263
+msgid "Description"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:347
+msgid "Description display at frontend and PDF Ticket."
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:350
+#: includes/admin/views/metaboxes/metabox-room.php:365
+msgid "Description limited 230 character in ticket."
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:215
+#: includes/admin/views/metaboxes/metabox-room.php:268
+msgid "Description of type area"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:100
+#: includes/admin/views/metaboxes/metabox-room.php:134
+msgid "Description of type seat"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:342
+msgid "Description:"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:433 includes/class-mb-woo-payment.php:434
+#: includes/booking/class-mb-booking-register.php:88
+#: includes/setting/class-mb-setting-tax.php:153
+#: templates/cart/cart_seat_info.php:23
+#: includes/admin/views/statistical/html-booking-statistics.php:85
+#: includes/admin/views/metaboxes/metabox-booking.php:678
+msgid "Discount"
+msgstr ""
+
+#: includes/room/class-mb-room-functions.php:229
+#, php-format
+msgid "Discount %s doesn't exist!"
+msgstr ""
+
+#: templates/cart/cart_seat_discount.php:22
+msgid "DISCOUNT CODE"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:742
+msgid "Discount code"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:109
+#, php-format
+msgctxt "discount mail"
+msgid "Discount: %1$s (%2$s)"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:735 includes/class-mb-woo-payment.php:790
+msgid "Discount:"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:769
+msgid "Dots"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-showtimes.php:79
+#: includes/admin/views/exporters/html-csv-tickets.php:99
+msgid "Draft"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:157
+msgid "Dutch"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:37
+#: includes/room/class-mb-room-register.php:32
+#: includes/booking/class-mb-booking-register.php:34
+#: includes/showtime/class-mb-showtime-register.php:40
+#: includes/ticket/class-mb-ticket-register.php:35
+msgid "Edit"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:35
+msgid "Edit Booking"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:164
+msgid "Edit Cast"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:93
+msgid "Edit Category"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:96
+msgid "Edit Location"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:38
+msgid "Edit movie"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:33
+msgid "Edit Room"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:130
+msgid "Edit Tag"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:36
+msgid "Edit Ticket"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:41
+msgid "Edit Time"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:88
+msgid "Edit Type"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:139
+msgid "Eesti"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:125
+#: includes/setting/class-mb-setting-mail.php:144
+#: includes/setting/class-mb-setting-mail.php:288
+#: includes/setting/class-mb-setting-mail.php:300
+#: includes/setting/class-mb-setting-mail.php:373
+#: includes/setting/class-mb-setting-mail.php:382
+msgid "Email Content"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:343
+msgid "Email*:"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:186
+msgid "Email: "
+msgstr ""
+
+#: includes/setting/class-mb-setting-tax.php:27
+#: includes/setting/class-mb-setting-tax.php:100
+#: includes/setting/class-mb-setting-tax.php:158
+#: includes/setting/class-mb-setting-checkout.php:83
+#: includes/setting/class-mb-setting-mail.php:41
+#: includes/setting/class-mb-setting-mail.php:207
+#: includes/setting/class-mb-setting-mail.php:318
+msgid "Enable"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:220
+msgid "Enable Filter by related movies"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:326
+#: includes/admin/views/metaboxes/metabox-movie.php:55
+msgid "End"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:136
+msgid "English"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:137
+msgid "English (British)"
+msgstr ""
+
+#: templates/cart/cart_seat_discount.php:16
+msgid "Enter Discount Code"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:1067
+#: includes/admin/views/metaboxes/metabox-room.php:315
+msgid "Enter Name"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:132
+msgid "Enter username of Staff check Tickets. Ex: demo"
+msgstr ""
+
+#: includes/api/class-mb-api.php:118 includes/api/class-mb-api.php:154
+#: includes/api/class-mb-api.php:338
+msgid "Error"
+msgstr ""
+
+#: includes/api/class-mb-api.php:85
+msgid "Error make token"
+msgstr ""
+
+#: includes/api/class-mb-api.php:88
+msgid "Error Something"
+msgstr ""
+
+#: includes/api/class-mb-api.php:73
+msgid "Error Username or Password"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:140
+msgid "Euskara"
+msgstr ""
+
+#: includes/cron/class-mb-cron.php:33 includes/cron/class-mb-cron.php:41
+msgid "Every % seconds"
+msgstr ""
+
+#: includes/api/class-mb-api.php:327
+msgid "Exception Error"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:510
+msgid "Excerpt"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:218
+msgid "Expired"
+msgstr ""
+
+#: includes/admin/class-mb-admin-assets.php:44
+#: includes/admin/class-mb-admin-assets.php:45
+#: includes/admin/views/exporters/html-csv-showtimes.php:143
+#: includes/admin/views/exporters/html-csv-tickets.php:170
+msgid "Export"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-showtimes.php:11
+msgid "Export Showtimes"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-showtimes.php:16
+msgid "Export showtimes to CSV file"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-tickets.php:11
+msgid "Export Tickets"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-tickets.php:16
+msgid "Export tickets to CSV file"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:241 includes/class-mb-woo-payment.php:705
+#: includes/admin/views/metaboxes/metabox-room.php:305
+msgid "Extra Service"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-ticket.php:109
+msgid "Extra Service:"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:181
+#: templates/pdf/template.php:71
+msgid "Extra Service: "
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:49
+#, php-format
+msgid "F j, Y (%s)"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:952
+msgid "Failed!"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:113
+#: includes/movie/class-mb-movie-metabox.php:116
+msgid "Featured Movie"
+msgstr ""
+
+#: includes/admin/class-mb-admin-importers.php:104
+msgid "File empty!"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:280
+msgid "Filter"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:49
+msgid "Filter Bookings"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:52
+msgid "Filter movies"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:47
+msgid "Filter Rooms"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:50
+msgid "Filter Tickets"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:55
+msgid "Filter times"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:142
+msgid "Finnish (Suomi)"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:318
+msgid "First name"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:311
+msgid "First name*:"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:345
+#: includes/admin/class-mb-admin-ajax.php:364
+#: includes/setting/class-mb-setting-tax.php:51
+#: includes/setting/class-mb-setting-tax.php:68
+#: includes/setting/class-mb-setting-tax.php:124
+#: includes/setting/class-mb-setting-tax.php:141
+#: includes/admin/views/metaboxes/metabox-movie.php:76
+#: includes/admin/views/metaboxes/metabox-movie.php:79
+#: includes/admin/views/metaboxes/metabox-movie.php:99
+msgid "Fixed amount(n)"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:121
+msgid "Fixed Period"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:99
+#: includes/setting/class-mb-setting-movie.php:160
+msgid "Footer"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:143
+msgid "French"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:120
+msgid "Friday"
+msgstr ""
+
+#: includes/admin/class-mb-admin-hooks.php:33
+#: includes/admin/views/exporters/html-csv-showtimes.php:88
+#: includes/admin/views/exporters/html-csv-tickets.php:116
+#: includes/admin/views/statistical/html-booking-statistics.php:29
+msgid "From Date"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:99
+#: includes/setting/class-mb-setting-mail.php:262
+#: includes/setting/class-mb-setting-mail.php:347
+msgid "From name"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:656
+#: includes/ticket/class-mb-ticket-functions.php:50
+#: includes/email/class-mb-email-functions.php:40
+#, php-format
+msgctxt "full name"
+msgid "%1$s %2$s"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:65
+#, php-format
+msgid "g:i A (%s)"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:64
+#, php-format
+msgid "g:i a (%s)"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:144
+msgid "Galego"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:15
+msgid "General"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:23
+msgid "General options"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:22
+msgid "General Settings"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:134
+msgid "German"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:149
+#: templates/parts/single-get-ticket-button.php:9
+msgid "Get Ticket"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:63
+#, php-format
+msgid "H:i (%s)"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:87
+#: includes/setting/class-mb-setting-movie.php:148
+msgid "Header"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:185
+msgid "Heading Movie Cast (Note*: Default template)"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:197
+msgid "Heading Movie Content (Note*: Default template)"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:145
+msgid "Hebrew"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:318
+#: elementor/widgets/movie_slider.php:325
+#: elementor/widgets/movie_slider.php:818
+#: elementor/widgets/movie_slider.php:886 elementor/widgets/movie_list.php:196
+msgid "Height"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:215
+#: elementor/widgets/movie_slider.php:53
+#: elementor/widgets/movie_main_slider.php:54
+#: elementor/widgets/movie_list.php:50
+msgid "Hide"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:38
+msgid "Hold-on"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:78
+msgid "Holding Ticket"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:721
+msgid "Hover"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:146
+msgid "Hrvatski"
+msgstr ""
+
+#. URI of the plugin
+msgid "https://ovatheme.com"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:147
+msgid "Hungarian"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:468
+#: elementor/widgets/movie_slider.php:475 elementor/widgets/movie_list.php:346
+msgid "Icon Color"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:626
+msgid "Icon Size"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:175
+#: elementor/widgets/movie_filter_ajax.php:186
+#: elementor/widgets/movie_slider.php:126
+#: elementor/widgets/movie_main_slider.php:126
+#: elementor/widgets/movie_list.php:137
+#: elementor/widgets/movie_cast_list.php:74
+#: includes/admin/views/exporters/html-csv-showtimes.php:20
+#: includes/admin/views/exporters/html-csv-showtimes.php:135
+#: includes/admin/views/exporters/html-csv-tickets.php:163
+msgid "ID"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:310
+#: elementor/widgets/movie_slider.php:317 elementor/widgets/movie_list.php:188
+#: elementor/widgets/movie_cast_list.php:101
+msgid "Image"
+msgstr ""
+
+#: includes/admin/class-mb-admin-assets.php:43
+#: includes/admin/views/importers/html-csv-showtimes.php:41
+msgid "Import"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:14
+msgid "Import Showtimes"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:18
+msgid "Import showtimes from a CSV file"
+msgstr ""
+
+#: includes/admin/class-mb-admin-importers.php:192
+msgid "Imported Fails!"
+msgstr ""
+
+#: includes/admin/class-mb-admin-importers.php:188
+msgid "Imported Success!"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:240
+#: templates/elementor/movie_main_slider.php:27
+msgid "In theater"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:148
+msgid "Indonesian"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:232
+#: elementor/widgets/movie_main_slider.php:304
+msgid "Infinite Loop"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:47
+msgid "Insert into Booking"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:50
+msgid "Insert into movie"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:45
+msgid "Insert into Room"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:48
+msgid "Insert into Ticket"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:53
+msgid "Insert into Time"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:105
+msgid "Insert Number"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:199
+msgid "Insert only an Area"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:146
+msgid "Insert only an area"
+msgstr ""
+
+#: templates/cart/cart_seat_discount.php:29
+#: includes/admin/views/metaboxes/metabox-booking.php:753
+msgid "Invalid Discount Code"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:149
+msgid "Italian"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:161 elementor/widgets/movie_list.php:172
+msgid "Item Background Image"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:198
+msgid "Item Number"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:190
+msgid "Item space between"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:150
+msgid "Japanese"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:151
+#: includes/class-mb-core-functions.php:152
+msgid "Korean"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:334
+msgid "Last name"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:327
+msgid "Last name*:"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:154
+msgid "Latvian"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:429
+msgid "Left"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:446
+#: elementor/widgets/movie_slider.php:453 elementor/widgets/movie_list.php:324
+msgid "Link Color"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:457
+#: elementor/widgets/movie_slider.php:464 elementor/widgets/movie_list.php:335
+msgid "Link Color Hover"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:39
+msgid "Listing"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:153
+msgid "Lithuanian"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:105
+msgid "Locations"
+msgstr ""
+
+#: includes/api/class-mb-api.php:83
+msgid "Login success"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:47
+#, php-format
+msgid "m/d/Y (%s)"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:155
+msgid "Macedonian"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:16
+msgid "Mail"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:400
+#: elementor/widgets/movie_filter_ajax.php:482
+#: elementor/widgets/movie_slider.php:407
+#: elementor/widgets/movie_slider.php:489
+#: elementor/widgets/movie_main_slider.php:494
+#: elementor/widgets/movie_main_slider.php:537
+#: elementor/widgets/movie_list.php:278 elementor/widgets/movie_list.php:360
+#: elementor/widgets/movie_cast_list.php:128
+#: elementor/widgets/movie_cast_list.php:171
+#: elementor/widgets/movie_cast_list.php:214
+msgid "Margin"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:187
+msgid "Margin Right Items"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:1075
+#: includes/admin/views/metaboxes/metabox-room.php:323
+msgid "Max Quantity/Calendar"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:1079
+#: includes/admin/views/metaboxes/metabox-room.php:327
+msgid "Max Quantity/Ticket"
+msgstr ""
+
+#: includes/booking/class-mb-booking-functions.php:488
+#, php-format
+msgid "Maximum %s: %s"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:129
+msgid "Maximum date to show in pop-up showtime"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:128
+msgid "Maximum showtime"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:30
+#, php-format
+msgid "Maximum size: %s"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:113
+msgid "Maximum time to complete payment"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:416
+#: elementor/widgets/movie_slider.php:423 elementor/widgets/movie_list.php:294
+msgid "Meta"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:15
+msgid "Metaboxs"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:72
+msgid "Minutes"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:116
+msgid "Monday"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:156
+msgid "Mongolian"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:279
+#: templates/elementor/movie_main_slider.php:30
+msgid "More Info"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:216
+msgid "More Movies Like This"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:179
+#: includes/admin/class-mb-admin-exporters.php:471
+#: includes/showtime/class-mb-showtime-register.php:147
+#: includes/ticket/class-mb-ticket-register.php:89
+#: includes/setting/class-mb-setting-movie.php:17
+#: elementor/widgets/movie_main_slider.php:213
+#: templates/elementor/movie_main_slider.php:25
+#: includes/admin/views/exporters/html-csv-showtimes.php:36
+#: includes/admin/views/exporters/html-csv-tickets.php:32
+msgid "Movie"
+msgstr ""
+
+#. Name of the plugin
+msgid "Movie Booking"
+msgstr ""
+
+#. Description of the plugin
+msgid ""
+"Movie Booking plugin Allow to manage multiple movies with ticket booking."
+msgstr ""
+
+#: elementor/widgets/movie_cast_list.php:20
+msgid "Movie Cast List"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:184
+msgctxt "Movie Cast Slug"
+msgid "movie_cast"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:20
+msgid "Movie Filter Ajax"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:178
+#: includes/admin/class-mb-admin-exporters.php:470
+#: includes/admin/views/exporters/html-csv-showtimes.php:32
+#: includes/admin/views/exporters/html-csv-tickets.php:28
+msgid "Movie ID"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:57
+msgid "Movie ID:"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:46
+msgid "Movie image"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-ticket.php:81
+#, php-format
+msgctxt "movie link"
+msgid "%s"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:20
+msgid "Movie Main Slider"
+msgstr ""
+
+#: includes/class-mb-setting.php:48
+msgid "Movie Settings"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:20
+msgid "Movie Slider"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:71
+msgctxt "Movie Slug"
+msgid "movie"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:84
+#: elementor/widgets/movie_main_slider.php:85
+#: elementor/widgets/movie_list.php:81
+msgid "Movie Status"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:146
+msgctxt "Movie Tag Slug"
+msgid "movie_tag"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-showtime.php:36
+msgid "Movie*"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:150
+msgid "Movie*:"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-ticket.php:80
+msgid "Movie:"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:175
+#: templates/pdf/template.php:20
+msgid "Movie: "
+msgstr ""
+
+#: elementor/widgets/movie_list.php:20
+msgid "Movies"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:221
+msgid ""
+"Movies and Movie Slider widget used in single movie page use filter by "
+"related movies"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:111
+msgctxt "Movies Category Slug"
+msgid "movie_cat"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:54
+msgid "Movies list"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:116
+msgctxt "Movies Location Slug"
+msgid "movie_location"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:53
+msgid "Movies navigation"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:42
+msgid "Movies Per Page"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:615
+msgid "Nav Control"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:36
+msgid "New Booking"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:167
+msgid "New Cast"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:96
+msgid "New Category"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:99
+msgid "New Location"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:39
+msgid "New movie"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:35
+msgid "New Order"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:34
+msgid "New Room"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:133
+msgid "New Tag"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:37
+msgid "New Ticket"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:42
+msgid "New Time"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:91
+msgid "New Type"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:80
+msgid "new_email@gmail.com"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:228
+#: includes/setting/class-mb-setting-tax.php:36
+#: includes/setting/class-mb-setting-tax.php:109
+#: includes/setting/class-mb-setting-tax.php:167
+#: includes/setting/class-mb-setting-checkout.php:91
+#: includes/setting/class-mb-setting-mail.php:50
+#: includes/setting/class-mb-setting-mail.php:216
+#: includes/setting/class-mb-setting-mail.php:327
+#: elementor/widgets/movie_slider.php:223
+#: elementor/widgets/movie_slider.php:237
+#: elementor/widgets/movie_slider.php:251
+#: elementor/widgets/movie_slider.php:288
+#: elementor/widgets/movie_slider.php:302
+#: elementor/widgets/movie_main_slider.php:175
+#: elementor/widgets/movie_main_slider.php:202
+#: elementor/widgets/movie_main_slider.php:229
+#: elementor/widgets/movie_main_slider.php:256
+#: elementor/widgets/movie_main_slider.php:309
+#: elementor/widgets/movie_main_slider.php:323
+#: elementor/widgets/movie_main_slider.php:337
+msgid "No"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:614
+#: includes/admin/class-mb-admin-ajax.php:755
+#: includes/admin/class-mb-admin-ajax.php:863
+msgid "No Area"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:40
+msgid "No Bookings found"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:41
+msgid "No Bookings found in trash"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:168
+msgid "No Cast found."
+msgstr ""
+
+#: includes/admin/class-mb-admin-importers.php:198
+msgid "No file was uploaded!"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:100
+msgid "No Locations found."
+msgstr ""
+
+#: includes/class-mb-ajax.php:206 templates/elementor/movie_filter_ajax.php:157
+msgid "No movie found"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:43
+msgid "No movies found"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:44
+msgid "No movies found in trash"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:528
+#: includes/admin/class-mb-admin-ajax.php:670
+msgid "No Room"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:38
+msgid "No Rooms found"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:39
+msgid "No Rooms found in trash"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:563
+#: includes/admin/class-mb-admin-ajax.php:703
+#: includes/admin/class-mb-admin-ajax.php:814
+msgid "No Seat"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:501
+msgid "No Showtime"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:41
+msgid "No Tickets found"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:42
+msgid "No Tickets found in trash"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:46
+msgid "No Times found"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:47
+msgid "No Times found in trash"
+msgstr ""
+
+#: includes/room/class-mb-room-functions.php:63
+msgid "No Type"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:92
+msgid "No Types found."
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:95
+msgid "No venue found"
+msgstr ""
+
+#: includes/setting/class-mb-setting-tax.php:88
+msgid "No, I will enter prices exclusive of tax"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:690
+#: elementor/widgets/movie_slider.php:782
+msgid "Normal"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:158
+msgid "Norwegian"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-tickets.php:105
+msgid "Not checked in"
+msgstr ""
+
+#: includes/api/class-mb-api.php:209 includes/api/class-mb-api.php:303
+msgid "Not Found QR Code"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:267
+#: includes/admin/class-mb-admin-ajax.php:273
+msgid "Not found Venue"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:216
+msgid ""
+"Note*: ( This mode used for preview purpose only, when turned off will "
+"automatically get current date as today)"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:46
+msgid "Note:"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:319
+msgid "Notify customers when Booking is canceled."
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:88
+#: elementor/widgets/movie_main_slider.php:89
+#: elementor/widgets/movie_list.php:85
+msgid "Now playing"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:230
+#: includes/setting/class-mb-setting-mail.php:243
+msgid "Number"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:71
+#: elementor/widgets/movie_filter_ajax.php:159
+#: elementor/widgets/movie_list.php:110
+#: elementor/widgets/movie_cast_list.php:47
+msgid "Number Column"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:200
+msgid "Number Item"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:130
+msgid "Number of Days"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:43
+msgid "Number of Movies Per Page"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:152
+#: elementor/widgets/movie_main_slider.php:152
+#: elementor/widgets/movie_list.php:163
+msgid "Offset"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:648
+msgid "Opacity"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:161
+msgid "Options"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:199
+#: elementor/widgets/movie_slider.php:139
+#: elementor/widgets/movie_main_slider.php:139
+#: elementor/widgets/movie_list.php:150
+#: elementor/widgets/movie_cast_list.php:85
+msgid "Order"
+msgstr ""
+
+#: templates/pdf/template.php:49
+msgid "Order Info: "
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:182
+#: elementor/widgets/movie_slider.php:122
+#: elementor/widgets/movie_main_slider.php:122
+#: elementor/widgets/movie_list.php:133
+#: elementor/widgets/movie_cast_list.php:70
+msgid "OrderBy"
+msgstr ""
+
+#: includes/ticket/class-mb-pdf.php:66
+msgid "Ordered by"
+msgstr ""
+
+#: elementor/class-register-elementor.php:57
+msgid "Ovatheme Movie Booking"
+msgstr ""
+
+#. Author of the plugin
+#. Author URI of the plugin
+#: includes/setting/class-mb-setting-checkout.php:57
+#: includes/setting/class-mb-setting-checkout.php:62
+msgid "ovatheme.com"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:637
+msgid "Overlay Color"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:592
+#: elementor/widgets/movie_slider.php:599
+#: elementor/widgets/movie_main_slider.php:613
+#: elementor/widgets/movie_list.php:470
+msgid "Padding"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:28
+msgid "Page contents: [mb_cart/]"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:42
+msgid "Parent Bookings"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:162
+msgid "Parent Cast"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:163
+msgid "Parent Cast:"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:91
+msgid "Parent Category"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:92
+msgid "Parent Category:"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:94
+msgid "Parent Location"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:95
+msgid "Parent Location:"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:45
+msgid "Parent movies"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:40
+msgid "Parent Rooms"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:128
+msgid "Parent Tag"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:129
+msgid "Parent Tag:"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:43
+msgid "Parent Tickets"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:48
+msgid "Parent Times"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:86
+msgid "Parent Type"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:87
+msgid "Parent Type:"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:218
+#: elementor/widgets/movie_main_slider.php:318
+msgid "Pause on Hover"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-showtimes.php:78
+#: includes/admin/views/exporters/html-csv-tickets.php:98
+#: includes/admin/views/statistical/html-booking-statistics.php:21
+#: includes/admin/views/metaboxes/metabox-booking.php:212
+msgid "Pending"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:344
+#: includes/admin/class-mb-admin-ajax.php:350
+#: includes/setting/class-mb-setting-tax.php:50
+#: includes/setting/class-mb-setting-tax.php:57
+#: includes/setting/class-mb-setting-tax.php:123
+#: includes/setting/class-mb-setting-tax.php:130
+#: includes/admin/views/metaboxes/metabox-movie.php:75
+#: includes/admin/views/metaboxes/metabox-movie.php:78
+#: includes/admin/views/metaboxes/metabox-movie.php:85
+msgid "Percentage(%)"
+msgstr ""
+
+#: includes/setting/class-mb-setting-tax.php:43
+#: includes/setting/class-mb-setting-tax.php:116
+msgid "Percentage(%) OR Fixed amount(n)"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:141
+msgid "Persian"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:170
+msgid "Person Type"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:359
+msgid "Phone*:"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:185
+msgid "Phone: "
+msgstr ""
+
+#: includes/api/class-mb-api.php:314
+msgid "Please check surely, you have permission to scan this ticket"
+msgstr ""
+
+#: templates/cart/cart_seat_checkout.php:33
+msgid "Please select seat"
+msgstr ""
+
+#: templates/cart/cart_seat_info.php:15
+msgid "Please Select Your Seat"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:400
+msgid "Please Select Your Seat or Area"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:917
+msgid "Please update booking status to Complete to send mail"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:159
+msgid "Polish"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:160
+msgid "Portuguese"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:161
+msgid "Português(Brasil)"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:28
+msgctxt "post general name"
+msgid "Bookings"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:31
+msgctxt "post general name"
+msgid "Movies"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:26
+msgctxt "post general name"
+msgid "Rooms"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:34
+msgctxt "post general name"
+msgid "Showtimes"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:29
+msgctxt "post general name"
+msgid "Tickets"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:29
+msgctxt "post singular name"
+msgid "Booking"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:32
+msgctxt "post singular name"
+msgid "Movie"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:27
+msgctxt "post singular name"
+msgid "Room"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:30
+msgctxt "post singular name"
+msgid "Ticket"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:35
+msgctxt "post singular name"
+msgid "Time"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:1071
+#: templates/cart/cart_seat_info.php:18
+#: includes/admin/views/metaboxes/metabox-booking.php:397
+#: includes/admin/views/metaboxes/metabox-room.php:319
+msgid "Price"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:70
+#: includes/admin/class-mb-admin-ajax.php:171
+#: includes/admin/views/metaboxes/metabox-room.php:104
+#: includes/admin/views/metaboxes/metabox-room.php:224
+#, php-format
+msgid "Price(%s)*"
+msgstr ""
+
+#: includes/setting/class-mb-setting-tax.php:79
+msgid "Prices entered with tax"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:362
+msgid "Private Description in Ticket - Only see when bought ticket."
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:357
+msgid "Private Description:"
+msgstr ""
+
+#: templates/cart/cart_seat_checkout.php:30
+msgid "Proceed to checkout"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:37
+msgid "Processing"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:1089
+msgid "Product ID does not exist!"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-showtimes.php:77
+#: includes/admin/views/exporters/html-csv-tickets.php:97
+msgid "Publish"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:474
+#: includes/ticket/class-mb-ticket-register.php:93
+#: includes/admin/views/exporters/html-csv-tickets.php:44
+msgid "QR code"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-ticket.php:117
+msgid "QR code:"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:354
+msgid "Qty"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:378
+#: includes/admin/views/metaboxes/metabox-movie.php:113
+msgid "Quantity"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:184
+#: includes/admin/views/metaboxes/metabox-room.php:237
+msgid "Quantity*"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:189
+#: elementor/widgets/movie_slider.php:129
+#: elementor/widgets/movie_main_slider.php:129
+#: elementor/widgets/movie_list.php:140
+#: elementor/widgets/movie_cast_list.php:77
+#: includes/admin/views/exporters/html-csv-showtimes.php:138
+#: includes/admin/views/exporters/html-csv-tickets.php:165
+msgid "Random"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:73
+msgid "Recipient(s)"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:68
+msgid "Redirect after booking successfully."
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:98
+msgid "Redirect to custom link instead of booking popup"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:208
+msgid "Related Movies Heading"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:209
+msgid "Related Movies Heading (Note*: Default template)"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:190
+#: elementor/widgets/movie_slider.php:130
+#: elementor/widgets/movie_main_slider.php:130
+#: elementor/widgets/movie_list.php:141
+msgid "Release Date"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:60
+msgid "Release date"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:201
+msgid "Remind"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:208
+msgid "Remind customer about event start time that they registered."
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:251
+#: includes/setting/class-mb-setting-mail.php:264
+#: includes/email/class-mb-email-functions.php:264
+#: includes/email/class-mb-email-functions.php:310
+msgid "Remind the movie start time"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:41
+msgid "Remove"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:45
+msgid "Remove Booking image"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:203
+#: includes/movie/class-mb-movie-register.php:293
+msgid "Remove image"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:48
+msgid "Remove movie image"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:43
+msgid "Remove Room image"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:46
+msgid "Remove Ticket image"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:51
+msgid "Remove Time image"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:666
+msgid "Right Position"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:162
+msgid "Romanian"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:199 includes/class-mb-woo-payment.php:691
+#: includes/class-mb-woo-payment.php:702
+#: includes/admin/class-mb-admin-exporters.php:182
+#: includes/admin/class-mb-admin-exporters.php:476
+#: includes/admin/views/exporters/html-csv-showtimes.php:48
+#: includes/admin/views/exporters/html-csv-tickets.php:52
+msgid "Room"
+msgstr ""
+
+#: includes/room/class-mb-room-metabox.php:56
+#, php-format
+msgid "Room #%s"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:29
+msgid "Room Code*:"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:181
+#: includes/admin/class-mb-admin-exporters.php:475
+#: includes/admin/views/exporters/html-csv-showtimes.php:44
+#: includes/admin/views/exporters/html-csv-tickets.php:48
+msgid "Room ID"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:65
+#: includes/admin/views/metaboxes/metabox-room.php:22
+msgid "Room ID:"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:41
+msgid "Room image"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:23
+#: includes/admin/views/metaboxes/metabox-ticket.php:95
+#, php-format
+msgctxt "room link"
+msgid "%s"
+msgstr ""
+
+#: includes/room/class-mb-room-metabox.php:12
+msgid "Room Settings"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:108
+msgctxt "Room Type Slug"
+msgid "room_type"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:187
+msgid "Room*:"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-ticket.php:94
+msgid "Room:"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:178
+msgid "Room: "
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:34
+msgid "room_1"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:151
+msgid "Rooms"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:49
+msgid "Rooms list"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:48
+msgid "Rooms navigation"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:67
+msgctxt "Rooms Slug"
+msgid "room"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-showtime.php:86
+msgid "Rooms*"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:101
+msgid "Run Cron to check ticket hold after x seconds"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:68
+msgid "Running time"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:163
+msgid "Russian"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:121
+msgid "Saturday"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:39
+msgid "Search Bookings"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:160
+msgid "Search Cast"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:89
+msgid "Search Category"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:92
+msgid "Search Location"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:42
+msgid "Search movies"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:37
+msgid "Search Rooms"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:126
+msgid "Search Tag"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:40
+msgid "Search Tickets"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:45
+msgid "Search Times"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:84
+msgid "Search Type"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:208 includes/class-mb-woo-payment.php:692
+#: includes/class-mb-woo-payment.php:703
+#: includes/admin/class-mb-admin-exporters.php:473
+#: includes/ticket/class-mb-ticket-register.php:92
+#: templates/cart/cart_seat_info.php:17
+#: includes/admin/views/exporters/html-csv-tickets.php:40
+#: includes/admin/views/metaboxes/metabox-booking.php:396
+msgid "Seat"
+msgstr ""
+
+#: includes/booking/class-mb-booking-functions.php:464
+#, php-format
+msgid "Seat %s has been booked!"
+msgstr ""
+
+#: includes/setting/class-mb-setting-tax.php:80
+msgid "Seat price"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:57
+#: includes/admin/views/metaboxes/metabox-room.php:91
+msgid "Seat*"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-ticket.php:101
+msgid "Seat:"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:179
+msgid "Seat: "
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:85
+msgid "Seats"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:226
+msgid "Seats*:"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:55
+msgid "Secret Key QR Code"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:236
+msgid "Send a mail every x seconds"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:56
+msgid "Send email to"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:57
+msgid "Send email to Admin, Customer"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:112
+#: includes/setting/class-mb-setting-mail.php:275
+#: includes/setting/class-mb-setting-mail.php:360
+msgid "Send from email"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:947
+msgid "Send mail failed!"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:939
+msgid "Send mail success!"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:224
+msgid "Send mail x days before the event starts"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:169
+msgid "Serbian"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:168
+msgid "Serbian Cyrillic"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:1065
+#: includes/admin/views/metaboxes/metabox-room.php:313
+msgid "Service Name"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:44
+msgid "Set Booking image"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:210
+msgid "Set how many slides are scrolled per swipe."
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:47
+msgid "Set movie image"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:42
+msgid "Set Room image"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:45
+msgid "Set Ticket image"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:50
+msgid "Set Time image"
+msgstr ""
+
+#: includes/class-mb-setting.php:49
+#: includes/movie/class-mb-movie-metabox.php:27
+msgid "Settings"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:186
+#: templates/elementor/movie_main_slider.php:23
+msgid "Share"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:69
+msgid "Shortcode Image Map*:"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:214
+#: elementor/widgets/movie_slider.php:52
+#: elementor/widgets/movie_main_slider.php:53
+#: elementor/widgets/movie_list.php:49
+msgid "Show"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:197
+msgid "Show Category"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:283
+msgid "Show Dots"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:297
+msgid "Show Nav"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:50
+#: elementor/widgets/movie_main_slider.php:51
+#: elementor/widgets/movie_list.php:47
+msgid "Show Only Featured"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:224
+msgid "Show Release date"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:170
+msgid "Show Share Social"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:251
+msgid "Show Trailer"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-showtimes.php:134
+#: includes/admin/views/exporters/html-csv-tickets.php:162
+msgid "Showtime Date"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:62
+msgid "Showtime date"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-showtime.php:30
+#: includes/admin/views/metaboxes/metabox-ticket.php:88
+#, php-format
+msgctxt "showtime link"
+msgid "%s"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-metabox.php:12
+msgid "Showtime Settings"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:54
+msgid "Showtime status"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:50
+msgid "Showtime title"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:164
+msgid "Showtime*:"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:84
+#: includes/showtime/class-mb-showtime-register.php:148
+#: includes/ticket/class-mb-ticket-register.php:90
+msgid "Showtimes"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:78
+msgid "Showtimes address"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:19
+#: includes/admin/class-mb-admin-exporters.php:20
+msgid "Showtimes Export"
+msgstr ""
+
+#: includes/admin/class-mb-admin-importers.php:19
+#: includes/admin/class-mb-admin-importers.php:20
+msgid "Showtimes Import"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:75
+msgctxt "Showtimes Slug"
+msgid "showtime"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-showtime.php:29
+#: includes/admin/views/metaboxes/metabox-ticket.php:87
+msgid "Showtimes:"
+msgstr ""
+
+#: templates/pdf/template.php:31
+msgid "Showtimes: "
+msgstr ""
+
+#: includes/class-mb-core-functions.php:131
+#: includes/class-mb-core-functions.php:175
+msgid "Simplified Chinese"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:130
+msgid "Single"
+msgstr ""
+
+#: elementor/widgets/movie_cast_list.php:109
+msgid "Size"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:208
+msgid "Slides to Scroll"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:75
+msgid "Slideshow image"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:165
+msgid "Slovenčina"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:166
+msgid "Slovenščina"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:274
+#: elementor/widgets/movie_main_slider.php:360
+msgid "Smart Speed"
+msgstr ""
+
+#: includes/class-mb-ajax.php:41 includes/class-mb-ajax.php:75
+msgid ""
+"Sorry, there is no showtime for this movie, please choose another movie."
+msgstr ""
+
+#: templates/movie/popup/city-tabs.php:36
+msgid "Sorry, there is no showtime on this date, please choose another date."
+msgstr ""
+
+#: includes/class-mb-ajax.php:164
+msgid "Sorry, there is no trailer video for this movie"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:103
+msgid "Sort Order"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:138
+msgid "Spanish"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:88
+#: includes/admin/class-mb-admin-ajax.php:203
+#: includes/admin/views/metaboxes/metabox-room.php:122
+#: includes/admin/views/metaboxes/metabox-room.php:256
+msgid "Standard"
+msgstr ""
+
+#: includes/admin/class-mb-admin-ajax.php:311
+#: includes/admin/views/metaboxes/metabox-movie.php:40
+msgid "Start"
+msgstr ""
+
+#: includes/admin/class-mb-admin-assets.php:46
+msgid "Statistical"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:92
+#: includes/admin/class-mb-admin-exporters.php:177
+#: includes/ticket/class-mb-ticket-register.php:94
+#: includes/admin/views/exporters/html-csv-showtimes.php:28
+msgid "Status"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:53
+#: includes/admin/views/metaboxes/metabox-booking.php:206
+msgid "Status:"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:71
+msgid "Step Time"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:124
+msgid "Stop showing this movie in archive page and all movie widgets"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:196
+msgid "Story Heading"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:204
+msgid "Story Line"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:86
+#: includes/setting/class-mb-setting-mail.php:249
+#: includes/setting/class-mb-setting-mail.php:334
+msgid "Subject"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:87
+#: includes/admin/views/statistical/html-booking-statistics.php:79
+msgid "Subtotal"
+msgstr ""
+
+#: includes/api/class-mb-api.php:282
+msgid "Success"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:122
+msgid "Sunday"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:170
+msgid "Svenska"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:164
+msgid "Swedish"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:138
+msgid "Tags"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:448 includes/class-mb-woo-payment.php:449
+#: includes/booking/class-mb-booking-register.php:89
+#: includes/setting/class-mb-setting-tax.php:15
+#: templates/cart/cart_seat_info.php:27
+#: includes/admin/views/statistical/html-booking-statistics.php:91
+#: includes/admin/views/metaboxes/metabox-booking.php:702
+msgid "Tax"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:114
+#, php-format
+msgctxt "tax mail"
+msgid "Tax: %s"
+msgstr ""
+
+#: includes/setting/class-mb-setting-tax.php:22
+msgid "Tax Settings"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:742 includes/class-mb-woo-payment.php:803
+msgid "Tax:"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:157
+msgctxt "taxonomy general name"
+msgid "Cast"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:89
+msgctxt "taxonomy general name"
+msgid "Locations"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:86
+msgctxt "taxonomy general name"
+msgid "Movie Categories"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:123
+msgctxt "taxonomy general name"
+msgid "Tags"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:81
+msgctxt "taxonomy general name"
+msgid "Types"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:158
+msgctxt "taxonomy singular name"
+msgid "Cast"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:87
+msgctxt "taxonomy singular name"
+msgid "Category"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:90
+msgctxt "taxonomy singular name"
+msgid "Location"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:124
+msgctxt "taxonomy singular name"
+msgid "Tag"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:82
+msgctxt "taxonomy singular name"
+msgid "Type"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:54
+#: includes/setting/class-mb-setting-movie.php:136
+#: elementor/widgets/movie_filter_ajax.php:144
+#: elementor/widgets/movie_slider.php:98
+#: elementor/widgets/movie_main_slider.php:99
+#: elementor/widgets/movie_list.php:95
+msgid "Template"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:62
+#: elementor/widgets/movie_filter_ajax.php:148
+#: elementor/widgets/movie_slider.php:102
+#: elementor/widgets/movie_main_slider.php:103
+#: elementor/widgets/movie_list.php:99
+msgid "Template 1"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:63
+#: elementor/widgets/movie_filter_ajax.php:149
+#: elementor/widgets/movie_slider.php:103
+#: elementor/widgets/movie_main_slider.php:104
+#: elementor/widgets/movie_list.php:100
+msgid "Template 2"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:64
+#: elementor/widgets/movie_filter_ajax.php:150
+#: elementor/widgets/movie_slider.php:104
+#: elementor/widgets/movie_main_slider.php:105
+#: elementor/widgets/movie_list.php:101
+msgid "Template 3"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:65
+#: elementor/widgets/movie_filter_ajax.php:151
+#: elementor/widgets/movie_slider.php:105 elementor/widgets/movie_list.php:102
+msgid "Template 4"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:256
+#: includes/setting/class-mb-setting-mail.php:269
+#: includes/setting/class-mb-setting-mail.php:341
+#: includes/setting/class-mb-setting-mail.php:354
+msgid "Text"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:214
+msgid "Text after movie category"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:241
+msgid "Text before release date"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:141
+msgid "Text Get Ticket"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:142
+msgid "Text get ticket button in all template/parts of movie"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:277
+msgid "Text More Info"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:280
+msgid "Text more info button"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:238
+msgid "Text Release"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:184
+msgid "Text Share"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:187
+msgid "Text share social icon"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:264
+msgid "Text This month"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:252
+msgid "Text This week"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:239
+msgid "Text Today"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:265
+msgid "Text Trailer"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:172
+#: includes/setting/class-mb-setting-general.php:153
+msgid "Text Watch Trailer"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:154
+msgid "Text watch trailer button in all template/parts of movie"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:173
+msgid "Text with pointing up arrow below the trailer button"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:171
+msgid "Thai"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:67
+msgid "Thank you page"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:112
+#: includes/admin/class-mb-admin-exporters.php:383
+msgid "The \"End\" time must be greater than or equal to the \"Start\" time"
+msgstr ""
+
+#: templates/cart/cart.php:60
+msgid "The Cart is empty!"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:108
+msgid "The first day of week"
+msgstr ""
+
+#: includes/class-mb-checkout.php:85
+msgid "The payment process failed!"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:100
+#: includes/setting/class-mb-setting-mail.php:263
+#: includes/setting/class-mb-setting-mail.php:348
+msgid "The subject displays in mail detail"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:87
+#: includes/setting/class-mb-setting-mail.php:250
+#: includes/setting/class-mb-setting-mail.php:335
+msgid "The subject displays in mail list"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:45
+msgid "This allow to booking a movie via WooCommerce"
+msgstr ""
+
+#: templates/cart/cart_seat_map.php:27
+msgid "This area out of stock!"
+msgstr ""
+
+#: includes/setting/class-mb-setting-checkout.php:56
+msgid "This key will attach to string to make QR Code."
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:266
+msgid "This month"
+msgstr ""
+
+#: templates/cart/cart_seat_map.php:26
+msgid "This seat booked!"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:254
+#: templates/elementor/movie_filter_ajax.php:18
+msgid "This week"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:198
+#: includes/movie/class-mb-movie-register.php:287
+msgid "Thumbnail"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:119
+msgid "Thursday"
+msgstr ""
+
+#: templates/pdf/template.php:63
+#, php-format
+msgctxt "ticket"
+msgid "#%s - %s - %s"
+msgstr ""
+
+#: templates/cart/cart.php:73
+#: includes/admin/views/metaboxes/metabox-booking.php:764
+msgid "Ticket #"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-booking.php:611
+#: includes/admin/views/metaboxes/metabox-booking.php:664
+#, php-format
+msgid "Ticket #%s"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:164
+msgid "Ticket Border Color"
+msgstr ""
+
+#: includes/room/class-mb-room-functions.php:210
+msgid "Ticket closed!"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:186
+msgid "Ticket Content Color"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-metabox.php:12
+msgid "Ticket Detail"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:463 includes/class-mb-woo-payment.php:464
+#: includes/booking/class-mb-booking-register.php:90
+#: includes/setting/class-mb-setting-tax.php:95
+#: templates/cart/cart_seat_info.php:31
+#: includes/admin/views/statistical/html-booking-statistics.php:97
+#: includes/admin/views/metaboxes/metabox-booking.php:719
+msgid "Ticket Fee"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:119
+#, php-format
+msgctxt "ticket fee mail"
+msgid "Ticket fee: %s"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:749 includes/class-mb-woo-payment.php:816
+msgid "Ticket Fee:"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:44
+msgid "Ticket image"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:175
+msgid "Ticket Label Color"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-ticket.php:67
+#, php-format
+msgctxt "ticket link"
+msgid "%s"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:152
+msgid "Ticket Logo"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:468
+#: includes/ticket/class-mb-ticket-register.php:87
+#: includes/admin/views/exporters/html-csv-tickets.php:20
+msgid "Ticket Number"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-ticket.php:66
+msgid "Ticket Number:"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:70
+msgctxt "Ticket Slug"
+msgid "mb_ticket"
+msgstr ""
+
+#: includes/admin/views/exporters/html-csv-tickets.php:96
+msgid "Ticket status"
+msgstr ""
+
+#: templates/pdf/template.php:59
+msgid "Ticket: "
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:28
+#: includes/admin/class-mb-admin-exporters.php:29
+msgid "Tickets Export"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:52
+msgid "Tickets list"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:51
+msgid "Tickets navigation"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:55
+msgid "Time Format"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:49
+msgid "Time image"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:57
+msgid "Times list"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:56
+msgid "Times navigation"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:47
+#: includes/admin/class-mb-admin-exporters.php:176
+#: elementor/widgets/movie_filter_ajax.php:187
+#: elementor/widgets/movie_filter_ajax.php:362
+#: elementor/widgets/movie_slider.php:127
+#: elementor/widgets/movie_slider.php:369
+#: elementor/widgets/movie_main_slider.php:127
+#: elementor/widgets/movie_main_slider.php:456
+#: elementor/widgets/movie_list.php:138 elementor/widgets/movie_list.php:240
+#: elementor/widgets/movie_cast_list.php:75
+#: includes/admin/views/exporters/html-csv-showtimes.php:24
+#: includes/admin/views/exporters/html-csv-showtimes.php:136
+msgid "Title"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:49
+msgid "Title:"
+msgstr ""
+
+#: includes/admin/class-mb-admin-hooks.php:48
+#: includes/admin/views/exporters/html-csv-showtimes.php:103
+#: includes/admin/views/exporters/html-csv-tickets.php:131
+#: includes/admin/views/statistical/html-booking-statistics.php:44
+msgid "To Date"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:241
+#: templates/elementor/movie_filter_ajax.php:17
+msgid "Today"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:192
+msgid "Top Cast"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:644
+msgid "Top Position"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:667
+msgid "Top Spacing"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:91
+#: elementor/widgets/movie_filter_ajax.php:173
+#: elementor/widgets/movie_slider.php:113
+#: elementor/widgets/movie_main_slider.php:113
+#: elementor/widgets/movie_list.php:124
+#: elementor/widgets/movie_cast_list.php:60
+#: templates/cart/cart_seat_info.php:37
+#: includes/admin/views/statistical/html-booking-statistics.php:103
+#: includes/admin/views/metaboxes/metabox-booking.php:727
+msgid "Total"
+msgstr ""
+
+#: includes/email/class-mb-email-functions.php:124
+#, php-format
+msgctxt "total mail"
+msgid "Total: %s"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:176
+msgid "Traditional Chinese"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:267
+#: templates/elementor/movie_main_slider.php:29
+msgid "Trailers"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:117
+msgid "Tuesday"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:172
+msgid "Turkish"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:125
+#: includes/admin/class-mb-admin-ajax.php:83
+#: includes/admin/class-mb-admin-ajax.php:198
+#: includes/admin/class-mb-admin-ajax.php:341
+#: includes/setting/class-mb-setting-tax.php:42
+#: includes/setting/class-mb-setting-tax.php:115
+#: includes/admin/views/metaboxes/metabox-room.php:117
+#: includes/admin/views/metaboxes/metabox-room.php:251
+#: includes/admin/views/metaboxes/metabox-movie.php:70
+msgid "Type"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-room.php:46
+msgid "Type*:"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:97
+msgid "Types"
+msgstr ""
+
+#: elementor/widgets/movie_main_slider.php:386
+msgid "Typography"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:173
+msgid "Ukrainian"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:165
+msgid "Update Cast"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:94
+msgid "Update Category"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:97
+msgid "Update Location"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:131
+msgid "Update Tag"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:89
+msgid "Update Type"
+msgstr ""
+
+#: includes/admin/views/settings/fields/upload_image.php:24
+msgid "Upload"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:202
+#: includes/movie/class-mb-movie-register.php:292
+msgid "Upload/Add image"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:48
+msgid "Uploaded to this Booking"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:51
+msgid "Uploaded to this movie"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:46
+msgid "Uploaded to this Room"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:49
+msgid "Uploaded to this Ticket"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:54
+msgid "Uploaded to this Time"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:46
+msgid "Use as Booking image"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:49
+msgid "Use as movie image"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:44
+msgid "Use as Room image"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:47
+msgid "Use as Ticket image"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:52
+msgid "Use as Time image"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:228
+#: includes/movie/class-mb-movie-register.php:318
+msgid "Use image"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:374
+msgid ""
+"Use tags to generate email template.<br/>\n"
+"                                Booking #[mb_booking] has been canceled.<br>"
+"\n"
+"                                Movie #[mb_movie].<br>"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:126
+msgid ""
+"Use tags to generate email template.<br/>\n"
+"                                Movie: [mb_movie]<br/>\n"
+"                                Booking: #[mb_booking]<br/>\n"
+"                                Date: [mb_date]<br/>\n"
+"                                Room: [mb_room]<br/>\n"
+"                                Seat: [mb_seat]<br/>\n"
+"                                Area: [mb_area]<br/>\n"
+"                                Extra Service: [mb_extra_service]<br/>\n"
+"                                Address: [mb_address]<br/>\n"
+"                                [mb_total]<br/>\n"
+"                                Customer: [mb_customer]<br/>\n"
+"                                Phone: [mb_phone]<br/>\n"
+"                                Email: [mb_email]<br/>"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:289
+msgid ""
+"Use tags to generate email template.<br/>\n"
+"                                You booked the [mb_movie] movie at [mb_date]."
+"<br>\n"
+"                                Booking: #[mb_booking]<br/>\n"
+"                                Room: [mb_room]<br/>\n"
+"                                Seat: [mb_seat]<br/>\n"
+"                                Address: [mb_address]<br/>"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:84
+msgid ""
+"Used in the Movie Main Slider widget as background image ( recommended size: "
+"1600x720px )"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:129
+msgid "Username of staff"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:53
+msgid "Value"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:186
+#: includes/admin/class-mb-admin-exporters.php:480
+#: includes/showtime/class-mb-showtime-register.php:150
+#: elementor/widgets/movie_filter_ajax.php:102
+#: includes/admin/views/exporters/html-csv-showtimes.php:64
+#: includes/admin/views/exporters/html-csv-tickets.php:68
+msgid "Venue"
+msgstr ""
+
+#: includes/admin/class-mb-admin-exporters.php:185
+#: includes/admin/class-mb-admin-exporters.php:479
+#: includes/admin/views/exporters/html-csv-showtimes.php:60
+#: includes/admin/views/exporters/html-csv-tickets.php:64
+msgid "Venue ID"
+msgstr ""
+
+#: includes/admin/views/importers/html-csv-showtimes.php:73
+msgid "Venue ID:"
+msgstr ""
+
+#: includes/admin/views/metaboxes/metabox-showtime.php:142
+msgid "Venue*"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:88
+msgid "Video Trailer"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:174
+msgid "Vietnamese"
+msgstr ""
+
+#: includes/booking/class-mb-booking-register.php:37
+#: includes/booking/class-mb-booking-register.php:38
+msgid "View Booking"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:40
+msgid "View movie"
+msgstr ""
+
+#: includes/movie/class-mb-movie-register.php:41
+msgid "View movies"
+msgstr ""
+
+#: includes/room/class-mb-room-register.php:35
+#: includes/room/class-mb-room-register.php:36
+msgid "View Room"
+msgstr ""
+
+#: includes/ticket/class-mb-ticket-register.php:38
+#: includes/ticket/class-mb-ticket-register.php:39
+msgid "View Ticket"
+msgstr ""
+
+#: includes/showtime/class-mb-showtime-register.php:43
+#: includes/showtime/class-mb-showtime-register.php:44
+msgid "View Time"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:180
+msgid "Watch the Trailer"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:161
+msgid "Watch Trailer"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:118
+msgid "Wednesday"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:120
+msgid "Weekdays"
+msgstr ""
+
+#: elementor/widgets/movie_slider.php:800
+#: elementor/widgets/movie_slider.php:868
+msgid "Width"
+msgstr ""
+
+#: includes/mb-template-hooks.php:13
+msgid "x"
+msgstr ""
+
+#: includes/setting/class-mb-setting-general.php:46
+#, php-format
+msgid "Y-m-d (%s)"
+msgstr ""
+
+#: includes/setting/class-mb-setting-movie.php:229
+#: includes/setting/class-mb-setting-tax.php:35
+#: includes/setting/class-mb-setting-tax.php:108
+#: includes/setting/class-mb-setting-tax.php:166
+#: includes/setting/class-mb-setting-checkout.php:92
+#: includes/setting/class-mb-setting-mail.php:49
+#: includes/setting/class-mb-setting-mail.php:215
+#: includes/setting/class-mb-setting-mail.php:326
+#: elementor/widgets/movie_slider.php:222
+#: elementor/widgets/movie_slider.php:236
+#: elementor/widgets/movie_slider.php:250
+#: elementor/widgets/movie_slider.php:287
+#: elementor/widgets/movie_slider.php:301
+#: elementor/widgets/movie_main_slider.php:174
+#: elementor/widgets/movie_main_slider.php:201
+#: elementor/widgets/movie_main_slider.php:228
+#: elementor/widgets/movie_main_slider.php:255
+#: elementor/widgets/movie_main_slider.php:308
+#: elementor/widgets/movie_main_slider.php:322
+#: elementor/widgets/movie_main_slider.php:336
+msgid "Yes"
+msgstr ""
+
+#: includes/setting/class-mb-setting-tax.php:87
+msgid "Yes, I will enter prices inclusive of tax"
+msgstr ""
+
+#: includes/movie/class-mb-movie-metabox.php:91
+msgid ""
+"You can paste the video URL from the third-party site such as YouTube, Vimeo."
+".. ( Find out more: https://wordpress.org/documentation/article/embeds/ )"
+msgstr ""
+
+#: includes/setting/class-mb-setting-mail.php:237
+msgid "You can setup 86400 to send 1 time per day"
+msgstr ""
+
+#: elementor/widgets/movie_filter_ajax.php:228
+msgid "You can specify the current date instead of today"
+msgstr ""
+
+#: includes/admin/class-mb-admin-importers.php:50
+msgid "You don't have permission to import showtimes"
+msgstr ""
+
+#: includes/class-mb-woo-payment.php:1023
+msgid "Your remaining time is "
+msgstr ""
+
+#: includes/class-mb-core-functions.php:132
+msgid "Čeština"
+msgstr ""
+
+#: includes/class-mb-core-functions.php:135
+msgid "Ελληνικά"
+msgstr ""

@@ -1,0 +1,60 @@
+// css main event
+.container-event {
+	display: flex;
+    max-width: var(--container-width);
+    margin: 0 auto;
+    padding: 0px 10px;
+    flex-wrap: wrap;
+
+    @media only screen and (min-width: 992px){
+
+	    #sidebar-event {
+	        flex: 0 0 405px;
+	        max-width: 405px;
+	        padding-left: 40px;
+	        padding-right: 0;
+	    }
+	    
+	    #sidebar-active {
+	        flex: 0 0 calc(100% - 405px);
+	        max-width: calc(100% - 405px);
+	    }
+	}
+
+	@media(max-width: 991px) {
+		padding: 0 20px;
+	    #sidebar, #sidebar-active {
+	        flex: 0 0 100%;
+	        max-width: 100%;
+	    }   
+	}
+
+    #main-event {
+		width: 100%;
+	}
+	#sidebar-active {
+		width: 100%;
+	}
+
+	.sidebar {
+	    position: sticky;
+	    position: -webkit-sticky;
+	    top: 150px;
+	    left: 0;
+	    height: 100%;
+	    margin-bottom: 65px;
+	}
+
+	.ovaev-content {
+		position: relative;
+		a {
+			text-decoration: none;
+		}
+	}
+}
+
+.icon_event{
+	font-size: 14px;
+	margin-right: 4px;
+	color: var(--primary);
+}

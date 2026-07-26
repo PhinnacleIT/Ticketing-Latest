@@ -1,0 +1,26 @@
+.archive_event {
+	display: grid;
+	grid-gap: 30px;
+ 	margin-bottom: 110px;
+ 	
+	&.col1 {
+  		grid-template-columns: 1fr;
+	}
+
+	&.col2 {
+  		grid-template-columns: 1fr 1fr;
+  		@media (max-width: 768px) {
+  			grid-template-columns: 1fr;
+  		}
+	}
+
+	&.col3 {
+  		grid-template-columns: 1fr 1fr 1fr;
+  		@media (max-width: 1024px) {
+  			grid-template-columns: 1fr 1fr;
+  		}
+  		@media (max-width: 768px) {
+  			grid-template-columns: 1fr;
+  		}
+	}
+}
