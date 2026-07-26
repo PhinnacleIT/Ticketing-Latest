@@ -45,6 +45,7 @@
   $(document).on("ajaxSend", function (_event, _xhr, settings) {
     if (isMovieBookingCheckoutRequest(settings)) {
       showMovieBookingCheckoutLoader();
+      setTimeout(resetMovieBookingCheckoutLoader, 10000);
     }
   });
 
@@ -52,11 +53,6 @@
     if (isMovieBookingCheckoutRequest(settings)) {
       resetMovieBookingCheckoutLoader();
     }
-  });
-
-  $(document).on("click", ".cart_detail .cart-sidebar #mb-btn-checkout", function () {
-    showMovieBookingCheckoutLoader();
-    setTimeout(resetMovieBookingCheckoutLoader, 10000);
   });
 
   $(function () {

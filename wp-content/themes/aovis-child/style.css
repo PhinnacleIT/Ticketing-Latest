@@ -11,6 +11,7 @@ Text Domain:  aovis-child
 
 /* Movie Booking: keep checkout spinner hidden unless loading state is explicit. */
 .cart_detail .cart-sidebar .cart-checkout .submit-load-more {
+	display: none !important;
 	z-index: -1 !important;
 	opacity: 0 !important;
 	visibility: hidden !important;
@@ -18,6 +19,7 @@ Text Domain:  aovis-child
 }
 
 .cart_detail .cart-sidebar .cart-checkout.mb-checkout-loading .submit-load-more {
+	display: block !important;
 	z-index: 2 !important;
 	opacity: 1 !important;
 	visibility: visible !important;
