@@ -3,8 +3,8 @@ Contributors: Ibericode, DvanKooten, hchouhan, lapzor
 Donate link: https://www.mc4wp.com/contribute/#utm_source=wp-plugin-repo&utm_medium=mailchimp-for-wp&utm_campaign=donate-link
 Tags: mailchimp, subscribe, email, newsletter, form
 Requires at least: 5.3
-Tested up to: 7.0
-Stable tag: 4.13.1
+Tested up to: 7.0.2
+Stable tag: 4.14.0
 License: GPL-3.0-or-later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Requires PHP: 7.4
@@ -203,6 +203,15 @@ Minor improvements and re-added support for Goodbye Captcha integration.
 
 == Changelog ==
 
+= 4.14.0 =
+
+_Release date: Aug 4, 2026_
+
+- Integrations: Show the sign-up checkbox on the admin "Add New User" form. Thanks [arnelap](https://github.com/arnelap)!
+- Misc: Add a code snippet for sending the WordPress username to Mailchimp with User Sync.
+- Misc: Update WordPress Coding Standards to 3.4 and fix a few incorrect type annotations.
+
+
 = 4.13.1 =
 
 _Release date: Jun 22, 2026_
@@ -243,16 +252,5 @@ _Release date: May 26, 2026_
 _Release date: May 8, 2026_
 
 - Fix fatal error on plugin activation in some cases when wp_rand() returns a value below 10 for the minute part. Thanks [Tim Carr](https://www.wpzinc.com/)!
-
-
-= 4.12.3 =
-
-_Release date: May 5, 2026_
-
-- Improved Mailchimp Site Tracking Pixel support. Site is now automatically discovered or registered in Mailchimp when feature is enabled.
-- Sign-up attempts for integrations are now processed asynchronously (via a scheduled event).
-- Ensure mc4wp_refresh_mailchimp_lists is scheduled in site's local timezone.
-- Added missing translator comments to all translatable strings.
-- General code hardening and minor improvements as reported by the Plugin Check tool.
 
 [View the full changelog on GitHub](https://github.com/ibericode/mailchimp-for-wordpress/blob/main/CHANGELOG.md)

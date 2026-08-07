@@ -1,6 +1,15 @@
 Changelog
 =========
 
+= 4.14.0 =
+
+_Release date: Aug 4, 2026_
+
+- Integrations: Show the sign-up checkbox on the admin "Add New User" form. Thanks [arnelap](https://github.com/arnelap)!
+- Misc: Add a code snippet for sending the WordPress username to Mailchimp with User Sync.
+- Misc: Update WordPress Coding Standards to 3.4 and fix a few incorrect type annotations.
+
+
 = 4.13.1 =
 
 _Release date: Jun 22, 2026_
