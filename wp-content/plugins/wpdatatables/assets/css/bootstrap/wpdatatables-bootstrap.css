@@ -218,7 +218,6 @@
     border-spacing: 0;
 }
 
-/*! Source: https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css */
 
 @media print {
     .wpdt-c *:before,
@@ -425,7 +424,7 @@
 }
 
 .wpdt-c .glyphicon-trash:before {
-    content: "\e020";
+    content: "\f273";
 }
 
 .wpdt-c .glyphicon-home:before {
@@ -3764,7 +3763,7 @@
     border: none;
     box-sizing: border-box;
     border-radius: 3px;
-    font-family: Inter;
+    font-family: var(--wpdt-inter-google-font, inherit);
     font-style: normal;
     font-weight: 600;
     font-size: 14px;
@@ -3846,6 +3845,10 @@
     color: #fff;
     background-color: #4CAF50;
     border-color: #449d48;
+}
+
+.wpdt-c .wpTableWCAG .btn-success {
+    background-color: #39853c;
 }
 
 .wpdt-c .btn-success:focus, .wpdt-c .btn-success.focus {
@@ -5599,7 +5602,7 @@ select.input-group-lg > .input-group-btn > .btn {
 }
 
 .wpdt-c .breadcrumb > li + li:before {
-    font-family: 'wpDataTablesIcons';
+    font-family: 'wpDataTablesIcons', sans-serif;
     content: "\f531";
     padding: 0 5px;
     color: #ccc;
@@ -5953,7 +5956,7 @@ select.input-group-lg > .input-group-btn > .btn {
     border-radius: 3px;
 }
 
-.wpdt-c.alert h4
+.wpdt-c.alert h4,
 .wpdt-c .alert h4 {
     margin-top: 0;
     color: inherit;
@@ -6055,6 +6058,13 @@ select.input-group-lg > .input-group-btn > .btn {
     border-color: transparent;
 }
 
+.wpdt-c .alert-danger.alert-medium {
+    background: rgba(243, 216, 0, 0.08);
+    color: #756033;
+    border-radius: 10px;
+    font-weight: 400;
+}
+
 .wpdt-c.alert-danger hr,
 .wpdt-c .alert-danger hr {
     border-top-color: rgba(0, 0, 0, 0);
@@ -6097,7 +6107,7 @@ select.input-group-lg > .input-group-btn > .btn {
 
 .wpdt-c .progress-bar {
     float: left;
-    width: 0%;
+    width: 0;
     height: 100%;
     font-size: 12px;
     line-height: 18px;
