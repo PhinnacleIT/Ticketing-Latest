@@ -126,6 +126,7 @@ class WPCode_Admin_Page_Live_Preview extends WPCode_Admin_Page {
 					<textarea id="wpcode-live-preview-css-editor" name="wpcode_live_preview_css"><?php echo esc_textarea( $this->preview_css ); ?></textarea>
 				</div>
 			</div>
+			<div class="wpcode-live-preview-resizer" title="<?php esc_attr_e( 'Drag to resize the editor', 'insert-headers-and-footers' ); ?>"></div>
 			<div class="wpcode-live-preview-iframe-wrapper wpcode-device-desktop">
 				<div class="wpcode-live-preview-loading">
 					<?php esc_html_e( 'Loading preview...', 'insert-headers-and-footers' ); ?>

@@ -470,6 +470,27 @@ class WPCode_Snippet {
 			$post_args['ID'] = $this->id;
 			$this->load_from_id( $this->id );
 		}
+
+		// A user who cannot activate snippets may not edit an active snippet, since that would change
+		// what runs on the site without activation rights. They can still edit inactive snippets and
+		// create new ones. No-user contexts (cron, WP-CLI, importers) are trusted and skip this check.
+		// This mirrors how the plugin behaved before the edit/activate capability split.
+		if (
+			is_user_logged_in()
+			&& ! empty( $this->id )
+			&& 'publish' === get_post_status( $this->id )
+			&& ! current_user_can( 'wpcode_activate_snippets', $this )
+		) {
+			wpcode()->error->add_error(
+				array(
+					'message' => __( 'You are not allowed to edit an active snippet. Please ask a user who can activate snippets to make the change.', 'insert-headers-and-footers' ),
+					'type'    => 'permissions',
+				)
+			);
+
+			return false;
+		}
+
 		if ( isset( $this->title ) ) {
 			$post_args['post_title'] = $this->title;
 		}

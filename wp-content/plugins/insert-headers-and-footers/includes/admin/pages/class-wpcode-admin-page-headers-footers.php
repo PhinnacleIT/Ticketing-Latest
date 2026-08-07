@@ -90,7 +90,8 @@ class WPCode_Admin_Page_Headers_Footers extends WPCode_Admin_Page {
 	 * @return void
 	 */
 	public function page_hooks() {
-		$this->can_edit = current_user_can( 'unfiltered_html', 'wpcode-editor' );
+		// The Header & Footer content is always live, so editing it requires activation rights too.
+		$this->can_edit = current_user_can( 'unfiltered_html', 'wpcode-editor' ) && current_user_can( 'wpcode_activate_snippets' );
 		add_action( 'admin_init', array( $this, 'submit_listener' ) );
 		$this->process_message();
 	}
@@ -199,7 +200,7 @@ class WPCode_Admin_Page_Headers_Footers extends WPCode_Admin_Page {
 		<div class="wpcode-code-textarea" id="wpcode-global-<?php echo esc_attr( $option ); ?>">
 			<h2><label for="ihaf_insert_<?php echo esc_attr( $option ); ?>"><?php echo esc_html( $title ); ?></label>
 			</h2>
-			<textarea name="ihaf_insert_<?php echo esc_attr( $option ); ?>" id="ihaf_insert_<?php echo esc_attr( $option ); ?>" class="widefat" rows="8" <?php disabled( ! current_user_can( 'unfiltered_html', 'wpcode-editor' ) ); ?>><?php echo esc_html( $value ); ?></textarea>
+			<textarea name="ihaf_insert_<?php echo esc_attr( $option ); ?>" id="ihaf_insert_<?php echo esc_attr( $option ); ?>" class="widefat" rows="8" <?php disabled( ! $this->can_edit ); ?>><?php echo esc_html( $value ); ?></textarea>
 			<p>
 				<?php echo wp_kses( $desc, array( 'code' => array() ) ); ?>
 			</p>

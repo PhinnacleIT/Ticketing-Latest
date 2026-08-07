@@ -38,6 +38,12 @@ class WPCode_Admin_Page_Snippet_Manager extends WPCode_Admin_Page {
 	 */
 	public $code_type = 'html';
 	/**
+	 * Whether the snippet is shown read-only (an active snippet the current user cannot activate).
+	 *
+	 * @var bool
+	 */
+	protected $is_read_only = false;
+	/**
 	 * The action for the nonce when the current page is submitted.
 	 *
 	 * @var string
@@ -142,6 +148,11 @@ class WPCode_Admin_Page_Snippet_Manager extends WPCode_Admin_Page {
 		if ( $this->show_library ) {
 			$this->header_title = __( 'Add Snippet', 'insert-headers-and-footers' );
 		}
+		// An active snippet can only be edited by a user who can activate snippets; everyone else
+		// gets a read-only view (mirrors the Header & Footer page behavior).
+		if ( isset( $this->snippet ) && $this->snippet->is_active() && ! current_user_can( 'wpcode_activate_snippets', $this->snippet ) ) {
+			$this->is_read_only = true;
+		}
 		$this->process_message();
 		add_action( 'admin_init', array( $this, 'check_status' ) );
 		add_filter( 'submenu_file', array( $this, 'change_current_menu' ) );
@@ -181,9 +192,13 @@ class WPCode_Admin_Page_Snippet_Manager extends WPCode_Admin_Page {
 	public function process_message() {
 		// phpcs:disable WordPress.Security.NonceVerification
 		if ( ! isset( $_GET['message'] ) ) {
-			$snippet_types = array_keys( wpcode()->execute->get_options() );
-			if ( in_array( 'html', $snippet_types, true ) && ! current_user_can( 'unfiltered_html', 'wpcode-editor' ) ) {
-				$this->set_error_message( __( 'Sorry, you only have read-only access to this page. Ask your administrator for assistance editing.', 'insert-headers-and-footers' ) );
+			if ( $this->is_read_only ) {
+				$this->set_error_message( __( 'This snippet is active, so it is read-only here. Please ask a user who can activate snippets to make changes.', 'insert-headers-and-footers' ) );
+			} else {
+				$snippet_types = array_keys( wpcode()->execute->get_options() );
+				if ( in_array( 'html', $snippet_types, true ) && ! current_user_can( 'unfiltered_html', 'wpcode-editor' ) ) {
+					$this->set_error_message( __( 'Sorry, you only have read-only access to this page. Ask your administrator for assistance editing.', 'insert-headers-and-footers' ) );
+				}
 			}
 
 			return;
@@ -1247,6 +1262,7 @@ class WPCode_Admin_Page_Snippet_Manager extends WPCode_Admin_Page {
 				data-show-if-value="on_demand"
 				type="submit"
 				name="execute_now"
+				<?php disabled( $this->is_read_only ); ?>
 				value="execute_now" style="display:none;">
 			<?php esc_html_e( 'Execute Snippet Now', 'insert-headers-and-footers' ); ?>
 		</button>
@@ -1289,7 +1305,7 @@ class WPCode_Admin_Page_Snippet_Manager extends WPCode_Admin_Page {
 	 */
 	public function update_button() {
 		?>
-		<button class="wpcode-button" type="submit" value="publish" name="button"><?php echo esc_html( $this->publish_button_text ); ?></button>
+		<button class="wpcode-button" type="submit" value="publish" name="button" <?php disabled( $this->is_read_only ); ?>><?php echo esc_html( $this->publish_button_text ); ?></button>
 		<?php
 	}
 
@@ -1387,6 +1403,11 @@ class WPCode_Admin_Page_Snippet_Manager extends WPCode_Admin_Page {
 			return;
 		}
 		if ( ! $this->can_edit ) {
+			return;
+		}
+		// Active snippets are read-only for users who cannot activate; do not process the save.
+		// WPCode_Snippet::save() enforces this too, as a backstop for any other entry point.
+		if ( $this->is_read_only ) {
 			return;
 		}
 		$code_type    = isset( $_POST['wpcode_snippet_type'] ) ? sanitize_text_field( wp_unslash( $_POST['wpcode_snippet_type'] ) ) : 'html';
@@ -1580,6 +1601,9 @@ class WPCode_Admin_Page_Snippet_Manager extends WPCode_Admin_Page {
 		$editor->load_hint_scripts();
 		$editor->set_setting( 'autoCloseTags', true );
 		$editor->set_setting( 'matchTags', array( 'bothTags' => true ) );
+		if ( $this->is_read_only ) {
+			$editor->set_setting( 'readOnly', 'nocursor' );
+		}
 
 		$editor->register_editor( 'wpcode_snippet_code' );
 		$editor->init_editor();

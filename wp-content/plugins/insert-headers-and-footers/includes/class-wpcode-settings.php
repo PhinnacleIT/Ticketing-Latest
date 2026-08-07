@@ -66,6 +66,7 @@ class WPCode_Settings {
 	 */
 	protected function load_options() {
 		$defaults = array(
+			'pixel_event_logging'    => false,
 			'facebook_pixel_events'  => array(
 				'page_view'      => 1,
 				'add_to_cart'    => 1,
