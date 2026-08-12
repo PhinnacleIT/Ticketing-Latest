@@ -1,3 +1,8 @@
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"
       xmlns:v="urn:schemas-microsoft-com:vml"
@@ -14,6 +19,7 @@
     <title>SiteGround Newsletter</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto:wght@400;700&display=swap" rel="stylesheet">    <style>
     :root {
         color-scheme: light dark;
@@ -98,10 +104,10 @@
                         style="color: #363636; font-weight: 600; font-family: 'Poppins', Arial, Helvetica, sans-serif; font-size: 30px; line-height: 40px; padding: 0 0 30px 0"><?php echo esc_html( $args['title'] ); ?>
                     </td>
                 </tr>
-                <?php foreach( $args['text'] as $paragraph ) : ?>
+                <?php foreach( $args['text'] as $sg_cachepress_paragraph ) : ?>
                 <tr>
                     <td class="body-text"
-                        style="color: #363636; font-weight: 400; font-family: 'Roboto', Arial, Helvetica, sans-serif; font-size: 18px; line-height: 30px; padding: 0px 0 30px 0"><?php echo esc_html( $paragraph ); ?>
+                        style="color: #363636; font-weight: 400; font-family: 'Roboto', Arial, Helvetica, sans-serif; font-size: 18px; line-height: 30px; padding: 0px 0 30px 0"><?php echo esc_html( $sg_cachepress_paragraph ); ?>
                     </td>
                 </tr>
                 <?php endforeach ;?>
@@ -110,11 +116,11 @@
                     <td style="padding: 0 0 30px 0;">
                         <!--Start List-->
                         <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                            <?php foreach( $args['table'] as $row ) : ?>
+                            <?php foreach( $args['table'] as $sg_cachepress_row ) : ?>
                             <tr>
                                 <td class="body-text"
                                     style="color: #363636; font-weight: 400; font-family: 'Roboto', Arial, Helvetica, sans-serif; font-size: 18px; line-height: 30px;">
-                                    <span style="color: #363636; display: inline-block; padding: 0 5px 0 0;">&#8226;</span><?php echo esc_html( $row ); ?>
+                                    <span style="color: #363636; display: inline-block; padding: 0 5px 0 0;">&#8226;</span><?php echo esc_html( $sg_cachepress_row ); ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -138,7 +144,7 @@
                 </tr>
                 <tr>
                     <td class="body-text"
-                        style="color: #a4a4a4; font-weight: 400; font-family: 'Roboto', Arial, Helvetica, sans-serif; font-size: 14px; line-height: 20px; padding: 0 0 30px 0"><?php esc_html_e( 'You are receiving this email because you’re using the SiteGround Optimizer WordPress plugin and you have agreed to receive promotional emails from us. You can unsubscribe or manage your email preferences in the WordPress admin panel.', 'sg-security' ); ?>
+                        style="color: #a4a4a4; font-weight: 400; font-family: 'Roboto', Arial, Helvetica, sans-serif; font-size: 14px; line-height: 20px; padding: 0 0 30px 0"><?php esc_html_e( 'You are receiving this email because you’re using the SiteGround Optimizer WordPress plugin and you have agreed to receive promotional emails from us. You can unsubscribe or manage your email preferences in the WordPress admin panel.', 'sg-cachepress' ); ?>
                     </td>
                 </tr>
             </table>

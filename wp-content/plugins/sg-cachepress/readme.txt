@@ -1,10 +1,10 @@
 === Speed Optimizer - The All-In-One Performance-Boosting Plugin ===
 Contributors: Hristo Sg, siteground, sstoqnov, stoyangeorgiev, elenachavdarova, ignatggeorgiev, asparuhtenev
 Tags: nginx, caching, speed, performance, siteground
-Requires at least: 4.7
+Requires at least: 5.5.1
 Requires PHP: 7.0
-Tested up to: 7.0
-Stable tag: 7.8.0
+Tested up to: 7.0.3
+Stable tag: 7.8.1
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -94,7 +94,7 @@ Evaluate the optimization level of your website with Speed Optimizer’s Speed t
 
 In order to work correctly, this plugin requires that your server meets the following criteria:
 
-* WordPress 4.7
+* WordPress 5.5.1
 * PHP 7.0+
 
 Our plugin uses a cookie in order to function properly. It does not store personal data and is used solely for the needs of our caching system.
@@ -117,6 +117,12 @@ Our plugin uses a cookie in order to function properly. It does not store person
 1. Go to Plugins -> Installed Plugins and click the 'Activate' link under the WordPress SiteGround Optimizer listing
 
 == Changelog ==
+= Version 7.8.1 =
+Release Date: Aug 12th, 2026
+
+* Security improvements
+* Lazy Loading improvements
+
 = Version 7.8.0 =
 Release Date: Jun 22th, 2026
 

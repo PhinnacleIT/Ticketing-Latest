@@ -1,3 +1,8 @@
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN""http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"
 	  xmlns:v="urn:schemas-microsoft-com:vml"
@@ -14,7 +19,8 @@
 	<title><?php echo esc_html( $args['meta_title'] ); ?></title>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto:wght@400;700&display=swap"
+		<!-- phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet -->
+		<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto:wght@400;700&display=swap"
 		  rel="stylesheet" />
 	<style type="text/css">
 		:root {color-scheme: light dark; supported-color-schemes: light dark;}

@@ -221,7 +221,7 @@ trait File_Cacher_Trait {
 
 		// Define the ignore cache headers.
 		$ignore_headers = apply_filters(
-			'sgo_file_cache_ignore_headers',
+			'sgo_file_cache_ignore_headers', // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible public filter.
 			array(
 				'cache-control' => 'no-cache',
 			)

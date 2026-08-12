@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+	exit;
+}
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
@@ -12,6 +16,6 @@ require_once dirname( __FILE__ ) . '/vendor/siteground/siteground-data/src/Setti
 
 use SiteGround_Data\Settings;
 
-$settings = new Settings();
+$siteground_optimizer_settings = new Settings();
 
-$settings->stop_collecting_data();
+$siteground_optimizer_settings->stop_collecting_data();

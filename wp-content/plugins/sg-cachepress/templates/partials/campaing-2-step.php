@@ -1,4 +1,9 @@
-				<!-- Header Image With link -->
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+?>
+					<!-- Header Image With link -->
 				<tr>
 					<td style="padding: 0 0 40px 0">
 						<a href="<?php echo esc_url( $args['campaign_link'] ); ?>"

@@ -153,7 +153,7 @@ class File_Cacher extends Supercacher {
 		$this->supercacher_terms    = new Supercacher_Terms();
 
 		$this->logged_in_cache     = (int) get_option( 'siteground_optimizer_logged_in_cache' );
-		$this->bypass_query_params = apply_filters( 'sgo_bypass_query_params', $this->bypass_query_params );
+		$this->bypass_query_params = apply_filters( 'sgo_bypass_query_params', $this->bypass_query_params ); // phpcs:ignore
 	}
 
 	/**
@@ -652,10 +652,12 @@ class File_Cacher extends Supercacher {
 			return $this->hit_url_cache( $url );
 		}
 
+		$sitemap_url = function_exists( 'get_sitemap_url' ) ? get_sitemap_url( 'index' ) : home_url( '/wp-sitemap.xml' );
+
 		$xml = $this->load_xml(
 			apply_filters(
-				'sg_file_caching_preheat_xml',
-				get_sitemap_url( 'index' ) // The sitemap url.
+				'sg_file_caching_preheat_xml', // phpcs:ignore
+				$sitemap_url // The sitemap url.
 			)
 		);
 
@@ -667,7 +669,7 @@ class File_Cacher extends Supercacher {
 		$regex = $this->get_excluded_urls_regex();
 
 		// Limit the number of sitemap URLs we are preheating.
-		$sitemap_url_limit = apply_filters( 'sg_file_caching_preheat_url_limit', 200 );
+		$sitemap_url_limit = apply_filters( 'sg_file_caching_preheat_url_limit', 200 ); // phpcs:ignore
 
 		// Sitemap URL counter.
 		$counter = 0;
@@ -787,7 +789,7 @@ class File_Cacher extends Supercacher {
 		// Add the custom interval.
 		$schedules['sg_once_in_two_days'] = array(
 			'interval' => 172800,
-			'display'  => esc_html__( 'Once in two days' ),
+			'display'  => esc_html__( 'Once in two days', 'sg-cachepress' ),
 		);
 
 		return $schedules;
@@ -814,9 +816,9 @@ class File_Cacher extends Supercacher {
 
 		// Prepare the config.
 		$config = array(
-			'ignored_query_params' => apply_filters( 'sgo_ignored_query_params', $this->ignored_query_params ),
+			'ignored_query_params' => apply_filters( 'sgo_ignored_query_params', $this->ignored_query_params ), // phpcs:ignore
 			'bypass_query_params'  => $this->bypass_query_params,
-			'bypass_cookies'       => apply_filters( 'sgo_bypass_cookies', $this->bypass_cookies ),
+			'bypass_cookies'       => apply_filters( 'sgo_bypass_cookies', $this->bypass_cookies ), // phpcs:ignore
 			'output_dir'           => $this->get_cache_dir(),
 			'logged_in_cache'      => (int) get_option( 'siteground_optimizer_logged_in_cache' ),
 			'cache_secret_key'     => $this->create_secret_if_not_exists(),
@@ -877,7 +879,7 @@ class File_Cacher extends Supercacher {
 	 */
 	public function get_excluded_urls_regex() {
 		// Get excluded urls.
-		$parts = apply_filters( 'sgo_exclude_urls_from_cache', \get_option( 'siteground_optimizer_excluded_urls', array() ) );
+		$parts = apply_filters( 'sgo_exclude_urls_from_cache', \get_option( 'siteground_optimizer_excluded_urls', array() ) ); // phpcs:ignore
 
 		$ecommerce_pages = array();
 
@@ -1009,7 +1011,7 @@ class File_Cacher extends Supercacher {
 	public function is_url_excluded() {
 		// Bail if the request is cronjob, ajax or the wordpress admin request.
 		if (
-			wp_doing_cron() ||
+			( function_exists( 'wp_doing_cron' ) ? wp_doing_cron() : defined( 'DOING_CRON' ) && DOING_CRON ) ||
 			Helper::sg_doing_ajax() ||
 			$GLOBALS['pagenow'] === 'wp-login.php' // phpcs:ignore
 		) {

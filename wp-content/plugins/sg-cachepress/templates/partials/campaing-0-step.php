@@ -1,4 +1,9 @@
-				<!-- Primary Title / H1 -->
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+?>
+					<!-- Primary Title / H1 -->
 				<tr>
 					<td class="body-text"
 						style="color: #363636; font-weight: 600; font-family: 'Poppins', Arial, Helvetica, sans-serif; font-size: 30px; line-height: 40px; padding: 0 0 30px 0"><?php echo esc_html( $args['primary_title'] ); ?></td>

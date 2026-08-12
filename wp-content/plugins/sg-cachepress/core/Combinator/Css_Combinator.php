@@ -158,7 +158,7 @@ class Css_Combinator extends Abstract_Combinator {
 		global $wp_styles;
 
 		$excluded_handles = apply_filters(
-			'sgo_css_combine_exclude',
+			'sgo_css_combine_exclude', // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible public filter.
 			array_merge(
 				$this->combined_styles_exclude_list,
 				get_option( 'siteground_optimizer_combine_css_exclude', array() )
@@ -247,7 +247,7 @@ class Css_Combinator extends Abstract_Combinator {
 		}
 
 		// Allows the combined CSS tag, to be added after the closing title or before the closing head tag.
-		$tag_position = apply_filters( 'sgo_css_combine_position', 'title' );
+		$tag_position = apply_filters( 'sgo_css_combine_position', 'title' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible public filter.
 
 		$allowed_values = array(
 			'head',
@@ -263,7 +263,7 @@ class Css_Combinator extends Abstract_Combinator {
 		$tag_data = $this->create_temp_file_and_get_url( $new_content, 'combined-css', 'css' );
 
 		// Build the combined CSS stylesheet tag.
-		$stylesheet_tag = '<link rel="stylesheet" id="' . $tag_data['handle'] . '" href="' . $tag_data['url'] . '" media="all" />';
+		$stylesheet_tag = '<link rel="stylesheet" id="' . $tag_data['handle'] . '" href="' . $tag_data['url'] . '" media="all" />'; // phpcs:ignore
 
 		$preload_tag = '';
 		if ( Options::is_enabled( 'siteground_optimizer_preload_combined_css' ) ) {

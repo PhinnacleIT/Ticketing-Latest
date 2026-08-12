@@ -111,9 +111,9 @@ class Admin {
 			remove_all_actions( 'admin_notices' );
 			remove_all_actions( 'all_admin_notices' );
 
-			error_reporting( 0 );
+			error_reporting( 0 ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting -- Prevents third-party notices from breaking the admin optimization test request.
 		}
-	}
+		}
 
 	/**
 	 * Register the stylesheets for the admin area.

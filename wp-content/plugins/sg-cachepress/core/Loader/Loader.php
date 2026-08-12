@@ -490,6 +490,14 @@ class Loader {
 			}
 		}
 
+		// Remove the 'srcset' from lazy-loaded images.
+		add_filter(
+			'wp_img_tag_add_srcset_and_sizes_attr',
+			array( $this->lazy_load->lazyload_images, 'disable_srcset_for_lazyload_image' ),
+			10,
+			4
+		);
+
 		// Enqueue scripts and styles.
 		add_action( 'wp_enqueue_scripts', array( $this->lazy_load, 'load_scripts' ) );
 	}
@@ -558,7 +566,7 @@ class Loader {
 	public function add_images_optimizer_hooks() {
 
 		// Get the resize_images option and apply filters to check the set value.
-		$resize_images = apply_filters( 'sgo_set_max_image_width', intval( get_option( 'siteground_optimizer_resize_images', 2560 ) ) );
+		$resize_images = apply_filters( 'sgo_set_max_image_width', intval( get_option( 'siteground_optimizer_resize_images', 2560 ) ) ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible public filter.
 
 		// Resize newly uploaded images, if different than default.
 		if ( 2560 !== $resize_images ) {
@@ -774,13 +782,13 @@ class Loader {
 		}
 
 		// Update the campaing last timestamp before the mail is sent.
-		add_action( 'sgo_campaign_cron', array( $this->campaign_service, 'update_last_cron_run_timestamp' ), 1 );
+		add_action( 'sgo_campaign_cron', array( $this->campaign_service, 'update_last_cron_run_timestamp' ), 1 ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible scheduled hook.
 
 		// Sent the campaign email.
-		add_action( 'sgo_campaign_cron', array( $this->campaign_service->campaign_service_email, 'sg_handle_email' ) );
+		add_action( 'sgo_campaign_cron', array( $this->campaign_service->campaign_service_email, 'sg_handle_email' ) ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible scheduled hook.
 
 		// Bump the campaign step counters after the mail is sent.
-		add_action( 'sgo_campaign_cron', array( $this->campaign_service, 'bump_campaign_count' ), PHP_INT_MAX );
+		add_action( 'sgo_campaign_cron', array( $this->campaign_service, 'bump_campaign_count' ), PHP_INT_MAX ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible scheduled hook.
 	}
 
 	/**
