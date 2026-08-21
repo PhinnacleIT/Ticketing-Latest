@@ -214,6 +214,7 @@ __( 'Some styles were added as static values because the class limit was reached
 __( 'Some styles were added as static values because the variable limit was reached.', 'elementor' );
 __( 'Icon Library', 'elementor' );
 __( 'Insert', 'elementor' );
+__( 'Keyboard Shortcuts', 'elementor' );
 __( 'Dynamic Content', 'elementor' );
 __(
 					'Create more personalized and dynamic sites by populating data from various sources with dozens of dynamic tags to choose from.',
@@ -230,7 +231,6 @@ __(
 					text: hasProAndNotConnected
 						? __( 'Connect & Activate', 'elementor' );
 __( 'Upgrade', 'elementor' );
-__( 'Keyboard Shortcuts', 'elementor' );
 __( 'Cannot load editor', 'elementor' );
 __( 'Server Error', 'elementor' );
 __( 'Type Here', 'elementor' );
@@ -402,6 +402,6 @@ __( 'Renew my subscription', 'elementor' );
 __( 'Empty folder', 'elememntor' );
 __( 'Connected successfully.', 'elementor' );
 __( 'Have a look', 'elementor' );
-__( 'Library sections', 'elementor' );
 __( 'Folders you create will appear here.', 'elementor' );
 __( 'To create a new one, go to Cloud Templates.', 'elementor' );
+__( 'Library sections', 'elementor' );
