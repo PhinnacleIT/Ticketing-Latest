@@ -135,7 +135,7 @@ if ( ! class_exists( 'Prflxtrflds_Fields_List' ) ) {
 					) {
 						$nonce = filter_input( INPUT_GET, 'prflxtrflds_nonce_name', FILTER_SANITIZE_STRING );
 						if ( wp_verify_nonce( $nonce, 'prflxtrflds_nonce_name' ) ) {
-							if ( isset( $_GET['prflxtrflds_field_id'] ) ) {
+							if ( isset( $_GET['prflxtrflds_field_id'] ) && is_array( $_GET['prflxtrflds_field_id'] ) ) {
 								foreach ( $_GET['prflxtrflds_field_id'] as $id ) {
 									/** Delete all checked fields */
 									prflxtrflds_remove_field( absint( $id ) );
@@ -198,7 +198,7 @@ if ( ! class_exists( 'Prflxtrflds_Fields_List' ) ) {
 								/** Create select with field types */
 								foreach ( $roles as $role ) {
 									?>
-									<option value="<?php echo intval( $role->role_id ); ?>"<?php selected( $current, $role->role_id ); ?>><?php echo esc_attr( translate_user_role( $role->role_name ) ); ?></option>
+									<option value="<?php echo absint( $role->role_id ); ?>"<?php selected( $current, $role->role_id ); ?>><?php echo esc_attr( translate_user_role( $role->role_name ) ); ?></option>
 									<?php
 								}
 							}
