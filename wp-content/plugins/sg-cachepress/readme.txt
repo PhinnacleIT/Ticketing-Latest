@@ -3,8 +3,8 @@ Contributors: Hristo Sg, siteground, sstoqnov, stoyangeorgiev, elenachavdarova, 
 Tags: nginx, caching, speed, performance, siteground
 Requires at least: 5.5.1
 Requires PHP: 7.0
-Tested up to: 7.0.3
-Stable tag: 7.8.1
+Tested up to: 7.1
+Stable tag: 7.8.2
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -21,7 +21,7 @@ Install our caching plugin now to dramatically improve your WordPress website pe
 = Essential Speed-boosting Features: =
 
 * **Powerful Caching** for up to 20% faster website.
-* **Frontend Optimizations** to minify JS, HTML and CSS, reducing wait time due to the number of scripts and characters in your code 
+* **Frontend Optimizations** to minify JS, HTML and CSS, reducing wait time due to the number of scripts and characters in your code
 * **Media Optimizations** by up to 85% image size compression without sacrificing quality
 * **WordPress Environment Optimizations** to optimize usage and efficiency of your WordPress site resources
 * **Speed Test** & tips to get on-demand optimization tips to help your site get even faster
@@ -81,7 +81,7 @@ Optimize your website media by reducing image size by up to 85% times while main
 = Image Compression: =
 Effortlessly compress images to resize your existing images and reduce the space they occupy on your server. The dimensions of the images will remain unchanged, allowing for optimized storage. Fine-tune the compression level and choose whether to create backups of the original images. Please note that image compression feature is exclusive to the SiteGround Environment.
 = WebP Images: =
-Leverage the power of WebP, a cutting-edge image format supported by modern browsers, to significantly reduce the size of your images and skyrocket your page speed. If a browser doesn't support WebP, the original images will be loaded. 
+Leverage the power of WebP, a cutting-edge image format supported by modern browsers, to significantly reduce the size of your images and skyrocket your page speed. If a browser doesn't support WebP, the original images will be loaded.
 = Lazy Load Media: =
 Take control of your website's asset loading with the ability to enable or disable Lazy Load for various assets. You can exclude specific assets such as iframes, videos, thumbnails, widgets, and shortcodes from the dropdown menu. Additionally, you have the option to exclude specific images from the Lazy Load by adding their respective class in the dedicated tab.
 = Maximum Image Width: =
@@ -117,6 +117,11 @@ Our plugin uses a cookie in order to function properly. It does not store person
 1. Go to Plugins -> Installed Plugins and click the 'Activate' link under the WordPress SiteGround Optimizer listing
 
 == Changelog ==
+= Version 7.8.2 =
+Release Date: Aug 25th, 2026
+
+* Legacy code removed
+
 = Version 7.8.1 =
 Release Date: Aug 12th, 2026
 
