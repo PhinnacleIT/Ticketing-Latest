@@ -1,0 +1,3381 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Profile Extra Fields by BestWebSoft\n"
+"POT-Creation-Date: 2024-07-15 16:27+0300\n"
+"PO-Revision-Date: 2024-07-15 16:27+0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.4.3\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-Flags-xgettext: --add-comments=translators:\n"
+"X-Poedit-WPHeader: profile-extra-fields.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: bws_menu\n"
+
+# automatic translation
+#: includes/class-prflxtrflds-fields-list.php:66
+#: includes/class-prflxtrflds-userdata-list.php:57
+#: profile-extra-fields.php:1395 profile-extra-fields.php:2702
+#: profile-extra-fields.php:2851
+msgid "Name"
+msgstr "Nombre"
+
+# automatic translation
+#: includes/class-prflxtrflds-fields-list.php:67
+#: includes/class-prflxtrflds-shortcode-list.php:57
+#: profile-extra-fields.php:1600
+msgid "Description"
+msgstr "Descripción"
+
+# automatic translation
+#: includes/class-prflxtrflds-fields-list.php:68 profile-extra-fields.php:1401
+msgid "Type"
+msgstr "Tipo"
+
+# automatic translation
+#: includes/class-prflxtrflds-fields-list.php:69 profile-extra-fields.php:1704
+msgid "Required"
+msgstr "Requerido"
+
+# automatic translation
+#: includes/class-prflxtrflds-fields-list.php:70
+msgid "Show by Default"
+msgstr "Mostrar por defecto"
+
+# automatic translation
+#: includes/class-prflxtrflds-fields-list.php:71
+msgid "Show Always"
+msgstr "Mostrar siempre"
+
+# automatic translation
+#: includes/class-prflxtrflds-fields-list.php:72
+msgid "Roles"
+msgstr "roles"
+
+# automatic translation
+#: includes/class-prflxtrflds-fields-list.php:73 profile-extra-fields.php:1906
+msgid "Field Order"
+msgstr "Orden de campo"
+
+# automatic translation
+#: includes/class-prflxtrflds-fields-list.php:97
+#: includes/class-prflxtrflds-fields-list.php:236
+#: includes/class-prflxtrflds-fields-list.php:241
+msgid "Delete Permanently"
+msgstr "borrar permanentemente"
+
+# automatic translation
+#: includes/class-prflxtrflds-fields-list.php:165
+msgid "All"
+msgstr "Todo"
+
+# automatic translation
+#: includes/class-prflxtrflds-fields-list.php:195
+#: includes/class-prflxtrflds-userdata-list.php:165
+msgid "All roles"
+msgstr "Todos los roles"
+
+# automatic translation
+#: includes/class-prflxtrflds-fields-list.php:208
+#: includes/class-prflxtrflds-userdata-list.php:179
+msgid "Filter"
+msgstr "Filtrar"
+
+# automatic translation
+#: includes/class-prflxtrflds-fields-list.php:235
+#: includes/class-prflxtrflds-fields-list.php:240 profile-extra-fields.php:1029
+#: profile-extra-fields.php:1292
+msgid "Edit Field"
+msgstr "Editar campo"
+
+# automatic translation
+#: includes/class-prflxtrflds-fields-list.php:266
+#: includes/class-prflxtrflds-fields-list.php:277
+#: includes/class-prflxtrflds-fields-list.php:293
+msgid "No"
+msgstr "No"
+
+# automatic translation
+#: includes/class-prflxtrflds-fields-list.php:266
+#: includes/class-prflxtrflds-fields-list.php:276
+#: includes/class-prflxtrflds-fields-list.php:292
+msgid "Yes"
+msgstr "Sí"
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:24
+msgid "Misc"
+msgstr "Varios"
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:25
+msgid "Custom Code"
+msgstr "Código personalizado"
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:26
+msgid "License Key"
+msgstr "Clave de licencia"
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:59
+msgid "Profile Extra Fields Pro Shortcode"
+msgstr "Perfil de campos adicionales Pro Shortcode"
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:62
+msgid "Add user data for current user using the following shortcode:"
+msgstr ""
+"Agregue datos de usuario para el usuario actual usando el siguiente código "
+"abreviado:"
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:66
+msgid ""
+"Add user data for specific users using the following shortcode (where * is "
+"user ids, separated by commas):"
+msgstr ""
+"Agregue datos de usuario para usuarios específicos utilizando el siguiente "
+"código abreviado (donde * son los ID de usuario, separados por comas):"
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:70
+msgid ""
+"Add user data for specific user roles using the following shortcode (where * "
+"is user roles, separated by commas):"
+msgstr ""
+"Agregue datos de usuario para roles de usuario específicos usando el "
+"siguiente código abreviado (donde * son roles de usuario, separados por "
+"comas):"
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:74
+msgid ""
+"Add user data specifying the data position (columns or rows) using the "
+"following shortcode (where * is top, left or right):"
+msgstr ""
+"Agregue datos de usuario especificando la posición de los datos (columnas o "
+"filas) usando el siguiente código abreviado (donde * está arriba, a la "
+"izquierda o a la derecha):"
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:78
+msgid "Display user data edit form on the front page:"
+msgstr ""
+"Mostrar formulario de edición de datos de usuario en la página principal:"
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:104 profile-extra-fields.php:2316
+msgid "Close"
+msgstr "Cerca"
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:108
+msgid "Gravity Forms"
+msgstr "Formas de gravedad"
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:111
+msgid "Ability to add Profile Extra Fields to the Gravity Forms."
+msgstr ""
+"Posibilidad de agregar campos adicionales de perfil a los formularios de "
+"gravedad."
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:116
+msgid "Title for WooCommerce Extra Fields Checkout Form"
+msgstr "Título del formulario de pago de campos adicionales de WooCommerce"
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:120
+msgid ""
+"This title will be displayed on Checkout Page and WooCommerce order emails"
+msgstr ""
+"Este título se mostrará en la página de pago y en los correos electrónicos "
+"de pedidos de WooCommerce"
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:125
+msgid "Title for WooCommerce Extra Fields Registration Form"
+msgstr "Título del formulario de registro de campos adicionales de WooCommerce"
+
+# automatic translation
+#: includes/class-prflxtrflds-settings.php:129
+msgid "This title will be displayed only on the WooCommerce Registration For"
+msgstr "Este título se mostrará solo en el registro de WooCommerce para"
+
+# automatic translation
+#: includes/class-prflxtrflds-shortcode-list.php:56
+msgid "Field Name"
+msgstr "Nombre del campo"
+
+# automatic translation
+#: includes/class-prflxtrflds-shortcode-list.php:58
+msgid "Show This Field"
+msgstr "Mostrar este campo"
+
+# automatic translation
+#: includes/class-prflxtrflds-shortcode-list.php:59
+msgid "Show Only If the Next Value is Selected"
+msgstr "Mostrar solo si se selecciona el siguiente valor"
+
+# automatic translation
+#: includes/class-prflxtrflds-shortcode-list.php:104
+msgid "Show despite the value"
+msgstr "Mostrar a pesar del valor"
+
+# automatic translation
+#: includes/class-prflxtrflds-userdata-list.php:54
+#: includes/class-prflxtrflds-userdata-list.php:111
+#: profile-extra-fields.php:2699 profile-extra-fields.php:2756
+#: profile-extra-fields.php:2829 profile-extra-fields.php:2919
+msgid "User ID"
+msgstr "ID de usuario"
+
+# automatic translation
+#: includes/class-prflxtrflds-userdata-list.php:55
+#: profile-extra-fields.php:2401 profile-extra-fields.php:2700
+#: profile-extra-fields.php:2758 profile-extra-fields.php:2836
+#: profile-extra-fields.php:2926
+msgid "Username"
+msgstr "Nombre de usuario"
+
+# automatic translation
+#: includes/class-prflxtrflds-userdata-list.php:56
+#: profile-extra-fields.php:2701 profile-extra-fields.php:2843
+msgid "User role"
+msgstr "Rol del usuario"
+
+# automatic translation
+#: includes/class-prflxtrflds-userdata-list.php:58
+#: profile-extra-fields.php:2703 profile-extra-fields.php:2859
+msgid "Email"
+msgstr "Correo electrónico"
+
+# automatic translation
+#: includes/class-prflxtrflds-userdata-list.php:59
+#: profile-extra-fields.php:2704 profile-extra-fields.php:2867
+msgid "Posts"
+msgstr "Publicaciones"
+
+# automatic translation
+#: includes/class-prflxtrflds-userdata-list.php:109
+msgid "Edit user"
+msgstr "Editar usuario"
+
+# automatic translation
+#: profile-extra-fields.php:58 profile-extra-fields.php:66
+#: profile-extra-fields.php:67
+msgid "All Fields"
+msgstr "Todos los campos"
+
+# automatic translation
+#: profile-extra-fields.php:74
+msgid "Add New Fields"
+msgstr "Agregar nuevos campos"
+
+# automatic translation
+#: profile-extra-fields.php:75 profile-extra-fields.php:2115
+msgid "Add New"
+msgstr "Agregar nuevo"
+
+# automatic translation
+#: profile-extra-fields.php:82 profile-extra-fields.php:2037
+msgid "Profile Extra Fields Settings"
+msgstr "Configuración de campos adicionales del perfil"
+
+# automatic translation
+#: profile-extra-fields.php:83 profile-extra-fields.php:4639
+#: profile-extra-fields.php:4658
+msgid "Settings"
+msgstr "Ajustes"
+
+# automatic translation
+#: profile-extra-fields.php:98 profile-extra-fields.php:1560
+#: profile-extra-fields.php:1592 profile-extra-fields.php:1815
+#: profile-extra-fields.php:2208 profile-extra-fields.php:2331
+msgid "Upgrade to Pro"
+msgstr "Actualízate a Pro"
+
+# automatic translation
+#: profile-extra-fields.php:430
+msgid "The field is empty"
+msgstr "el campo esta vacio"
+
+# automatic translation
+#: profile-extra-fields.php:431
+msgid "N/A"
+msgstr "N / A"
+
+# automatic translation
+#: profile-extra-fields.php:445
+msgid "Text field"
+msgstr "Campo de texto"
+
+# automatic translation
+#: profile-extra-fields.php:446
+msgid "Textarea"
+msgstr "área de texto"
+
+# automatic translation
+#: profile-extra-fields.php:447
+msgid "Checkbox"
+msgstr "Caja"
+
+# automatic translation
+#: profile-extra-fields.php:448
+msgid "Radio button"
+msgstr "Boton de radio"
+
+# automatic translation
+#: profile-extra-fields.php:449
+msgid "Drop down list"
+msgstr "La lista desplegable"
+
+# automatic translation
+#: profile-extra-fields.php:450
+msgid "Date"
+msgstr "Fecha"
+
+# automatic translation
+#: profile-extra-fields.php:451
+msgid "Time"
+msgstr "Tiempo"
+
+# automatic translation
+#: profile-extra-fields.php:452
+msgid "Datetime"
+msgstr "Fecha y hora"
+
+# automatic translation
+#: profile-extra-fields.php:453
+msgid "Number"
+msgstr "Número"
+
+# automatic translation
+#: profile-extra-fields.php:454
+msgid "Phone number"
+msgstr "Número de teléfono"
+
+# automatic translation
+#: profile-extra-fields.php:455
+msgid "URL link"
+msgstr "enlace URL"
+
+# automatic translation
+#: profile-extra-fields.php:456
+msgid "Attachment"
+msgstr "Adjunto"
+
+#: profile-extra-fields.php:457
+msgid "Country"
+msgstr "País"
+
+#: profile-extra-fields.php:468
+msgid "Afghanistan"
+msgstr "Afganistán"
+
+#: profile-extra-fields.php:469
+msgid "Albania"
+msgstr "Albania"
+
+#: profile-extra-fields.php:470
+msgid "Algeria"
+msgstr "Argelia"
+
+#: profile-extra-fields.php:471
+msgid "Andorra"
+msgstr "Andorra"
+
+#: profile-extra-fields.php:472
+msgid "Angola"
+msgstr "Angola"
+
+#: profile-extra-fields.php:473
+msgid "Antigua and Barbuda"
+msgstr "Antigua y Barbuda"
+
+#: profile-extra-fields.php:474
+msgid "Argentina"
+msgstr "Argentina"
+
+#: profile-extra-fields.php:475
+msgid "Armenia"
+msgstr "Armenia"
+
+#: profile-extra-fields.php:476
+msgid "Australia"
+msgstr "Australia"
+
+#: profile-extra-fields.php:477
+msgid "Austria"
+msgstr "Austria"
+
+#: profile-extra-fields.php:478
+msgid "Azerbaijan"
+msgstr "Azerbaiyán"
+
+#: profile-extra-fields.php:479
+msgid "Bahamas"
+msgstr "Bahamas"
+
+#: profile-extra-fields.php:480
+msgid "Bahrain"
+msgstr "Baréin"
+
+#: profile-extra-fields.php:481
+msgid "Bangladesh"
+msgstr "Bangladesh"
+
+#: profile-extra-fields.php:482
+msgid "Barbados"
+msgstr "Barbados"
+
+#: profile-extra-fields.php:483
+msgid "Belarus"
+msgstr "Bielorrusia"
+
+#: profile-extra-fields.php:484
+msgid "Belgium"
+msgstr "Bélgica"
+
+#: profile-extra-fields.php:485
+msgid "Belize"
+msgstr "Belice"
+
+#: profile-extra-fields.php:486
+msgid "Benin"
+msgstr "Benín"
+
+#: profile-extra-fields.php:487
+msgid "Bhutan"
+msgstr "Bután"
+
+#: profile-extra-fields.php:488
+msgid "Bolivia"
+msgstr "Bolivia"
+
+#: profile-extra-fields.php:489
+msgid "Bosnia and Herzegovina"
+msgstr "Bosnia y Herzegovina"
+
+#: profile-extra-fields.php:490
+msgid "Botswana"
+msgstr "Botsuana"
+
+#: profile-extra-fields.php:491
+msgid "Brazil"
+msgstr "Brasil"
+
+#: profile-extra-fields.php:492
+msgid "Brunei"
+msgstr "Brunéi"
+
+#: profile-extra-fields.php:493
+msgid "Bulgaria"
+msgstr "Bulgaria"
+
+#: profile-extra-fields.php:494
+msgid "Burkina Faso"
+msgstr "Burkina Faso"
+
+#: profile-extra-fields.php:495
+msgid "Burundi"
+msgstr "Burundi"
+
+#: profile-extra-fields.php:496
+msgid "Cambodia"
+msgstr "Camboya"
+
+#: profile-extra-fields.php:497
+msgid "Cameroon"
+msgstr "Camerún"
+
+#: profile-extra-fields.php:498
+msgid "Canada"
+msgstr "Canadá"
+
+#: profile-extra-fields.php:499
+msgid "Cape Verde"
+msgstr "Cabo Verde"
+
+#: profile-extra-fields.php:500
+msgid "Central African Republic"
+msgstr "República Centroafricana"
+
+#: profile-extra-fields.php:501
+msgid "Chad"
+msgstr "Chad"
+
+#: profile-extra-fields.php:502
+msgid "Chile"
+msgstr "Chile"
+
+#: profile-extra-fields.php:503
+msgid "China"
+msgstr "China"
+
+#: profile-extra-fields.php:504
+msgid "Colombia"
+msgstr "Colombia"
+
+#: profile-extra-fields.php:505
+msgid "Comoros"
+msgstr "Comores"
+
+#: profile-extra-fields.php:506
+msgid "Costa Rica"
+msgstr "Costa Rica"
+
+#: profile-extra-fields.php:507
+msgid "Croatia"
+msgstr "Croacia"
+
+#: profile-extra-fields.php:508
+msgid "Cuba"
+msgstr "Cuba"
+
+#: profile-extra-fields.php:509
+msgid "Cyprus"
+msgstr "Chipre"
+
+#: profile-extra-fields.php:510
+msgid "Czech Republic"
+msgstr "República Checa"
+
+#: profile-extra-fields.php:511
+msgid "Democratic Republic of the Congo"
+msgstr "República Democrática del Congo"
+
+#: profile-extra-fields.php:512
+msgid "Denmark"
+msgstr "Dinamarca"
+
+#: profile-extra-fields.php:513
+msgid "Djibouti"
+msgstr "Yibuti"
+
+#: profile-extra-fields.php:514
+msgid "Dominica"
+msgstr "Dominica"
+
+#: profile-extra-fields.php:515
+msgid "Dominican Republic"
+msgstr "República Dominicana"
+
+#: profile-extra-fields.php:516
+msgid "Ecuador"
+msgstr "Ecuador"
+
+#: profile-extra-fields.php:517
+msgid "Egypt"
+msgstr "Egipto"
+
+#: profile-extra-fields.php:518
+msgid "El Salvador"
+msgstr "El Salvador"
+
+#: profile-extra-fields.php:519
+msgid "Equatorial Guinea"
+msgstr "Guinea Ecuatorial"
+
+#: profile-extra-fields.php:520
+msgid "Eritrea"
+msgstr "Eritrea"
+
+#: profile-extra-fields.php:521
+msgid "Eswatini"
+msgstr "Suazilandia"
+
+#: profile-extra-fields.php:522
+msgid "Estonia"
+msgstr "Estonia"
+
+#: profile-extra-fields.php:523
+msgid "Ethiopia"
+msgstr "Etiopía"
+
+#: profile-extra-fields.php:524
+msgid "Fiji"
+msgstr "Fiji"
+
+#: profile-extra-fields.php:525
+msgid "Finland"
+msgstr "Finlandia"
+
+#: profile-extra-fields.php:526
+msgid "France"
+msgstr "Francia"
+
+#: profile-extra-fields.php:527
+msgid "Gabon"
+msgstr "Gabón"
+
+#: profile-extra-fields.php:528
+msgid "Gambia"
+msgstr "Gambia"
+
+#: profile-extra-fields.php:529
+msgid "Georgia"
+msgstr "Georgia"
+
+#: profile-extra-fields.php:530
+msgid "Germany"
+msgstr "Alemania"
+
+#: profile-extra-fields.php:531
+msgid "Ghana"
+msgstr "Ghana"
+
+#: profile-extra-fields.php:532
+msgid "Greece"
+msgstr "Grecia"
+
+#: profile-extra-fields.php:533
+msgid "Grenada"
+msgstr "Granada"
+
+#: profile-extra-fields.php:534
+msgid "Guatemala"
+msgstr "Guatemala"
+
+#: profile-extra-fields.php:535
+msgid "Guinea"
+msgstr "Guinea"
+
+#: profile-extra-fields.php:536
+msgid "Guinea-Bissau"
+msgstr "Guinea-Bissau"
+
+#: profile-extra-fields.php:537
+msgid "Guyana"
+msgstr "Guyana"
+
+#: profile-extra-fields.php:538
+msgid "Haiti"
+msgstr "Haití"
+
+#: profile-extra-fields.php:539
+msgid "Honduras"
+msgstr "Honduras"
+
+#: profile-extra-fields.php:540
+msgid "Hungary"
+msgstr "Hungría"
+
+#: profile-extra-fields.php:541
+msgid "Iceland"
+msgstr "Islandia"
+
+#: profile-extra-fields.php:542
+msgid "India"
+msgstr "India"
+
+#: profile-extra-fields.php:543
+msgid "Indonesia"
+msgstr "Indonesia"
+
+#: profile-extra-fields.php:544
+msgid "Iran"
+msgstr "Irán"
+
+#: profile-extra-fields.php:545
+msgid "Iraq"
+msgstr "Irak"
+
+#: profile-extra-fields.php:546
+msgid "Ireland"
+msgstr "Irlanda"
+
+#: profile-extra-fields.php:547
+msgid "Israel"
+msgstr "Israel"
+
+#: profile-extra-fields.php:548
+msgid "Italy"
+msgstr "Italia"
+
+#: profile-extra-fields.php:549
+msgid "Jamaica"
+msgstr "Jamaica"
+
+#: profile-extra-fields.php:550
+msgid "Japan"
+msgstr "Japón"
+
+#: profile-extra-fields.php:551
+msgid "Jordan"
+msgstr "Jordania"
+
+#: profile-extra-fields.php:552
+msgid "Kazakhstan"
+msgstr "Kazajistán"
+
+#: profile-extra-fields.php:553
+msgid "Kenya"
+msgstr "Kenia"
+
+#: profile-extra-fields.php:554
+msgid "Kiribati"
+msgstr "Kiribati"
+
+#: profile-extra-fields.php:555
+msgid "Kuwait"
+msgstr "Kuwait"
+
+#: profile-extra-fields.php:556
+msgid "Kyrgyzstan"
+msgstr "Kirguistán"
+
+#: profile-extra-fields.php:557
+msgid "Laos"
+msgstr "Laos"
+
+#: profile-extra-fields.php:558
+msgid "Latvia"
+msgstr "Letonia"
+
+#: profile-extra-fields.php:559
+msgid "Lebanon"
+msgstr "Líbano"
+
+#: profile-extra-fields.php:560
+msgid "Lesotho"
+msgstr "Lesoto"
+
+#: profile-extra-fields.php:561
+msgid "Liberia"
+msgstr "Liberia"
+
+#: profile-extra-fields.php:562
+msgid "Libya"
+msgstr "Libia"
+
+#: profile-extra-fields.php:563
+msgid "Liechtenstein"
+msgstr "Liechtenstein"
+
+#: profile-extra-fields.php:564
+msgid "Lithuania"
+msgstr "Lituania"
+
+#: profile-extra-fields.php:565
+msgid "Luxembourg"
+msgstr "Luxemburgo"
+
+#: profile-extra-fields.php:566
+msgid "Madagascar"
+msgstr "Madagascar"
+
+#: profile-extra-fields.php:567
+msgid "Malawi"
+msgstr "Malaui"
+
+#: profile-extra-fields.php:568
+msgid "Malaysia"
+msgstr "Malasia"
+
+#: profile-extra-fields.php:569
+msgid "Maldives"
+msgstr "Maldivas"
+
+#: profile-extra-fields.php:570
+msgid "Mali"
+msgstr "Malí"
+
+#: profile-extra-fields.php:571
+msgid "Malta"
+msgstr "Malta"
+
+#: profile-extra-fields.php:572
+msgid "Marshall Islands"
+msgstr "Islas Marshall"
+
+#: profile-extra-fields.php:573
+msgid "Mauritania"
+msgstr "Mauritania"
+
+#: profile-extra-fields.php:574
+msgid "Mauritius"
+msgstr "Mauricio"
+
+#: profile-extra-fields.php:575
+msgid "Mexico"
+msgstr "México"
+
+#: profile-extra-fields.php:576
+msgid "Micronesia"
+msgstr "Micronesia"
+
+#: profile-extra-fields.php:577
+msgid "Moldova"
+msgstr "Moldavia"
+
+#: profile-extra-fields.php:578
+msgid "Monaco"
+msgstr "Mónaco"
+
+#: profile-extra-fields.php:579
+msgid "Mongolia"
+msgstr "Mongolia"
+
+#: profile-extra-fields.php:580
+msgid "Montenegro"
+msgstr "Montenegro"
+
+#: profile-extra-fields.php:581
+msgid "Morocco"
+msgstr "Marruecos"
+
+#: profile-extra-fields.php:582
+msgid "Mozambique"
+msgstr "Mozambique"
+
+#: profile-extra-fields.php:583
+msgid "Myanmar"
+msgstr "Myanmar"
+
+#: profile-extra-fields.php:584
+msgid "Namibia"
+msgstr "Namibia"
+
+#: profile-extra-fields.php:585
+msgid "Nauru"
+msgstr "Nauru"
+
+#: profile-extra-fields.php:586
+msgid "Nepal"
+msgstr "Nepal"
+
+#: profile-extra-fields.php:587
+msgid "Netherlands"
+msgstr "Países Bajos"
+
+#: profile-extra-fields.php:588
+msgid "New Zealand"
+msgstr "Nueva Zelanda"
+
+#: profile-extra-fields.php:589
+msgid "Nicaragua"
+msgstr "Nicaragua"
+
+#: profile-extra-fields.php:590
+msgid "Niger"
+msgstr "Níger"
+
+#: profile-extra-fields.php:591
+msgid "Nigeria"
+msgstr "Nigeria"
+
+#: profile-extra-fields.php:592
+msgid "North Korea"
+msgstr "Corea del Norte"
+
+#: profile-extra-fields.php:593
+msgid "North Macedonia"
+msgstr "Macedonia del Norte"
+
+#: profile-extra-fields.php:594
+msgid "Norway"
+msgstr "Noruega"
+
+#: profile-extra-fields.php:595
+msgid "Oman"
+msgstr "Omán"
+
+#: profile-extra-fields.php:596
+msgid "Pakistan"
+msgstr "Pakistán"
+
+#: profile-extra-fields.php:597
+msgid "Palau"
+msgstr "Palau"
+
+#: profile-extra-fields.php:598
+msgid "Palestine"
+msgstr "Palestina"
+
+#: profile-extra-fields.php:599
+msgid "Panama"
+msgstr "Panamá"
+
+#: profile-extra-fields.php:600
+msgid "Papua New Guinea"
+msgstr "Papua Nueva Guinea"
+
+#: profile-extra-fields.php:601
+msgid "Paraguay"
+msgstr "Paraguay"
+
+#: profile-extra-fields.php:602
+msgid "Peru"
+msgstr "Perú"
+
+#: profile-extra-fields.php:603
+msgid "Philippines"
+msgstr "Filipinas"
+
+#: profile-extra-fields.php:604
+msgid "Poland"
+msgstr "Polonia"
+
+#: profile-extra-fields.php:605
+msgid "Portugal"
+msgstr "Portugal"
+
+#: profile-extra-fields.php:606
+msgid "Qatar"
+msgstr "Qatar"
+
+#: profile-extra-fields.php:607
+msgid "Republic of the Congo"
+msgstr "República del Congo"
+
+#: profile-extra-fields.php:608
+msgid "Romania"
+msgstr "Rumania"
+
+#: profile-extra-fields.php:609
+msgid "Russia"
+msgstr "Rusia"
+
+#: profile-extra-fields.php:610
+msgid "Rwanda"
+msgstr "Ruanda"
+
+#: profile-extra-fields.php:611
+msgid "Saint Kitts and Nevis"
+msgstr "San Cristóbal y Nieves"
+
+#: profile-extra-fields.php:612
+msgid "Saint Lucia"
+msgstr "Santa Lucía"
+
+#: profile-extra-fields.php:613
+msgid "Saint Vincent and the Grenadines"
+msgstr "San Vicente y las Granadinas"
+
+#: profile-extra-fields.php:614
+msgid "Samoa"
+msgstr "Samoa"
+
+#: profile-extra-fields.php:615
+msgid "San Marino"
+msgstr "San Marino"
+
+#: profile-extra-fields.php:616
+msgid "Sao Tome and Principe"
+msgstr "Santo Tomé y Príncipe"
+
+#: profile-extra-fields.php:617
+msgid "Saudi Arabia"
+msgstr "Arabia Saudita"
+
+#: profile-extra-fields.php:618
+msgid "Senegal"
+msgstr "Senegal"
+
+#: profile-extra-fields.php:619
+msgid "Serbia"
+msgstr "Serbia"
+
+#: profile-extra-fields.php:620
+msgid "Seychelles"
+msgstr "Seychelles"
+
+#: profile-extra-fields.php:621
+msgid "Sierra Leone"
+msgstr "Sierra Leona"
+
+#: profile-extra-fields.php:622
+msgid "Singapore"
+msgstr "Singapur"
+
+#: profile-extra-fields.php:623
+msgid "Slovakia"
+msgstr "Eslovaquia"
+
+#: profile-extra-fields.php:624
+msgid "Slovenia"
+msgstr "Eslovenia"
+
+#: profile-extra-fields.php:625
+msgid "Solomon Islands"
+msgstr "Islas Salomón"
+
+#: profile-extra-fields.php:626
+msgid "Somalia"
+msgstr "Somalia"
+
+#: profile-extra-fields.php:627
+msgid "South Africa"
+msgstr "Sudáfrica"
+
+#: profile-extra-fields.php:628
+msgid "South Korea"
+msgstr "Corea del Sur"
+
+#: profile-extra-fields.php:629
+msgid "South Sudan"
+msgstr "Sudán del Sur"
+
+#: profile-extra-fields.php:630
+msgid "Spain"
+msgstr "España"
+
+#: profile-extra-fields.php:631
+msgid "Sri Lanka"
+msgstr "Sri Lanka"
+
+#: profile-extra-fields.php:632
+msgid "Sudan"
+msgstr "Sudán"
+
+# automatic translation
+#: profile-extra-fields.php:633
+msgid "Suriname"
+msgstr "Surinam"
+
+#: profile-extra-fields.php:634
+msgid "Sweden"
+msgstr "Suecia"
+
+#: profile-extra-fields.php:635
+msgid "Switzerland"
+msgstr "Suiza"
+
+#: profile-extra-fields.php:636
+msgid "Syria"
+msgstr "Siria"
+
+#: profile-extra-fields.php:637
+msgid "Tajikistan"
+msgstr "Tayikistán"
+
+#: profile-extra-fields.php:638
+msgid "Tanzania"
+msgstr "Tanzania"
+
+#: profile-extra-fields.php:639
+msgid "Thailand"
+msgstr "Tailandia"
+
+#: profile-extra-fields.php:640
+msgid "Timor-Leste"
+msgstr "Timor Oriental"
+
+#: profile-extra-fields.php:641
+msgid "Togo"
+msgstr "Togo"
+
+#: profile-extra-fields.php:642
+msgid "Tonga"
+msgstr "Tonga"
+
+#: profile-extra-fields.php:643
+msgid "Trinidad and Tobago"
+msgstr "Trinidad y Tobago"
+
+#: profile-extra-fields.php:644
+msgid "Tunisia"
+msgstr "Túnez"
+
+#: profile-extra-fields.php:645
+msgid "Turkey"
+msgstr "Turquía"
+
+#: profile-extra-fields.php:646
+msgid "Turkmenistan"
+msgstr "Turkmenistán"
+
+#: profile-extra-fields.php:647
+msgid "Tuvalu"
+msgstr "Tuvalu"
+
+#: profile-extra-fields.php:648
+msgid "Uganda"
+msgstr "Uganda"
+
+#: profile-extra-fields.php:649
+msgid "Ukraine"
+msgstr "Ucrania"
+
+#: profile-extra-fields.php:650
+msgid "United Arab Emirates"
+msgstr "Emiratos Árabes Unidos"
+
+#: profile-extra-fields.php:651
+msgid "United Kingdom"
+msgstr "Reino Unido"
+
+# automatic translation
+#: profile-extra-fields.php:652
+msgid "United States"
+msgstr "Estados Unidos"
+
+#: profile-extra-fields.php:653
+msgid "Uruguay"
+msgstr "Uruguay"
+
+#: profile-extra-fields.php:654
+msgid "Uzbekistan"
+msgstr "Uzbekistán"
+
+#: profile-extra-fields.php:655
+msgid "Vanuatu"
+msgstr "Vanuatu"
+
+#: profile-extra-fields.php:656
+msgid "Vatican City"
+msgstr "Ciudad del Vaticano"
+
+#: profile-extra-fields.php:657
+msgid "Venezuela"
+msgstr "Venezuela"
+
+#: profile-extra-fields.php:658
+msgid "Vietnam"
+msgstr "Vietnam"
+
+#: profile-extra-fields.php:659
+msgid "Yemen"
+msgstr "Yemen"
+
+#: profile-extra-fields.php:660
+msgid "Zambia"
+msgstr "Zambia"
+
+#: profile-extra-fields.php:661
+msgid "Zimbabwe"
+msgstr "Zimbabue"
+
+# automatic translation
+#: profile-extra-fields.php:945
+msgid "Unable to create field of this type."
+msgstr "No se puede crear un campo de este tipo."
+
+# automatic translation
+#: profile-extra-fields.php:1032
+msgid "Field name is empty."
+msgstr "El nombre del campo está vacío."
+
+# automatic translation
+#: profile-extra-fields.php:1037
+msgid "Select at least one user role."
+msgstr "Seleccione al menos una función de usuario."
+
+# automatic translation
+#: profile-extra-fields.php:1042 profile-extra-fields.php:1484
+#, php-format
+msgid ""
+"Please specify a mask which will be used for the phone validation, where * "
+"is a number. Use only the following symbols %1$s"
+msgstr ""
+"Especifique una máscara que se utilizará para la validación del teléfono, "
+"donde * es un número. Use solo los siguientes símbolos %1$s"
+
+# automatic translation
+#: profile-extra-fields.php:1058 profile-extra-fields.php:1064
+msgid "Select at least one available value."
+msgstr "Seleccione al menos un valor disponible."
+
+# automatic translation
+#: profile-extra-fields.php:1061
+msgid "Select at least two available values."
+msgstr "Seleccione al menos dos valores disponibles."
+
+# automatic translation
+#: profile-extra-fields.php:1071
+msgid "The field has been updated."
+msgstr "El campo ha sido actualizado."
+
+# automatic translation
+#: profile-extra-fields.php:1073
+msgid "The field has been created."
+msgstr "El campo ha sido creado."
+
+# automatic translation
+#: profile-extra-fields.php:1365
+msgid "Add New Field"
+msgstr "Agregar nuevo campo"
+
+# automatic translation
+#: profile-extra-fields.php:1411
+msgid "Max Length"
+msgstr "Longitud máxima"
+
+# automatic translation
+#: profile-extra-fields.php:1414
+msgid ""
+"Specify field max length (for text field and textarea type) or max number "
+"(for number field type)."
+msgstr ""
+"Especifique la longitud máxima del campo (para el tipo de campo de texto y "
+"área de texto) o el número máximo (para el tipo de campo numérico)."
+
+# automatic translation
+#: profile-extra-fields.php:1418
+msgid "Field width in characters"
+msgstr "Ancho de campo en caracteres"
+
+# automatic translation
+#: profile-extra-fields.php:1424
+msgid "The height of the field in the text lines"
+msgstr "La altura del campo en las líneas de texto."
+
+# automatic translation
+#: profile-extra-fields.php:1430 profile-extra-fields.php:1433
+msgid "Date Format"
+msgstr "Formato de fecha"
+
+# automatic translation
+#: profile-extra-fields.php:1447 profile-extra-fields.php:1473
+msgid "Custom:"
+msgstr "Costumbre:"
+
+# automatic translation
+#: profile-extra-fields.php:1447
+msgid "enter a custom date format in the following field"
+msgstr "ingrese un formato de fecha personalizado en el siguiente campo"
+
+# automatic translation
+#: profile-extra-fields.php:1448
+msgid "Custom date format:"
+msgstr "Formato de fecha personalizado:"
+
+# automatic translation
+#: profile-extra-fields.php:1449 profile-extra-fields.php:1474
+msgid "example:"
+msgstr "ejemplo:"
+
+# automatic translation
+#: profile-extra-fields.php:1451 profile-extra-fields.php:1476
+msgid "Documentation on date and time formatting."
+msgstr "Documentación sobre formato de fecha y hora."
+
+# automatic translation
+#: profile-extra-fields.php:1456 profile-extra-fields.php:1459
+msgid "Time Format"
+msgstr "Formato de tiempo"
+
+# automatic translation
+#: profile-extra-fields.php:1473
+msgid "enter a custom time format in the following field"
+msgstr "ingrese un formato de hora personalizado en el siguiente campo"
+
+# automatic translation
+#: profile-extra-fields.php:1474
+msgid "Custom time format:"
+msgstr "Formato de hora personalizado:"
+
+# automatic translation
+#: profile-extra-fields.php:1481
+msgid "Pattern"
+msgstr "Patrón"
+
+# automatic translation
+#: profile-extra-fields.php:1488
+msgid "Available Values"
+msgstr "Valores Disponibles"
+
+# automatic translation
+#: profile-extra-fields.php:1491
+msgid "Edit values manually"
+msgstr "Editar valores manualmente"
+
+# automatic translation
+#: profile-extra-fields.php:1495 profile-extra-fields.php:1514
+#: profile-extra-fields.php:1531
+msgid "Name of value"
+msgstr "Nombre del valor"
+
+# automatic translation
+#: profile-extra-fields.php:1498
+msgid "Delete"
+msgstr "Borrar"
+
+# automatic translation
+#: profile-extra-fields.php:1536
+msgid "Add"
+msgstr "Agregar"
+
+# automatic translation
+#: profile-extra-fields.php:1537
+msgid "Click save button to add more values"
+msgstr "Haga clic en el botón Guardar para agregar más valores"
+
+# automatic translation
+#: profile-extra-fields.php:1549
+msgid "Import values"
+msgstr "Importar valores"
+
+# automatic translation
+#: profile-extra-fields.php:1552
+msgid ""
+"Upload XLSX file that includes the values to overwrite the standard values. "
+"Example: location1,location2,location3"
+msgstr ""
+"Cargue el archivo XLSX que incluye los valores para sobrescribir los valores "
+"estándar. Ejemplo: ubicación1,ubicación2,ubicación3"
+
+# automatic translation
+#: profile-extra-fields.php:1576
+msgid "Available Extensions"
+msgstr "Extensiones disponibles"
+
+# automatic translation
+#: profile-extra-fields.php:1606
+msgid "Field Properties"
+msgstr "Propiedades de campo"
+
+# automatic translation
+#: profile-extra-fields.php:1610 profile-extra-fields.php:1615
+msgid "Available"
+msgstr "Disponible"
+
+# automatic translation
+#: profile-extra-fields.php:1611 profile-extra-fields.php:1639
+msgid "Editable"
+msgstr "Editable"
+
+# automatic translation
+#: profile-extra-fields.php:1612 profile-extra-fields.php:1661
+msgid "Visible"
+msgstr "Visible"
+
+# automatic translation
+#: profile-extra-fields.php:1620 profile-extra-fields.php:1649
+#: profile-extra-fields.php:1671 profile-extra-fields.php:1687
+msgid "Select all"
+msgstr "Seleccionar todo"
+
+# automatic translation
+#: profile-extra-fields.php:1713
+msgid "Enable to make this field required."
+msgstr "Habilite para que este campo sea obligatorio."
+
+# automatic translation
+#: profile-extra-fields.php:1718
+msgid "Required Symbol"
+msgstr "Símbolo requerido"
+
+# automatic translation
+#: profile-extra-fields.php:1726
+msgid "Show by Default in User Data"
+msgstr "Mostrar por defecto en datos de usuario"
+
+# automatic translation
+#: profile-extra-fields.php:1735
+msgid ""
+"Show this field by default in User Data. You can change it using Screen "
+"Options tab."
+msgstr ""
+"Muestra este campo por defecto en Datos de usuario. Puede cambiarlo usando "
+"la pestaña Opciones de pantalla."
+
+# automatic translation
+#: profile-extra-fields.php:1740
+msgid "Always Show in User Data"
+msgstr "Mostrar siempre en datos de usuario"
+
+# automatic translation
+#: profile-extra-fields.php:1749
+msgid ""
+"Show this field in User Data on any display. You can change it using Screen "
+"Options tab."
+msgstr ""
+"Muestre este campo en Datos de usuario en cualquier pantalla. Puede "
+"cambiarlo usando la pestaña Opciones de pantalla."
+
+# automatic translation
+#: profile-extra-fields.php:1755
+msgid "Always Show in User Registration Form"
+msgstr "Mostrar siempre en el formulario de registro de usuario"
+
+# automatic translation
+#: profile-extra-fields.php:1764
+msgid "Show this field in user registration form."
+msgstr "Mostrar este campo en el formulario de registro de usuario."
+
+# automatic translation
+#: profile-extra-fields.php:1777 profile-extra-fields.php:2132
+msgid "WooСommerce"
+msgstr "WooCommerce"
+
+# automatic translation
+#: profile-extra-fields.php:1781
+msgid "Enable to display this field for WooCommerce."
+msgstr "Habilite para mostrar este campo para WooCommerce."
+
+# automatic translation
+#: profile-extra-fields.php:1786
+msgid "WooСommerce Сheckout Form"
+msgstr "Formulario de pago de WooCommerce"
+
+# automatic translation
+#: profile-extra-fields.php:1790
+msgid "Enable to display this field for WooCommerce Сheckout Form."
+msgstr ""
+"Habilite para mostrar este campo para el formulario de pago de WooCommerce."
+
+# automatic translation
+#: profile-extra-fields.php:1795
+msgid "WooСommerce Registration Form"
+msgstr "Formulario de registro de WooCommerce"
+
+# automatic translation
+#: profile-extra-fields.php:1799
+msgid "Enable to display this field for WooCommerce Registration Form."
+msgstr ""
+"Habilite para mostrar este campo para el formulario de registro de "
+"WooCommerce."
+
+# automatic translation
+#: profile-extra-fields.php:1808
+msgid "Enable to display this field for Subscriber form."
+msgstr "Habilite para mostrar este campo para el formulario de Suscriptor."
+
+# automatic translation
+#: profile-extra-fields.php:1835 profile-extra-fields.php:1851
+#: profile-extra-fields.php:1892
+#, php-format
+msgid "Enable to display this field for %1$s."
+msgstr "Habilite para mostrar este campo para %1$s."
+
+# automatic translation
+#: profile-extra-fields.php:1880 profile-extra-fields.php:2280
+msgid "Activate"
+msgstr "Activar"
+
+# automatic translation
+#: profile-extra-fields.php:1883 profile-extra-fields.php:2284
+msgid "Download"
+msgstr "Descargar"
+
+# automatic translation
+#: profile-extra-fields.php:1916 profile-extra-fields.php:2456
+msgid "Save Changes"
+msgstr "Guardar cambios"
+
+# automatic translation
+#: profile-extra-fields.php:1939
+msgid "Fields per page"
+msgstr "Campos por página"
+
+# automatic translation
+#: profile-extra-fields.php:2089
+msgid "Settings saved"
+msgstr "Ajustes guardados"
+
+# automatic translation
+#: profile-extra-fields.php:2097
+msgid "All plugin settings were restored."
+msgstr "Se restauraron todas las configuraciones del complemento."
+
+# automatic translation
+#: profile-extra-fields.php:2124 profile-extra-fields.php:3206
+msgid "Extra Fields"
+msgstr "Campos adicionales"
+
+# automatic translation
+#: profile-extra-fields.php:2147
+msgid "Booking"
+msgstr "Reserva"
+
+# automatic translation
+#: profile-extra-fields.php:2154
+msgid "User Data"
+msgstr "Datos del usuario"
+
+# automatic translation
+#: profile-extra-fields.php:2162
+msgid "Shortcode Settings"
+msgstr "Configuración de código corto"
+
+# automatic translation
+#: profile-extra-fields.php:2173 profile-extra-fields.php:2226
+msgid ""
+"Drag each item into the order you would like to display it on the user page"
+msgstr ""
+"Arrastre cada elemento en el orden en que le gustaría mostrarlo en la página "
+"de usuario"
+
+# automatic translation
+#: profile-extra-fields.php:2180 profile-extra-fields.php:2200
+#: profile-extra-fields.php:2233 profile-extra-fields.php:2359
+msgid "Search"
+msgstr "Buscar"
+
+# automatic translation
+#: profile-extra-fields.php:2278
+#, php-format
+msgid "Activate %1$s to display fields for %2$s."
+msgstr "Active %1$s para mostrar los campos de %2$s."
+
+# automatic translation
+#: profile-extra-fields.php:2282
+#, php-format
+msgid "Install %1$s to display fields for %2$s."
+msgstr "Instale %1$s para mostrar los campos de %2$s."
+
+# automatic translation
+#: profile-extra-fields.php:2320
+msgid "Import Data"
+msgstr "Datos de importacion"
+
+# automatic translation
+#: profile-extra-fields.php:2325
+msgid "Import"
+msgstr "Importar"
+
+# automatic translation
+#: profile-extra-fields.php:2338
+msgid "Export Data"
+msgstr "Exportar datos"
+
+# automatic translation
+#: profile-extra-fields.php:2340
+msgid "Data layout"
+msgstr "Diseño de datos"
+
+# automatic translation
+#: profile-extra-fields.php:2342 profile-extra-fields.php:2428
+#: profile-extra-fields.php:4452
+msgid "Columns"
+msgstr "columnas"
+
+# automatic translation
+#: profile-extra-fields.php:2343 profile-extra-fields.php:2429
+#: profile-extra-fields.php:4453
+msgid "Rows"
+msgstr "Filas"
+
+# automatic translation
+#: profile-extra-fields.php:2345
+msgid "Export"
+msgstr "Exportar"
+
+# automatic translation
+#: profile-extra-fields.php:2346
+msgid ""
+"Data export does not depend on the selected filters for displaying data in "
+"the table below"
+msgstr ""
+"La exportación de datos no depende de los filtros seleccionados para mostrar "
+"datos en la siguiente tabla"
+
+# automatic translation
+#: profile-extra-fields.php:2376
+msgid "Message for Empty Field"
+msgstr "Mensaje para campo vacío"
+
+# automatic translation
+#: profile-extra-fields.php:2382
+msgid "Message for the Field Unavaliable for the User"
+msgstr "Mensaje para el campo no disponible para el usuario"
+
+# automatic translation
+#: profile-extra-fields.php:2388
+msgid "Sort by User Name"
+msgstr "Ordenar por nombre de usuario"
+
+# automatic translation
+#: profile-extra-fields.php:2391
+msgid "ASC"
+msgstr "ASC"
+
+# automatic translation
+#: profile-extra-fields.php:2392
+msgid "DESC"
+msgstr "DESC"
+
+# automatic translation
+#: profile-extra-fields.php:2397
+msgid "Display Name"
+msgstr "Nombre para mostrar"
+
+# automatic translation
+#: profile-extra-fields.php:2404
+msgid "Public Name"
+msgstr "Nombre público"
+
+# automatic translation
+#: profile-extra-fields.php:2410
+msgid "Show Empty Fields"
+msgstr "Mostrar campos vacíos"
+
+# automatic translation
+#: profile-extra-fields.php:2414
+msgid "Enable to show the field if the value is not filled by a user."
+msgstr "Habilite para mostrar el campo si un usuario no completa el valor."
+
+# automatic translation
+#: profile-extra-fields.php:2419
+msgid "Show User ID"
+msgstr "Mostrar ID de usuario"
+
+# automatic translation
+#: profile-extra-fields.php:2425 profile-extra-fields.php:4450
+msgid "Data Rotation"
+msgstr "Rotación de datos"
+
+# automatic translation
+#: profile-extra-fields.php:2434
+msgid "Debug Mode"
+msgstr "Modo de depuración"
+
+# automatic translation
+#: profile-extra-fields.php:2438
+msgid ""
+"Enable to display error messages when shortcode formation is failed (i.e. "
+"there are no users for the selected roles)."
+msgstr ""
+"Habilite para mostrar mensajes de error cuando falle la formación de "
+"shortcode (es decir, no hay usuarios para los roles seleccionados)."
+
+# automatic translation
+#: profile-extra-fields.php:2506 profile-extra-fields.php:3029
+#, php-format
+msgid "User with entered id(id=%1$s) does not exist!"
+msgstr "¡El usuario con id ingresado (id=%1$s) no existe!"
+
+# automatic translation
+#: profile-extra-fields.php:2529
+#, php-format
+msgid "There are no users for the selected roles ( %1$s )"
+msgstr "No hay usuarios para los roles seleccionados ( %1$s )"
+
+# automatic translation
+#: profile-extra-fields.php:2537
+#, php-format
+msgid "Unsupported shortcode option(display=%1$s)"
+msgstr "Opción de shortcode no admitida (display=%1$s)"
+
+# automatic translation
+#: profile-extra-fields.php:2547 profile-extra-fields.php:3072
+msgid "Shortcode output error"
+msgstr "Error de salida de código corto"
+
+# automatic translation
+#: profile-extra-fields.php:2986
+msgid "No data for current shortcode settings"
+msgstr "No hay datos para la configuración actual de shortcode"
+
+# automatic translation
+#: profile-extra-fields.php:3036
+#, php-format
+msgid "Field with entered id(id=%1$s) does not exist!"
+msgstr "¡El campo con el id ingresado (id=%1$s) no existe!"
+
+# automatic translation
+#: profile-extra-fields.php:3108
+msgid "Sorry, your nonce did not verify."
+msgstr "Lo sentimos, tu nonce no se verificó."
+
+# automatic translation
+#: profile-extra-fields.php:3148 profile-extra-fields.php:3160
+msgid "Profile updated"
+msgstr "Perfil actualizado"
+
+# automatic translation
+#: profile-extra-fields.php:3581
+msgid "Save Info"
+msgstr "Guardar información"
+
+# automatic translation
+#: profile-extra-fields.php:3675
+#, php-format
+msgid "%1$s Extra Fields"
+msgstr "%1$s campos adicionales"
+
+# automatic translation
+#: profile-extra-fields.php:4080 profile-extra-fields.php:5354
+#, php-format
+msgid "Required field %1$s is not filled. Data was not saved!"
+msgstr "El campo obligatorio %1$s no está lleno. ¡Los datos no se guardaron!"
+
+# automatic translation
+#: profile-extra-fields.php:4092 profile-extra-fields.php:4123
+#: profile-extra-fields.php:4127 profile-extra-fields.php:5364
+#: profile-extra-fields.php:5395 profile-extra-fields.php:5399
+#, php-format
+msgid "Field %1$s does not match %2$s. Data was not saved!"
+msgstr "El campo %1$s no coincide con %2$s. ¡Los datos no se guardaron!"
+
+# automatic translation
+#: profile-extra-fields.php:4298 profile-extra-fields.php:5319
+msgid "Please fill all required fields."
+msgstr "Por favor llene todos los campos requeridos."
+
+# automatic translation
+#: profile-extra-fields.php:4434
+msgid "Display all users data"
+msgstr "Mostrar todos los datos de los usuarios"
+
+# automatic translation
+#: profile-extra-fields.php:4435
+msgid "Display logged in user data"
+msgstr "Mostrar datos de usuario registrados"
+
+# automatic translation
+#: profile-extra-fields.php:4436
+msgid "Specify a user role"
+msgstr "Especificar un rol de usuario"
+
+# automatic translation
+#: profile-extra-fields.php:4437
+msgid "Specify a user"
+msgstr "Especificar un usuario"
+
+# automatic translation
+#: profile-extra-fields.php:4442
+msgid "Select Shortcode"
+msgstr "Seleccionar código corto"
+
+# automatic translation
+#: profile-extra-fields.php:4444
+msgid "Table"
+msgstr "Mesa"
+
+# automatic translation
+#: profile-extra-fields.php:4445
+msgid "Field Value"
+msgstr "Valor de campo"
+
+# automatic translation
+#: profile-extra-fields.php:4457
+msgid "Users"
+msgstr "Usuarios"
+
+# automatic translation
+#: profile-extra-fields.php:4660
+msgid "FAQ"
+msgstr "Preguntas más frecuentes"
+
+# automatic translation
+#: profile-extra-fields.php:4661
+msgid "Support"
+msgstr "Apoyo"
+
+# automatic translation
+#: profile-extra-fields.php:5320
+msgid "The following fields are required"
+msgstr "Se requieren los siguientes campos"
+
+# automatic translation
+#. Plugin Name of the plugin/theme
+msgid "Profile Extra Fields by BestWebSoft"
+msgstr "Perfil de campos adicionales por BestWebSoft"
+
+# automatic translation
+#. Plugin URI of the plugin/theme
+msgid ""
+"https://bestwebsoft.com/products/wordpress/plugins/profile-extra-fields/"
+msgstr ""
+"https://bestwebsoft.com/products/wordpress/plugins/profile-extra-fields/"
+
+# automatic translation
+#. Description of the plugin/theme
+msgid ""
+"Add extra fields to default WordPress user profile. The easiest way to "
+"create and manage additional custom values."
+msgstr ""
+"Agregue campos adicionales al perfil de usuario predeterminado de WordPress. "
+"La forma más fácil de crear y administrar valores personalizados adicionales."
+
+# automatic translation
+#. Author of the plugin/theme
+msgid "BestWebSoft"
+msgstr "mejorwebsoft"
+
+# automatic translation
+#. Author URI of the plugin/theme
+msgid "https://bestwebsoft.com/"
+msgstr "https://bestwebsoft.com/"
+
+# automatic translation
+#~ msgid "requires"
+#~ msgstr "requiere"
+
+# automatic translation
+#~ msgid ""
+#~ "or higher, that is why it has been deactivated! Please upgrade WordPress "
+#~ "and try again."
+#~ msgstr ""
+#~ "o superior, ¡por eso se ha desactivado! Actualice WordPress y vuelva a "
+#~ "intentarlo."
+
+# automatic translation
+#~ msgid "Back to the WordPress"
+#~ msgstr "Volver a WordPress"
+
+# automatic translation
+#~ msgid "Plugins page"
+#~ msgstr "Página de complementos"
+
+# automatic translation
+#~ msgid "Like the plugin?"
+#~ msgstr "¿Te gusta el complemento?"
+
+# automatic translation
+#, php-format
+#~ msgid "%s reviews"
+#~ msgstr "%s reseñas"
+
+# automatic translation
+#~ msgid "Rate it"
+#~ msgstr "Puntúalo"
+
+# automatic translation
+#~ msgid "Need help?"
+#~ msgstr "¿Necesitas ayuda?"
+
+# automatic translation
+#~ msgid "Visit Help Center"
+#~ msgstr "Visite el Centro de ayuda"
+
+# automatic translation
+#~ msgid "Want to support the plugin?"
+#~ msgstr "¿Quieres apoyar el complemento?"
+
+# automatic translation
+#~ msgid "Donate"
+#~ msgstr "Donar"
+
+# automatic translation
+#~ msgid "WARNING: Illegal use notification"
+#~ msgstr "ADVERTENCIA: notificación de uso ilegal"
+
+# automatic translation
+#~ msgid ""
+#~ "You can use one license of the Pro plugin for one domain only. Please "
+#~ "check and edit your license or domain if necessary using your personal "
+#~ "Client Area. We strongly recommend you to solve the problem within 24 "
+#~ "hours, otherwise the Pro plugin will be deactivated."
+#~ msgstr ""
+#~ "Puede usar una licencia del complemento Pro solo para un dominio. "
+#~ "Verifique y edite su licencia o dominio si es necesario utilizando su "
+#~ "Área de Cliente personal. Le recomendamos encarecidamente que resuelva el "
+#~ "problema dentro de las 24 horas, de lo contrario, el complemento Pro se "
+#~ "desactivará."
+
+# automatic translation
+#~ msgid "Learn More"
+#~ msgstr "Aprende más"
+
+# automatic translation
+#~ msgid ""
+#~ "Notice: Your Pro Trial license has expired. To continue using the plugin, "
+#~ "you should buy a Pro license"
+#~ msgstr ""
+#~ "Aviso: Su licencia Pro Trial ha caducado. Para continuar usando el "
+#~ "complemento, debe comprar una licencia Pro"
+
+# automatic translation
+#~ msgid ""
+#~ "Your license has expired. To continue getting top-priority support and "
+#~ "plugin updates, you should extend it."
+#~ msgstr ""
+#~ "Su licencia ha expirado. Para continuar recibiendo soporte de máxima "
+#~ "prioridad y actualizaciones de complementos, debe extenderlo."
+
+# automatic translation
+#~ msgid "Learn more"
+#~ msgstr "Aprende más"
+
+# automatic translation
+#, php-format
+#~ msgid "Notice: You are using the Pro Trial license of %s plugin."
+#~ msgstr "Aviso: está utilizando la licencia Pro Trial del complemento %s."
+
+# automatic translation
+#~ msgid "Notice: You are using the Pro Trial license of plugin."
+#~ msgstr "Aviso: está utilizando la licencia Pro Trial del complemento."
+
+# automatic translation
+#~ msgid "The Pro Trial license will expire on"
+#~ msgstr "La licencia Pro Trial caducará el"
+
+# automatic translation
+#~ msgid "Close notice"
+#~ msgstr "Cerrar aviso"
+
+# automatic translation
+#~ msgid "It’s time to upgrade your"
+#~ msgstr "Es hora de actualizar tu"
+
+# automatic translation
+#~ msgid "to"
+#~ msgstr "a"
+
+# automatic translation
+#~ msgid "version!"
+#~ msgstr "¡versión!"
+
+# automatic translation
+#~ msgid "Extend standard plugin functionality with new great options."
+#~ msgstr ""
+#~ "Amplíe la funcionalidad del complemento estándar con nuevas opciones "
+#~ "excelentes."
+
+# automatic translation
+#, php-format
+#~ msgid ""
+#~ "Your license key for %1$s expires on %2$s and you won't be granted TOP-"
+#~ "PRIORITY SUPPORT or UPDATES."
+#~ msgstr ""
+#~ "Su clave de licencia para %1$s vence el %2$s y no se le otorgará SOPORTE "
+#~ "DE PRIMERA PRIORIDAD ni ACTUALIZACIONES."
+
+# automatic translation
+#~ msgid ""
+#~ "or higher! We do not guarantee that our plugin will work correctly. "
+#~ "Please upgrade to WordPress latest version."
+#~ msgstr ""
+#~ "¡o mas alto! No garantizamos que nuestro complemento funcione "
+#~ "correctamente. Actualice a la última versión de WordPress."
+
+# automatic translation
+#, php-format
+#~ msgid "Thank you for installing %s plugin!"
+#~ msgstr "¡Gracias por instalar el complemento %s!"
+
+# automatic translation
+#~ msgid "Let's get started"
+#~ msgstr "Empecemos"
+
+# automatic translation
+#~ msgid "or"
+#~ msgstr "o"
+
+# automatic translation
+#~ msgid "Thank you for installing plugins by BestWebSoft!"
+#~ msgstr "¡Gracias por instalar complementos de BestWebSoft!"
+
+# automatic translation
+#~ msgid "More Details"
+#~ msgstr "Más detalles"
+
+# automatic translation
+#~ msgid "Less Details"
+#~ msgstr "Menos detalles"
+
+# automatic translation
+#~ msgid "Deprecated function(-s) is used on the site here:"
+#~ msgstr "La(s) función(es) obsoleta(s) se usa(n) en el sitio aquí:"
+
+# automatic translation
+#~ msgid ""
+#~ "This function(-s) will be removed over time. Please update the product(-"
+#~ "s)."
+#~ msgstr ""
+#~ "Esta(s) función(es) se eliminarán con el tiempo. Actualice los productos."
+
+# automatic translation
+#, php-format
+#~ msgid "Thank you for choosing %s plugin!"
+#~ msgstr "¡Gracias por elegir el complemento %s!"
+
+# automatic translation
+#~ msgid ""
+#~ "If you have a feature, suggestion or idea you'd like to see in the "
+#~ "plugin, we'd love to hear about it!"
+#~ msgstr ""
+#~ "Si tiene una característica, sugerencia o idea que le gustaría ver en el "
+#~ "complemento, ¡nos encantaría saberlo!"
+
+# automatic translation
+#~ msgid "Suggest a Feature"
+#~ msgstr "Sugerir una característica"
+
+# automatic translation
+#~ msgid "Affiliate Program"
+#~ msgstr "programa de afiliación"
+
+# automatic translation
+#, php-format
+#~ msgid "Get %s"
+#~ msgstr "Obtiene"
+
+# automatic translation
+#~ msgid "from each BestWebSoft plugin and theme sale you refer"
+#~ msgstr "de cada complemento BestWebSoft y venta de temas que recomiende"
+
+# automatic translation
+#~ msgid "Join affiliate program"
+#~ msgstr "Únase al programa de afiliados"
+
+# automatic translation
+#~ msgid "Promote and sell products"
+#~ msgstr "Promocionar y vender productos"
+
+# automatic translation
+#~ msgid "Get commission!"
+#~ msgstr "¡Consigue comisión!"
+
+# automatic translation
+#~ msgid "Start Now"
+#~ msgstr "Empezar ahora"
+
+# automatic translation
+#~ msgid "Notice"
+#~ msgstr "Aviso"
+
+# automatic translation
+#~ msgid "The plugin's settings have been changed."
+#~ msgstr "Se ha cambiado la configuración del complemento."
+
+# automatic translation
+#~ msgid ""
+#~ "You can always look at premium options by checking the \"Pro Options\" in "
+#~ "the \"Misc\" tab."
+#~ msgstr ""
+#~ "Siempre puede ver las opciones premium marcando las \"Opciones "
+#~ "profesionales\" en la pestaña \"Misc\"."
+
+# automatic translation
+#~ msgid "Add BWS Shortcode"
+#~ msgstr "Agregar código abreviado BWS"
+
+# automatic translation
+#~ msgid "Add BWS Plugins Shortcode"
+#~ msgstr "Agregar código abreviado de complementos BWS"
+
+# automatic translation
+#~ msgid "Add shortcode"
+#~ msgstr "Añadir código abreviado"
+
+# automatic translation
+#~ msgid "Add BestWebSoft plugins' shortcodes using this button."
+#~ msgstr ""
+#~ "Agregue los códigos abreviados de los complementos de BestWebSoft usando "
+#~ "este botón."
+
+# automatic translation
+#~ msgid "Are you sure you want to restore default settings?"
+#~ msgstr ""
+#~ "¿Está seguro de que desea restaurar la configuración predeterminada?"
+
+# automatic translation
+#~ msgid "Yes, restore all settings"
+#~ msgstr "Sí, restaurar todas las configuraciones"
+
+# automatic translation
+#~ msgid "No, go back to the settings page"
+#~ msgstr "No, vuelve a la página de configuración"
+
+# automatic translation
+#~ msgid "Plugin"
+#~ msgstr "Enchufar"
+
+# automatic translation
+#~ msgid "Shortcode settings"
+#~ msgstr "Configuración de código corto"
+
+# automatic translation
+#~ msgid "The shortcode will be inserted"
+#~ msgstr "Se insertará el código abreviado"
+
+# automatic translation
+#~ msgid "For more information:"
+#~ msgstr "Para más información:"
+
+# automatic translation
+#~ msgid "Documentation"
+#~ msgstr "Documentación"
+
+# automatic translation
+#~ msgid "Video Instructions"
+#~ msgstr "Instrucciones en vídeo"
+
+# automatic translation
+#~ msgid "Submit a Request"
+#~ msgstr "Presentar una solicitud"
+
+# automatic translation
+#~ msgid "Wrong license key"
+#~ msgstr "Clave de licencia incorrecta"
+
+# automatic translation
+#~ msgid ""
+#~ "Something went wrong. Please try again later. If the error appears again, "
+#~ "please contact us"
+#~ msgstr ""
+#~ "Algo salió mal. Por favor, inténtelo de nuevo más tarde. Si el error "
+#~ "vuelve a aparecer, por favor contáctenos"
+
+# automatic translation
+#~ msgid "We are sorry for inconvenience."
+#~ msgstr "Lamentamos las molestias."
+
+# automatic translation
+#~ msgid "Wrong license key."
+#~ msgstr "Clave de licencia incorrecta."
+
+# automatic translation
+#~ msgid ""
+#~ "This license key is bound to another site. Change it via personal Client "
+#~ "Area."
+#~ msgstr ""
+#~ "Esta clave de licencia está vinculada a otro sitio. Cámbialo a través del "
+#~ "Área de Cliente personal."
+
+# automatic translation
+#~ msgid "Log in"
+#~ msgstr "Acceso"
+
+# automatic translation
+#~ msgid ""
+#~ "Unfortunately, you have exceeded the number of available tries per day."
+#~ msgstr ""
+#~ "Desafortunadamente, ha excedido el número de intentos disponibles por día."
+
+# automatic translation
+#, php-format
+#~ msgid ""
+#~ "Unfortunately, Your license has expired. To continue getting top-priority "
+#~ "support and plugin updates, you should extend it in your %s"
+#~ msgstr ""
+#~ "Lamentablemente, su licencia ha caducado. Para continuar recibiendo "
+#~ "soporte de máxima prioridad y actualizaciones de complementos, debe "
+#~ "ampliarlo en su %s"
+
+# automatic translation
+#~ msgid ""
+#~ "Unfortunately, the Pro licence was already installed to this domain. The "
+#~ "Pro Trial license can be installed only once."
+#~ msgstr ""
+#~ "Desafortunadamente, la licencia Pro ya estaba instalada en este dominio. "
+#~ "La licencia Pro Trial solo se puede instalar una vez."
+
+# automatic translation
+#~ msgid "The license key is valid."
+#~ msgstr "La clave de licencia es válida."
+
+# automatic translation
+#~ msgid "Your license will expire on"
+#~ msgstr "Su licencia caducará el"
+
+# automatic translation
+#~ msgid "Congratulations! Pro Membership license is activated successfully."
+#~ msgstr "¡Felicidades! La licencia de Membresía Pro se activó con éxito."
+
+# automatic translation
+#~ msgid ""
+#~ "Something went wrong. Try again later or upload the plugin manually. We "
+#~ "are sorry for inconvenience."
+#~ msgstr ""
+#~ "Algo salió mal. Vuelva a intentarlo más tarde o cargue el complemento "
+#~ "manualmente. Lamentamos las molestias."
+
+# automatic translation
+#~ msgid "Please enter your license key."
+#~ msgstr "Por favor, introduzca su clave de licencia."
+
+# automatic translation
+#~ msgid "Not set"
+#~ msgstr "no establecido"
+
+# automatic translation
+#~ msgid "On"
+#~ msgstr "En"
+
+# automatic translation
+#~ msgid "Off"
+#~ msgstr "Apagado"
+
+# automatic translation
+#~ msgid "Mb"
+#~ msgstr "megabyte"
+
+# automatic translation
+#~ msgid "WordPress Environment"
+#~ msgstr "Entorno de WordPress"
+
+# automatic translation
+#~ msgid "Home URL"
+#~ msgstr "URL de inicio"
+
+# automatic translation
+#~ msgid "Website URL"
+#~ msgstr "URL del sitio web"
+
+# automatic translation
+#~ msgid "WP Version"
+#~ msgstr "Versión de trabajo en equipo"
+
+# automatic translation
+#~ msgid "WP Multisite"
+#~ msgstr "WP multisitio"
+
+# automatic translation
+#~ msgid "WP Memory Limit"
+#~ msgstr "Límite de memoria de WP"
+
+# automatic translation
+#~ msgid "Active Theme"
+#~ msgstr "Tema activo"
+
+# automatic translation
+#, php-format
+#~ msgid "by %s"
+#~ msgstr "por %s"
+
+# automatic translation
+#~ msgid "Server Environment"
+#~ msgstr "Entorno del servidor"
+
+# automatic translation
+#~ msgid "Operating System"
+#~ msgstr "Sistema operativo"
+
+# automatic translation
+#~ msgid "Server"
+#~ msgstr "Servidor"
+
+# automatic translation
+#~ msgid "PHP Version"
+#~ msgstr "Versión PHP"
+
+# automatic translation
+#~ msgid "PHP Allow URL fopen"
+#~ msgstr "PHP Permitir URL fopen"
+
+# automatic translation
+#~ msgid "PHP Memory Limit"
+#~ msgstr "Límite de memoria PHP"
+
+# automatic translation
+#~ msgid "Memory Usage"
+#~ msgstr "Uso de memoria"
+
+# automatic translation
+#~ msgid "PHP Max Upload Size"
+#~ msgstr "Tamaño máximo de carga de PHP"
+
+# automatic translation
+#~ msgid "PHP Max Post Size"
+#~ msgstr "Tamaño máximo de publicación de PHP"
+
+# automatic translation
+#~ msgid "PHP Max Script Execute Time"
+#~ msgstr "Tiempo máximo de ejecución del script PHP"
+
+# automatic translation
+#~ msgid "PHP Exif support"
+#~ msgstr "Compatibilidad con PHP Exif"
+
+# automatic translation
+#~ msgid "PHP IPTC support"
+#~ msgstr "Compatibilidad con PHP IPTC"
+
+# automatic translation
+#~ msgid "PHP XML support"
+#~ msgstr "Compatibilidad con PHPXML"
+
+# automatic translation
+#~ msgid "Database"
+#~ msgstr "Base de datos"
+
+# automatic translation
+#~ msgid "WP DB version"
+#~ msgstr "Versión de la base de datos de WP"
+
+# automatic translation
+#~ msgid "MySQL version"
+#~ msgstr "versión mysql"
+
+# automatic translation
+#~ msgid "SQL Mode"
+#~ msgstr "Modo SQL"
+
+# automatic translation
+#~ msgid "Active Plugins"
+#~ msgstr "Complementos activos"
+
+# automatic translation
+#~ msgid "Inactive Plugins"
+#~ msgstr "Complementos inactivos"
+
+# automatic translation
+#~ msgid "Please enter a valid email address."
+#~ msgstr "Por favor, introduce una dirección de correo electrónico válida."
+
+# automatic translation
+#, php-format
+#~ msgid "Email with system info is sent to %s."
+#~ msgstr "Se envía un correo electrónico con la información del sistema a %s."
+
+# automatic translation
+#~ msgid "Thank you for contacting us."
+#~ msgstr "Gracias por contactarnos."
+
+# automatic translation
+#~ msgid "Sorry, email message could not be delivered."
+#~ msgstr "Lo sentimos, no se pudo entregar el mensaje de correo electrónico."
+
+# automatic translation
+#~ msgid "Plugins"
+#~ msgstr "Complementos"
+
+# automatic translation
+#~ msgid "Themes"
+#~ msgstr "Temas"
+
+# automatic translation
+#~ msgid "System status"
+#~ msgstr "Estado del sistema"
+
+# automatic translation
+#~ msgid "Manage purchased licenses & subscriptions"
+#~ msgstr "Administrar licencias y suscripciones compradas"
+
+# automatic translation
+#, php-format
+#~ msgid "Get Access to %s+ Premium Plugins"
+#~ msgstr "Obtenga acceso a %s+ complementos premium"
+
+# automatic translation
+#~ msgid "Subscribe to Pro Membership"
+#~ msgstr "Suscríbete a la Membresía Pro"
+
+# automatic translation
+#~ msgid "Check license key"
+#~ msgstr "Comprobar clave de licencia"
+
+# automatic translation
+#~ msgid "Enter your license key"
+#~ msgstr "Introduce tu clave de licencia"
+
+# automatic translation
+#~ msgid "Upload Plugin"
+#~ msgstr "Cargar complemento"
+
+# automatic translation
+#, php-format
+#~ msgid ""
+#~ "The plugin generated %d characters of <strong>unexpected output</strong> "
+#~ "during activation. If you notice &#8220;headers already sent&#8221; "
+#~ "messages, problems with syndication feeds or other issues, try "
+#~ "deactivating or removing this plugin."
+#~ msgstr ""
+#~ "El complemento generó %d caracteres de <strong>salida inesperada</strong> "
+#~ "durante la activación. Si nota mensajes de &quot;encabezados ya "
+#~ "enviados&quot;, problemas con las fuentes de distribución u otros "
+#~ "problemas, intente desactivar o eliminar este complemento."
+
+# automatic translation
+#~ msgid ""
+#~ "Plugin could not be activated because it triggered a <strong>fatal error</"
+#~ "strong>."
+#~ msgstr ""
+#~ "El complemento no se pudo activar porque provocó un <strong>error fatal</"
+#~ "strong> ."
+
+# automatic translation
+#~ msgid "Plugin <strong>activated</strong>."
+#~ msgstr "Complemento <strong>activado</strong> ."
+
+# automatic translation
+#~ msgid "Download Pro Plugin"
+#~ msgstr "Descargar complemento profesional"
+
+# automatic translation
+#~ msgid "Your Pro plugin is ready"
+#~ msgstr "Su complemento Pro está listo"
+
+# automatic translation
+#~ msgid "Your plugin has been zipped, and now is ready to download."
+#~ msgstr ""
+#~ "Su complemento ha sido comprimido y ahora está listo para descargar."
+
+# automatic translation
+#~ msgid "Download Now"
+#~ msgstr "Descargar ahora"
+
+# automatic translation
+#~ msgid "Need help installing the plugin?"
+#~ msgstr "¿Necesita ayuda para instalar el complemento?"
+
+# automatic translation
+#~ msgid ""
+#~ "How to install WordPress plugin from your admin Dashboard (ZIP archive)"
+#~ msgstr ""
+#~ "Cómo instalar el complemento de WordPress desde su panel de "
+#~ "administración (archivo ZIP)"
+
+# automatic translation
+#~ msgid "Get Started"
+#~ msgstr "Empezar"
+
+# automatic translation
+#~ msgid "Knowledge Base"
+#~ msgstr "Base de conocimientos"
+
+# automatic translation
+#~ msgid "Licenses & Domains"
+#~ msgstr "Licencias y Dominios"
+
+# automatic translation
+#~ msgid "Client Area"
+#~ msgstr "Área de Clientes"
+
+# automatic translation
+#~ msgid "Return to BestWebSoft Panel"
+#~ msgstr "Volver al panel de BestWebSoft"
+
+# automatic translation
+#~ msgid "Installed"
+#~ msgstr "Instalado"
+
+# automatic translation
+#~ msgid "Not Installed"
+#~ msgstr "No instalado"
+
+# automatic translation
+#~ msgid "Filter results"
+#~ msgstr "Filtrar Resultados"
+
+# automatic translation
+#~ msgid "Category"
+#~ msgstr "Categoría"
+
+# automatic translation
+#~ msgid "Not installed"
+#~ msgstr "No instalado"
+
+# automatic translation
+#~ msgid "Renew to get updates"
+#~ msgstr "Renovar para obtener actualizaciones"
+
+# automatic translation
+#, php-format
+#~ msgid "Update to v %s"
+#~ msgstr "Actualizar a v %s"
+
+# automatic translation
+#~ msgid "Get Pro"
+#~ msgstr "Obtener pro"
+
+# automatic translation
+#~ msgid "Activate this plugin"
+#~ msgstr "Activar este complemento"
+
+# automatic translation
+#~ msgid "Install this plugin"
+#~ msgstr "Instala este complemento"
+
+# automatic translation
+#~ msgid "Install Now"
+#~ msgstr "Instalar ahora"
+
+# automatic translation
+#~ msgid "Nothing found. Try another criteria."
+#~ msgstr "Nada Encontrado. Pruebe con otro criterio."
+
+# automatic translation
+#, php-format
+#~ msgid "By %s"
+#~ msgstr "Por %s"
+
+# automatic translation
+#~ msgid "Already Installed"
+#~ msgstr "Ya instalado"
+
+# automatic translation
+#~ msgid "Browse More WordPress Themes"
+#~ msgstr "Explorar más temas de WordPress"
+
+# automatic translation
+#~ msgid "Send to support"
+#~ msgstr "Enviar a soporte"
+
+# automatic translation
+#~ msgid "Send to custom email &#187;"
+#~ msgstr "Enviar a correo electrónico personalizado &#187;"
+
+# automatic translation
+#~ msgid "Information"
+#~ msgstr "Información"
+
+# automatic translation
+#~ msgid "Inactive"
+#~ msgstr "Inactivo"
+
+# automatic translation
+#~ msgid "Expired"
+#~ msgstr "Venció"
+
+# automatic translation
+#, php-format
+#~ msgid "%s day(-s) left"
+#~ msgstr "Quedan %s día(s)"
+
+# automatic translation
+#, php-format
+#~ msgid "Expired on %s"
+#~ msgstr "Caducó el %s"
+
+# automatic translation
+#~ msgid "Renew Now"
+#~ msgstr "Renovar ahora"
+
+# automatic translation
+#~ msgid "Active"
+#~ msgstr "Activo"
+
+# automatic translation
+#~ msgid "License"
+#~ msgstr "Licencia"
+
+# automatic translation
+#~ msgid "Status"
+#~ msgstr "Estado"
+
+# automatic translation
+#~ msgid "Version"
+#~ msgstr "Versión"
+
+# automatic translation
+#~ msgid ""
+#~ "The ability to add custom code is available in the Pro version. If the "
+#~ "Pro version is not available please contact us via Help Center"
+#~ msgstr ""
+#~ "La capacidad de agregar código personalizado está disponible en la "
+#~ "versión Pro. Si la versión Pro no está disponible, contáctenos a través "
+#~ "del Centro de ayuda"
+
+# automatic translation
+#~ msgid ""
+#~ "You do not have sufficient permissions to edit plugins for this site."
+#~ msgstr ""
+#~ "No tiene suficientes permisos para editar complementos para este sitio."
+
+# automatic translation
+#~ msgid "These styles will be added to the header on all pages of your site."
+#~ msgstr ""
+#~ "Estos estilos se agregarán al encabezado en todas las páginas de su sitio."
+
+# automatic translation
+#, php-format
+#~ msgid ""
+#~ "This PHP code will be hooked to the %s Action and will be printed on "
+#~ "front end only."
+#~ msgstr ""
+#~ "Este código PHP se conectará a la acción %s y se imprimirá solo en la "
+#~ "parte frontal."
+
+# automatic translation
+#~ msgid "These code will be added to the header on all pages of your site."
+#~ msgstr ""
+#~ "Estos códigos se agregarán al encabezado en todas las páginas de su sitio."
+
+# automatic translation
+#~ msgid "Browsing"
+#~ msgstr "Hojeada"
+
+# automatic translation
+#, php-format
+#~ msgid "Activate custom %s code."
+#~ msgstr "Activa el código %s personalizado."
+
+# automatic translation
+#, php-format
+#~ msgid "Learn more about %s"
+#~ msgstr "Más información sobre %s"
+
+# automatic translation
+#~ msgid "Miscellaneous Settings"
+#~ msgstr "Otras configuraciones"
+
+# automatic translation
+#, php-format
+#~ msgid ""
+#~ "It is prohibited to change %1$s settings on this site in the %2$s network "
+#~ "settings."
+#~ msgstr ""
+#~ "Está prohibido cambiar la configuración de %1$s en este sitio en la "
+#~ "configuración de red de %2$s."
+
+# automatic translation
+#, php-format
+#~ msgid ""
+#~ "It is prohibited to view %1$s settings on this site in the %2$s network "
+#~ "settings."
+#~ msgstr ""
+#~ "Está prohibido ver la configuración de %1$s en este sitio en la "
+#~ "configuración de red de %2$s."
+
+# automatic translation
+#~ msgid "Pro Options"
+#~ msgstr "Opciones profesionales"
+
+# automatic translation
+#~ msgid "Enable to display plugin Pro options."
+#~ msgstr "Habilite para mostrar las opciones del complemento Pro."
+
+# automatic translation
+#~ msgid "Track Usage"
+#~ msgstr "Seguimiento de uso"
+
+# automatic translation
+#~ msgid ""
+#~ "Enable to allow tracking plugin usage anonymously in order to make it "
+#~ "better."
+#~ msgstr ""
+#~ "Habilite para permitir el seguimiento del uso del complemento de forma "
+#~ "anónima para mejorarlo."
+
+# automatic translation
+#~ msgid "Default Settings"
+#~ msgstr "Configuración por defecto"
+
+# automatic translation
+#~ msgid "Restore Settings"
+#~ msgstr "Restaurar configuracion"
+
+# automatic translation
+#~ msgid "This will restore plugin settings to defaults."
+#~ msgstr ""
+#~ "Esto restaurará la configuración del complemento a los valores "
+#~ "predeterminados."
+
+# automatic translation
+#~ msgid "Import / Export"
+#~ msgstr "Importación y exportación"
+
+# automatic translation
+#, php-format
+#~ msgid ""
+#~ "Enter your license key to activate %s and get premium plugin features."
+#~ msgstr ""
+#~ "Ingrese su clave de licencia para activar %s y obtener funciones de "
+#~ "complemento premium."
+
+# automatic translation
+#~ msgid ""
+#~ "Unfortunately, you have exceeded the number of available tries per day. "
+#~ "Please, upload the plugin manually."
+#~ msgstr ""
+#~ "Desafortunadamente, ha excedido el número de intentos disponibles por "
+#~ "día. Por favor, cargue el complemento manualmente."
+
+# automatic translation
+#, php-format
+#~ msgid "Start Your Free %s-Day Trial Now"
+#~ msgstr "Comience su prueba gratuita de %s días ahora"
+
+# automatic translation
+#~ msgid ""
+#~ "If necessary, you can check if the license key is correct or reenter it "
+#~ "in the field below."
+#~ msgstr ""
+#~ "Si es necesario, puede verificar si la clave de licencia es correcta o "
+#~ "volver a ingresarla en el campo a continuación."
+
+# automatic translation
+#~ msgid "Manage License Settings"
+#~ msgstr "Administrar la configuración de la licencia"
+
+# automatic translation
+#~ msgid "Login to Client Area"
+#~ msgstr "Iniciar sesión en el área de clientes"
+
+# automatic translation
+#~ msgid ""
+#~ "Manage active licenses, download BWS products, and view your payment "
+#~ "history using BestWebSoft Client Area."
+#~ msgstr ""
+#~ "Administre licencias activas, descargue productos BWS y vea su historial "
+#~ "de pagos utilizando el Área de cliente de BestWebSoft."
+
+# automatic translation
+#~ msgid "Security check"
+#~ msgstr "Control de seguridad"
+
+# automatic translation
+#~ msgid "This license key is bound to another site."
+#~ msgstr "Esta clave de licencia está vinculada a otro sitio."
+
+# automatic translation
+#~ msgid ""
+#~ "This license key is valid, but Your license has expired. If you want to "
+#~ "update our plugin in future, you should extend the license."
+#~ msgstr ""
+#~ "Esta clave de licencia es válida, pero su licencia ha caducado. Si desea "
+#~ "actualizar nuestro complemento en el futuro, debe extender la licencia."
+
+# automatic translation
+#~ msgid "Unfortunately, you have exceeded the number of available tries."
+#~ msgstr "Desafortunadamente, ha excedido el número de intentos disponibles."
+
+# automatic translation
+#~ msgid ""
+#~ "Unfortunately, the Pro Trial licence was already installed to this "
+#~ "domain. The Pro Trial license can be installed only once."
+#~ msgstr ""
+#~ "Desafortunadamente, la licencia Pro Trial ya estaba instalada en este "
+#~ "dominio. La licencia Pro Trial solo se puede instalar una vez."
+
+# automatic translation
+#~ msgid "The Pro Trial license key is valid."
+#~ msgstr "La clave de licencia Pro Trial es válida."
+
+# automatic translation
+#, php-format
+#~ msgid ""
+#~ "In order to continue using the plugin it is necessary to buy a %s license."
+#~ msgstr ""
+#~ "Para continuar usando el complemento, es necesario comprar una licencia "
+#~ "de %s."
+
+# automatic translation
+#, php-format
+#~ msgid ""
+#~ "Unfortunately, Your license has expired. To continue getting top-priority "
+#~ "support and plugin updates, you should extend it in your %s."
+#~ msgstr ""
+#~ "Lamentablemente, su licencia ha caducado. Para continuar recibiendo "
+#~ "soporte de máxima prioridad y actualizaciones de complementos, debe "
+#~ "ampliarlo en su %s."
+
+# automatic translation
+#~ msgid "Please, enter Your license key"
+#~ msgstr "Por favor, introduzca su clave de licencia"
+
+# automatic translation
+#~ msgid "Need Help?"
+#~ msgstr "¿Necesitas ayuda?"
+
+# automatic translation
+#~ msgid "Read the Instruction"
+#~ msgstr "Lea las instrucciones"
+
+# automatic translation
+#~ msgid "Watch the Video"
+#~ msgstr "Ver el vídeo"
+
+# automatic translation
+#~ msgid "Start Your Free Trial"
+#~ msgstr "Comienza tu prueba gratuita"
+
+# automatic translation
+#~ msgid "Request a Feature"
+#~ msgstr "Solicitar una característica"
+
+# automatic translation
+#, php-format
+#~ msgid "How can we improve %s?"
+#~ msgstr "¿Cómo podemos mejorar %s?"
+
+# automatic translation
+#~ msgid "We look forward to hear your ideas."
+#~ msgstr "Esperamos escuchar sus ideas."
+
+# automatic translation
+#~ msgid "Describe your idea"
+#~ msgstr "Describe tu idea"
+
+# automatic translation
+#~ msgid "Send website data and allow to contact me back"
+#~ msgstr "Enviar datos del sitio web y permitir que me contacten de nuevo"
+
+# automatic translation
+#~ msgid "Submit"
+#~ msgstr "Entregar"
+
+# automatic translation
+#~ msgid "Processing"
+#~ msgstr "Procesando"
+
+# automatic translation
+#~ msgid "Thank you!"
+#~ msgstr "¡Gracias!"
+
+# automatic translation
+#~ msgid "Need help? We are ready to answer your questions."
+#~ msgstr "¿Necesitas ayuda? Estamos listos para responder a sus preguntas."
+
+# automatic translation
+#~ msgid "Contact Support"
+#~ msgstr "Soporte de contacto"
+
+# automatic translation
+#~ msgid "The plugin is not working"
+#~ msgstr "El complemento no funciona."
+
+# automatic translation
+#~ msgid "Kindly share what didn't work so we can fix it in future updates..."
+#~ msgstr ""
+#~ "Comparta amablemente lo que no funcionó para que podamos solucionarlo en "
+#~ "futuras actualizaciones..."
+
+# automatic translation
+#~ msgid "The plugin didn't work as expected"
+#~ msgstr "El complemento no funcionó como se esperaba."
+
+# automatic translation
+#~ msgid "What did you expect?"
+#~ msgstr "¿Que esperabas?"
+
+# automatic translation
+#~ msgid "The plugin suddenly stopped working"
+#~ msgstr "El complemento de repente dejó de funcionar"
+
+# automatic translation
+#~ msgid "The plugin broke my site"
+#~ msgstr "El complemento rompió mi sitio"
+
+# automatic translation
+#~ msgid "I couldn't understand how to get it work"
+#~ msgstr "No pude entender cómo hacerlo funcionar"
+
+# automatic translation
+#~ msgid "I found a better plugin"
+#~ msgstr "Encontré un complemento mejor."
+
+# automatic translation
+#~ msgid "What's the plugin name?"
+#~ msgstr "¿Cuál es el nombre del complemento?"
+
+# automatic translation
+#~ msgid ""
+#~ "The plugin is great, but I need specific feature that you don't support"
+#~ msgstr ""
+#~ "El complemento es excelente, pero necesito una función específica que no "
+#~ "admite"
+
+# automatic translation
+#~ msgid "What feature?"
+#~ msgstr "¿Qué característica?"
+
+# automatic translation
+#~ msgid "I no longer need the plugin"
+#~ msgstr "ya no necesito el plugin"
+
+# automatic translation
+#~ msgid "It's a temporary deactivation, I'm just debugging an issue"
+#~ msgstr "Es una desactivación temporal, solo estoy depurando un problema."
+
+# automatic translation
+#~ msgid "Other"
+#~ msgstr "Otro"
+
+# automatic translation
+#~ msgid "Quick Feedback"
+#~ msgstr "Comentarios rápidos"
+
+# automatic translation
+#~ msgid "If you have a moment, please let us know why you are deactivating"
+#~ msgstr "Si tiene un momento, háganos saber por qué está desactivando"
+
+# automatic translation
+#~ msgid "Submit and Deactivate"
+#~ msgstr "Enviar y desactivar"
+
+# automatic translation
+#~ msgid "Skip and Deactivate"
+#~ msgstr "Omitir y desactivar"
+
+# automatic translation
+#~ msgid "Please tell us the reason so we can improve it."
+#~ msgstr "Por favor, díganos el motivo para que podamos mejorarlo."
+
+# automatic translation
+#~ msgid "System Status"
+#~ msgstr "Estado del sistema"
+
+# automatic translation
+#~ msgid ""
+#~ "If necessary, you can check if the license key is correct or reenter it "
+#~ "in the field below. You can find your license key on your personal page - "
+#~ "Client Area - on our website"
+#~ msgstr ""
+#~ "Si es necesario, puede verificar si la clave de licencia es correcta o "
+#~ "volver a ingresarla en el campo a continuación. Puede encontrar su clave "
+#~ "de licencia en su página personal - Área de Cliente - en nuestro sitio web"
+
+# automatic translation
+#~ msgid ""
+#~ "(your username is the email address specified during the purchase). If "
+#~ "necessary, please submit \"Lost your password?\" request."
+#~ msgstr ""
+#~ "(su nombre de usuario es la dirección de correo electrónico especificada "
+#~ "durante la compra). Si es necesario, envíe \"¿Perdió su contraseña?\" "
+#~ "pedido."
+
+# automatic translation
+#~ msgid "After that, you can activate it by entering your license key."
+#~ msgstr "Después de eso, puede activarlo ingresando su clave de licencia."
+
+# automatic translation
+#~ msgid "License key can be found in the"
+#~ msgstr "La clave de licencia se puede encontrar en el"
+
+# automatic translation
+#~ msgid "(your username is the email address specified during the purchase)."
+#~ msgstr ""
+#~ "(su nombre de usuario es la dirección de correo electrónico especificada "
+#~ "durante la compra)."
+
+# automatic translation
+#~ msgid ""
+#~ "Congratulations! The Pro license of the plugin is activated successfully."
+#~ msgstr "¡Felicidades! La licencia Pro del complemento se activó con éxito."
+
+# automatic translation
+#~ msgid "Please, go to"
+#~ msgstr "Por favor, ve a"
+
+# automatic translation
+#~ msgid "the setting page"
+#~ msgstr "la página de configuración"
+
+# automatic translation
+#~ msgid "Restore all plugin settings to defaults"
+#~ msgstr ""
+#~ "Restaurar todas las configuraciones del complemento a los valores "
+#~ "predeterminados"
+
+# automatic translation
+#~ msgid "Restore settings"
+#~ msgstr "Restaurar configuracion"
+
+# automatic translation
+#~ msgid ""
+#~ "Congratulations! Pro version of the plugin is  installed and activated "
+#~ "successfully."
+#~ msgstr ""
+#~ "¡Felicidades! La versión Pro del complemento está instalada y activada "
+#~ "con éxito."
+
+# automatic translation
+#~ msgid "Show Pro features"
+#~ msgstr "Mostrar funciones profesionales"
+
+# automatic translation
+#~ msgid "Enter your license key to install and activate"
+#~ msgstr "Ingrese su clave de licencia para instalar y activar"
+
+# automatic translation
+#~ msgid "version of the plugin."
+#~ msgstr "versión del complemento."
+
+# automatic translation
+#~ msgid "Admin Tools"
+#~ msgstr "Herramientas de administración"
+
+# automatic translation
+#~ msgid "Content"
+#~ msgstr "Contenido"
+
+# automatic translation
+#~ msgid "eCommerce"
+#~ msgstr "comercio electrónico"
+
+# automatic translation
+#~ msgid "Marketing"
+#~ msgstr "Marketing"
+
+# automatic translation
+#~ msgid "Navigation"
+#~ msgstr "Navegación"
+
+# automatic translation
+#~ msgid "Recommended"
+#~ msgstr "Recomendado"
+
+# automatic translation
+#~ msgid "Security"
+#~ msgstr "Seguridad"
+
+# automatic translation
+#~ msgid "SEO"
+#~ msgstr "ESTE"
+
+# automatic translation
+#~ msgid "SMM"
+#~ msgstr "SMM"
+
+# automatic translation
+#~ msgid "Give a birth for your bike rental and booking WordPress website."
+#~ msgstr ""
+#~ "Da a luz a tu sitio web de WordPress de alquiler y reserva de bicicletas."
+
+# automatic translation
+#~ msgid "Best secure captcha plugin to protect your WordPress forms."
+#~ msgstr ""
+#~ "El mejor complemento seguro de captcha para proteger sus formularios de "
+#~ "WordPress."
+
+# automatic translation
+#~ msgid "Create your own rental website for car renting and booking."
+#~ msgstr ""
+#~ "Cree su propio sitio web de alquiler para alquilar y reservar automóviles."
+
+# automatic translation
+#~ msgid ""
+#~ "Add columns with custom content to WordPress website pages, posts, "
+#~ "widgets, etc."
+#~ msgstr ""
+#~ "Agregue columnas con contenido personalizado a las páginas del sitio web "
+#~ "de WordPress, publicaciones, widgets, etc."
+
+# automatic translation
+#~ msgid ""
+#~ "Allow customers to reach you using secure contact form plugin any website "
+#~ "must have."
+#~ msgstr ""
+#~ "Permita que los clientes se comuniquen con usted mediante el complemento "
+#~ "de formulario de contacto seguro que cualquier sitio web debe tener."
+
+# automatic translation
+#~ msgid "Add unlimited number of contact forms to WordPress website."
+#~ msgstr ""
+#~ "Agregue un número ilimitado de formularios de contacto al sitio web de "
+#~ "WordPress."
+
+# automatic translation
+#~ msgid "Save and manage Contact Form messages. Never lose important data."
+#~ msgstr ""
+#~ "Guarde y administre los mensajes del formulario de contacto. Nunca pierda "
+#~ "datos importantes."
+
+# automatic translation
+#~ msgid "Add unlimited custom pages to WordPress admin dashboard."
+#~ msgstr ""
+#~ "Agregue páginas personalizadas ilimitadas al panel de administración de "
+#~ "WordPress."
+
+# automatic translation
+#~ msgid ""
+#~ "Add custom post types and taxonomies to WordPress website search results."
+#~ msgstr ""
+#~ "Agregue tipos de publicaciones personalizadas y taxonomías a los "
+#~ "resultados de búsqueda del sitio web de WordPress."
+
+# automatic translation
+#~ msgid "Add PayPal and 2CO donate buttons to receive charity payments."
+#~ msgstr ""
+#~ "Agregue los botones de donación de PayPal y 2CO para recibir pagos de "
+#~ "caridad."
+
+# automatic translation
+#~ msgid ""
+#~ "Get latest error log messages to diagnose website problems. Define and "
+#~ "fix issues faster."
+#~ msgstr ""
+#~ "Obtenga los últimos mensajes de registro de errores para diagnosticar "
+#~ "problemas del sitio web. Defina y solucione problemas más rápido."
+
+# automatic translation
+#~ msgid ""
+#~ "Add Facebook Follow, Like, and Share buttons to WordPress posts, pages, "
+#~ "and widgets."
+#~ msgstr ""
+#~ "Agregue los botones Seguir, Me gusta y Compartir de Facebook a las "
+#~ "publicaciones, páginas y widgets de WordPress."
+
+# automatic translation
+#~ msgid ""
+#~ "Add beautiful galleries, albums & images to your WordPress website in a "
+#~ "few clicks."
+#~ msgstr ""
+#~ "Agregue hermosas galerías, álbumes e imágenes a su sitio web de WordPress "
+#~ "con unos pocos clics."
+
+# automatic translation
+#~ msgid ""
+#~ "Stronger security solution which protects your WordPress website from "
+#~ "hacks and unauthorized login attempts."
+#~ msgstr ""
+#~ "Solución de seguridad más sólida que protege su sitio web de WordPress de "
+#~ "ataques e intentos de inicio de sesión no autorizados."
+
+# automatic translation
+#~ msgid ""
+#~ "Add Adsense ads to WordPress website pages, posts, custom posts, search "
+#~ "results, categories, tags, and widgets."
+#~ msgstr ""
+#~ "Agregue anuncios de Adsense a las páginas del sitio web de WordPress, "
+#~ "publicaciones, publicaciones personalizadas, resultados de búsqueda, "
+#~ "categorías, etiquetas y widgets."
+
+# automatic translation
+#~ msgid ""
+#~ "Add Google Analytics code to WordPress website and track basic stats."
+#~ msgstr ""
+#~ "Agregue el código de Google Analytics al sitio web de WordPress y realice "
+#~ "un seguimiento de las estadísticas básicas."
+
+# automatic translation
+#~ msgid "Protect WordPress website forms from spam entries with reCaptcha."
+#~ msgstr ""
+#~ "Proteja los formularios del sitio web de WordPress de las entradas de "
+#~ "spam con reCaptcha."
+
+# automatic translation
+#~ msgid "Add customized Google maps to WordPress posts, pages and widgets."
+#~ msgstr ""
+#~ "Agregue mapas de Google personalizados a las publicaciones, páginas y "
+#~ "widgets de WordPress."
+
+# automatic translation
+#~ msgid ""
+#~ "Generate and add XML sitemap to WordPress website. Help search engines "
+#~ "index your blog."
+#~ msgstr ""
+#~ "Genere y agregue un mapa del sitio XML al sitio web de WordPress. Ayuda a "
+#~ "los motores de búsqueda a indexar tu blog."
+
+# automatic translation
+#~ msgid ""
+#~ "Replace external WordPress website links with Google shortlinks and track "
+#~ "click stats."
+#~ msgstr ""
+#~ "Reemplace los enlaces de sitios web externos de WordPress con enlaces "
+#~ "cortos de Google y realice un seguimiento de las estadísticas de clics."
+
+#~ msgid "Create Content with GPT."
+#~ msgstr "Crear contenido con GPT."
+
+# automatic translation
+#~ msgid ""
+#~ "Protect WordPress website – allow and deny access for certain IP "
+#~ "addresses, hostnames, etc."
+#~ msgstr ""
+#~ "Proteja el sitio web de WordPress: permita y deniegue el acceso a ciertas "
+#~ "direcciones IP, nombres de host, etc."
+
+# automatic translation
+#~ msgid ""
+#~ "Create your personal job board and listing WordPress website. Search "
+#~ "jobs, submit CV/resumes, choose candidates."
+#~ msgstr ""
+#~ "Crea tu bolsa de trabajo personal y lista el sitio web de WordPress. "
+#~ "Buscar trabajos, enviar CV/currículums, elegir candidatos."
+
+# automatic translation
+#~ msgid ""
+#~ "Protect WordPress website against brute force attacks. Limit rate of "
+#~ "login attempts."
+#~ msgstr ""
+#~ "Proteja el sitio web de WordPress contra ataques de fuerza bruta. Limite "
+#~ "la tasa de intentos de inicio de sesión."
+
+# automatic translation
+#~ msgid ""
+#~ "Add LinkedIn Share and Follow buttons to WordPress posts, pages and "
+#~ "widgets. 5 plugins included – profile, insider, etc."
+#~ msgstr ""
+#~ "Agregue los botones Compartir y Seguir de LinkedIn a las publicaciones, "
+#~ "páginas y widgets de WordPress. 5 complementos incluidos: perfil, "
+#~ "información privilegiada, etc."
+
+# automatic translation
+#~ msgid ""
+#~ "Translate WordPress website content to other languages manually. Create "
+#~ "multilingual pages, posts, widgets, menus, etc."
+#~ msgstr ""
+#~ "Traduzca el contenido del sitio web de WordPress a otros idiomas "
+#~ "manualmente. Cree páginas multilingües, publicaciones, widgets, menús, "
+#~ "etc."
+
+# automatic translation
+#~ msgid ""
+#~ "Add customizable pagination to WordPress website. Split long content to "
+#~ "multiple pages for better navigation."
+#~ msgstr ""
+#~ "Agregue paginación personalizable al sitio web de WordPress. Divida el "
+#~ "contenido largo en varias páginas para una mejor navegación."
+
+# automatic translation
+#~ msgid ""
+#~ "Generate PDF files and print WordPress posts/pages. Customize document "
+#~ "header/footer styles and appearance."
+#~ msgstr ""
+#~ "Genere archivos PDF e imprima publicaciones/páginas de WordPress. "
+#~ "Personalice los estilos y la apariencia del encabezado/pie de página del "
+#~ "documento."
+
+# automatic translation
+#~ msgid ""
+#~ "Add Pinterest Follow, Pin It buttons and profile widgets (Pin, Board, "
+#~ "Profile) to WordPress posts, pages and widgets."
+#~ msgstr ""
+#~ "Agregue los botones Seguir, Pin It y widgets de perfil (Pin, Tablero, "
+#~ "Perfil) de Pinterest a las publicaciones, páginas y widgets de WordPress."
+
+# automatic translation
+#~ msgid ""
+#~ "Create your personal portfolio WordPress website. Manage and showcase "
+#~ "past projects to get more clients."
+#~ msgstr ""
+#~ "Cree su sitio web de WordPress de cartera personal. Administre y muestre "
+#~ "proyectos anteriores para obtener más clientes."
+
+# automatic translation
+#~ msgid ""
+#~ "Export WordPress posts to CSV file format easily. Configure data order."
+#~ msgstr ""
+#~ "Exporte publicaciones de WordPress a formato de archivo CSV fácilmente. "
+#~ "Configurar orden de datos."
+
+# automatic translation
+#~ msgid ""
+#~ "Add and display HTML advertisement banner on WordPress website. Customize "
+#~ "bar styles and appearance."
+#~ msgstr ""
+#~ "Agregue y muestre un banner publicitario HTML en el sitio web de "
+#~ "WordPress. Personaliza los estilos y la apariencia de la barra."
+
+# automatic translation
+#~ msgid ""
+#~ "Add customizable quotes and tips blocks to WordPress posts, pages and "
+#~ "widgets."
+#~ msgstr ""
+#~ "Agregue citas personalizables y bloques de consejos a las publicaciones, "
+#~ "páginas y widgets de WordPress."
+
+# automatic translation
+#~ msgid ""
+#~ "Add rating plugin to your WordPress website to receive feedback from your "
+#~ "customers."
+#~ msgstr ""
+#~ "Agregue un complemento de calificación a su sitio web de WordPress para "
+#~ "recibir comentarios de sus clientes."
+
+# automatic translation
+#~ msgid ""
+#~ "Create your personal real estate WordPress website. Sell, rent and buy "
+#~ "properties. Add, search and browse listings easily."
+#~ msgstr ""
+#~ "Cree su sitio web personal de bienes raíces en WordPress. Vender, "
+#~ "alquilar y comprar propiedades. Agregue, busque y explore listados "
+#~ "fácilmente."
+
+# automatic translation
+#~ msgid ""
+#~ "Add related, featured, latest, and popular posts to your WordPress "
+#~ "website. Connect your blog readers with a relevant content."
+#~ msgstr ""
+#~ "Agregue publicaciones relacionadas, destacadas, más recientes y populares "
+#~ "a su sitio web de WordPress. Conecta a los lectores de tu blog con un "
+#~ "contenido relevante."
+
+# automatic translation
+#~ msgid ""
+#~ "Send bulk email messages to WordPress users. Custom templates, advanced "
+#~ "settings and detailed reports."
+#~ msgstr ""
+#~ "Envíe mensajes de correo electrónico masivos a los usuarios de WordPress. "
+#~ "Plantillas personalizadas, configuraciones avanzadas e informes "
+#~ "detallados."
+
+# automatic translation
+#~ msgid ""
+#~ "The best responsive slider plugin for your WordPress website. Create "
+#~ "beautifully animated slides just in a few clicks."
+#~ msgstr ""
+#~ "El mejor complemento deslizante receptivo para su sitio web de WordPress. "
+#~ "Cree diapositivas bellamente animadas con solo unos pocos clics."
+
+# automatic translation
+#~ msgid ""
+#~ "Configure SMTP server to receive email messages from WordPress to Gmail, "
+#~ "Yahoo, Hotmail and other services."
+#~ msgstr ""
+#~ "Configure el servidor SMTP para recibir mensajes de correo electrónico de "
+#~ "WordPress a Gmail, Yahoo, Hotmail y otros servicios."
+
+# automatic translation
+#~ msgid ""
+#~ "Add social media buttons and widgets to WordPress posts, pages and "
+#~ "widgets. FB, Twitter, Pinterest, LinkedIn."
+#~ msgstr ""
+#~ "Agregue botones y widgets de redes sociales a las publicaciones, páginas "
+#~ "y widgets de WordPress. Facebook, Twitter, Pinterest, LinkedIn."
+
+# automatic translation
+#~ msgid ""
+#~ "Add social media login, registration, and commenting to your WordPress "
+#~ "website."
+#~ msgstr ""
+#~ "Agregue inicio de sesión, registro y comentarios de redes sociales a su "
+#~ "sitio web de WordPress."
+
+# automatic translation
+#~ msgid ""
+#~ "Add email newsletter sign up form to WordPress posts, pages and widgets. "
+#~ "Collect data and subscribe your users."
+#~ msgstr ""
+#~ "Agregue el formulario de registro del boletín de correo electrónico a las "
+#~ "publicaciones, páginas y widgets de WordPress. Recoge datos y suscribe a "
+#~ "tus usuarios."
+
+# automatic translation
+#~ msgid ""
+#~ "Add testimonials and feedbacks from your customers to WordPress website "
+#~ "posts, pages, and widgets."
+#~ msgstr ""
+#~ "Agregue testimonios y comentarios de sus clientes a las publicaciones, "
+#~ "páginas y widgets del sitio web de WordPress."
+
+# automatic translation
+#~ msgid ""
+#~ "Best timesheet plugin for WordPress. Track employee time, streamline "
+#~ "attendance and generate reports."
+#~ msgstr ""
+#~ "El mejor complemento de hoja de tiempo para WordPress. Realice un "
+#~ "seguimiento del tiempo de los empleados, optimice la asistencia y genere "
+#~ "informes."
+
+# automatic translation
+#~ msgid ""
+#~ "Add Twitter Follow, Tweet, Hashtag, and Mention buttons to WordPress "
+#~ "posts and pages."
+#~ msgstr ""
+#~ "Agregue los botones Seguir, Tweet, Hashtag y Mención de Twitter a las "
+#~ "publicaciones y páginas de WordPress."
+
+# automatic translation
+#~ msgid ""
+#~ "Automatically check and update WordPress website core with all installed "
+#~ "plugins and themes to the latest versions."
+#~ msgstr ""
+#~ "Verifique y actualice automáticamente el núcleo del sitio web de "
+#~ "WordPress con todos los complementos y temas instalados a las últimas "
+#~ "versiones."
+
+# automatic translation
+#~ msgid ""
+#~ "Powerful user role management plugin for WordPress website. Create, edit, "
+#~ "copy, and delete user roles."
+#~ msgstr ""
+#~ "Potente complemento de gestión de funciones de usuario para el sitio web "
+#~ "de WordPress. Cree, edite, copie y elimine roles de usuario."
+
+# automatic translation
+#~ msgid ""
+#~ "Display live count of online visitors who are currently browsing your "
+#~ "WordPress website."
+#~ msgstr ""
+#~ "Muestre el recuento en vivo de los visitantes en línea que actualmente "
+#~ "están navegando en su sitio web de WordPress."
+
+# automatic translation
+#~ msgid ""
+#~ "Backup and export Zendesk Help Center content automatically to your "
+#~ "WordPress website database."
+#~ msgstr ""
+#~ "Haga una copia de seguridad y exporte el contenido del Centro de ayuda de "
+#~ "Zendesk automáticamente a la base de datos de su sitio web de WordPress."
