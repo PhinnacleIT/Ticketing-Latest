@@ -1,6 +1,17 @@
 Changelog
 =========
 
+= 4.14.1 =
+
+_Release date: Sep 10, 2026_
+
+- Security: Escape dynamic content tags based on where they appear in the HTML. Values in URL attributes can no longer use a protocol like `javascript:`, and values in event handler attributes are removed.
+- Integrations: Prosopo Procaptcha now follows the alignment of the surrounding form. Thanks [Chris Taylor](https://github.com/forgetso)!
+- Integrations: Fix Prosopo Procaptcha breaking other scripts on the page when the theme wraps the form in paragraph tags. Thanks [Chris Taylor](https://github.com/forgetso)!
+- Misc: Fix the Mailchimp Site Tracking Pixel not finding an already connected site for the same domain, for example when it was registered with a `www.` prefix or on a multisite subdirectory install.
+- Misc: Log the full Mailchimp error message when the Site Tracking Pixel fails to connect.
+
+
 = 4.14.0 =
 
 _Release date: Aug 4, 2026_
