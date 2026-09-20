@@ -5,8 +5,7 @@
  *
  * Standard: PSR-2
  *
- * @package SC\DUPX\DB
- * @link    http://www.php-fig.org/psr/psr-2/
+ * @link http://www.php-fig.org/psr/psr-2/
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -21,12 +20,12 @@ interface DUPX_Host_interface
      *
      * @return string
      */
-    public static function getIdentifier();
+    public static function getIdentifier(): string;
 
     /**
      * @return bool true if is current host
      */
-    public function isHosting();
+    public function isHosting(): bool;
 
     /**
      * the init function.
@@ -34,17 +33,19 @@ interface DUPX_Host_interface
      *
      * @return void
      */
-    public function init();
+    public function init(): void;
 
     /**
      * return the label of current hosting
      *
      * @return string
      */
-    public function getLabel();
+    public function getLabel(): string;
 
     /**
      * this function is called if current hosting is this
+     *
+     * @return void
      */
-    public function setCustomParams();
+    public function setCustomParams(): void;
 }

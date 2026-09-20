@@ -1,23 +1,20 @@
 <?php
 
-/**
- * @package Duplicator
- */
-
 namespace Duplicator\Utils;
 
+use Duplicator\Core\Exceptions\DupliException;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapLog;
 use Duplicator\Libs\Snap\SnapUtil;
-use Exception;
+use Duplicator\Utils\Logging\DupLog;
+use Throwable;
 use ZipArchive;
 
 class ZipArchiveExtended
 {
     /** @var string */
     protected $archivePath = '';
-    /** @var ZipArchive */
-    protected $zipArchive = null;
+    protected \ZipArchive $zipArchive;
     /** @var bool */
     protected $isOpened = false;
     /** @var bool */
@@ -31,14 +28,22 @@ class ZipArchiveExtended
      * Class constructor
      *
      * @param string $path zip archive path
+     *
+     * @throws DupliException
      */
     public function __construct($path)
     {
         if (!self::isPhpZipAvailable()) {
-            throw new Exception('ZipArchive PHP module is not installed/enabled.');
+            throw new DupliException(
+                'ZipArchive PHP module is not installed/enabled.',
+                DupliException::CODE_ZIP_NOT_AVAILABLE
+            );
         }
         if (file_exists($path) && (!is_file($path) || !is_writeable($path))) {
-            throw new Exception('File ' . SnapLog::v2str($path) . 'exists but isn\'t valid');
+            throw new DupliException(
+                'Zip path exists but isn\'t a writable file.' . "\n" . SnapLog::v2str($path),
+                DupliException::CODE_ZIP_PATH_NOT_WRITABLE
+            );
         }
 
         $this->archivePath = $path;
@@ -84,7 +89,7 @@ class ZipArchiveExtended
 
         return SnapIO::regexGlobCallback(
             $dirPath,
-            function ($path) use ($dirPath, $archivePath, $thisObj) {
+            function ($path) use ($dirPath, $archivePath, $thisObj): void {
                 $newPath = $archivePath . SnapIO::getRelativePath($path, $dirPath);
 
                 if (is_dir($path)) {
@@ -93,7 +98,7 @@ class ZipArchiveExtended
                     $thisObj->addFile($path, $newPath);
                 }
             },
-            array('recursive' => true)
+            ['recursive' => true]
         );
     }
 
@@ -104,7 +109,7 @@ class ZipArchiveExtended
      *
      * @return bool TRUE on success or FALSE on failure.
      */
-    public function addEmptyDir($path)
+    public function addEmptyDir($path): bool
     {
         return $this->zipArchive->addEmptyDir($path);
     }
@@ -112,13 +117,14 @@ class ZipArchiveExtended
     /**
      * Add file on zip archive
      *
-     * @param string $filepath    file path
-     * @param string $archivePath archive path, if empty use file name
-     * @param int    $maxSize     max size of file, if the size is grater than this value the file will be truncated, 0 for no limit
+     * @param string $filepath        file path
+     * @param string $archivePath     archive path, if empty use file name
+     * @param bool   $forceUncompress if true the file will be stored uncompressed
+     * @param int    $maxSize         max size of file, if the size is grater than this value the file will be truncated, 0 for no limit
      *
      * @return bool TRUE on success or FALSE on failure.
      */
-    public function addFile($filepath, $archivePath = '', $maxSize = 0)
+    public function addFile($filepath, $archivePath = '', $forceUncompress = false, $maxSize = 0)
     {
         if (!is_file($filepath) || !is_readable($filepath)) {
             return false;
@@ -137,7 +143,7 @@ class ZipArchiveExtended
         if ($result && $this->encrypt) {
             $this->zipArchive->setEncryptionName($archivePath, ZipArchive::EM_AES_256);
         }
-        if ($result && !$this->compressed) {
+        if ($result && (!$this->compressed || $forceUncompress)) {
             $this->zipArchive->setCompressionName($archivePath, ZipArchive::CM_STORE);
         }
         return $result;
@@ -170,23 +176,26 @@ class ZipArchiveExtended
     /**
      * Open Zip archive, create it if don't exists
      *
-     * @return bool|int Returns TRUE on success or the error code. See zip archive
+     * @return bool True on success, false on failure (the ZipArchive error code is logged)
      */
-    public function open()
+    public function open(): bool
     {
         if ($this->isOpened) {
             return true;
         }
 
-        if (($result = $this->zipArchive->open($this->archivePath, ZipArchive::CREATE)) === true) {
-            $this->isOpened = true;
-            if ($this->encrypt) {
-                $this->zipArchive->setPassword($this->password);
-            } else {
-                $this->zipArchive->setPassword('');
-            }
+        if (($result = $this->zipArchive->open($this->archivePath, ZipArchive::CREATE)) !== true) {
+            DupLog::infoTrace("ZipArchive open failed with code {$result} on {$this->archivePath}");
+            return false;
         }
-        return $result;
+
+        $this->isOpened = true;
+        if ($this->encrypt) {
+            $this->zipArchive->setPassword($this->password);
+        } else {
+            $this->zipArchive->setPassword('');
+        }
+        return true;
     }
 
     /**
@@ -201,12 +210,38 @@ class ZipArchiveExtended
         }
 
         $result = false;
-
-        if (($result = $this->zipArchive->close()) === true) {
-            $this->isOpened = false;
+        try {
+            if (($result = $this->zipArchive->close()) !== true) {
+                DupLog::infoTrace("ZipArchive close failed on {$this->archivePath} [{$this->getLastErrorDetails()}]");
+            }
+        } catch (Throwable $e) {
+            DupLog::infoTrace('ZipArchive close error: ' . $e->getMessage());
+            $result = false;
         }
 
+        // Closing is one-shot: after a failed close PHP invalidates the internal
+        // object, so no further operation may be attempted on it. Never throws:
+        // it is also called from the destructor, where an exception during stack
+        // unwinding would replace the original in-flight exception.
+        $this->isOpened = false;
+
         return $result;
+    }
+
+    /**
+     * Describe the last ZipArchive error for logging
+     *
+     * @return string
+     */
+    protected function getLastErrorDetails(): string
+    {
+        try {
+            $statusString = $this->zipArchive->getStatusString();
+            return 'status ' . $this->zipArchive->status . '/' . $this->zipArchive->statusSys .
+                ': ' . ($statusString === false ? 'unknown' : $statusString);
+        } catch (Throwable $e) {
+            return 'status unavailable: ' . $e->getMessage();
+        }
     }
 
     /**
@@ -214,7 +249,7 @@ class ZipArchiveExtended
      *
      * @return int
      */
-    public function getNumFiles()
+    public function getNumFiles(): int
     {
         $this->open();
         return $this->zipArchive->numFiles;
@@ -239,12 +274,7 @@ class ZipArchiveExtended
      */
     public function setCompressed($compressed)
     {
-        if (!method_exists($this->zipArchive, 'setCompressionName')) {
-            // If don't exists setCompressionName the archive can't create uncrompressed
-            $this->compressed = true;
-        } else {
-            $this->compressed = $compressed;
-        }
+        $this->compressed = $compressed;
         return $this->compressed;
     }
 
@@ -272,12 +302,6 @@ class ZipArchiveExtended
                 return false;
             }
 
-            $zipArchive = new ZipArchive();
-            if (!method_exists($zipArchive, 'setEncryptionName')) {
-                $isEncryptAvailable = false;
-                return false;
-            }
-
             if (version_compare(self::getLibzipVersion(), '1.2.0', '<')) {
                 $isEncryptAvailable = false;
                 return false;
@@ -296,40 +320,36 @@ class ZipArchiveExtended
      */
     public static function getLibzipVersion()
     {
-        static $zlibVersion =  null;
+        static $libzipVersion = null;
 
-        if (is_null($zlibVersion)) {
+        if (is_null($libzipVersion)) {
             ob_start();
             SnapUtil::phpinfo(INFO_MODULES);
             $info = (string) ob_get_clean();
 
             if (preg_match('/<td\s.*?>\s*(libzip.*\sver.+?)\s*<\/td>\s*<td\s.*?>\s*(.+?)\s*<\/td>/i', $info, $matches) !== 1) {
-                $zlibVersion = "0";
+                $libzipVersion = "0";
             } else {
-                $zlibVersion = $matches[2];
+                $libzipVersion = $matches[2];
             }
         }
 
-        return $zlibVersion;
+        return $libzipVersion;
     }
 
-     /**
-      * Set encryption
-      *
-      * @param bool   $encrypt  true if archvie must be encrypted
-      * @param string $password password
+    /**
+     * Set encryption
+     *
+     * @param bool   $encrypt  true if archvie must be encrypted
+     * @param string $password password
 
-      * @return bool
-      */
+     * @return bool
+     */
     public function setEncrypt($encrypt, $password = '')
     {
-        $this->encrypt = (self::isEncryptionAvaliable() ? $encrypt : false);
+        $this->encrypt = (self::isEncryptionAvaliable() && $encrypt);
 
-        if ($this->encrypt) {
-            $this->password = $password;
-        } else {
-            $this->password = '';
-        }
+        $this->password = $this->encrypt ? $password : '';
 
         if ($this->isOpened) {
             if ($this->encrypt) {
@@ -350,16 +370,26 @@ class ZipArchiveExtended
      * @param string $password Password if archive is encrypted or empty string
      *
      * @return false|array{name:string,index:int,crc:int,size:int,mtime:int,comp_size:int,comp_method:int}
+     *
+     * @throws DupliException
      */
     public static function searchRegex($path, $regex, $password = '')
     {
         if (!self::isPhpZipAvailable()) {
-            throw new Exception(__('ZipArchive PHP module is not installed/enabled. The current Backup cannot be opened.', 'duplicator'));
+            throw new DupliException(
+                'ZipArchive PHP module is not installed/enabled.',
+                DupliException::CODE_ZIP_NOT_AVAILABLE,
+                __('ZipArchive PHP module is not installed/enabled. The current Backup cannot be opened.', 'duplicator')
+            );
         }
 
         $zip = new ZipArchive();
-        if ($zip->open($path) !== true) {
-            throw new Exception('Cannot open the ZipArchive file.  Please see the online FAQ\'s for additional help.' . $path);
+        if (($result = $zip->open($path)) !== true) {
+            throw new DupliException(
+                'Cannot open the ZipArchive file, error code ' . $result . "\n" . SnapLog::v2str($path),
+                DupliException::CODE_ZIP_OPEN_FAILED,
+                __('Cannot open the Backup archive file.', 'duplicator')
+            );
         }
 
         if (strlen($password)) {

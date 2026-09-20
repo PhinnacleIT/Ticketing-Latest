@@ -1,15 +1,5 @@
 <?php
 
-/**
- * param descriptor
- *
- * Standard: PSR-2
- *
- * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
- */
-
 namespace Duplicator\Installer\Core\Params\Items;
 
 /**
@@ -38,7 +28,7 @@ class ParamFormPass extends ParamForm
      *
      * @return string
      */
-    protected function valueToInfo()
+    protected function valueToInfo(): string
     {
         return '**********';
     }
@@ -50,9 +40,9 @@ class ParamFormPass extends ParamForm
      */
     protected function pwdToggleHtml()
     {
-        $attrs = array(
+        $attrs = [
             'value' => $this->getInputValue(),
-        );
+        ];
 
         if ($this->isDisabled()) {
             $attrs['disabled'] = 'disabled';
@@ -80,9 +70,9 @@ class ParamFormPass extends ParamForm
      *
      * @param string $formType form type
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    protected static function getDefaultAttrForFormType($formType)
+    protected static function getDefaultAttrForFormType($formType): array
     {
         $attrs = parent::getDefaultAttrForFormType($formType);
         if ($formType == self::FORM_TYPE_PWD_TOGGLE) {

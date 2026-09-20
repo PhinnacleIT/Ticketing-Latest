@@ -1,5 +1,8 @@
 <?php
 
+use Duplicator\Libs\Snap\FunctionalityCheck;
+use Duplicator\Libs\Snap\SnapUtil;
+
 $archiveConfig = DUPX_ArchiveConfig::getInstance();
 ?>
 <div id="dialog-server-details" title="Setup Information" style="display:none">
@@ -12,15 +15,14 @@ $archiveConfig = DUPX_ArchiveConfig::getInstance();
         $ini_error_path = ini_get('error_log');
         ?>
         <div class="hdr">SERVER DETAILS</div>
-        <label>Try CDN Request:</label>
-        <?php echo (DUPX_U::tryCDN("ajax.aspnetcdn.com", 443) && DUPX_U::tryCDN("ajax.googleapis.com", 443)) ? 'Yes' : 'No'; ?><br/>
         <label>Web Server:</label>              <?php echo DUPX_U::esc_html($_SERVER['SERVER_SOFTWARE']); ?><br/>
         <label>PHP Version:</label>             <?php echo DUPX_U::esc_html(phpversion()); ?><br/>
+        <label>PHP INI Path:</label>            <?php echo empty($ini_path) ? 'Unable to detect loaded php.ini file' : DUPX_U::esc_html($ini_path); ?>  <br/>
         <label>PHP SAPI:</label>                <?php echo DUPX_U::esc_html(php_sapi_name()); ?><br/>
-        <label>PHP ZIP Archive:</label>         <?php echo class_exists('ZipArchive') ? 'Is Installed' : 'Not Installed'; ?> <br/>
+        <label>PHP ZIP Archive:</label>         <?php echo DUPX_Conf_Utils::isPhpZipAvailable() ? 'Is Installed' : 'Not Installed'; ?> <br/>
         <label>PHP max_execution_time:</label>  <?php echo $ini_max_time === false ? 'unable to find' : DUPX_U::esc_html($ini_max_time); ?><br/>
         <label>PHP memory_limit:</label>        <?php echo empty($ini_memory) ? 'unable to find' : DUPX_U::esc_html($ini_memory); ?><br/>
-        <label>Error Log Path:</label>          <?php echo empty($ini_error_path) ? 'unable to find' : '/dup-installer/php_error__[HASH].log' ?><br/>
+        <label>Error Log Path:</label>          <?php echo empty($ini_error_path) ? 'unable to find' : DUPX_U::esc_html($ini_error_path); ?><br/>
 
         <br/>
         <div class="hdr">PACKAGE BUILD DETAILS</div>

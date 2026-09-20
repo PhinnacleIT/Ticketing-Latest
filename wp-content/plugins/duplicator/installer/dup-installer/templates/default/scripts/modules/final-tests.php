@@ -1,21 +1,15 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-use Duplicator\Installer\Utils\Tests\WP\TestsExecuter;
 use Duplicator\Libs\Snap\SnapJson;
-
-
 ?>
 <script>
     DUPX.finalTests = {
-        frontendTest: <?php echo json_encode(TestsExecuter::getFrontendUrl()); ?>,
-        backendTest: <?php echo json_encode(TestsExecuter::getBackendUrl()); ?>,
+        frontendTest: <?php echo json_encode(\Duplicator\Installer\Utils\Tests\WP\TestsExecuter::getFrontendUrl()); ?>,
+        backendTest: <?php echo json_encode(\Duplicator\Installer\Utils\Tests\WP\TestsExecuter::getBackendUrl()); ?>,
         afterCallback: null,
         testsResults: {
             'wp_frontend': {
@@ -40,7 +34,7 @@ use Duplicator\Libs\Snap\SnapJson;
             let action = <?php echo SnapJson::jsonEncode(DUPX_Ctrl_ajax::ACTION_FINAL_TESTS_PREPARE); ?>;
             let token = <?php echo SnapJson::jsonEncode(DUPX_Ctrl_ajax::generateToken(DUPX_Ctrl_ajax::ACTION_FINAL_TESTS_PREPARE)); ?>;
 
-            DUPX.StandardJsonAjaxWrapper(
+            DUPX.StandarJsonAjaxWrapper(
                     action,
                     token,
                     {},
@@ -97,7 +91,7 @@ use Duplicator\Libs\Snap\SnapJson;
             let action = <?php echo SnapJson::jsonEncode(DUPX_Ctrl_ajax::ACTION_FINAL_TESTS_AFTER); ?>;
             let token = <?php echo SnapJson::jsonEncode(DUPX_Ctrl_ajax::generateToken(DUPX_Ctrl_ajax::ACTION_FINAL_TESTS_AFTER)); ?>;
 
-            DUPX.StandardJsonAjaxWrapper(
+            DUPX.StandarJsonAjaxWrapper(
                     action,
                     token,
                     {},

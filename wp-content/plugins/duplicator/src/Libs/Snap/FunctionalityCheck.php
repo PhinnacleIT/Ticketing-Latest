@@ -1,11 +1,5 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
- */
-
 namespace Duplicator\Libs\Snap;
 
 use Exception;
@@ -21,7 +15,7 @@ class FunctionalityCheck
     /** @var int Enum type */
     protected $type = 0;
     /** @var string item key to test */
-    protected $itemKey = '';
+    protected string $itemKey;
     /** @var bool true if this item is required */
     protected $required = false;
     /** @var string link to documntation */
@@ -29,7 +23,7 @@ class FunctionalityCheck
     /** @var string html troubleshoot */
     public $troubleshoot = '';
     /** @var ?callable if is set is called when check fail */
-    protected $failCallback = null;
+    protected $failCallback;
 
 
     /**
@@ -76,7 +70,7 @@ class FunctionalityCheck
      *
      * @return string
      */
-    public function getItemKey()
+    public function getItemKey(): string
     {
         return $this->itemKey;
     }
@@ -124,7 +118,7 @@ class FunctionalityCheck
      *
      * @return void
      */
-    public function setFailCallback($failCallback)
+    public function setFailCallback($failCallback): void
     {
         $this->failCallback = $failCallback;
     }
@@ -138,13 +132,13 @@ class FunctionalityCheck
      *
      * @return bool
      */
-    public static function checkList($funcs, $requiredOnly = false, &$notPassList = array())
+    public static function checkList($funcs, $requiredOnly = false, &$notPassList = []): bool
     {
         if (!is_array($funcs)) {
             throw new Exception('funcs must be an array');
         }
 
-        $notPassList = array();
+        $notPassList = [];
 
         foreach ($funcs as $func) {
             if ($requiredOnly && !$func->isRequired()) {

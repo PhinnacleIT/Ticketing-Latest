@@ -1,19 +1,22 @@
 <?php
 
-/**
- * Standard: PSR-2
- *
- * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\Crypt
- */
-
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\Deploy\Chunk\SiteUpdateChunkManager;
+use Duplicator\Installer\Core\Deploy\CleanUp;
 use Duplicator\Installer\Core\Deploy\Database\DbCleanup;
 use Duplicator\Installer\Core\Deploy\Database\DbReplace;
-use Duplicator\Installer\Utils\Log\Log;
+use Duplicator\Installer\Core\Deploy\Database\DbUtils;
+use Duplicator\Installer\Core\Deploy\Plugins\PluginsManager;
+use Duplicator\Installer\Core\Deploy\ServerConfigs;
+use Duplicator\Installer\Core\Deploy\Standalone;
+use Duplicator\Installer\Core\InstState;
+use Duplicator\Installer\Core\Params\Models\SiteOwrMap;
 use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Installer\Utils\InstallerOrigFileMng;
+use Duplicator\Installer\Utils\InstDescMng;
+use Duplicator\Installer\Utils\Log\Log;
+use Duplicator\Installer\Utils\ReplaceEngine\ReplaceMng;
 use Duplicator\Libs\Snap\SnapDB;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapJson;
@@ -21,10 +24,7 @@ use Duplicator\Libs\Snap\SnapString;
 use Duplicator\Libs\Snap\SnapUtil;
 use Duplicator\Libs\WpConfig\WPConfigTransformer;
 use Duplicator\Libs\WpConfig\WPConfigTransformerSrc;
-
-//-- START OF ACTION STEP 3: Update the database
-require_once(DUPX_INIT . '/classes/utilities/class.u.search.reaplce.manager.php');
-require_once(DUPX_INIT . '/classes/chunk/class.chunk.s3.manager.php');
+use VendorDuplicator\Amk\JsonSerialize\JsonSerialize;
 
 /**
  * Step 3 functions
@@ -35,107 +35,142 @@ final class DUPX_S3_Funcs
     const MODE_NORMAL           = 1;
     const MODE_CHUNK            = 2;
     const MODE_SKIP             = 3;
-    const FIRST_LOGIN_OPTION    = 'duplicator_first_login_after_install';
-    const MIGRATION_DATA_OPTION = 'duplicator_migration_data';
+    const FIRST_LOGIN_OPTION    = 'dupli_opt_first_login_after_install';
+    const MIGRATION_DATA_OPTION = 'dupli_opt_migration_data';
+
+    /** @var ?self */
+    protected static $instance;
+    /** @var ?mixed[] */
+    public $cTableParams;
+    /** @var array<string, mixed> */
+    public $report = [
+        'pass'          => 0,
+        'chunk'         => 0,
+        'chunkPos'      => [],
+        'progress_perc' => 0,
+        'scan_tables'   => 0,
+        'scan_rows'     => 0,
+        'scan_cells'    => 0,
+        'updt_tables'   => 0,
+        'updt_rows'     => 0,
+        'updt_cells'    => 0,
+        'errsql'        => [],
+        'errser'        => [],
+        'errkey'        => [],
+        'errsql_sum'    => 0,
+        'errser_sum'    => 0,
+        'errkey_sum'    => 0,
+        'profile_start' => '',
+        'profile_end'   => '',
+        'time'          => '',
+        'err_all'       => 0,
+        'warn_all'      => 0,
+        'warnlist'      => [],
+    ];
+    private float $timeStart;
+    /** @var null|mysqli connection */
+    private $dbh;
 
     /**
-     *
-     * @var DUPX_S3_Funcs
+     * Class constructor
      */
-    protected static $instance = null;
-
-    /**
-     *
-     * @var array
-     */
-    public $cTableParams = null;
-
-    /**
-     *
-     * @var array
-     */
-    public $report = array();
-
-    /**
-     *
-     * @var int
-     */
-    private $timeStart = null;
-
-    /**
-     *
-     * @var resource|mysqli connection
-     */
-    private $dbh = null;
-
     private function __construct()
     {
         $this->initData();
         $this->timeStart = DUPX_U::getMicrotime();
     }
 
-    public function updateWebsite()
+    /**
+     * Main update controller for the installer
+     *
+     * @return array{step3: mixed[]}
+     */
+    public function updateWebsite(): array
     {
         Log::setThrowExceptionOnError(true);
         $nManager = DUPX_NOTICE_MANAGER::getInstance();
 
         switch ($this->getEngineMode()) {
             case DUPX_S3_Funcs::MODE_CHUNK:
-                /* START CHUNK MANAGER */
+                // START CHUNK MANAGER
                 $maxIteration = 0;     // max iteration before stop. If 0 have no limit
                 // auto set prevent timeout
                 $inimaxExecutionTime           = ini_get('max_execution_time');
                 $maxExecutionTime              = (int) (empty($inimaxExecutionTime) ? DUPX_Constants::CHUNK_MAX_TIMEOUT_TIME : $inimaxExecutionTime);
-                $timeOut                       = max(5, $maxExecutionTime - 2) * 1000;    // timeout in milliseconds before stop exectution
-                $throttling                    = 2;  // sleep in milliseconds every iteration
+                $timeOut                       = max(5, $maxExecutionTime - 2) * 1000000;    // timeout in microseconds before stop exectution
+                $throttling                    = 2000;  // sleep in microseconds every iteration
                 $GLOBALS['DATABASE_PAGE_SIZE'] = 1000;   // database pagination size for engine update queries
 
                 /* TEST INIT SINGLE FUNC
-                  $maxIteration                  = 1;     // max iteration before stop. If 0 have no limit
-                  $timeOut                       = 0;    // timeout in milliseconds before stop exectution
-                  $throttling                    = 0;  // sleep in milliseconds every iteration
+                  $maxIteration                  = 1;  // max iteration before stop. If 0 have no limit
+                  $timeOut                       = 0;  // timeout in milliseconds before stop exectution
+                  $throttling                    = 0;  // sleep in microseconds every iteration
                   $GLOBALS['DATABASE_PAGE_SIZE'] = 1000000;   // database pagination size for engine update queries
                  */
 
-                $chunkmManager = new DUPX_chunkS3Manager($maxIteration, $timeOut, $throttling);
-                if ($chunkmManager->start() === false) {
-                    /* Stop executions */
-                    $this->chunkStop($chunkmManager->getProgressPerc(), $chunkmManager->getLastPosition());
-                } else {
-                    /* step 3 completed */
-                    $this->complete();
+                $chunkmManager = new SiteUpdateChunkManager([], $maxIteration, $timeOut, $throttling);
+
+                if ($chunkmManager->wasProcessingIncomplete()) {
+                    Log::info('Previous deployment process exited unexpectedly, resuming from last saved position');
+                }
+
+                switch ($chunkmManager->start()) {
+                    case SiteUpdateChunkManager::CHUNK_COMPLETE:
+                        $this->complete();
+                        break;
+                    case SiteUpdateChunkManager::CHUNK_STOP:
+                        // Stop executions
+                        $this->chunkStop($chunkmManager->getProgressPerc(), $chunkmManager->getLastPosition());
+                        break;
+                    case SiteUpdateChunkManager::CHUNK_ERROR:
+                    default:
+                        // chunk error
+                        throw new Exception('Chunk error, message: ' . $chunkmManager->getLastErrorMessage());
                 }
                 break;
             case DUPX_S3_Funcs::MODE_SKIP:
                 $this->initLog();
-                DbCleanup::cleanupOptions();
-                DbCleanup::cleanupExtra();
-                DbCleanup::cleanupPackages();
                 $this->removeMaintenanceMode();
-                $this->configFilesUpdate();
-                $this->forceLogoutOfAllUsers();
-                $this->duplicatorMigrationInfoSet();
                 $this->checkForIndexHtml();
-                $this->noticeTest();
-                $this->cleanupTmpFiles();
+                if (!InstState::dbDoNothing()) {
+                    DbCleanup::cleanupOptions();
+                    DbCleanup::cleanupExtra();
+                    DbCleanup::cleanupPackages();
+                    DbCleanup::cleanupActivityLogs();
+                    $this->configFilesUpdate();
+                    $this->forceLogoutOfAllUsers();
+                    $this->duplicatorMigrationInfoSet();
+                    $this->noticeTest();
+                } elseif (InstState::isImportFromBackendMode() || InstState::isRecoveryMode()) {
+                    $this->forceLogoutOfAllUsers();
+                    $this->duplicatorMigrationInfoSet();
+                }
+                $this->cleanupFiles();
                 $this->setFilePermsission();
                 $this->finalReportNotices();
                 $this->complete();
                 break;
             case DUPX_S3_Funcs::MODE_NORMAL:
             default:
-                $chunkmManager = new DUPX_chunkS3Manager();
-                if ($chunkmManager->start() === false) {
-                    throw new Exception('No chunk in normal mode');
+                $chunkmManager = new SiteUpdateChunkManager();
+                switch ($chunkmManager->start()) {
+                    case SiteUpdateChunkManager::CHUNK_COMPLETE:
+                        $this->complete();
+                        break;
+                    case SiteUpdateChunkManager::CHUNK_STOP:
+                        throw new Exception('No chunk in normal mode');
+                    case SiteUpdateChunkManager::CHUNK_ERROR:
+                    default:
+                        // chunk error
+                        throw new Exception('Chunk error, message: ' . $chunkmManager->getLastErrorMessage());
                 }
-                $this->complete();
         }
-
         $nManager->saveNotices();
         return $this->getJsonReport();
     }
 
     /**
+     * Get single instance
      *
      * @return self
      */
@@ -149,8 +184,10 @@ final class DUPX_S3_Funcs
 
     /**
      * inizialize 3sFunc data
+     *
+     * @return void
      */
-    public function initData()
+    public function initData(): void
     {
         // if data file exists load saved data
         if (file_exists(self::getS3dataFilePath())) {
@@ -162,11 +199,11 @@ final class DUPX_S3_Funcs
             Log::info('INIT S3 DATA', Log::LV_DETAILED);
             // else init data from $_POST
             $this->setReplaceList();
-            $this->initReport();
         }
     }
 
     /**
+     * Get data file path
      *
      * @return string
      */
@@ -174,22 +211,23 @@ final class DUPX_S3_Funcs
     {
         static $path = null;
         if (is_null($path)) {
-            $path = DUPX_INIT . '/dup-installer-s3data__' . DUPX_Package::getPackageHash() . '.json';
+            $path = DUPX_INIT . '/' . InstDescMng::getInstance()->getName(InstDescMng::TYPE_INST_S3_DATA);
         }
         return $path;
     }
 
     /**
+     * Save data to json file
      *
-     * @return boolean
+     * @return bool
      */
-    public function saveData()
+    public function saveData(): bool
     {
-        $data = array(
+        $data = [
             'report'       => $this->report,
             'cTableParams' => $this->cTableParams,
-            'replaceData'  => DUPX_S_R_MANAGER::getInstance()->getArrayData()
-        );
+            'replaceData'  => ReplaceMng::getInstance()->getArrayData(),
+        ];
 
         if (($json = SnapJson::jsonEncodePPrint($data)) === false) {
             Log::info('Can\'t encode json data');
@@ -205,10 +243,11 @@ final class DUPX_S3_Funcs
     }
 
     /**
+     * Load data from json file
      *
-     * @return boolean
+     * @return bool
      */
-    private function loadData()
+    private function loadData(): bool
     {
         if (!file_exists(self::getS3dataFilePath())) {
             return false;
@@ -234,7 +273,7 @@ final class DUPX_S3_Funcs
         }
 
         if (array_key_exists('replaceData', $data)) {
-            DUPX_S_R_MANAGER::getInstance()->setFromArrayData($data['replaceData']);
+            ReplaceMng::getInstance()->setFromArrayData($data['replaceData']);
         } else {
             Log::info('S3 data not well formed: replace not found.');
             return false;
@@ -251,6 +290,7 @@ final class DUPX_S3_Funcs
     }
 
     /**
+     * Reset step data
      *
      * @return boolean
      */
@@ -273,44 +313,30 @@ final class DUPX_S3_Funcs
         return $result;
     }
 
-    private function initReport()
-    {
-        $this->report = array(
-            'pass'          => 0,
-            'chunk'         => 0,
-            'chunkPos'      => array(),
-            'progress_perc' => 0,
-            'scan_tables'   => 0,
-            'scan_rows'     => 0,
-            'scan_cells'    => 0,
-            'updt_tables'   => 0,
-            'updt_rows'     => 0,
-            'updt_cells'    => 0,
-            'errsql'        => array(),
-            'errser'        => array(),
-            'errkey'        => array(),
-            'errsql_sum'    => 0,
-            'errser_sum'    => 0,
-            'errkey_sum'    => 0,
-            'profile_start' => '',
-            'profile_end'   => '',
-            'time'          => '',
-            'err_all'       => 0,
-            'warn_all'      => 0,
-            'warnlist'      => array()
-        );
-    }
-
-    public function getJsonReport()
+    /**
+     * Get json report
+     *
+     * @return array{step3: mixed[]}
+     */
+    public function getJsonReport(): array
     {
         $this->report['warn_all'] = empty($this->report['warnlist']) ? 0 : count($this->report['warnlist']);
 
-        return array(
-            'step3' => $this->report
-        );
+        return [
+            'step3' => $this->report,
+        ];
     }
 
-    private static function logSectionHeader($title, $func, $line)
+    /**
+     * Add section headr to log
+     *
+     * @param string $title Section title
+     * @param string $func  fun
+     * @param int    $line  line
+     *
+     * @return void
+     */
+    private static function logSectionHeader(string $title, string $func, int $line): void
     {
         $log = "\n" . '====================================' . "\n" .
             $title;
@@ -324,9 +350,9 @@ final class DUPX_S3_Funcs
     }
 
     /**
-     * open db connection if is closed
+     * Open db connection if is closed
      *
-     * @return database connection handle
+     * @return mysqli connection handle
      */
     private function dbConnection()
     {
@@ -337,7 +363,9 @@ final class DUPX_S3_Funcs
     }
 
     /**
-     *  @return database|mysqli connection handle
+     * Get db connection handle
+     *
+     * @return mysqli connection handle
      */
     public function getDbConnection()
     {
@@ -345,30 +373,39 @@ final class DUPX_S3_Funcs
     }
 
     /**
-     * close db connection if is open
+     * Close db connection if is open
+     *
+     * @return void
      */
-    public function closeDbConnection()
+    public function closeDbConnection(): void
     {
         DUPX_DB_Functions::getInstance()->closeDbConnection();
         $this->dbh = null;
     }
 
-    public function initLog()
+    /**
+     * Step 3 log header
+     *
+     * @return void
+     */
+    public function initLog(): void
     {
         $paramsManager = PrmMng::getInstance();
         $labelPadSize  = 22;
 
-        // make sure dbConnection is initialized
-        $this->dbConnection();
-
-        $charsetServer = @mysqli_character_set_name($this->dbh);
-        $charsetClient = @mysqli_character_set_name($this->dbh);
+        $charsetServer = "Not Available";
+        $charsetClient = "Not Available";
+        if (!InstState::dbDoNothing()) {
+            $this->dbConnection();
+            $charsetServer = @mysqli_character_set_name($this->dbh);
+            $charsetClient = @mysqli_character_set_name($this->dbh);
+        }
 
         //LOGGING
         $date = @date('h:i:s');
         $log  = "\n\n" .
             "********************************************************************************\n" .
-            "DUPLICATOR LITE: INSTALL-LOG\n" .
+            "DUPLICATOR INSTALL-LOG\n" .
             "STEP-3 START @ " . $date . "\n" .
             "NOTICE: Do NOT post to public sites or forums\n" .
             "********************************************************************************\n" .
@@ -379,7 +416,7 @@ final class DUPX_S3_Funcs
 
         $log .= str_pad('SKIP PATH REPLACE', $labelPadSize, '_', STR_PAD_RIGHT) . ': ' . Log::v2str($paramsManager->getValue(PrmMng::PARAM_SKIP_PATH_REPLACE)) . "\n";
 
-        $wpConfigsKeys = array(
+        $wpConfigsKeys = [
             PrmMng::PARAM_WP_CONF_DISALLOW_FILE_EDIT,
             PrmMng::PARAM_WP_CONF_DISALLOW_FILE_MODS,
             PrmMng::PARAM_WP_CONF_AUTOSAVE_INTERVAL,
@@ -401,8 +438,8 @@ final class DUPX_S3_Funcs
             PrmMng::PARAM_WP_CONF_COOKIE_DOMAIN,
             PrmMng::PARAM_WP_CONF_WP_MEMORY_LIMIT,
             PrmMng::PARAM_WP_CONF_WP_MAX_MEMORY_LIMIT,
-            PrmMng::PARAM_WP_CONF_WP_TEMP_DIR
-        );
+            PrmMng::PARAM_WP_CONF_WP_TEMP_DIR,
+        ];
         foreach ($wpConfigsKeys as $key) {
             $label = $paramsManager->getLabel($key);
             $value = SnapString::implodeKeyVals(', ', $paramsManager->getValue($key), '[%s = %s]');
@@ -421,7 +458,17 @@ final class DUPX_S3_Funcs
         Log::flush();
     }
 
-    public function initChunkLog($maxIteration, $timeOut, $throttling, $rowsPerPage)
+    /**
+     * Init chunk log
+     *
+     * @param int $maxIteration max iteration
+     * @param int $timeOut      time out
+     * @param int $throttling   throttling
+     * @param int $rowsPerPage  rows per page
+     *
+     * @return void
+     */
+    public function initChunkLog($maxIteration, $timeOut, $throttling, $rowsPerPage): void
     {
         $log  = "********************************************************************************\n" .
             "CHUNK PARAMS:\n";
@@ -434,25 +481,26 @@ final class DUPX_S3_Funcs
     }
 
     /**
-     * set replace list
+     * Set replace list
      *
-     * Auto inizialize function
+     * @return void
      */
-    public function setReplaceList()
+    public function setReplaceList(): void
     {
         if ($this->getEngineMode() === self::MODE_SKIP) {
             return;
         }
 
-        self::logSectionHeader('SET SEARCH AND REPLACE LIST INSTALL TYPE ' . DUPX_InstallerState::installTypeToString(), __FUNCTION__, __LINE__);
+        self::logSectionHeader('SET SEARCH AND REPLACE LIST INSTALL TYPE ' . InstState::installTypeToString(), __FUNCTION__, __LINE__);
 
         $dbReplace = new DbReplace();
         $dbReplace->setSearchReplace();
     }
 
     /**
+     * Return engine mode
      *
-     * @return int MODE_NORAML|MODE_CHUNK|MODE_SKIP
+     * @return int Enum MODE_NORAML|MODE_CHUNK|MODE_SKIP
      */
     public function getEngineMode()
     {
@@ -463,29 +511,47 @@ final class DUPX_S3_Funcs
      *
      * @return bool
      */
-    public function isChunk()
+    public function isChunk(): bool
     {
         return PrmMng::getInstance()->getValue(PrmMng::PARAM_REPLACE_ENGINE) === self::MODE_CHUNK;
     }
 
-    public function runSearchAndReplace()
+    /**
+     * Run search and replace
+     *
+     * @return void
+     */
+    public function runSearchAndReplace(): void
     {
         self::logSectionHeader('RUN SEARCH AND REPLACE', __FUNCTION__, __LINE__);
 
         $tables = DUPX_DB_Tables::getInstance()->getReplaceTablesNames();
 
         DUPX_UpdateEngine::load($tables);
+        DUPX_UpdateEngine::replaceSiteTable();
+        DUPX_UpdateEngine::replaceBlogsTable();
         DUPX_UpdateEngine::logStats();
         DUPX_UpdateEngine::logErrors();
     }
 
-    public function removeMaintenanceMode()
+
+    /**
+     * Remove maintenance mode
+     *
+     * @return void
+     */
+    public function removeMaintenanceMode(): void
     {
         self::logSectionHeader('REMOVE MAINTENANCE MODE', __FUNCTION__, __LINE__);
         DUPX_U::maintenanceMode(false);
     }
 
-    protected function resetUsersPasswords()
+    /**
+     * reset all users passwords
+     *
+     * @return void
+     */
+    protected function resetUsersPasswords(): void
     {
         self::logSectionHeader('RESET USERS PASSWORD', __FUNCTION__, __LINE__);
 
@@ -498,9 +564,16 @@ final class DUPX_S3_Funcs
         }
     }
 
-    public function forceLogoutOfAllUsers()
+    /**
+     * reset all users session tokens
+     *
+     * @return void
+     */
+    public function forceLogoutOfAllUsers(): void
     {
         Log::info('RESET ALL USERS SESSION TOKENS');
+        // make sure dbConnection is initialized
+        $this->dbConnection();
         $escapedTablePrefix = mysqli_real_escape_string($this->dbh, PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_TABLE_PREFIX));
 
         try {
@@ -510,7 +583,12 @@ final class DUPX_S3_Funcs
         }
     }
 
-    public function createNewAdminUser()
+    /**
+     * create new admin user
+     *
+     * @return void
+     */
+    public function createNewAdminUser(): void
     {
         $this->resetUsersPasswords();
 
@@ -587,21 +665,56 @@ final class DUPX_S3_Funcs
             DUPX_DB::mysqli_query($this->dbh, "INSERT INTO `" . $usermeta_table . "` (`user_id`, `meta_key`, `meta_value`) VALUES ('{$newuser1_insert_id}', 'first_name', '{$wp_first_name}')");
             DUPX_DB::mysqli_query($this->dbh, "INSERT INTO `" . $usermeta_table . "` (`user_id`, `meta_key`, `meta_value`) VALUES ('{$newuser1_insert_id}', 'last_name', '{$wp_last_name}')");
 
+            //Add super admin permissions
+            if (InstState::isNewSiteIsMultisite()) {
+                $site_admins_query = DUPX_DB::mysqli_query($this->dbh, "SELECT meta_value FROM `" . $escapedTablePrefix . "sitemeta` WHERE meta_key = 'site_admins'");
+                $site_admins       = mysqli_fetch_row($site_admins_query);
+                $site_admins[0]    = stripslashes($site_admins[0]);
+                if (!SnapUtil::safeUnserialize($site_admins[0], $site_admins_array) || !is_array($site_admins_array)) {
+                    throw new Exception('Invalid site_admins value: expected a serialized array, can\'t add super admin ' . $wpUserName);
+                }
+
+                array_push($site_admins_array, $wpUserName);
+
+                $site_admins_serialized = serialize($site_admins_array);
+
+                DUPX_DB::mysqli_query($this->dbh, "UPDATE `" . $escapedTablePrefix . "sitemeta` SET meta_value = '{$site_admins_serialized}' WHERE meta_key = 'site_admins'");
+                // Adding permission for each sub-site to the newly created user
+                $admin_user_level   = DUPX_WPConfig::ADMIN_LEVEL; // For wp_2_user_level
+                $sql_values_array   = [];
+                $sql_values_array[] = "('{$newuser1_insert_id}', 'primary_blog', '{$archiveConfig->main_site_id}')";
+                foreach ($archiveConfig->subsites as $subsite_info) {
+                    // No need to add permission for main site
+                    if ($subsite_info->id == $archiveConfig->main_site_id) {
+                        continue;
+                    }
+                    $escapeBlogPrefix = mysqli_real_escape_string($this->dbh, $archiveConfig->getSubsitePrefixByParam($subsite_info->id));
+
+                    $cap_meta_key       = $escapeBlogPrefix . 'capabilities';
+                    $sql_values_array[] = "('{$newuser1_insert_id}', '{$cap_meta_key}', '{$newuser_security}')";
+
+                    $user_level_meta_key = $escapeBlogPrefix . 'user_level';
+                    $sql_values_array[]  = "('{$newuser1_insert_id}', '{$user_level_meta_key}', '{$admin_user_level}')";
+                }
+                $sql = "INSERT INTO " . $escapedTablePrefix . "usermeta (user_id, meta_key, meta_value) VALUES " . implode(', ', $sql_values_array);
+                DUPX_DB::mysqli_query($this->dbh, $sql);
+            }
+
             Log::info("\nNEW WP-ADMIN USER:");
             if ($newuser1 && $newuser2 && $newuser3) {
-                Log::info("- New username '{$wpUserName}' was created successfully allong with MU usermeta.");
+                Log::info("- New username '{$wpUserName}' was created successfully along with MU usermeta.");
             } elseif ($newuser1) {
                 Log::info("- New username '{$wpUserName}' was created successfully.");
             } else {
                 $newuser_warnmsg            = "- Failed to create the user '{$wpUserName}' \n ";
                 $this->report['warnlist'][] = $newuser_warnmsg;
 
-                $nManager->addFinalReportNotice(array(
+                $nManager->addFinalReportNotice([
                     'shortMsg' => 'New admin user create error',
                     'level'    => DUPX_NOTICE_ITEM::HARD_WARNING,
                     'longMsg'  => $newuser_warnmsg,
-                    'sections' => 'general'
-                ), DUPX_NOTICE_MANAGER::ADD_UNIQUE_UPDATE, 'new-user-create-error');
+                    'sections' => 'general',
+                ], DUPX_NOTICE_MANAGER::ADD_UNIQUE_UPDATE, 'new-user-create-error');
 
                 Log::info($newuser_warnmsg);
             }
@@ -609,26 +722,28 @@ final class DUPX_S3_Funcs
             $newuser_warnmsg            = "\nNEW WP-ADMIN USER:\n - Username '{$wpUserName}' already exists in the database.  Unable to create new account.\n";
             $this->report['warnlist'][] = $newuser_warnmsg;
 
-            $nManager->addFinalReportNotice(array(
+            $nManager->addFinalReportNotice([
                 'shortMsg'    => 'New admin user create error',
                 'level'       => DUPX_NOTICE_ITEM::SOFT_WARNING,
                 'longMsg'     => $newuser_warnmsg,
                 'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_PRE,
-                'sections'    => 'general'
-            ), DUPX_NOTICE_MANAGER::ADD_UNIQUE_UPDATE, 'new-user-create-error');
+                'sections'    => 'general',
+            ], DUPX_NOTICE_MANAGER::ADD_UNIQUE_UPDATE, 'new-user-create-error');
 
             Log::info($newuser_warnmsg);
         }
     }
 
     /**
-     * update all config files
+     * Update all config files
+     *
+     * @return void
      */
-    public function configFilesUpdate()
+    public function configFilesUpdate(): void
     {
         $nManager = DUPX_NOTICE_MANAGER::getInstance();
         // SET FILES
-        DUPX_ServerConfig::setFiles(PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_NEW));
+        ServerConfigs::setFiles(PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_NEW));
         $wpConfigFile = DUPX_WPConfig::getWpConfigPath();
 
         // UPDATE FILES
@@ -643,19 +758,19 @@ final class DUPX_S3_Funcs
             }
             $configTransformer = new WPConfigTransformer($wpConfigFile);
             $this->wpConfigUpdate($configTransformer);
-            DUP_Extraction::setPermsFromParams($wpConfigFile);
+            DUPX_Extraction::setPermsFromParams($wpConfigFile);
         } else {
             $msg  = "WP-CONFIG NOTICE: <b>wp-config.php not found.</b><br><br>";
             $msg .= "No action on the wp-config was possible.<br>";
             $msg .= "Be sure to insert a properly modified wp-config for correct wordpress operation.";
 
-            $nManager->addBothNextAndFinalReportNotice(array(
+            $nManager->addBothNextAndFinalReportNotice([
                 'shortMsg'    => 'wp-config.php file not found',
                 'level'       => DUPX_NOTICE_ITEM::CRITICAL,
                 'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_HTML,
                 'longMsg'     => $msg,
-                'sections'    => 'general'
-            ));
+                'sections'    => 'general',
+            ]);
         }
 
         $this->htaccessUpdate();
@@ -664,18 +779,19 @@ final class DUPX_S3_Funcs
     }
 
     /**
-     * update index.php file with right wp-blog-header include related to installation ABSPATH
+     * Update index.php file with right wp-blog-header include related to installation ABSPATH
      *
-     * @return boolean
+     * @return bool
      */
-    protected function indexPhpUpdate()
+    protected function indexPhpUpdate(): bool
     {
         $paramsManager = PrmMng::getInstance();
 
         if (
-            DUPX_InstallerState::isRestoreBackup()
+            InstState::isRestoreBackup() ||
+            InstState::isAddSiteOnMultisite()
         ) {
-            return;
+            return true;
         }
 
         self::logSectionHeader('INDEX.PHP UPDATE', __FUNCTION__, __LINE__);
@@ -689,17 +805,22 @@ final class DUPX_S3_Funcs
         }
 
         if (($relativeAbsPath = SnapIO::getRelativePath($paramsManager->getValue(PrmMng::PARAM_PATH_WP_CORE_NEW), $pathNew)) === false) {
-            $blogHeaderValue = "'" . $paramsManager->getValue(PrmMng::PARAM_PATH_WP_CORE_NEW) . "/wp-blog-header.php'";
+            $blogHeaderValue = var_export($paramsManager->getValue(PrmMng::PARAM_PATH_WP_CORE_NEW) . '/wp-blog-header.php', true);
         } else {
             $relativeAbsPath = strlen($relativeAbsPath) ? '/' . $relativeAbsPath : '';
-            $blogHeaderValue = "__DIR__ . '" . $relativeAbsPath . "/wp-blog-header.php'";
+            $blogHeaderValue = '__DIR__ . ' . var_export($relativeAbsPath . '/wp-blog-header.php', true);
         }
 
         if (($indexContent = file_get_contents($indexPath)) === false) {
             Log::info('Can\'t read index.php content');
             return false;
         }
-        $indexContent = preg_replace('/(require\s*\(.*wp-blog-header.php[\'"]\s*\))/m', 'require(' . $blogHeaderValue . ')', $indexContent);
+        // Callback form: a backslash or "$" in the literal would be read as a backreference
+        $indexContent = preg_replace_callback(
+            '/^(.*\s)(require.*?[\'"].*wp-blog-header\.php[\'"].*?;)(.*)$/s',
+            static fn(array $matches): string => $matches[1] . 'require ' . $blogHeaderValue . ';' . $matches[3],
+            $indexContent
+        );
 
         if (file_put_contents($indexPath, $indexContent) === false) {
             Log::info('Can\'t update index.php content');
@@ -711,12 +832,13 @@ final class DUPX_S3_Funcs
     }
 
     /**
+     * Update the wp-config.php file
      *
-     * @param WPConfigTransformer $confTransformer
+     * @param WPConfigTransformer $confTransformer wp config transformer
      *
      * @return void
      */
-    protected function wpConfigUpdate(WPConfigTransformer $confTransformer)
+    protected function wpConfigUpdate(WPConfigTransformer $confTransformer): void
     {
         self::logSectionHeader('CONFIGURATION FILE UPDATES', __FUNCTION__, __LINE__);
         Log::incIndent();
@@ -736,16 +858,16 @@ final class DUPX_S3_Funcs
             $dbcharset = $paramsManager->getValue(PrmMng::PARAM_DB_CHARSET);
             $dbcollate = $paramsManager->getValue(PrmMng::PARAM_DB_COLLATE);
 
-            $confTransformer->update('constant', 'DB_NAME', $dbname, array('raw' => true));
+            $confTransformer->update('constant', 'DB_NAME', $dbname, ['raw' => true]);
             Log::info('UPDATE DB_NAME ' . Log::v2str($dbname));
 
-            $confTransformer->update('constant', 'DB_USER', $dbuser, array('raw' => true));
+            $confTransformer->update('constant', 'DB_USER', $dbuser, ['raw' => true]);
             Log::info('UPDATE DB_USER ' . Log::v2str('** OBSCURED **'));
 
-            $confTransformer->update('constant', 'DB_PASSWORD', $dbpass, array('raw' => true));
+            $confTransformer->update('constant', 'DB_PASSWORD', $dbpass, ['raw' => true]);
             Log::info('UPDATE DB_PASSWORD ' . Log::v2str('** OBSCURED **'));
 
-            $confTransformer->update('constant', 'DB_HOST', $dbhost, array('raw' => true));
+            $confTransformer->update('constant', 'DB_HOST', $dbhost, ['raw' => true]);
             Log::info('UPDATE DB_HOST ' . Log::v2str($dbhost));
 
             $confTransformer->update('constant', 'DB_CHARSET', $dbcharset);
@@ -754,13 +876,13 @@ final class DUPX_S3_Funcs
             $confTransformer->update('constant', 'DB_COLLATE', $dbcollate);
             Log::info('UPDATE DB_COLLATE ' . Log::v2str($dbcollate));
 
-            if (DUPX_InstallerState::isRestoreBackup()) {
+            if (InstState::isRestoreBackup()) {
                 Log::info("\nRESTORE BACKUP MODE: SKIP OTHER WP-CONFIGS UPDATE ***");
                 Log::resetIndent();
                 return;
             }
 
-            $auth_keys = array(
+            $auth_keys = [
                 'AUTH_KEY',
                 'SECURE_AUTH_KEY',
                 'LOGGED_IN_KEY',
@@ -769,10 +891,25 @@ final class DUPX_S3_Funcs
                 'SECURE_AUTH_SALT',
                 'LOGGED_IN_SALT',
                 'NONCE_SALT',
-            );
+            ];
 
-            foreach ($auth_keys as $const_key) {
-                $confTransformer->update('constant', $const_key, $archiveConfig->getDefineValue($const_key));
+            if ($paramsManager->getValue(PrmMng::PARAM_GEN_WP_AUTH_KEY)) {
+                foreach ($auth_keys as $const_key) {
+                    $key = SnapUtil::generatePassword(64, true, true);
+
+                    if ($confTransformer->exists('constant', $const_key)) {
+                        $confTransformer->update('constant', $const_key, $key);
+                        Log::info('UPDATE ' . $const_key . ' ' . Log::v2str('**OBSCURED**'));
+                    } else {
+                        $confTransformer->add('constant', $const_key, $key);
+                        Log::info('ADD ' . $const_key . ' ' . Log::v2str('**OBSCURED**'));
+                    }
+                }
+            } else {
+                // FORCE OLD VALUES
+                foreach ($auth_keys as $const_key) {
+                    $confTransformer->update('constant', $const_key, $archiveConfig->getDefineValue($const_key, ''));
+                }
             }
 
             $confTransformer->update('variable', 'table_prefix', $paramsManager->getValue(PrmMng::PARAM_DB_TABLE_PREFIX));
@@ -833,13 +970,13 @@ LONGMSG;
               'level' => DUPX_NOTICE_ITEM::CRITICAL,
 
               ), DUPX_NOTICE_MANAGER::ADD_UNIQUE , 'wp-config-transformer-exception'); */
-            $nManager->addFinalReportNotice(array(
+            $nManager->addFinalReportNotice([
                 'shortMsg'    => $shortMsg,
                 'level'       => DUPX_NOTICE_ITEM::CRITICAL,
                 'longMsg'     => $longMsg,
                 'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_HTML,
-                'sections'    => 'general'
-            ), DUPX_NOTICE_MANAGER::ADD_UNIQUE, 'wp-config-transformer-exception');
+                'sections'    => 'general',
+            ], DUPX_NOTICE_MANAGER::ADD_UNIQUE, 'wp-config-transformer-exception');
 
             Log::info("WP-CONFIG TRANSFORMER EXCEPTION\n" . $e->getTraceAsString());
         }
@@ -847,12 +984,15 @@ LONGMSG;
     }
 
     /**
+     * Update wp-config.php file for multisite
      *
-     * @param WPConfigTransformer $confTransformer
+     * @param WPConfigTransformer $confTransformer WPConfigTransformer instance
+     *
+     * @return void
      */
-    protected function configurationMultisiteUpdate(WPConfigTransformer $confTransformer)
+    protected function configurationMultisiteUpdate(WPConfigTransformer $confTransformer): void
     {
-        $muDefines = array(
+        $muDefines = [
             'WP_ALLOW_MULTISITE',
             'ALLOW_MULTISITE',
             'MULTISITE',
@@ -867,117 +1007,151 @@ LONGMSG;
             'COOKIEPATH',
             'SITECOOKIEPATH',
             'ADMIN_COOKIE_PATH',
-            'PLUGINS_COOKIE_PATH'
-        );
+            'PLUGINS_COOKIE_PATH',
+        ];
 
-        // Clean all mu site define
-        foreach ($muDefines as $key) {
-            if ($confTransformer->exists('constant', $key)) {
-                $confTransformer->remove('constant', $key);
-                Log::info('TRANSFORMER[no wpmu]: ' . $key . ' constant removed from WP config file');
+        /**
+         * if is single site clean all mu site define
+         */
+        if (!InstState::isNewSiteIsMultisite()) {
+            foreach ($muDefines as $key) {
+                if ($confTransformer->exists('constant', $key)) {
+                    $confTransformer->remove('constant', $key);
+                    Log::info('TRANSFORMER[no wpmu]: ' . $key . ' constant removed from WP config file');
+                }
+            }
+        } elseif (PrmMng::getInstance()->getValue(PrmMng::PARAM_WP_CONFIG) == 'new') {
+            Log::info('TRANSFORMER[wpmu]: new wp-config from sample');
+            $archiveConfig = DUPX_ArchiveConfig::getInstance();
+
+            foreach ($muDefines as $key) {
+                DUPX_ArchiveConfig::updateWpConfigByValue($confTransformer, $key, $archiveConfig->getDefineArrayValue($key));
             }
         }
     }
 
     /**
+     * Updat wp-config.php file with new urls and paths
      *
-     * @param WPConfigTransformer $confTransformer
+     * @param WPConfigTransformer $confTransformer WPConfigTransformer instance
+     *
+     * @return void
      */
-    protected function configurationUrlsAndPaths(WPConfigTransformer $confTransformer)
+    protected function configurationUrlsAndPaths(WPConfigTransformer $confTransformer): void
     {
         $paramsManager = PrmMng::getInstance();
 
         $urlNew  = $paramsManager->getValue(PrmMng::PARAM_URL_NEW);
         $pathNew = $paramsManager->getValue(PrmMng::PARAM_PATH_NEW);
 
+        $absPathNew = $paramsManager->getValue(PrmMng::PARAM_PATH_WP_CORE_NEW);
+        $absUrlNew  = $paramsManager->getValue(PrmMng::PARAM_SITE_URL);
+
         $mu_newDomain     = parse_url($urlNew);
         $mu_newDomainHost = $mu_newDomain['host'];
         $mu_newUrlPath    = parse_url($urlNew, PHP_URL_PATH);
 
-        if (empty($mu_newUrlPath) || ($mu_newUrlPath == '/')) {
-            $mu_newUrlPath = '/';
-        } else {
-            $mu_newUrlPath = rtrim($mu_newUrlPath, '/') . '/';
-        }
+        $mu_newUrlPath = empty($mu_newUrlPath) || $mu_newUrlPath == '/' ? '/' : rtrim($mu_newUrlPath, '/') . '/';
 
         if ($confTransformer->exists('constant', 'ABSPATH')) {
-            if (($relativeAbsPath = SnapIO::getRelativePath($paramsManager->getValue(PrmMng::PARAM_PATH_WP_CORE_NEW), $pathNew)) === false) {
-                $absPathValue = "'" . $paramsManager->getValue(PrmMng::PARAM_PATH_WP_CORE_NEW) . "'";
+            // raw => true is required or formatValue() var_exports the whole __DIR__ expression
+            if (($relativeAbsPath = SnapIO::getRelativePath($absPathNew, $pathNew)) === false) {
+                $absPathValue = var_export($absPathNew, true);
             } else {
-                $absPathValue = "__DIR__ . '/" . $relativeAbsPath . "'";
+                $absPathValue = '__DIR__ . ' . var_export('/' . ltrim($relativeAbsPath, '/'), true);
             }
-            $confTransformer->update('constant', 'ABSPATH', $absPathValue, array('raw' => true));
+            $confTransformer->update('constant', 'ABSPATH', $absPathValue, ['raw' => true]);
             Log::info('UPDATE ABSPATH ' . Log::v2str($absPathValue));
         }
 
         if ($confTransformer->exists('constant', 'WP_HOME')) {
-            $confTransformer->update('constant', 'WP_HOME', $urlNew, array('normalize' => true, 'add' => true));
+            $confTransformer->update('constant', 'WP_HOME', $urlNew, ['normalize' => true, 'add' => true]);
             Log::info('UPDATE WP_HOME ' . Log::v2str($urlNew));
         }
 
-        $newSiteUrl = $paramsManager->getValue(PrmMng::PARAM_SITE_URL);
-        if ($confTransformer->exists('constant', 'WP_SITEURL') || $urlNew != $newSiteUrl) {
-            $confTransformer->update('constant', 'WP_SITEURL', $newSiteUrl, array('normalize' => true, 'add' => true));
-            Log::info('UPDATE WP_SITEURL ' . Log::v2str($newSiteUrl));
+        if ($confTransformer->exists('constant', 'WP_SITEURL') || $urlNew != $absUrlNew) {
+            $confTransformer->update('constant', 'WP_SITEURL', $absUrlNew, ['normalize' => true, 'add' => true]);
+            Log::info('UPDATE WP_SITEURL ' . Log::v2str($absUrlNew));
         }
 
         if ($confTransformer->exists('constant', 'DOMAIN_CURRENT_SITE')) {
-            $confTransformer->update('constant', 'DOMAIN_CURRENT_SITE', $mu_newDomainHost, array('normalize' => true, 'add' => true));
+            $confTransformer->update('constant', 'DOMAIN_CURRENT_SITE', $mu_newDomainHost, ['normalize' => true, 'add' => true]);
             Log::info('UPDATE DOMAIN_CURRENT_SITE ' . Log::v2str($mu_newDomainHost));
         }
+
         if ($confTransformer->exists('constant', 'PATH_CURRENT_SITE')) {
-            $confTransformer->update('constant', 'PATH_CURRENT_SITE', $mu_newUrlPath, array('normalize' => true, 'add' => true));
+            $confTransformer->update('constant', 'PATH_CURRENT_SITE', $mu_newUrlPath, ['normalize' => true, 'add' => true]);
             Log::info('UPDATE PATH_CURRENT_SITE ' . Log::v2str($mu_newUrlPath));
         }
 
-        $pathContent = $paramsManager->getValue(PrmMng::PARAM_PATH_CONTENT_NEW);
-        if ($confTransformer->exists('constant', 'WP_CONTENT_DIR') || $pathNew . '/wp-content' != $pathContent) {
-            $confTransformer->update('constant', 'WP_CONTENT_DIR', $pathContent, array('normalize' => true, 'add' => true));
+        $pathContent    = $paramsManager->getValue(PrmMng::PARAM_PATH_CONTENT_NEW);
+        $pathContentDef = $absPathNew . '/wp-content';
+        if ($confTransformer->exists('constant', 'WP_CONTENT_DIR') || $pathContentDef != $pathContent) {
+            $confTransformer->update('constant', 'WP_CONTENT_DIR', $pathContent, ['normalize' => true, 'add' => true]);
             Log::info('UPDATE WP_CONTENT_DIR ' . Log::v2str($pathContent));
         }
 
-        $urlContent = $paramsManager->getValue(PrmMng::PARAM_URL_CONTENT_NEW);
-        if ($confTransformer->exists('constant', 'WP_CONTENT_URL') || $urlNew . '/wp-content' != $urlContent) {
-            $confTransformer->update('constant', 'WP_CONTENT_URL', $urlContent, array('normalize' => true, 'add' => true));
+        $urlContent    = $paramsManager->getValue(PrmMng::PARAM_URL_CONTENT_NEW);
+        $urlContentDef =  $absUrlNew . '/wp-content';
+        if ($confTransformer->exists('constant', 'WP_CONTENT_URL') || $urlContentDef != $urlContent) {
+            $confTransformer->update('constant', 'WP_CONTENT_URL', $urlContent, ['normalize' => true, 'add' => true]);
             Log::info('UPDATE WP_CONTENT_URL ' . Log::v2str($urlContent));
         }
 
-        $pathPlugins = $paramsManager->getValue(PrmMng::PARAM_PATH_PLUGINS_NEW);
-        if ($confTransformer->exists('constant', 'WP_PLUGIN_DIR') || $pathNew . '/wp-content/plugins' != $pathPlugins) {
-            $confTransformer->update('constant', 'WP_PLUGIN_DIR', $pathPlugins, array('normalize' => true, 'add' => true));
+        $pathPlugins    = $paramsManager->getValue(PrmMng::PARAM_PATH_PLUGINS_NEW);
+        $pathPluginsDef = $pathContentDef . '/plugins';
+        if ($confTransformer->exists('constant', 'WP_PLUGIN_DIR') || $pathPluginsDef != $pathPlugins) {
+            $confTransformer->update('constant', 'WP_PLUGIN_DIR', $pathPlugins, ['normalize' => true, 'add' => true]);
             Log::info('UPDATE WP_PLUGIN_DIR ' . Log::v2str($pathPlugins));
         }
 
-        $urlPlugins = $paramsManager->getValue(PrmMng::PARAM_URL_PLUGINS_NEW);
-        if ($confTransformer->exists('constant', 'WP_PLUGIN_URL') || $urlNew . '/wp-content/plugins' != $urlPlugins) {
-            $confTransformer->update('constant', 'WP_PLUGIN_URL', $urlPlugins, array('normalize' => true, 'add' => true));
+        $urlPlugins    = $paramsManager->getValue(PrmMng::PARAM_URL_PLUGINS_NEW);
+        $urlPluginsDef = $urlContentDef . '/plugins';
+        if ($confTransformer->exists('constant', 'WP_PLUGIN_URL') || $urlPluginsDef != $urlPlugins) {
+            $confTransformer->update('constant', 'WP_PLUGIN_URL', $urlPlugins, ['normalize' => true, 'add' => true]);
             Log::info('UPDATE WP_PLUGIN_URL ' . Log::v2str($urlPlugins));
         }
 
-        $pathMuPlugins = $paramsManager->getValue(PrmMng::PARAM_PATH_MUPLUGINS_NEW);
-        if ($confTransformer->exists('constant', 'WPMU_PLUGIN_DIR') || $pathNew . '/wp-content/mu-plugins' != $pathMuPlugins) {
-            $confTransformer->update('constant', 'WPMU_PLUGIN_DIR', $pathMuPlugins, array('normalize' => true, 'add' => true));
+        $pathMuPlugins    = $paramsManager->getValue(PrmMng::PARAM_PATH_MUPLUGINS_NEW);
+        $pathMuPluginsDef = $pathContentDef . '/mu-plugins';
+        if ($confTransformer->exists('constant', 'WPMU_PLUGIN_DIR') || $pathMuPluginsDef != $pathMuPlugins) {
+            $confTransformer->update('constant', 'WPMU_PLUGIN_DIR', $pathMuPlugins, ['normalize' => true, 'add' => true]);
             Log::info('UPDATE WPMU_PLUGIN_DIR ' . Log::v2str($pathMuPlugins));
         }
 
-        $urlMuPlugins = $paramsManager->getValue(PrmMng::PARAM_URL_MUPLUGINS_NEW);
-        if ($confTransformer->exists('constant', 'WPMU_PLUGIN_URL') || $urlNew . '/wp-content/mu-plugins' != $urlMuPlugins) {
-            $confTransformer->update('constant', 'WPMU_PLUGIN_URL', $urlMuPlugins, array('normalize' => true, 'add' => true));
+        $urlMuPlugins    = $paramsManager->getValue(PrmMng::PARAM_URL_MUPLUGINS_NEW);
+        $urlMuPluginsDef = $urlContentDef . '/mu-plugins';
+        if ($confTransformer->exists('constant', 'WPMU_PLUGIN_URL') || $urlMuPluginsDef != $urlMuPlugins) {
+            $confTransformer->update('constant', 'WPMU_PLUGIN_URL', $urlMuPlugins, ['normalize' => true, 'add' => true]);
             Log::info('UPDATE WPMU_PLUGIN_URL ' . Log::v2str($urlMuPlugins));
         }
     }
 
-    protected function htaccessUpdate()
+    /**
+     * Update the .htaccess file
+     *
+     * @return void
+     */
+    protected function htaccessUpdate(): void
     {
         self::logSectionHeader('HTACCESS UPDATE', __FUNCTION__, __LINE__);
         // make sure dbConnection is initialized
         $this->dbConnection();
 
-        DUPX_ServerConfig::setup($this->dbh, PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_NEW));
+        ServerConfigs::setup($this->dbh, PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_NEW));
     }
 
-    protected function updateBlogName()
+    /**
+     * Update the blogname in the database
+     *
+     * @return void
+     */
+    protected function updateBlogName(): void
     {
+        if (InstState::isAddSiteOnMultisite()) {
+            return;
+        }
+
         $paramsManager = PrmMng::getInstance();
 
         $escapedOptionTable = mysqli_real_escape_string($this->dbh, DUPX_DB_Functions::getOptionsTableName());
@@ -988,53 +1162,40 @@ LONGMSG;
         DUPX_DB::mysqli_query(
             $this->dbh,
             "UPDATE `" . $escapedOptionTable .
-            "` SET option_value = '" . mysqli_real_escape_string($this->dbh, $escapedBlogName) .
-            "' WHERE option_name = 'blogname' "
+                "` SET option_value = '" . mysqli_real_escape_string($this->dbh, $escapedBlogName) .
+                "' WHERE option_name = 'blogname' "
         );
     }
 
     /**
      * Update options URLs
      *
-     * @param string $table
-     * @param string $urlNew
-     * @param string $siteUrl
+     * @param string  $urlNew  new url
+     * @param string  $siteUrl site url
+     * @param ?string $prefix  table prefix, if null is wp main prefix
      *
      * @return void
      */
-    protected function updateOptionsUrls($table, $urlNew, $siteUrl)
+    protected function updateOptionsUrls($urlNew, $siteUrl, $prefix = null): void
     {
-        $paramsManager      = PrmMng::getInstance();
-        $escapedOptionTable = mysqli_real_escape_string($this->dbh, $table);
+        $paramsManager = PrmMng::getInstance();
 
         Log::info('UPATE URL NEW ' . Log::v2str($urlNew), Log::LV_DETAILED);
-        DUPX_DB::mysqli_query(
-            $this->dbh,
-            "UPDATE `" . $escapedOptionTable . "` " .
-            "SET option_value = '" . mysqli_real_escape_string($this->dbh, $urlNew) . "'  WHERE option_name = 'home' "
-        );
+        DbUtils::updateWpOption($this->dbh, 'home', $urlNew, $prefix);
         Log::info('UPATE SITE URL ' . Log::v2str($siteUrl), Log::LV_DETAILED);
-        DUPX_DB::mysqli_query(
-            $this->dbh,
-            "UPDATE `" . $escapedOptionTable . "` " .
-            "SET option_value = '" . mysqli_real_escape_string($this->dbh, $siteUrl) . "'  WHERE option_name = 'siteurl' "
-        );
-
-        $safeModeVal = mysqli_real_escape_string($this->dbh, $paramsManager->getValue(PrmMng::PARAM_SAFE_MODE));
-        DUPX_DB::mysqli_query($this->dbh, "INSERT INTO `" . $escapedOptionTable . "` (option_value, option_name) "
-            . "VALUES('" . $safeModeVal . "','duplicator_pro_exe_safe_mode')"
-            . "ON DUPLICATE KEY UPDATE option_value = '" . $safeModeVal . "'");
+        DbUtils::updateWpOption($this->dbh, 'siteurl', $siteUrl, $prefix);
+        DbUtils::updateWpOption($this->dbh, 'dupli_opt_exe_safe_mode', $paramsManager->getValue(PrmMng::PARAM_SAFE_MODE));
     }
 
     /**
      * Update post GUID
      *
-     * @param string $table
-     * @param string $urlNew
+     * @param string $table  table name
+     * @param string $urlNew new url
      *
      * @return void
      */
-    protected function updatePostsGuid($table, $urlNew)
+    protected function updatePostsGuid(string $table, $urlNew): void
     {
         $paramsManager = PrmMng::getInstance();
 
@@ -1056,7 +1217,12 @@ LONGMSG;
         Log::info("Reverted '{$update_guid}' post guid columns back to '" . $paramsManager->getValue(PrmMng::PARAM_URL_OLD) . "'");
     }
 
-    public function generalUpdate()
+    /**
+     * Genral db update
+     *
+     * @return void
+     */
+    public function generalUpdate(): void
     {
         self::logSectionHeader('GENERAL UPDATES', __FUNCTION__, __LINE__);
         // make sure dbConnection is initialized
@@ -1065,27 +1231,52 @@ LONGMSG;
         $this->updateBlogName();
 
         $paramsManager = PrmMng::getInstance();
-        $urlNew        = $paramsManager->getValue(PrmMng::PARAM_URL_NEW);
-        $siteUrl       = $paramsManager->getValue(PrmMng::PARAM_SITE_URL);
 
-        $this->updateOptionsUrls(
-            DUPX_DB_Functions::getOptionsTableName(),
-            $urlNew,
-            $siteUrl
-        );
-        $this->updatePostsGuid(
-            DUPX_DB_Functions::getPostsTableName(),
-            $urlNew
-        );
+        if (InstState::isAddSiteOnMultisite()) {
+            /** @var SiteOwrMap[] $overwriteMapping */
+            $overwriteMapping = PrmMng::getInstance()->getValue(PrmMng::PARAM_SUBSITE_OVERWRITE_MAPPING);
+
+            foreach ($overwriteMapping as $map) {
+                if (($targetInfo = $map->getTargetSiteInfo()) == false) {
+                    throw new Exception('Target site info ' . $map->getTargetId() . ' don\'t exists');
+                }
+
+                $urlNew  = $targetInfo['fullHomeUrl'];
+                $siteUrl = $targetInfo['fullSiteUrl'];
+
+                $this->updateOptionsUrls(
+                    $urlNew,
+                    $siteUrl,
+                    $targetInfo['blog_prefix']
+                );
+                $this->updatePostsGuid(
+                    DUPX_DB_Functions::getPostsTableName($targetInfo['blog_prefix']),
+                    $urlNew
+                );
+            }
+        } else {
+            $urlNew  = $paramsManager->getValue(PrmMng::PARAM_URL_NEW);
+            $siteUrl = $paramsManager->getValue(PrmMng::PARAM_SITE_URL);
+
+            $this->updateOptionsUrls(
+                $urlNew,
+                $siteUrl
+            );
+            $this->updatePostsGuid(
+                DUPX_DB_Functions::getPostsTableName(),
+                $urlNew
+            );
+        }
 
         $this->managePlugins();
     }
 
     /**
+     * Migration info set
      *
-     * @return boolean
+     * @return bool true if success
      */
-    public function duplicatorMigrationInfoSet()
+    public function duplicatorMigrationInfoSet(): bool
     {
         Log::info('MIGRATION INFO SET');
         // make sure dbConnection is initialized
@@ -1093,21 +1284,22 @@ LONGMSG;
 
         // on main options tables in all installation
         $optionTable   = mysqli_real_escape_string($this->dbh, DUPX_DB_Functions::getOptionsTableName());
-        $migrationData = DUPX_InstallerState::getMigrationData();
+        $migrationData = InstState::getMigrationData();
+        $json          = JsonSerialize::serialize($migrationData, JSON_PRETTY_PRINT | JsonSerialize::JSON_SKIP_CLASS_NAME);
 
         $query = "REPLACE INTO `" . $optionTable . "` (`option_id`, `option_name`, `option_value`, `autoload`) VALUES " .
             "(NULL, '" . self::FIRST_LOGIN_OPTION . "', '1', 'no'), " .
-            "(NULL, '" . self::MIGRATION_DATA_OPTION . "', '" . mysqli_real_escape_string($this->dbh, SnapJson::jsonEncodePPrint($migrationData)) . "', 'no');";
+            "(NULL, '" . self::MIGRATION_DATA_OPTION . "', '" . mysqli_real_escape_string($this->dbh, $json) . "', 'no');";
 
         if (DUPX_DB::mysqli_query($this->dbh, $query) === false) {
             $errMsg = "DATABASE ERROR \"" . mysqli_error($this->dbh) . "\"<br>[sql=" . substr($query, 0, DUPX_DBInstall::QUERY_ERROR_LOG_LEN) . "...]";
-            DUPX_NOTICE_MANAGER::getInstance()->addBothNextAndFinalReportNotice(array(
+            DUPX_NOTICE_MANAGER::getInstance()->addBothNextAndFinalReportNotice([
                 'shortMsg'    => 'UPDATE MIRATION INFO ISSUE',
                 'level'       => DUPX_NOTICE_ITEM::SOFT_WARNING,
                 'longMsg'     => $errMsg,
                 'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_HTML,
-                'sections'    => 'database'
-            ));
+                'sections'    => 'database',
+            ]);
 
             return false;
         } else {
@@ -1115,52 +1307,84 @@ LONGMSG;
         }
     }
 
-    public function generalCleanup()
+    /**
+     * General cleanup
+     *
+     * @return void
+     */
+    public function generalCleanup(): void
     {
         self::logSectionHeader('GENERAL CLEANUP', __FUNCTION__, __LINE__);
         // make sure dbConnection is initialized
         $this->dbConnection();
+        $archiveConfig = DUPX_ArchiveConfig::getInstance();
         $paramsManager = PrmMng::getInstance();
 
         if (!DUPX_UpdateEngine::updateTablePrefixKeys()) {
             // @todo display erorr on notice manager
         }
+
+        if (InstState::isInstType(InstState::TYPE_STANDALONE)) {
+            Log::info('UPDATE DATA FOR STANDALONE MIGRATION');
+            $siteId = $paramsManager->getValue(PrmMng::PARAM_SUBSITE_ID);
+            Standalone::updateOptionsTable($siteId, $this->dbh);
+            Standalone::purgeRedundantData($siteId, $this->dbh);
+        }
+
+        //SCHEDULE STORAGE CLEANUP
+        if ($paramsManager->getValue(PrmMng::PARAM_EMPTY_SCHEDULE_STORAGE)) {
+            $entitiesTable = mysqli_real_escape_string($this->dbh, DUPX_DB_Functions::getEntitiesTableName());
+
+            DUPX_DB::mysqli_query(
+                $this->dbh,
+                "DELETE FROM `" . $entitiesTable . "` WHERE `type` = 'Storage_Entity' AND `id` != " . $archiveConfig->defaultStorageId
+            );
+            Log::info(" - REMOVED " . mysqli_affected_rows($this->dbh) . " storage items");
+
+            DUPX_DB::mysqli_query(
+                $this->dbh,
+                "DELETE FROM `" . $entitiesTable . "` WHERE `type` = 'Schedule_Entity'"
+            );
+            Log::info(" - REMOVED " . mysqli_affected_rows($this->dbh) . " schedule items");
+        }
     }
 
     /**
-     * activate and deactivate plugins
+     * Activate and deactivate plugins
      *
      * @return void
      */
-    protected function managePlugins()
+    protected function managePlugins(): void
     {
         self::logSectionHeader("MANAGE PLUGINS", __FUNCTION__, __LINE__);
         $paramsManager = PrmMng::getInstance();
+        $subsite_id    = $paramsManager->getValue(PrmMng::PARAM_SUBSITE_ID);
 
         try {
-            $pluginsManager = DUPX_Plugins_Manager::getInstance();
-            $pluginsManager->setActions($paramsManager->getValue(PrmMng::PARAM_PLUGINS));
-            $pluginsManager->executeActions($this->dbConnection());
+            $pluginsManager = PluginsManager::getInstance();
+            $pluginsManager->setActions($paramsManager->getValue(PrmMng::PARAM_PLUGINS), $subsite_id);
+            $pluginsManager->preViewChecks($subsite_id);
+            $pluginsManager->executeActions($this->dbConnection(), $subsite_id);
         } catch (Exception $e) {
             $nManager = DUPX_NOTICE_MANAGER::getInstance();
-            $nManager->addFinalReportNotice(array(
+            $nManager->addFinalReportNotice([
                 'shortMsg'    => 'Plugins settings error ' . $e->getMessage(),
                 'level'       => DUPX_NOTICE_ITEM::CRITICAL,
                 'longMsg'     => $e->getTraceAsString(),
                 'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_PRE,
-                'sections'    => 'general'
-            ));
+                'sections'    => 'general',
+            ]);
 
             Log::info("PLUGIN MANAGER EXCEPTIOMN\n" . $e->getTraceAsString());
         }
     }
 
     /**
-     * checks for index.html in root, and if found, issues a soft warning
+     * hecks for index.html in root, and if found, issues a soft warning
      *
      * @return void
      */
-    public function checkForIndexHtml()
+    public function checkForIndexHtml(): void
     {
         self::logSectionHeader('CHECK FOR INDEX.HTML', __FUNCTION__, __LINE__);
 
@@ -1168,13 +1392,13 @@ LONGMSG;
         if (file_exists(PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_NEW) . '/index.html')) {
             $nManager = DUPX_NOTICE_MANAGER::getInstance();
             $nManager->addFinalReportNotice(
-                array(
+                [
                     'shortMsg'    => 'An index.html was found.',
                     'level'       => DUPX_NOTICE_ITEM::SOFT_WARNING,
                     'longMsg'     => 'An index.html was found in the existing site. You may need to manually remove it for the new site to work.',
                     'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_DEFAULT,
-                    'sections'    => 'general'
-                )
+                    'sections'    => 'general',
+                ]
             );
 
             Log::info("AN INDEX.HTML WAS FOUND IN THE ROOT OF THE INSTALLATION.");
@@ -1183,7 +1407,12 @@ LONGMSG;
         }
     }
 
-    public function noticeTest()
+    /**
+     * Notice tests
+     *
+     * @return void
+     */
+    public function noticeTest(): void
     {
         self::logSectionHeader('NOTICES TEST', __FUNCTION__, __LINE__);
         // make sure dbConnection is initialized
@@ -1206,13 +1435,13 @@ LONGMSG;
                     $this->report['warnlist'][] = $msg;
                     Log::info($msg);
 
-                    $nManager->addFinalReportNotice(array(
+                    $nManager->addFinalReportNotice([
                         'shortMsg'    => 'Media settings notice',
                         'level'       => DUPX_NOTICE_ITEM::SOFT_WARNING,
                         'longMsg'     => $msg,
                         'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_PRE,
-                        'sections'    => 'general'
-                    ), DUPX_NOTICE_MANAGER::ADD_UNIQUE_UPDATE, 'media-settings-notice');
+                        'sections'    => 'general',
+                    ], DUPX_NOTICE_MANAGER::ADD_UNIQUE_UPDATE, 'media-settings-notice');
 
                     break;
                 }
@@ -1224,18 +1453,115 @@ LONGMSG;
         }
     }
 
-    public function cleanupTmpFiles()
+    /**
+     * Remove redundant data
+     *
+     * @return void
+     */
+    protected function removeRedundant(): void
     {
+        $paramsManager = PrmMng::getInstance();
+
+        if ($paramsManager->getValue(PrmMng::PARAM_REMOVE_RENDUNDANT)) {
+            self::logSectionHeader('REMOVE REDUNDANT', __FUNCTION__, __LINE__);
+
+            // make sure maintenance mode is disabled
+            DUPX_U::maintenanceMode(false);
+
+            // Need to load if user selected redundant-data checkbox
+            $nManager = DUPX_NOTICE_MANAGER::getInstance();
+
+            try {
+                CleanUp::removeUnusedPlugins();
+            } catch (Exception $ex) {
+                // Technically it can complete but this should be brought to their attention
+                $errorMsg = "**EXCEPTION ERROR** The Inactive Plugins deletion failed";
+                Log::info($errorMsg);
+                $nManager->addFinalReportNotice([
+                    'shortMsg' => $errorMsg,
+                    'level'    => DUPX_NOTICE_ITEM::HARD_WARNING,
+                    'longMsg'  => 'Please uninstall all inactive plugins manually',
+                    'sections' => 'general',
+                ]);
+            }
+
+            try {
+                CleanUp::removeUnusedThemes();
+            } catch (Exception $ex) {
+                // Technically it can complete but this should be brought to their attention
+                $errorMsg = "**EXCEPTION ERROR** The Inactive Themes deletion failed";
+                Log::info($errorMsg);
+                $nManager->addFinalReportNotice([
+                    'shortMsg' => $errorMsg,
+                    'level'    => DUPX_NOTICE_ITEM::HARD_WARNING,
+                    'longMsg'  => 'Please uninstall all inactive themes manually',
+                    'sections' => 'general',
+                ]);
+            } catch (Error $ex) {
+                $errorMsg = "**FATAL ERROR** The Inactive Themes deletion failed";
+                Log::info($errorMsg);
+                $nManager->addFinalReportNotice([
+                    'shortMsg' => $errorMsg,
+                    'level'    => DUPX_NOTICE_ITEM::HARD_WARNING,
+                    'longMsg'  => 'Please uninstall all inactive themes manually',
+                    'sections' => 'general',
+                ]);
+            }
+        }
+
+        if ($paramsManager->getValue(PrmMng::PARAM_REMOVE_USERS_WITHOUT_PERMISSIONS)) {
+            // make sure maintenance mode is disabled
+            DUPX_U::maintenanceMode(false);
+
+            // Need to load if user selected redundant-data checkbox
+            $nManager = DUPX_NOTICE_MANAGER::getInstance();
+
+            try {
+                $siteId = $paramsManager->getValue(PrmMng::PARAM_SUBSITE_ID);
+                CleanUp::removeUsersWithoutPermissions($siteId, $this->dbh);
+            } catch (Exception $ex) {
+                $errorMsg = "**EXCEPTION ERROR** Removing Users without permissions failed";
+                Log::info($errorMsg);
+                $nManager->addFinalReportNotice([
+                    'shortMsg' => $errorMsg,
+                    'level'    => DUPX_NOTICE_ITEM::HARD_WARNING,
+                    'longMsg'  => 'Please remove all users without permissions manually',
+                    'sections' => 'general',
+                ]);
+            } catch (Error $ex) {
+                // Technically it can complete but this should be brought to their attention
+                $errorMsg = "**FATAL ERROR** Removing Users without permissions failed";
+                Log::info($errorMsg);
+                $nManager->addFinalReportNotice([
+                    'shortMsg' => $errorMsg,
+                    'level'    => DUPX_NOTICE_ITEM::HARD_WARNING,
+                    'longMsg'  => 'Please remove all users without permissions manually',
+                    'sections' => 'general',
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Cleanup any tmp files
+     *
+     * @return void
+     */
+    public function cleanupFiles(): void
+    {
+        $this->removeRedundant();
         self::logSectionHeader('CLEANUP TMP FILES', __FUNCTION__, __LINE__);
 
         //Cleanup any tmp files a developer may have forgotten about
         //Lets be proactive for the developer just in case
         $pathNew             = PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_NEW);
-        $wpconfig_path_bak   = $pathNew . "/wp-config.bak";
-        $wpconfig_path_old   = $pathNew . "/wp-config.old";
-        $wpconfig_path_org   = $pathNew . "/wp-config.org";
-        $wpconfig_path_orig  = $pathNew . "/wp-config.orig";
-        $wpconfig_safe_check = array($wpconfig_path_bak, $wpconfig_path_old, $wpconfig_path_org, $wpconfig_path_orig);
+        $wpconfig_safe_check = [
+            $pathNew . "/wp-config.bak",
+            $pathNew . "/wp-config.old",
+            $pathNew . "/wp-config.org",
+            $pathNew . "/wp-config.orig",
+
+        ];
         foreach ($wpconfig_safe_check as $file) {
             if (file_exists($file)) {
                 $tmp_newfile = $file . uniqid('_');
@@ -1244,15 +1570,37 @@ LONGMSG;
                 }
             }
         }
+
+        $wpContent   = PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_CONTENT_NEW);
+        $removeFiled = [
+            $wpContent . "/debug.log",
+        ];
+        foreach ($removeFiled as $file) {
+            if (file_exists($file)) {
+                if (unlink($file) === false) {
+                    Log::info("WARNING: Unable to remove '{$file}'");
+                }
+            }
+        }
     }
 
-    public function setFilePermsission()
+    /**
+     * Set file permission
+     *
+     * @return void
+     */
+    public function setFilePermsission(): void
     {
         self::logSectionHeader('SET PARAMS PERMISSION', __FUNCTION__, __LINE__);
-        DUP_Extraction::setFolderPermissionAfterExtraction();
+        DUPX_Extraction::setFolderPermissionAfterExtraction();
     }
 
-    public function finalReportNotices()
+    /**
+     * Final report notices
+     *
+     * @return void
+     */
+    public function finalReportNotices(): void
     {
         self::logSectionHeader('FINAL REPORT NOTICES', __FUNCTION__, __LINE__);
 
@@ -1260,16 +1608,21 @@ LONGMSG;
         $this->htaccessFinalReport();
     }
 
-    private function htaccessFinalReport()
+    /**
+     * Htaccess final report
+     *
+     * @return void
+     */
+    private function htaccessFinalReport(): void
     {
         $nManager = DUPX_NOTICE_MANAGER::getInstance();
 
-        $origHtaccessPath = DUPX_Orig_File_Manager::getInstance()->getEntryStoredPath(DUPX_ServerConfig::CONFIG_ORIG_FILE_HTACCESS_ID);
+        $origHtaccessPath = InstallerOrigFileMng::getInstance()->getEntryStoredPath(ServerConfigs::CONFIG_ORIG_FILE_HTACCESS_ID);
         if ($origHtaccessPath === false || ($orig             = file_get_contents($origHtaccessPath)) === false) {
             $orig = 'Original .htaccess file doesn\'t exist';
         }
 
-        $targetHtaccessPath = DUPX_ServerConfig::getHtaccessTargetPath();
+        $targetHtaccessPath = ServerConfigs::getHtaccessTargetPath();
         if (!file_exists($targetHtaccessPath) || ($new                = file_get_contents($targetHtaccessPath)) === false) {
             $new = 'New .htaccess file doesn\'t exist';
         }
@@ -1280,20 +1633,25 @@ LONGMSG;
             '</div>';
         $longMsg         = DUPX_U_Html::getLigthBox('.htaccess changes', 'HTACCESS COMPARE', $lightBoxContent, false);
 
-        $nManager->addFinalReportNotice(array(
+        $nManager->addFinalReportNotice([
             'shortMsg'    => 'htaccess changes',
             'level'       => DUPX_NOTICE_ITEM::INFO,
             'longMsg'     => $longMsg,
             'sections'    => 'changes',
             'open'        => true,
-            'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_HTML
-        ), DUPX_NOTICE_MANAGER::ADD_UNIQUE, 'htaccess-changes');
+            'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_HTML,
+        ], DUPX_NOTICE_MANAGER::ADD_UNIQUE, 'htaccess-changes');
     }
 
-    private function wpConfigFinalReport()
+    /**
+     * wp-config final report
+     *
+     * @return void
+     */
+    private function wpConfigFinalReport(): void
     {
         $nManager     = DUPX_NOTICE_MANAGER::getInstance();
-        $wpConfigPath = DUPX_Orig_File_Manager::getInstance()->getEntryStoredPath(DUPX_ServerConfig::CONFIG_ORIG_FILE_WPCONFIG_ID);
+        $wpConfigPath = InstallerOrigFileMng::getInstance()->getEntryStoredPath(ServerConfigs::CONFIG_ORIG_FILE_WPCONFIG_ID);
 
         if ($wpConfigPath === false || ($orig = file_get_contents($wpConfigPath)) === false) {
             $orig = 'Can\'t read origin wp-config.php file';
@@ -1316,20 +1674,39 @@ LONGMSG;
             '</div>';
         $longMsg         = DUPX_U_Html::getLigthBox('wp-config.php changes', 'WP-CONFIG.PHP COMPARE', $lightBoxContent, false);
 
-        $nManager->addFinalReportNotice(array(
+        $nManager->addFinalReportNotice([
             'shortMsg'    => 'wp-config.php changes',
             'level'       => DUPX_NOTICE_ITEM::INFO,
             'longMsg'     => $longMsg,
             'sections'    => 'changes',
             'open'        => true,
-            'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_HTML
-        ), DUPX_NOTICE_MANAGER::ADD_UNIQUE, 'wp-config-changes');
+            'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_HTML,
+        ], DUPX_NOTICE_MANAGER::ADD_UNIQUE, 'wp-config-changes');
+
+        if (PrmMng::getInstance()->getValue(PrmMng::PARAM_WP_CONFIG) == 'new') {
+            DUPX_NOTICE_MANAGER::getInstance()->addFinalReportNotice([
+                'shortMsg'    => 'New wp-config.php was created',
+                'level'       => DUPX_NOTICE_ITEM::SOFT_WARNING,
+                'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_HTML,
+                'open'        => true,
+                'longMsg'     => 'A new wp-config has been created, unless you have selected this option and in order to make sure that everything will work as it should '
+                    . 'please make a comparison between the old and the new wp-config with the following link ' . $longMsg,
+                'sections'    => 'general',
+            ]);
+        }
     }
 
-    private function obscureWpConfig($src)
+    /**
+     * Obscure wp-config.php critical data in wp-config
+     *
+     * @param string $src wp-config.php content
+     *
+     * @return string
+     */
+    private function obscureWpConfig(string $src)
     {
         $transformer = new WPConfigTransformerSrc($src);
-        $obsKeys     = array(
+        $obsKeys     = [
             'DB_NAME',
             'DB_USER',
             'DB_HOST',
@@ -1341,8 +1718,8 @@ LONGMSG;
             'AUTH_SALT',
             'SECURE_AUTH_SALT',
             'LOGGED_IN_SALT',
-            'NONCE_SALT'
-        );
+            'NONCE_SALT',
+        ];
 
         foreach ($obsKeys as $key) {
             if ($transformer->exists('constant', $key)) {
@@ -1353,7 +1730,31 @@ LONGMSG;
         return $transformer->getSrc();
     }
 
-    public function chunkStop($progressPerc, $position)
+    /**
+     * Update report
+     *
+     * @return array<string, mixed> return report
+     */
+    public function reportLoadEnd()
+    {
+        $this->report['profile_end'] = DUPX_U::getMicrotime();
+        $this->report['time']        = DUPX_U::elapsedTime($this->report['profile_end'], $this->report['profile_start']);
+        $this->report['errsql_sum']  = empty($this->report['errsql']) ? 0 : count($this->report['errsql']);
+        $this->report['errser_sum']  = empty($this->report['errser']) ? 0 : count($this->report['errser']);
+        $this->report['errkey_sum']  = empty($this->report['errkey']) ? 0 : count($this->report['errkey']);
+        $this->report['err_all']     = $this->report['errsql_sum'] + $this->report['errser_sum'] + $this->report['errkey_sum'];
+        return $this->report;
+    }
+
+    /**
+     * Chunk stop
+     *
+     * @param float $progressPerc progress percentage
+     * @param mixed $position     chunk position
+     *
+     * @return void
+     */
+    private function chunkStop($progressPerc, $position): void
     {
         $this->closeDbConnection();
 
@@ -1366,7 +1767,12 @@ LONGMSG;
         $this->report['progress_perc'] = $progressPerc;
     }
 
-    public function complete()
+    /**
+     * Complete step, update final report
+     *
+     * @return void
+     */
+    public function complete(): void
     {
         $this->closeDbConnection();
 

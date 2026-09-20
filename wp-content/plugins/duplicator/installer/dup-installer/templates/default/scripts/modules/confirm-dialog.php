@@ -1,10 +1,5 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
-
 use Duplicator\Libs\Snap\SnapJson;
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -24,7 +19,7 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
                 this.content = null;
             }
 
-            DUPX.StandardJsonAjaxWrapper(
+            DUPX.StandarJsonAjaxWrapper(
                 confirmDialogAction,
                 confirmDialogToken,
                 {},

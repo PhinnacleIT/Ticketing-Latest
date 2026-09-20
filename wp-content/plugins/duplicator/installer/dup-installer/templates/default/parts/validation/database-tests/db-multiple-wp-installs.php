@@ -1,15 +1,15 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $isOk bool */
-/* @var $uniquePrefixes array */
+/**
+ * Variables
+ *
+ * @var bool $isOk
+ * @var string[] $uniquePrefixes
+ */
 
 ?>
 <div class="sub-title">STATUS</div>
@@ -38,8 +38,4 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
     <li><b><?php echo DUPX_U::esc_html($prefix); ?></b></li>
     <?php endforeach; ?>
 </ul>
-<?php endif; ?>
-
-
-
-
+<?php endif;

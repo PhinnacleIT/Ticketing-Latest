@@ -2,9 +2,6 @@
 
 /**
  * Duplicator messages sections
- *
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
  */
 
 defined("ABSPATH") or die("");
@@ -14,14 +11,13 @@ defined("ABSPATH") or die("");
  *
  * @var \Duplicator\Core\Controllers\ControllersManager $ctrlMng
  * @var \Duplicator\Core\Views\TplMng  $tplMng
- * @var array<string, mixed> $tplData
  */
-$serverSettings = $tplData['serverSettings'];
+$serverSettings = $tplMng->getDataValueArrayRequired('serverSettings');
 ?>
 <table class="widefat" cellspacing="0">
 <?php foreach ($serverSettings as $section) : ?>
     <tr>
-        <td class="dup-settings-diag-header" colspan="2"><?php echo esc_html($section['title']); ?></td>
+        <td class="dupli-settings-diag-header" colspan="2"><?php echo esc_html($section['title']); ?></td>
     </tr>
     <?php foreach ($section['settings'] as $setting) : ?>
         <tr>

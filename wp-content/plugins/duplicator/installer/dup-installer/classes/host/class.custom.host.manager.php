@@ -6,14 +6,15 @@
  *
  * Standard: PSR-2
  *
- * @package SC\DUPX\DB
- * @link    http://www.php-fig.org/psr/psr-2/
+ * @link http://www.php-fig.org/psr/psr-2/
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Installer\Core\Deploy\Plugins\PluginsManager;
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\Items\ParamForm;
+use Duplicator\Installer\Core\Params\PrmMng;
 use Duplicator\Libs\Snap\SnapWP;
 
 require_once(DUPX_INIT . '/classes/host/interface.host.php');
@@ -35,11 +36,8 @@ class DUPX_Custom_Host_Manager
     const HOST_FLYWHEEL     = 'flywheel';
     const HOST_SITEGROUND   = 'siteground';
 
-    /**
-     *
-     * @var self
-     */
-    protected static $instance = null;
+    /** @var ?self */
+    protected static $instance;
 
     /**
      * this var prevent multiple params inizialization.
@@ -54,14 +52,7 @@ class DUPX_Custom_Host_Manager
      *
      * @var DUPX_Host_interface[]
      */
-    private $customHostings = array();
-
-    /**
-     * active custom hosting in current server
-     *
-     * @var string[]
-     */
-    private $activeHostings = array();
+    private $customHostings = [];
 
     /**
      *
@@ -95,7 +86,7 @@ class DUPX_Custom_Host_Manager
      * @return boolean
      * @throws Exception
      */
-    public function init()
+    public function init(): bool
     {
         if ($this->initialized) {
             return true;
@@ -105,7 +96,6 @@ class DUPX_Custom_Host_Manager
                 throw new Exception('Host must implemnete DUPX_Host_interface');
             }
             if ($cHost->isHosting()) {
-                $this->activeHostings[] = $cHost->getIdentifier();
                 $cHost->init();
             }
         }
@@ -116,11 +106,11 @@ class DUPX_Custom_Host_Manager
     /**
      * return the lisst of current custom active hostings
      *
-     * @return DUPX_Host_interface[]
+     * @return string[]
      */
-    public function getActiveHostings()
+    public function getActiveHostings(): array
     {
-        $result = array();
+        $result = [];
         foreach ($this->customHostings as $cHost) {
             if ($cHost->isHosting()) {
                 $result[] = $cHost->getIdentifier();
@@ -132,11 +122,11 @@ class DUPX_Custom_Host_Manager
     /**
      * return true if current identifier hostoing is active
      *
-     * @param string $identifier
+     * @param string $identifier hosting identifier
      *
      * @return bool
      */
-    public function isHosting($identifier)
+    public function isHosting($identifier): bool
     {
         return isset($this->customHostings[$identifier]) && $this->customHostings[$identifier]->isHosting();
     }
@@ -165,10 +155,9 @@ class DUPX_Custom_Host_Manager
     }
 
     /**
+     * @param string $identifier hosting identifier
      *
-     * @param type $identifier
-     *
-     * @return boolean|DUPX_Host_interface
+     * @return bool|DUPX_Host_interface
      */
     public function getHosting($identifier)
     {
@@ -183,19 +172,19 @@ class DUPX_Custom_Host_Manager
      * @todo temp function fot prevent the warnings on managed hosting.
      * This function must be removed in favor of right extraction mode will'be implemented
      *
-     * @param string $extract_filename
+     * @param string $extract_filename filename
      *
      * @return boolean
      */
-    public function skipWarningExtractionForManaged($extract_filename)
+    public function skipWarningExtractionForManaged($extract_filename): bool
     {
         if (!$this->isManaged()) {
             return false;
         } elseif (SnapWP::isWpCore($extract_filename, SnapWP::PATH_RELATIVE)) {
             return true;
-        } elseif (DUPX_ArchiveConfig::getInstance()->isChildOfArchivePath($extract_filename, array('abs', 'plugins', 'muplugins', 'themes'))) {
+        } elseif (DUPX_ArchiveConfig::getInstance()->isChildOfArchivePath($extract_filename, ['abs', 'plugins', 'muplugins', 'themes'])) {
             return true;
-        } elseif (in_array($extract_filename, DUPX_Plugins_Manager::getInstance()->getDropInsPaths())) {
+        } elseif (in_array($extract_filename, PluginsManager::getInstance()->getDropInsPaths())) {
             return true;
         } else {
             return false;
@@ -203,11 +192,11 @@ class DUPX_Custom_Host_Manager
     }
 
     /**
+     * Set default params for manage hosting
      *
-     * @return bool
-     * @throws Exception
+     * @return void
      */
-    public function setManagedHostParams()
+    public function setManagedHostParams(): void
     {
         if (($managedSlug = $this->isManaged()) === false) {
             return;
@@ -222,12 +211,11 @@ class DUPX_Custom_Host_Manager
         $paramsManager->setValue(PrmMng::PARAM_OTHER_CONFIG, 'nothing');
         $paramsManager->setFormStatus(PrmMng::PARAM_OTHER_CONFIG, ParamForm::STATUS_INFO_ONLY);
 
-        $paramsManager->setValue(PrmMng::PARAM_DB_ACTION, 'empty');
-
-        if (DUPX_InstallerState::getInstance()->getMode() === DUPX_InstallerState::MODE_OVR_INSTALL) {
+        if (InstState::getInstance()->getMode() === InstState::MODE_OVR_INSTALL) {
             $overwriteData = $paramsManager->getValue(PrmMng::PARAM_OVERWRITE_SITE_DATA);
             $paramsManager->setValue(PrmMng::PARAM_VALIDATION_ACTION_ON_START, DUPX_Validation_manager::ACTION_ON_START_AUTO);
             $paramsManager->setValue(PrmMng::PARAM_DB_DISPLAY_OVERWIRE_WARNING, false);
+            $paramsManager->setValue(PrmMng::PARAM_CPNL_CAN_SELECTED, false);
             $paramsManager->setValue(PrmMng::PARAM_DB_HOST, $overwriteData['dbhost']);
             $paramsManager->setValue(PrmMng::PARAM_DB_NAME, $overwriteData['dbname']);
             $paramsManager->setValue(PrmMng::PARAM_DB_USER, $overwriteData['dbuser']);

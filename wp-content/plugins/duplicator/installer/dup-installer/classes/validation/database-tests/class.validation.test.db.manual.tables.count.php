@@ -6,22 +6,22 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 use Duplicator\Installer\Core\Params\PrmMng;
 
-class DUPX_Validation_test_db_manual_tabels_count extends DUPX_Validation_abstract_item
+class DUPX_Validation_test_db_manual_tables_count extends DUPX_Validation_abstract_item
 {
     const MIN_TABLES_NUM = 10;
 
+    /** @var string */
     protected $errorMessage = '';
-    protected $numTables    = 0;
+    /** @var int<0, max> */
+    protected $numTables = 0;
 
-    protected function runTest()
+    protected function runTest(): int
     {
         if (
             DUPX_Validation_database_service::getInstance()->skipDatabaseTests() ||
@@ -39,30 +39,36 @@ class DUPX_Validation_test_db_manual_tabels_count extends DUPX_Validation_abstra
         }
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'Manual Table Check';
     }
 
     protected function hwarnContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-manual-tables-count', array(
-            'isOk'         => false,
-            'dbname'       => PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_NAME),
-            'numTables'    => $this->numTables,
-            'minNumTables' > self::MIN_TABLES_NUM,
-            'errorMessage' => $this->errorMessage
-            ), false);
+        return dupxTplRender(
+            'parts/validation/database-tests/db-manual-tables-count',
+            [
+                'isOk'         => false,
+                'dbname'       => PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_NAME),
+                'numTables'    => $this->numTables,
+                'errorMessage' => $this->errorMessage,
+            ],
+            false
+        );
     }
 
     protected function passContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-manual-tables-count', array(
-            'isOk'         => true,
-            'dbname'       => PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_NAME),
-            'numTables'    => $this->numTables,
-            'minNumTables' > self::MIN_TABLES_NUM,
-            'errorMessage' => $this->errorMessage
-            ), false);
+        return dupxTplRender(
+            'parts/validation/database-tests/db-manual-tables-count',
+            [
+                'isOk'         => true,
+                'dbname'       => PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_NAME),
+                'numTables'    => $this->numTables,
+                'errorMessage' => $this->errorMessage,
+            ],
+            false
+        );
     }
 }

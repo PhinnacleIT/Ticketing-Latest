@@ -1,19 +1,18 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
 
 $paramsManager = PrmMng::getInstance();
+$title         = InstState::isNewSiteIsMultisite() ? 'New SUPER ADMIN account' : 'New Admin Account';
 ?>
-<div class="hdr-sub3 margin-top-2">New Admin Account</div>
+<div class="hdr-sub3 margin-top-2"><?php echo $title; ?></div>
 <p style="text-align: center">
-    <i style="color:gray;font-size:11px">
+    <i style="color:gray;font-size: 11px">
         This feature is optional.  If the username already exists the account will NOT be created or updated.
     </i>
 </p>

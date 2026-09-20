@@ -1,31 +1,24 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
- */
-
 namespace Duplicator\Libs\DupArchive;
 
 use Duplicator\Libs\DupArchive\Headers\DupArchiveDirectoryHeader;
 use Duplicator\Libs\DupArchive\Headers\DupArchiveFileHeader;
 use Duplicator\Libs\DupArchive\Headers\DupArchiveHeader;
-use Duplicator\Libs\DupArchive\Headers\DupArchiveReaderFileHeader;
-use Duplicator\Libs\DupArchive\Headers\DupArchiveReaderGlobHeader;
+use Duplicator\Libs\DupArchive\Headers\DupArchiveGlobHeader;
 use Duplicator\Libs\DupArchive\Info\DupArchiveInfo;
 use Duplicator\Libs\DupArchive\Processors\DupArchiveDirectoryProcessor;
 use Duplicator\Libs\DupArchive\Processors\DupArchiveFileProcessor;
 use Duplicator\Libs\DupArchive\Processors\DupArchiveProcessingFailure;
 use Duplicator\Libs\DupArchive\States\DupArchiveCreateState;
 use Duplicator\Libs\DupArchive\States\DupArchiveExpandState;
-use Duplicator\Libs\DupArchive\States\DupArchiveSimpleCreateState;
-use Duplicator\Libs\DupArchive\States\DupArchiveSimpleExpandState;
 use Duplicator\Libs\DupArchive\Utils\DupArchiveScanUtil;
 use Duplicator\Libs\DupArchive\Utils\DupArchiveUtil;
 use Duplicator\Libs\Snap\Snap32BitSizeLimitException;
+use Duplicator\Libs\Snap\SnapException;
 use Duplicator\Libs\Snap\SnapIO;
 use Exception;
+use ErrorException;
 use stdClass;
 
 /**
@@ -44,7 +37,7 @@ class DupArchiveEngine extends DupArchive
     const EXCEPTION_FATAL     = 1;
 
     /** @var string|null */
-    public static $targetRootPath = null;
+    public static $targetRootPath;
 
     /**
      * Dup archive init
@@ -54,7 +47,7 @@ class DupArchiveEngine extends DupArchive
      *
      * @return void
      */
-    public static function init(DupArchiveLoggerBase $logger, $targetRootPath = null)
+    public static function init(DupArchiveLoggerBase $logger, $targetRootPath = null): void
     {
         DupArchiveUtil::$logger = $logger;
         self::$targetRootPath   = $targetRootPath;
@@ -68,7 +61,7 @@ class DupArchiveEngine extends DupArchive
      *
      * @return string
      */
-    protected static function getLocalPath($path, DupArchiveCreateState $createState)
+    protected static function getLocalPath($path, DupArchiveCreateState $createState): string
     {
         $result = '';
         if (self::$targetRootPath === null) {
@@ -79,10 +72,14 @@ class DupArchiveEngine extends DupArchive
             }
         } else {
             $safePath = SnapIO::safePathUntrailingslashit($path);
-            $result   = ltrim(
-                $createState->newBasePath . preg_replace('/^' . preg_quote(self::$targetRootPath, '/') . '(.*)/m', '$1', $safePath),
-                '/'
-            );
+            if ($safePath === SnapIO::untrailingslashit(self::$targetRootPath)) {
+                $result = '';
+            } else {
+                $result = ltrim(
+                    $createState->newBasePath . preg_replace('/^' . preg_quote(self::$targetRootPath, '/') . '(.*)/m', '$1', $safePath),
+                    '/'
+                );
+            }
         }
         return $result;
     }
@@ -91,36 +88,33 @@ class DupArchiveEngine extends DupArchive
      * Get archvie info from path
      *
      * @param string $filepath archvie path
+     * @param string $password password archive, empty no password
      *
      * @return DupArchiveInfo
      */
-    public static function getArchiveInfo($filepath)
+    public static function getArchiveInfo($filepath, $password): \Duplicator\Libs\DupArchive\Info\DupArchiveInfo
     {
         $archiveInfo = new DupArchiveInfo();
 
         DupArchiveUtil::log("archive size=" . filesize($filepath));
         $archiveHandle              = SnapIO::fopen($filepath, 'rb');
-        $archiveInfo->archiveHeader = DupArchiveHeader::readFromArchive($archiveHandle);
+        $archiveInfo->archiveHeader = (new DupArchiveHeader())->readFromArchive($archiveHandle, $password);
         $moreToRead                 = true;
 
         while ($moreToRead) {
             $headerType = self::getNextHeaderType($archiveHandle);
-
             // DupArchiveUtil::log("next header type=$headerType: " . ftell($archiveHandle));
 
             switch ($headerType) {
                 case self::HEADER_TYPE_FILE:
-                    $fileHeader                 = DupArchiveFileHeader::readFromArchive($archiveHandle, true, true);
+                    $fileHeader                 = (new DupArchiveFileHeader($archiveInfo->archiveHeader))->readFromArchive($archiveHandle, true, true);
                     $archiveInfo->fileHeaders[] = $fileHeader;
                     DupArchiveUtil::log("file" . $fileHeader->relativePath);
                     break;
-
                 case self::HEADER_TYPE_DIR:
-                    $directoryHeader = DupArchiveDirectoryHeader::readFromArchive($archiveHandle, true);
-
+                    $directoryHeader                 = (new DupArchiveDirectoryHeader($archiveInfo->archiveHeader))->readFromArchive($archiveHandle, true);
                     $archiveInfo->directoryHeaders[] = $directoryHeader;
                     break;
-
                 case self::HEADER_TYPE_NONE:
                     $moreToRead = false;
             }
@@ -135,9 +129,9 @@ class DupArchiveEngine extends DupArchive
      *
      * @param string  $archiveFilepath archive file
      * @param string  $directory       folder to add
-     * @param string  $basepath        base path to consider (?)
+     * @param string  $archivePath     archive path
+     * @param string  $password        password archive, empty no password
      * @param boolean $includeFiles    if true include files
-     * @param string  $newBasepath     new base path
      * @param int     $globSize        global size
      *
      * @return stdClass
@@ -145,28 +139,32 @@ class DupArchiveEngine extends DupArchive
     public static function addDirectoryToArchiveST(
         $archiveFilepath,
         $directory,
-        $basepath,
+        $archivePath,
+        $password,
         $includeFiles = false,
-        $newBasepath = null,
         $globSize = DupArchiveCreateState::DEFAULT_GLOB_SIZE
-    ) {
+    ): stdClass {
         if ($includeFiles) {
             $scan = DupArchiveScanUtil::createScanObject($directory);
         } else {
             $scan        = new stdClass();
-            $scan->Files = array();
-            $scan->Dirs  = array();
+            $scan->Files = [];
+            $scan->Dirs  = [];
         }
 
-        $createState = new DupArchiveSimpleCreateState();
+        $newBasePath = $archivePath;
+        $newBasePath = $newBasePath == '.' || strlen($newBasePath) == 0 ? '' : ltrim(trailingslashit($newBasePath), '\\/');
+
+        $archiveHeader = self::getArchiveHeader($archiveFilepath, $password);
+        $createState   = new DupArchiveCreateState($archiveHeader);
 
         $createState->archiveOffset  = filesize($archiveFilepath);
         $createState->archivePath    = $archiveFilepath;
-        $createState->basePath       = $basepath;
-        $createState->basepathLength = strlen($basepath);
+        $createState->basePath       = $directory;
+        $createState->basepathLength = strlen($createState->basePath);
         $createState->timerEnabled   = false;
         $createState->globSize       = $globSize;
-        $createState->newBasePath    = $newBasepath;
+        $createState->newBasePath    = $newBasePath;
 
         self::addItemsToArchive($createState, $scan);
 
@@ -175,9 +173,15 @@ class DupArchiveEngine extends DupArchive
         $retVal->numFilesAdded = $createState->currentFileIndex;
 
         if ($createState->skippedFileCount > 0) {
-            throw new Exception("One or more files were were not able to be added when adding {$directory} to {$archiveFilepath}");
+            throw new Exception(
+                "One or more files were not able to be added when adding {$directory} to {$archiveFilepath}",
+                self::EXCEPTION_CODE_ADD_ERROR
+            );
         } elseif ($createState->skippedDirectoryCount > 0) {
-            throw new Exception("One or more directories were not able to be added when adding {$directory} to {$archiveFilepath}");
+            throw new Exception(
+                "One or more directories were not able to be added when adding {$directory} to {$archiveFilepath}",
+                self::EXCEPTION_CODE_ADD_ERROR
+            );
         }
 
         return $retVal;
@@ -189,6 +193,7 @@ class DupArchiveEngine extends DupArchive
      * @param string $archiveFilepath archive file
      * @param string $filepath        file to add
      * @param string $relativePath    relative path in archive
+     * @param string $password        password archive, empty no password
      * @param int    $globSize        global size
      *
      * @return void
@@ -197,26 +202,26 @@ class DupArchiveEngine extends DupArchive
         $archiveFilepath,
         $filepath,
         $relativePath,
+        $password,
         $globSize = DupArchiveCreateState::DEFAULT_GLOB_SIZE
-    ) {
-        $createState = new DupArchiveSimpleCreateState();
+    ): void {
+        $archiveHeader = self::getArchiveHeader($archiveFilepath, $password);
+        $createState   = new DupArchiveCreateState($archiveHeader);
 
-        $createState->archiveOffset  = filesize($archiveFilepath);
-        $createState->archivePath    = $archiveFilepath;
-        $createState->basePath       = null;
-        $createState->basepathLength = 0;
-        $createState->timerEnabled   = false;
-        $createState->globSize       = $globSize;
+        $createState->archiveOffset = filesize($archiveFilepath);
+        $createState->archivePath   = $archiveFilepath;
+        $createState->timerEnabled  = false;
+        $createState->globSize      = $globSize;
 
         $scan = new stdClass();
 
-        $scan->Files = array();
-        $scan->Dirs  = array();
+        $scan->Files = [];
+        $scan->Dirs  = [];
 
         $scan->Files[] = $filepath;
 
         if ($relativePath != null) {
-            $scan->FileAliases            = array();
+            $scan->FileAliases            = [];
             $scan->FileAliases[$filepath] = $relativePath;
         }
 
@@ -229,6 +234,8 @@ class DupArchiveEngine extends DupArchive
      * @param string|resource $archive          Archive path or archive handle
      * @param string          $src              source string
      * @param string          $relativeFilePath relative path
+     * @param int             $flags            if -1 get global archive flags else overwrite
+     * @param string          $password         password archive
      * @param int             $forceSize        if 0 size is auto of content is filled of \0 char to size
      *
      * @return bool
@@ -237,39 +244,42 @@ class DupArchiveEngine extends DupArchive
         $archive,
         $src,
         $relativeFilePath,
+        $flags = -1,
+        $password = '',
         $forceSize = 0
-    ) {
+    ): bool {
         if (is_resource($archive)) {
             $archiveHandle = $archive;
             SnapIO::fseek($archiveHandle, 0, SEEK_SET);
         } else {
             if (($archiveHandle = SnapIO::fopen($archive, 'r+b')) == false) {
-                throw new Exception('Can\'t open archive');
+                throw new Exception('Can\'t open archive', self::EXCEPTION_CODE_OPEN_ERROR);
             }
         }
 
-        $createState                 = new DupArchiveSimpleCreateState();
+        $archiveHeader               = (new DupArchiveHeader())->readFromArchive($archiveHandle, $password);
+        $createState                 = new DupArchiveCreateState($archiveHeader);
         $createState->archiveOffset  = SnapIO::ftell($archiveHandle);
         $createState->basePath       = dirname($relativeFilePath);
         $createState->basepathLength = strlen($createState->basePath);
         $createState->timerEnabled   = false;
 
-        if ($forceSize == 0) {
-            $archiveHeader             = DupArchiveHeader::readFromArchive($archiveHandle);
-            $createState->isCompressed = $archiveHeader->isCompressed;
-        } else {
-            // ff force size is enables the src isn't compress
-            $createState->isCompressed = false;
-        }
-
         SnapIO::fseek($archiveHandle, 0, SEEK_END);
 
-        $result = DupArchiveFileProcessor::writeFileSrcToArchive($createState, $archiveHandle, $src, $relativeFilePath, $forceSize);
+        DupArchiveFileProcessor::writeFileSrcToArchive(
+            $createState,
+            $archiveHeader,
+            $archiveHandle,
+            $src,
+            $relativeFilePath,
+            $flags,
+            $forceSize
+        );
 
         if (!is_resource($archive)) {
             SnapIO::fclose($archiveHandle);
         }
-        return $result;
+        return true;
     }
 
     /**
@@ -278,6 +288,7 @@ class DupArchiveEngine extends DupArchive
      * @param string $archiveFilepath  archive path
      * @param string $src              source string
      * @param string $relativeFilePath relative path
+     * @param string $password         password archive
      * @param int    $offset           start search location
      * @param int    $sizeToSearch     max size where search
      *
@@ -287,70 +298,46 @@ class DupArchiveEngine extends DupArchive
         $archiveFilepath,
         $src,
         $relativeFilePath,
+        $password,
         $offset = 0,
         $sizeToSearch = 0
-    ) {
+    ): bool {
         if (($archiveHandle = SnapIO::fopen($archiveFilepath, 'r+b')) == false) {
-            throw new Exception('Can\'t open archive');
+            throw new Exception('Can\'t open archive', self::EXCEPTION_CODE_OPEN_ERROR);
         }
 
-        if (($filePos = self::searchPath($archiveHandle, $relativeFilePath, $offset, $sizeToSearch)) == false) {
+        $archiveHeader = (new DupArchiveHeader())->readFromArchive($archiveHandle, $password);
+
+        if (($filePos = self::searchPath($archiveHandle, $archiveHeader, $relativeFilePath, $offset, $sizeToSearch)) == false) {
             return false;
         }
-        $fileHeader = DupArchiveReaderFileHeader::readFromArchive($archiveHandle);
-        $globHeader = DupArchiveReaderGlobHeader::readFromArchive($archiveHandle);
+
+        $fileHeader = (new DupArchiveFileHeader($archiveHeader))->readFromArchive($archiveHandle);
+        $globHeader = (new DupArchiveGlobHeader($fileHeader))->readFromArchive($archiveHandle);
         SnapIO::fseek($archiveHandle, $filePos);
 
-        $createState                 = new DupArchiveSimpleCreateState();
+        $createState                 = new DupArchiveCreateState($archiveHeader);
         $createState->archivePath    = $archiveFilepath;
         $createState->archiveOffset  = $filePos;
         $createState->basePath       = dirname($relativeFilePath);
         $createState->basepathLength = strlen($createState->basePath);
         $createState->timerEnabled   = false;
-        $createState->isCompressed   = false; // replaced content can't be compressed
 
         $forceSize = $globHeader->storedSize;
 
-        $result = DupArchiveFileProcessor::writeFileSrcToArchive($createState, $archiveHandle, $src, $relativeFilePath, $forceSize);
+        DupArchiveFileProcessor::writeFileSrcToArchive(
+            $createState,
+            $archiveHeader,
+            $archiveHandle,
+            $src,
+            $relativeFilePath,
+            $fileHeader->getFlags(),
+            $forceSize
+        );
+
         SnapIO::fclose($archiveHandle);
 
-        return $result;
-    }
-
-
-    /**
-     * Add file in archive using base dir
-     *
-     * @param string $archiveFilepath archive file
-     * @param string $basePath        base path
-     * @param string $filepath        file to add
-     * @param int    $globSize        global size
-     *
-     * @return void
-     */
-    public static function addFileToArchiveUsingBaseDirST(
-        $archiveFilepath,
-        $basePath,
-        $filepath,
-        $globSize = DupArchiveCreateState::DEFAULT_GLOB_SIZE
-    ) {
-        $createState = new DupArchiveSimpleCreateState();
-
-        $createState->archiveOffset  = filesize($archiveFilepath);
-        $createState->archivePath    = $archiveFilepath;
-        $createState->basePath       = $basePath;
-        $createState->basepathLength = strlen($basePath);
-        $createState->timerEnabled   = false;
-        $createState->globSize       = $globSize;
-
-        $scan = new stdClass();
-
-        $scan->Files = array();
-        $scan->Dirs  = array();
-
-        $scan->Files[] = $filepath;
-
-        self::addItemsToArchive($createState, $scan);
+        return true;
     }
 
     /**
@@ -358,25 +345,44 @@ class DupArchiveEngine extends DupArchive
      *
      * @param string $archivePath  archive file path
      * @param bool   $isCompressed is compressed
+     * @param string $password     ecrypt password, if empty archive isn't ecrypted
      *
-     * @return void
+     * @return DupArchiveHeader return archvie header of create archive
      */
-    public static function createArchive($archivePath, $isCompressed)
+    public static function createArchive($archivePath, $isCompressed, $password): \Duplicator\Libs\DupArchive\Headers\DupArchiveHeader
     {
         if (($archiveHandle = SnapIO::fopen($archivePath, 'w+b')) === false) {
-            throw new Exception('Can\t create dup archvie file ' . $archivePath);
+            throw new Exception('Can\t create dup archvie file ' . $archivePath, self::EXCEPTION_CODE_OPEN_ERROR);
         }
 
-        $archiveHeader = DupArchiveHeader::create($isCompressed);
-        $archiveHeader->writeToArchive($archiveHandle);
+        $flags = 0;
+        if ($isCompressed) {
+            $flags |= DupArchive::FLAG_COMPRESS;
+        }
 
+        $archiveHeader = new DupArchiveHeader();
+        $archiveHeader->setFlags($flags);
+
+        if (strlen($password) > 0) {
+            $archiveHeader->setPassword($password);
+        }
+
+        $archiveHeader->writeToArchive($archiveHandle);
         //reserver space for index
-        $src  = json_encode(array('test'));
+        $src  = json_encode([]);
         $src .= str_repeat("\0", self::INDEX_FILE_SIZE - strlen($src));
-        self::addFileFromSrc($archiveHandle, $src, self::INDEX_FILE_NAME, self::INDEX_FILE_SIZE);
+        self::addFileFromSrc(
+            $archiveHandle,
+            $src,
+            self::INDEX_FILE_NAME,
+            0,
+            $password,
+            self::INDEX_FILE_SIZE
+        );
 
         // Intentionally do not write build state since if something goes wrong we went it to start over on the archive
         SnapIO::fclose($archiveHandle);
+        return $archiveHeader;
     }
 
     /**
@@ -387,34 +393,29 @@ class DupArchiveEngine extends DupArchive
      *
      * @return void
      */
-    public static function addItemsToArchive(DupArchiveCreateState $createState, stdClass $scanFSInfo)
+    public static function addItemsToArchive(DupArchiveCreateState $createState, stdClass $scanFSInfo): void
     {
-        if ($createState->globSize == -1) {
-            $createState->globSize = DupArchiveCreateState::DEFAULT_GLOB_SIZE;
-        }
-
         DupArchiveUtil::tlogObject("addItemsToArchive start", $createState);
 
         $directoryCount = count($scanFSInfo->Dirs);
         $fileCount      = count($scanFSInfo->Files);
+
         $createState->startTimer();
+
+        DupArchiveUtil::tlog("Archive size=" . filesize($createState->archivePath));
         $archiveHandle = SnapIO::fopen($createState->archivePath, 'r+b');
+        DupArchiveUtil::tlog("Archive location is now 0");
 
-        DupArchiveUtil::tlog("Archive size=", filesize($createState->archivePath));
-        DupArchiveUtil::tlog("Archive location is now " . SnapIO::ftell($archiveHandle));
-
-        $archiveHeader = DupArchiveHeader::readFromArchive($archiveHandle);
-
-        $createState->isCompressed = $archiveHeader->isCompressed;
+        $archiveHeader = $createState->archiveHeader;
 
         if ($createState->archiveOffset == filesize($createState->archivePath)) {
             DupArchiveUtil::tlog(
                 "Seeking to end of archive location because of offset {$createState->archiveOffset} " .
-                "for file size " . filesize($createState->archivePath)
+                    "for file size " . filesize($createState->archivePath)
             );
             SnapIO::fseek($archiveHandle, 0, SEEK_END);
         } else {
-            DupArchiveUtil::tlog("Seeking archive offset {$createState->archiveOffset} for file size " . filesize($createState->archivePath));
+            DupArchiveUtil::tlog("Seeking archive offset {$createState->archiveOffset}");
             SnapIO::fseek($archiveHandle, $createState->archiveOffset);
         }
 
@@ -435,18 +436,22 @@ class DupArchiveEngine extends DupArchive
                 }
 
                 if ($relativeDirectoryPath !== '') {
-                    DupArchiveDirectoryProcessor::writeDirectoryToArchive($createState, $archiveHandle, $directory, $relativeDirectoryPath);
+                    DupArchiveDirectoryProcessor::writeDirectoryToArchive($createState, $archiveHeader, $archiveHandle, $directory, $relativeDirectoryPath);
                 } else {
                     $createState->skippedDirectoryCount++;
                     $createState->currentDirectoryIndex++;
                 }
             } catch (Exception $ex) {
+                if (SnapException::isDiskFullInChain($ex)) {
+                    // Disk full is not a per-directory failure: skipping would just fail every next write.
+                    throw $ex;
+                }
                 DupArchiveUtil::log("Failed to add {$directory} to archive. Error: " . $ex->getMessage(), true);
 
                 $createState->addFailure(DupArchiveProcessingFailure::TYPE_DIRECTORY, $directory, $ex->getMessage(), false);
                 $createState->currentDirectoryIndex++;
                 $createState->skippedDirectoryCount++;
-                $createState->save();
+                self::flushAndSaveCreateState($createState, $archiveHandle);
             }
         }
 
@@ -466,14 +471,14 @@ class DupArchiveEngine extends DupArchive
                 }
 
                 // Uncomment when testing error handling
-//                   if((strpos($relativeFilePath, 'dup-installer') !== false) || (strpos($relativeFilePath, 'lib') !== false)) {
-//                       Dup_Log::Trace("Was going to do intentional error to {$relativeFilePath} but skipping");
-//                   } else {
-//                        throw new Exception("#### intentional file error when writing " . $relativeFilePath);
-//                   }
-//                }
+                //                   if((strpos($relativeFilePath, 'dup-installer') !== false) || (strpos($relativeFilePath, 'lib') !== false)) {
+                //                       Dup_Log::Trace("Was going to do intentional error to {$relativeFilePath} but skipping");
+                //                   } else {
+                //                        throw new Exception("#### intentional file error when writing " . $relativeFilePath);
+                //                   }
+                //                }
 
-                DupArchiveFileProcessor::writeFilePortionToArchive($createState, $archiveHandle, $filepath, $relativeFilePath);
+                DupArchiveFileProcessor::writeFilePortionToArchive($createState, $archiveHeader, $archiveHandle, $filepath, $relativeFilePath);
 
                 if (($createState->isRobust) && (time() - $workTimestamp >= 1)) {
                     DupArchiveUtil::log("Robust mode create state save");
@@ -481,29 +486,51 @@ class DupArchiveEngine extends DupArchive
                     // When in robustness mode save the state every second
                     $workTimestamp        = time();
                     $createState->working = ($createState->currentDirectoryIndex < $directoryCount) || ($createState->currentFileIndex < $fileCount);
-                    $createState->save();
+                    self::flushAndSaveCreateState($createState, $archiveHandle);
                 }
             } catch (Snap32BitSizeLimitException $ex) {
                 throw $ex;
             } catch (Exception $ex) {
+                if (SnapException::isDiskFullInChain($ex)) {
+                    // Disk full is not a per-file failure: skipping would just fail every next write.
+                    throw $ex;
+                }
                 DupArchiveUtil::log("Failed to add {$filepath} to archive. Error: " . $ex->getMessage() . $ex->getTraceAsString(), true);
                 $createState->currentFileIndex++;
                 $createState->skippedFileCount++;
                 $createState->addFailure(DupArchiveProcessingFailure::TYPE_FILE, $filepath, $ex->getMessage(), ($ex->getCode() === self::EXCEPTION_FATAL));
-                $createState->save();
+                self::flushAndSaveCreateState($createState, $archiveHandle);
             }
         }
 
         $createState->working = ($createState->currentDirectoryIndex < $directoryCount) || ($createState->currentFileIndex < $fileCount);
-        $createState->save();
+        self::flushAndSaveCreateState($createState, $archiveHandle);
 
         SnapIO::fclose($archiveHandle);
 
         if (!$createState->working) {
-            DupArchiveUtil::log("compress done");
-        } else {
             DupArchiveUtil::tlog("compress not done so continuing later");
         }
+    }
+
+    /**
+     * Flush the archive handle to the OS, then persist the create state.
+     *
+     * fflush pushes PHP-buffered bytes to the kernel page cache, which survives a
+     * process kill, so the persisted archiveOffset never points past the real end
+     * of the archive file.
+     *
+     * @param DupArchiveCreateState $createState   create state info
+     * @param resource              $archiveHandle archive resource
+     *
+     * @return void
+     */
+    private static function flushAndSaveCreateState(DupArchiveCreateState $createState, $archiveHandle): void
+    {
+        if (fflush($archiveHandle) === false) {
+            DupArchiveUtil::log('DupArchive fflush failed before create state save: ' . print_r(error_get_last(), true), true);
+        }
+        $createState->save();
     }
 
     /**
@@ -513,7 +540,7 @@ class DupArchiveEngine extends DupArchive
      *
      * @return void
      */
-    public static function expandArchive(DupArchiveExpandState $expandState)
+    public static function expandArchive(DupArchiveExpandState $expandState): void
     {
         $expandState->startTimer();
         $archiveHandle = SnapIO::fopen($expandState->archivePath, 'rb');
@@ -521,10 +548,8 @@ class DupArchiveEngine extends DupArchive
         SnapIO::fseek($archiveHandle, $expandState->archiveOffset);
 
         if ($expandState->archiveOffset == 0) {
-            $expandState->archiveHeader = DupArchiveHeader::readFromArchive($archiveHandle);
-            $expandState->isCompressed  = $expandState->archiveHeader->isCompressed;
+            $expandState->archiveHeader = (new DupArchiveHeader())->readFromArchive($archiveHandle, $expandState->archiveHeader->getPassword());
             $expandState->archiveOffset = SnapIO::ftell($archiveHandle);
-
             $expandState->save();
         } else {
             DupArchiveUtil::log("#### seeking archive offset {$expandState->archiveOffset}");
@@ -532,7 +557,7 @@ class DupArchiveEngine extends DupArchive
 
         DupArchiveUtil::log('DUP EXPAND OFFSET ' . $expandState->archiveOffset);
 
-        if ((!$expandState->validateOnly) || ($expandState->validationType == DupArchiveExpandState::VALIDATION_FULL)) {
+        if ((!$expandState->validateOnly) || ($expandState->validatiOnType == DupArchiveExpandState::VALIDATION_FULL)) {
             $moreItems = self::expandItems($expandState, $archiveHandle);
         } else {
             $moreItems = self::standardValidateItems($expandState, $archiveHandle);
@@ -559,43 +584,12 @@ class DupArchiveEngine extends DupArchive
                     DupArchiveProcessingFailure::TYPE_DIRECTORY,
                     'Archive',
                     "Number of directories expected ({$expandState->expectedDirectoryCount}) " .
-                    "doesn't equal number written ({$expandState->directoryWriteCount})."
+                        "doesn't equal number written ({$expandState->directoryWriteCount})."
                 );
             }
         } else {
             DupArchiveUtil::tlogObject("expand not done so continuing later", $expandState);
         }
-    }
-
-    /**
-     * Single-threaded file expansion
-     *
-     * @param string $archiveFilePath   archive path
-     * @param string $relativeFilePaths relative file path in archive
-     * @param string $destPath          destination path
-     *
-     * @return void
-     */
-    public static function expandFiles($archiveFilePath, $relativeFilePaths, $destPath)
-    {
-        // Not setting timeout timestamp so it will never timeout
-        DupArchiveUtil::tlog("opening archive {$archiveFilePath}");
-
-        $archiveHandle = SnapIO::fopen($archiveFilePath, 'r');
-
-        /* @var $expandState DupArchiveSimpleExpandState */
-        $expandState = new DupArchiveSimpleExpandState();
-
-        $expandState->archiveHeader       = DupArchiveHeader::readFromArchive($archiveHandle);
-        $expandState->isCompressed        = $expandState->archiveHeader->isCompressed;
-        $expandState->archiveOffset       = SnapIO::ftell($archiveHandle);
-        $expandState->includedFiles       = $relativeFilePaths;
-        $expandState->filteredDirectories = array('*');
-        $expandState->filteredFiles       = array('*');
-        // $expandState->basePath    = $destPath . '/tempExtract';   // RSR remove once extract works
-        $expandState->basePath = $destPath;   // RSR remove once extract works
-        // TODO: Filter out all directories/files except those in the list
-        self::expandItems($expandState, $archiveHandle);
     }
 
     /**
@@ -606,45 +600,17 @@ class DupArchiveEngine extends DupArchive
      *
      * @return bool true if more to read
      */
-    private static function expandItems(DupArchiveExpandState $expandState, $archiveHandle)
+    private static function expandItems(DupArchiveExpandState $expandState, $archiveHandle): bool
     {
-        $moreToRead    = true;
         $workTimestamp = time();
+        $headerType    = null;
 
-        while ($moreToRead && (!$expandState->timedOut())) {
+        while (!$expandState->timedOut()) {
             if ($expandState->throttleDelayInUs !== 0) {
                 usleep($expandState->throttleDelayInUs);
             }
 
-            if ($expandState->currentFileHeader != null) {
-                DupArchiveUtil::tlog("Writing file {$expandState->currentFileHeader->relativePath}");
-
-                if (self::filePassesFilters($expandState)) {
-                    try {
-                        $fileCompleted = DupArchiveFileProcessor::writeToFile($expandState, $archiveHandle);
-                    } catch (Exception $ex) {
-                        DupArchiveUtil::log("Failed to write to {$expandState->currentFileHeader->relativePath}. Error: " . $ex->getMessage(), true);
-
-                        // Reset things - skip over this file within the archive.
-                        SnapIO::fseek($archiveHandle, $expandState->lastHeaderOffset);
-                        self::skipToNextHeader($archiveHandle, $expandState->currentFileHeader);
-
-                        $expandState->archiveOffset = ftell($archiveHandle);
-                        $expandState->addFailure(
-                            DupArchiveProcessingFailure::TYPE_FILE,
-                            $expandState->currentFileHeader->relativePath,
-                            $ex->getMessage(),
-                            false
-                        );
-                        $expandState->resetForFile();
-                        $expandState->lastHeaderOffset = -1;
-                        $expandState->save();
-                    }
-                } else {
-                    self::skipFileInArchive($archiveHandle, $expandState->currentFileHeader);
-                    $expandState->resetForFile();
-                }
-            } else {
+            if ($expandState->currentFileHeader == null) {
                 // Header is null so read in the next one
                 $expandState->lastHeaderOffset = @ftell($archiveHandle);
                 $headerType                    = self::getNextHeaderType($archiveHandle);
@@ -653,14 +619,13 @@ class DupArchiveEngine extends DupArchive
                 switch ($headerType) {
                     case self::HEADER_TYPE_FILE:
                         DupArchiveUtil::tlog('File header');
-                        $expandState->currentFileHeader = DupArchiveFileHeader::readFromArchive($archiveHandle, false, true);
+                        $expandState->currentFileHeader = (new DupArchiveFileHeader($expandState->archiveHeader))->readFromArchive($archiveHandle, false, true);
                         $expandState->archiveOffset     = @ftell($archiveHandle);
                         DupArchiveUtil::tlog('Just read file header from archive');
                         break;
                     case self::HEADER_TYPE_DIR:
                         DupArchiveUtil::tlog('Directory Header');
-                        $directoryHeader = DupArchiveDirectoryHeader::readFromArchive($archiveHandle, true);
-
+                        $directoryHeader = (new DupArchiveDirectoryHeader($expandState->archiveHeader))->readFromArchive($archiveHandle, true);
                         if (self::passesDirectoryExclusion($expandState, $directoryHeader->relativePath)) {
                             $createdDirectory = true;
 
@@ -676,7 +641,41 @@ class DupArchiveEngine extends DupArchive
                         DupArchiveUtil::tlog('Just read directory header ' . $directoryHeader->relativePath . ' from archive');
                         break;
                     case self::HEADER_TYPE_NONE:
-                        $moreToRead = false;
+                        break 2;
+                }
+            }
+
+            if ($expandState->currentFileHeader != null) {
+                DupArchiveUtil::tlog("Writing file {$expandState->currentFileHeader->relativePath}");
+
+                if (self::filePassesFilters($expandState)) {
+                    try {
+                        DupArchiveFileProcessor::writeToFile($expandState, $archiveHandle);
+                    } catch (ErrorException $ex) {
+                        // This is the fatal exception that we just want to pass further
+                        throw $ex;
+                    } catch (Exception $ex) {
+                        DupArchiveUtil::log("Failed to write to {$expandState->currentFileHeader->relativePath}. Error: " . $ex->getMessage(), true);
+
+                        // Reset things - skip over this file within the archive.
+                        SnapIO::fseek($archiveHandle, $expandState->lastHeaderOffset);
+                        self::skipToNextHeader($archiveHandle, $expandState->archiveHeader);
+
+                        $expandState->archiveOffset = ftell($archiveHandle);
+                        $expandState->addFailure(
+                            DupArchiveProcessingFailure::TYPE_FILE,
+                            $expandState->currentFileHeader->relativePath,
+                            $ex->getMessage(),
+                            false
+                        );
+                        $expandState->resetForFile();
+                        $expandState->lastHeaderOffset = -1;
+                        $expandState->save();
+                    }
+                } else {
+                    self::skipFileInArchive($archiveHandle, $expandState->currentFileHeader);
+                    $expandState->resetForFile();
+                    $expandState->archiveOffset = ftell($archiveHandle);
                 }
             }
 
@@ -690,8 +689,7 @@ class DupArchiveEngine extends DupArchive
         }
 
         $expandState->save();
-
-        return $moreToRead;
+        return $headerType !== self::HEADER_TYPE_NONE;
     }
 
     /**
@@ -702,7 +700,7 @@ class DupArchiveEngine extends DupArchive
      *
      * @return bool
      */
-    private static function passesDirectoryExclusion(DupArchiveExpandState $expandState, $candidate)
+    private static function passesDirectoryExclusion(DupArchiveExpandState $expandState, $candidate): bool
     {
         foreach ($expandState->filteredDirectories as $directoryFilter) {
             if ($directoryFilter === '*') {
@@ -728,7 +726,7 @@ class DupArchiveEngine extends DupArchive
      *
      * @return boolean
      */
-    private static function filePassesFilters(DupArchiveExpandState $expandState)
+    private static function filePassesFilters(DupArchiveExpandState $expandState): bool
     {
         $candidate = $expandState->currentFileHeader->relativePath;
 
@@ -772,10 +770,28 @@ class DupArchiveEngine extends DupArchive
                 usleep($expandState->throttleDelayInUs);
             }
 
+            if ($expandState->currentFileHeader == null) {
+                $headerType = self::getNextHeaderType($archiveHandle);
+
+                switch ($headerType) {
+                    case self::HEADER_TYPE_FILE:
+                        $expandState->currentFileHeader = (new DupArchiveFileHeader($expandState->archiveHeader))->readFromArchive($archiveHandle, false, true);
+                        $expandState->archiveOffset     = ftell($archiveHandle);
+                        break;
+                    case self::HEADER_TYPE_DIR:
+                        $directoryHeader = (new DupArchiveDirectoryHeader($expandState->archiveHeader))->readFromArchive($archiveHandle, true);
+                        $expandState->directoryWriteCount++;
+                        $expandState->archiveOffset = ftell($archiveHandle);
+                        break;
+                    case self::HEADER_TYPE_NONE:
+                        $moreToRead = false;
+                        break 2; //break out of switch and while
+                }
+            }
+
             if ($expandState->currentFileHeader != null) {
                 try {
                     $fileCompleted = DupArchiveFileProcessor::standardValidateFileEntry($expandState, $archiveHandle);
-
                     if ($fileCompleted) {
                         $expandState->resetForFile();
                     }
@@ -791,22 +807,6 @@ class DupArchiveEngine extends DupArchive
                     $expandState->save();
 
                     $moreToRead = false;
-                }
-            } else {
-                $headerType = self::getNextHeaderType($archiveHandle);
-
-                switch ($headerType) {
-                    case self::HEADER_TYPE_FILE:
-                        $expandState->currentFileHeader = DupArchiveFileHeader::readFromArchive($archiveHandle, false, true);
-                        $expandState->archiveOffset     = ftell($archiveHandle);
-                        break;
-                    case self::HEADER_TYPE_DIR:
-                        $directoryHeader = DupArchiveDirectoryHeader::readFromArchive($archiveHandle, true);
-                        $expandState->directoryWriteCount++;
-                        $expandState->archiveOffset = ftell($archiveHandle);
-                        break;
-                    case self::HEADER_TYPE_NONE:
-                        $moreToRead = false;
                 }
             }
 

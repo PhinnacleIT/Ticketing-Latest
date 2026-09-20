@@ -1,12 +1,10 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
 
 $paramsManager = PrmMng::getInstance();
@@ -16,7 +14,12 @@ $paramsManager = PrmMng::getInstance();
 VIEW: STEP 3- INPUT -->
 <form id='s3-input-form' method="post" class="content-form" autocomplete="off">
     <div class="main-form-content" >
-        <?php dupxTplRender('pages-parts/step3/options'); ?>
+        <?php
+        if (!InstState::dbDoNothing()) {
+            dupxTplRender('pages-parts/step3/options');
+        } else {
+            dupxTplRender('pages-parts/step3/options-disabled');
+        } ?>
     </div>
     <div class="footer-buttons margin-top-2">
         <div class="content-left">

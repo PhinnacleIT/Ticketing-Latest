@@ -1,15 +1,9 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
- */
-
 namespace Duplicator\Libs\Snap;
 
-use Error;
 use Exception;
+use Throwable;
 
 class SnapUtil
 {
@@ -46,7 +40,7 @@ class SnapUtil
      *
      * @return string Returns the calling function name from where this method is called
      */
-    public static function getCallingFunctionName($backTraceBack = 0)
+    public static function getCallingFunctionName($backTraceBack = 0): string
     {
         $callers     = debug_backtrace();
         $backTraceL1 = 1 + $backTraceBack;
@@ -55,33 +49,80 @@ class SnapUtil
             . str_pad((string) $callers[$backTraceL1]['line'], 4, ' ', STR_PAD_LEFT) . ']';
         if (isset($callers[$backTraceL2])) {
             $result .= ' [';
-            $result .= isset($callers[$backTraceL2]['class']) ? $callers[$backTraceL2]['class'] . '::' : '';
+            // $result .= isset($callers[$backTraceL2]['class']) ? $callers[$backTraceL2]['class'] . '::' : '';
             $result .= $callers[$backTraceL2]['function'];
             $result .= ']';
         }
 
-        return str_pad($result, 80, '_', STR_PAD_RIGHT);
+        return str_pad($result, 50, '_', STR_PAD_RIGHT);
+    }
+
+    /**
+     * Gets the name of a callback function
+     *
+     * @param callable $callback The callback function to get the name of
+     *
+     * @return string Returns the name of the callback function
+     */
+    public static function getCallbackName($callback): string
+    {
+        if (is_string($callback)) {
+            return $callback;
+        } elseif (is_array($callback)) {
+            if (is_object($callback[0])) {
+                return get_class($callback[0]) . '::' . $callback[1];
+            } else {
+                return $callback[0] . '::' . $callback[1];
+            }
+        } elseif (is_object($callback) && method_exists($callback, '__invoke')) {
+            return get_class($callback) . '::__invoke';
+        }
+        return 'unknown';
     }
 
     /**
      * Return a percentage
      *
-     * @param int $startingPercent  Low Percentage Limit
-     * @param int $endingPercent    High Percentage Limit
-     * @param int $totalTaskCount   Total count
-     * @param int $currentTaskCount Current count
+     * @param float $startingPercent  Low Percentage Limit
+     * @param float $endingPercent    High Percentage Limit
+     * @param int   $totalTaskCount   Total count
+     * @param int   $currentTaskCount Current count
      *
-     * @return int
+     * @return float
      */
-    public static function getWorkPercent($startingPercent, $endingPercent, $totalTaskCount, $currentTaskCount)
-    {
+    public static function getWorkPercent(
+        float $startingPercent,
+        float $endingPercent,
+        int $totalTaskCount,
+        int $currentTaskCount
+    ): float {
         if ($totalTaskCount > 0) {
-            $percent = $startingPercent + (($endingPercent - $startingPercent) * ($currentTaskCount / (float) $totalTaskCount));
+            $percent = $startingPercent + (($endingPercent - $startingPercent) * ($currentTaskCount / $totalTaskCount));
         } else {
             $percent = $startingPercent;
         }
 
         return min(max($startingPercent, $percent), $endingPercent);
+    }
+
+    /**
+     * Gets the percentage of one value to another
+     * example:
+     *     $val1 = 100
+     *     $val2 = 400
+     *     $res  = 25
+     *
+     * @param float $val1      The value to calculate the percentage
+     * @param float $val2      The total value to calculate the percentage against
+     * @param int   $precision The number of decimal places to round to
+     *
+     * @return float  Returns the results
+     */
+    public static function percentage(float $val1, float $val2, int $precision = 0): float
+    {
+        $division = ($val2 == 0) ? 0 : $val1 / $val2;
+        $res      = $division * 100;
+        return round($res, $precision);
     }
 
     /**
@@ -103,7 +144,12 @@ class SnapUtil
             $tV2      = array_slice(preg_split("/[.-]/", $version2), 0, $vLevel);
             $version2 = implode('.', $tV2);
         }
-        return version_compare($version1, $version2, $operator);
+        if ($operator === null) {
+            // Double check to hack rector code generation on function return type
+            return version_compare($version1, $version2);
+        } else {
+            return version_compare($version1, $version2, $operator);
+        }
     }
 
     /**
@@ -124,106 +170,54 @@ class SnapUtil
     }
 
     /**
-     * Return true if is PHP7+
-     *
-     * @return bool
-     */
-    public static function isPHP7Plus()
-    {
-        static $isPHP7Plus = null;
-        if (is_null($isPHP7Plus)) {
-            $isPHP7Plus = version_compare(PHP_VERSION, '7.0.0', '>=');
-        }
-        return $isPHP7Plus;
-    }
-
-    /**
-     * Groups an array into arrays by a given key, or set of keys, shared between all array members.
-     *
-     * Based on {@author Jake Zatecky}'s {@link https://github.com/jakezatecky/array_group_by array_group_by()} function.
-     * This variant allows $key to be closures.
-     *
-     * @param mixed[] $array The array to have grouping performed on.
-     * @param mixed   $key   The key to group or split by. Can be a _string_, an _integer_, a _float_, or a _callable_.
-     *                       - If the key is a callback, it must return a valid key from the array. - If the key is
-     *                       _NULL_, the iterated element is skipped. - string|int callback ( mixed $item )
-     *
-     * @return mixed[]|null Returns a multidimensional array or `null` if `$key` is invalid.
-     */
-    public static function arrayGroupBy(array $array, $key)
-    {
-        if (!is_string($key) && !is_int($key) && !is_float($key) && !is_callable($key)) {
-            trigger_error('array_group_by(): The key should be a string, an integer, or a callback', E_USER_ERROR);
-        }
-        $func = (!is_string($key) && is_callable($key) ? $key : null);
-        $_key = $key;
-        // Load the new array, splitting by the target key
-        $grouped = array();
-        foreach ($array as $value) {
-            $key = null;
-            if (is_callable($func)) {
-                $key = call_user_func($func, $value);
-            } elseif (is_object($value) && isset($value->{$_key})) {
-                $key = $value->{$_key};
-            } elseif (isset($value[$_key])) {
-                $key = $value[$_key];
-            }
-            if ($key === null) {
-                continue;
-            }
-            $grouped[$key][] = $value;
-        }
-        // Recursively build a nested grouping if more parameters are supplied
-        // Each grouped array value is grouped according to the next sequential key
-        if (func_num_args() > 2) {
-            $args = func_get_args();
-            foreach ($grouped as $key => $value) {
-                $params        = array_merge(array($value), array_slice($args, 2, func_num_args()));
-                $grouped[$key] = call_user_func_array(array(__CLASS__, 'arrayGroupBy'), $params);
-            }
-        }
-        return $grouped;
-    }
-
-    /**
      * Converts human readable types (10GB) to bytes
      *
      * @param string $from A human readable byte size such as 100MB
      *
      * @return int<-1, max> Returns and integer of the byte size, -1 if isn't well formatted
      */
-    public static function convertToBytes($from)
+    public static function convertToBytes($from): int
     {
         if (is_numeric($from)) {
-            return (int) $from;
+            $number = (int) $from;
+            if ($number < 0) {
+                return -1;
+            }
+            return $number;
         }
 
         $number = (int) substr($from, 0, -2);
+        if ($number < 0) {
+            return -1;
+        }
         switch (strtoupper(substr($from, -2))) {
             case "KB":
                 return $number * 1024;
             case "MB":
-                return $number * pow(1024, 2);
+                return $number * 1024 ** 2;
             case "GB":
-                return $number * pow(1024, 3);
+                return $number * 1024 ** 3;
             case "TB":
-                return $number * pow(1024, 4);
+                return $number * 1024 ** 4;
             case "PB":
-                return $number * pow(1024, 5);
+                return $number * 1024 ** 5;
         }
 
         $number = (int) substr($from, 0, -1);
+        if ($number < 0) {
+            return -1;
+        }
         switch (strtoupper(substr($from, -1))) {
             case "K":
                 return $number * 1024;
             case "M":
-                return $number * pow(1024, 2);
+                return $number * 1024 ** 2;
             case "G":
-                return $number * pow(1024, 3);
+                return $number * 1024 ** 3;
             case "T":
-                return $number * pow(1024, 4);
+                return $number * 1024 ** 4;
             case "P":
-                return $number * pow(1024, 5);
+                return $number * 1024 ** 5;
         }
 
         return -1;
@@ -236,7 +230,7 @@ class SnapUtil
      *
      *  @return string Returns the input value cleaned up.
      */
-    public static function sanitize($input)
+    public static function sanitize($input): string
     {
         return htmlspecialchars(self::sanitizeNSChars($input));
     }
@@ -248,9 +242,13 @@ class SnapUtil
      *
      * @return string
      */
-    public static function sanitizeNSChars($string)
+    public static function sanitizeNSChars($string): string
     {
-        return preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/u', '', (string) $string);
+        return (string) preg_replace(
+            '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/u',
+            '',
+            (string) $string
+        );
     }
 
     /**
@@ -261,9 +259,13 @@ class SnapUtil
      *
      * @return string
      */
-    public static function sanitizeNSCharsNewline($string)
+    public static function sanitizeNSCharsNewline($string): string
     {
-        return preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\r\n]/u', '', (string) $string);
+        return (string) preg_replace(
+            '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\r\n]/u',
+            '',
+            (string) $string
+        );
     }
 
     /**
@@ -273,9 +275,13 @@ class SnapUtil
      *
      * @return string
      */
-    public static function sanitizeNSCharsNewlineTabs($string)
+    public static function sanitizeNSCharsNewlineTabs($string): string
     {
-        return preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\r\n\s]/u', '', (string) $string);
+        return (string) preg_replace(
+            '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\r\n\s]/u',
+            '',
+            (string) $string
+        );
     }
 
     /**
@@ -286,38 +292,10 @@ class SnapUtil
      *
      * @return string
      */
-    public static function sanitizeNSCharsNewlineTrim($string)
+    public static function sanitizeNSCharsNewlineTrim($string): string
     {
         return trim(self::sanitizeNSCharsNewline($string));
     }
-
-    /**
-     * Default filter sanitize input text, apply sanitizeNSCharsNewlineTrim function.
-     *
-     * @param int    $type     One of INPUT_GET, INPUT_POST, INPUT_COOKIE, INPUT_SERVER, or INPUT_ENV.
-     * @param string $var_name Name of a variable to get.
-     * @param string $default  default value if dont exists
-     *
-     * @return string
-     */
-    public static function sanitizeTextInput($type, $var_name, $default = '')
-    {
-        $filter  = FILTER_UNSAFE_RAW;
-        $options = array(
-            'options' => array( 'default' => null),
-        );
-        if ($type == self::INPUT_REQUEST) {
-            $result = self::filterInputRequest($var_name, $filter, $options);
-        } else {
-            $result = filter_input($type, $var_name, $filter, $options);
-        }
-        if (is_null($result)) {
-            return $default;
-        }
-        return self::sanitizeNSCharsNewlineTrim($result);
-    }
-
-
 
     /**
      * Determines whether a PHP ini value is changeable at runtime.
@@ -332,7 +310,7 @@ class SnapUtil
      *
      * @return bool True if the value is changeable at runtime. False otherwise.
      */
-    public static function isIniValChangeable($setting)
+    public static function isIniValChangeable($setting): bool
     {
         // if ini_set is disabled can change the values
         if (!function_exists('ini_set')) {
@@ -350,7 +328,7 @@ class SnapUtil
         }
 
         // Bit operator to workaround https://bugs.php.net/bug.php?id=44936 which changes access level to 63 in PHP 5.2.6 - 5.2.17.
-        if (isset($ini_all[$setting]['access']) && ( INI_ALL === ( $ini_all[$setting]['access'] & 7 ) || INI_USER === ( $ini_all[$setting]['access'] & 7 ) )) {
+        if (isset($ini_all[$setting]['access']) && (INI_ALL === ($ini_all[$setting]['access'] & 7) || INI_USER === ($ini_all[$setting]['access'] & 7))) {
             return true;
         }
 
@@ -404,7 +382,7 @@ class SnapUtil
      *
      * @return int
      */
-    public static function getIntBetween($val, $min, $max)
+    public static function getIntBetween($val, $min, $max): int
     {
         return min((int) $max, max((int) $min, (int) $val));
     }
@@ -425,8 +403,9 @@ class SnapUtil
      * @link http://php.net/manual/en/function.filter-input.php
      * @see  filter_var(), filter_input_array(), filter_var_array()
      */
-    public static function filterInputRequest($variable_name, $filter = FILTER_DEFAULT, $options = 0)
+    public static function filterInputRequest($variable_name, int $filter = FILTER_DEFAULT, $options = 0)
     {
+        //phpcs:ignore WordPress.Security.NonceVerification
         if (isset($_GET[$variable_name]) && !isset($_POST[$variable_name])) {
             return filter_input(INPUT_GET, $variable_name, $filter, $options);
         }
@@ -443,6 +422,7 @@ class SnapUtil
      */
     public static function getInputFromType($type)
     {
+        //phpcs:disable WordPress.Security.NonceVerification
         switch ($type) {
             case INPUT_GET:
                 return $_GET;
@@ -459,6 +439,7 @@ class SnapUtil
             default:
                 throw new Exception('Invalid type ' . $type);
         }
+        //phpcs:enable
     }
 
     /**
@@ -470,14 +451,17 @@ class SnapUtil
      *
      * @return string
      */
-    public static function filterInputDefaultSanitizeString($type, $var_name, $default = '')
+    public static function sanitizeDefaultInput($type, $var_name, $default = '')
     {
-        $filter  = FILTER_UNSAFE_RAW;
-        $options = array(
-            'options' => array( 'default' => null)
-        );
+        $filter  =  FILTER_UNSAFE_RAW;
+        $options = [
+            'options' => ['default' => null],
+        ];
         if ($type == self::INPUT_REQUEST) {
             $result = self::filterInputRequest($var_name, $filter, $options);
+        } elseif ($type == INPUT_SERVER) {
+            // In some server filter input don't work with INPUT_SERVER, so we need to use $_SERVER directly
+            $result = isset($_SERVER[$var_name]) ? filter_var($_SERVER[$var_name], $filter, $options) : null;
         } else {
             $result = filter_input($type, $var_name, $filter, $options);
         }
@@ -485,6 +469,36 @@ class SnapUtil
             return $default;
         }
         return self::sanitizeNSChars($result);
+    }
+
+    /**
+     * Default filter sanitize input text, apply sanitizeNSCharsNewlineTrim function.
+     *
+     * @param int    $type     One of INPUT_GET, INPUT_POST, INPUT_COOKIE, INPUT_SERVER, or INPUT_ENV.
+     * @param string $var_name Name of a variable to get.
+     * @param string $default  default value if dont exists
+     *
+     * @return string
+     */
+    public static function sanitizeTextInput($type, $var_name, $default = '')
+    {
+        $filter  =  FILTER_UNSAFE_RAW;
+        $options = [
+            'options' => ['default' => null],
+        ];
+
+        if ($type == self::INPUT_REQUEST) {
+            $result = self::filterInputRequest($var_name, $filter, $options);
+        } elseif ($type == INPUT_SERVER) {
+            // In some server filter input don't work with INPUT_SERVER, so we need to use $_SERVER directly
+            $result = isset($_SERVER[$var_name]) ? filter_var($_SERVER[$var_name], $filter, $options) : null;
+        } else {
+            $result = filter_input($type, $var_name, $filter, $options);
+        }
+        if (is_null($result)) {
+            return $default;
+        }
+        return self::sanitizeNSCharsNewlineTrim($result);
     }
 
     /**
@@ -516,7 +530,7 @@ class SnapUtil
         }
 
         $result = preg_replace($regex, '', $input);
-        return (is_null($result) ? '' : $result);
+        return ($result ?? '');
     }
 
     /**
@@ -534,7 +548,7 @@ class SnapUtil
         } elseif (is_bool($input)) {
             return (int) $input;
         } else {
-            return filter_var($input, FILTER_VALIDATE_INT, array('options' => array( 'default' => $default)));
+            return filter_var($input, FILTER_VALIDATE_INT, ['options' => ['default' => $default]]);
         }
     }
 
@@ -638,14 +652,23 @@ class SnapUtil
      */
     protected static function getValueByType($type, $varName)
     {
-        $doNothingCallback = function ($v) {
-            return $v;
-        };
+        $doNothingCallback = (fn($v) => $v);
 
         if ($type === self::INPUT_REQUEST) {
+            //phpcs:ignore WordPress.Security.NonceVerification
             $type = ((isset($_GET[$varName]) && !isset($_POST[$varName])) ? INPUT_GET : INPUT_POST);
         }
-        $value = filter_input($type, $varName, FILTER_CALLBACK, array('options' => $doNothingCallback));
+
+        if ($type === INPUT_SERVER) {
+            // In some server filter input don't work with INPUT_SERVER, so we need to use $_SERVER directly
+            if (isset($_SERVER[$varName])) {
+                $value = filter_var($_SERVER[$varName], FILTER_CALLBACK, ['options' => $doNothingCallback]);
+            } else {
+                $value = null;
+            }
+        } else {
+            $value = filter_input($type, $varName, FILTER_CALLBACK, ['options' => $doNothingCallback]);
+        }
 
         /** @var string|string[]|null $value */
         return $value;
@@ -665,31 +688,26 @@ class SnapUtil
      *                                Then all values in the input array are filtered by this filter.</p>
      * @param bool        $add_empty  <p>Add missing keys as <b><code>NULL</code></b> to the return value.</p>
      *
-     * @return mixed An array containing the values of the requested variables on success.
+     * @return mixed[] An array containing the values of the requested variables on success.
      *
      * @link http://php.net/manual/en/function.filter-input-array.php
      * @see  filter_input(), filter_var_array()
      */
-    public static function filterInputRequestArray($definition = FILTER_DEFAULT, $add_empty = true)
+    public static function filterInputRequestArray($definition = FILTER_DEFAULT, bool $add_empty = true): array
     {
         if (!is_array($definition) || count($definition) === 0) {
-            return array();
+            return [];
         }
-        $getKeys  = array_keys($_GET);
-        $postKeys = array_keys($_POST);
+        $getKeys  = array_keys($_GET); //phpcs:ignore WordPress.Security.NonceVerification
+        $postKeys = array_keys($_POST); //phpcs:ignore WordPress.Security.NonceVerification
         $keys     = array_keys($definition);
 
-        if (count(array_intersect($keys, $getKeys)) && !count(array_intersect($keys, $postKeys))) {
-            $type = INPUT_GET;
-        } else {
-            $type = INPUT_POST;
-        }
+        $type = count(array_intersect($keys, $getKeys)) && !count(array_intersect($keys, $postKeys)) ? INPUT_GET : INPUT_POST;
 
-        // phpcs:ignore PHPCompatibility.FunctionUse.NewFunctionParameters.filter_input_array_add_emptyFound
         $result = filter_input_array($type, $definition, $add_empty);
 
         if (!is_array($result)) {
-            $result = array();
+            $result = [];
             foreach ($keys as $key) {
                 $result[$key] = null;
             }
@@ -704,7 +722,7 @@ class SnapUtil
      *
      * @return string
      */
-    public static function obCleanAll($getContent = true)
+    public static function obCleanAll($getContent = true): string
     {
         $result = '';
         for ($i = 0; $i < ob_get_level(); $i++) {
@@ -724,7 +742,7 @@ class SnapUtil
      *
      * @return mixed[]
      */
-    public static function arrayMapRecursive($callback, $array)
+    public static function arrayMapRecursive($callback, $array): array
     {
         if (!is_array($array)) {
             throw new Exception('$array must be an array');
@@ -765,7 +783,7 @@ class SnapUtil
      *
      * @return string
      */
-    public static function getArchitectureString()
+    public static function getArchitectureString(): string
     {
         return (PHP_INT_SIZE * 8) . '-bit';
     }
@@ -778,7 +796,7 @@ class SnapUtil
      *
      * @return null|bool
      */
-    public static function inArrayExtended($haystack, $callback)
+    public static function inArrayExtended($haystack, $callback): ?bool
     {
         if (!is_callable($callback)) {
             return null;
@@ -804,7 +822,7 @@ class SnapUtil
      *
      * @return bool
      */
-    public static function binarySearch($array, $x)
+    public static function binarySearch($array, $x): bool
     {
         if (count($array) === 0) {
             return false;
@@ -813,7 +831,7 @@ class SnapUtil
         $high = count($array) - 1;
 
         while ($low <= $high) {
-            $mid = floor(($low + $high) / 2);
+            $mid = (int) floor(($low + $high) / 2);
 
             if ($array[$mid] == $x) {
                 return true;
@@ -839,7 +857,7 @@ class SnapUtil
      *
      * @return string The random password.
      */
-    public static function generatePassword($length = 12, $special_chars = true, $extra_special_chars = false)
+    public static function generatePassword($length = 12, $special_chars = true, $extra_special_chars = false): string
     {
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         if ($special_chars) {
@@ -866,7 +884,7 @@ class SnapUtil
      *
      * @return int A random number between min and max
      */
-    public static function rand($min = 0, $max = 0)
+    public static function rand($min = 0, $max = 0): int
     {
         global $rnd_value;
         // Some misconfigured 32bit environments (Entropy PHP, for example) truncate integers
@@ -883,20 +901,18 @@ class SnapUtil
         }
         if ($use_random_int_functionality) {
             try {
-                $_max = ( 0 != $max ) ? $max : $max_random_number;
+                $_max = (0 != $max) ? $max : $max_random_number;
                 // rand() can accept arguments in either order, PHP cannot.
                 $_max = max($min, $_max);
                 $_min = min($min, $_max);
                 // phpcs:ignore PHPCompatibility.FunctionUse.NewFunctions.random_intFound
                 $val = random_int($_min, $_max);
-                if (false !== $val) {
+                if (false !== $val) { // @phpstan-ignore-line
                     return abs(intval($val));
                 } else { // @phpstan-ignore-line
                     $use_random_int_functionality = false;
                 }
-            } catch (Error $e) {
-                $use_random_int_functionality = false;
-            } catch (Exception $e) {
+            } catch (Throwable $e) {
                 $use_random_int_functionality = false;
             }
         }
@@ -918,7 +934,7 @@ class SnapUtil
         $value     = abs(hexdec($value));
         // Reduce the value to be within the min - max range
         if ($max != 0) {
-            $value = $min + ( $max - $min + 1 ) * $value / ( $max_random_number + 1 );
+            $value = $min + ($max - $min + 1) * $value / ($max_random_number + 1);
         }
 
         return abs(intval($value));
@@ -939,9 +955,53 @@ class SnapUtil
         }
         if (function_exists("ini_get")) {
             $disabled = explode(',', ini_get('disable_classes'));
-            return in_array($className, $disabled) ? false : true;
+            return !in_array($className, $disabled);
         }
         // We can only suppose that it exists, can't be 100% sure, but it's the best guess
+        return true;
+    }
+
+    /**
+     * Safe replacement for the native unserialize().
+     *
+     * Object instantiation is always disabled, so an untrusted serialized string can never
+     * trigger a POP chain (no __wakeup/__destruct on attacker-chosen classes). Always use this
+     * instead of a raw unserialize() when the input is not fully under our control.
+     *
+     * Success is the return value and the unserialized data goes to $value, so a legitimately
+     * serialized null or false is never mistaken for a failure.
+     *
+     * @param mixed $data  The serialized string (cast to string)
+     * @param mixed $value The unserialized value, null on failure
+     *
+     * @return bool True when the data was unserialized successfully
+     */
+    public static function safeUnserialize($data, &$value = null): bool
+    {
+        $value = null;
+
+        if (!is_scalar($data) && $data !== null) {
+            return false;
+        }
+
+        $data = (string) $data;
+        if ($data === 'b:0;') {
+            // Legitimately serialized boolean false: unserialize() also returns false here.
+            $value = false;
+            return true;
+        }
+
+        try {
+            $result = @unserialize($data, ['allowed_classes' => false]);
+        } catch (Throwable $e) {
+            return false;
+        }
+
+        if ($result === false) {
+            return false;
+        }
+
+        $value = $result;
         return true;
     }
 
@@ -956,38 +1016,121 @@ class SnapUtil
      */
     public static function phpinfo($flags = INFO_ALL)
     {
-        if (!function_exists('phpinfo')) {
+        if (!self::functionExists('phpinfo')) {
             return false;
         }
         return phpinfo($flags);
     }
 
     /**
-     * Wrapper for set_time_limit to see if it is enabled.
+     * Checks if CURL is enabled
      *
-     * @since 1.6.4
+     * @param bool $multiCheck Optional. Whether to check that the installed curl version supports multi.
      *
-     * @param int $limit Time limit.
-     *
-     * @return void
+     * @return bool True if CURL is enabled, false otherwise
      */
-    public static function duplicatorSetTimeLimit($limit = 0)
+    public static function isCurlEnabled($multiCheck = false): bool
     {
-
         if (
-            function_exists('set_time_limit') &&
-            false === strpos(ini_get('disable_functions'), 'set_time_limit') &&
-            ! ini_get('safe_mode')
-        ) { // phpcs:ignore PHPCompatibility.IniDirectives.RemovedIniDirectives.safe_modeDeprecatedRemoved
-            @set_time_limit( $limit ); // @codingStandardsIgnoreLine
+            !self::functionExists('curl_init') ||
+            !self::functionExists('curl_exec') ||
+            !self::functionExists('curl_getinfo')
+        ) {
+            return false;
         }
+
+        if ($multiCheck) {
+            if (!self::functionExists('curl_multi_exec')) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if the zlib module is enabled
+     *
+     * @return bool True if both compression and decompression are available, false otherwise
+     */
+    public static function isZlibEnabled(): bool
+    {
+        return (self::functionExists('gzdeflate') && self::functionExists('gzinflate'));
+    }
+
+    /**
+     * Check if ftp module is enabled
+     *
+     * @return bool
+     */
+    public static function isFtpEnabled(): bool
+    {
+        return apply_filters(
+            'duplicator_ftp_connect_exists',
+            self::functionExists('ftp_connect')
+        );
+    }
+
+    /**
+     * Check if URL fopen is enabled
+     *
+     * @return bool
+     */
+    public static function isUrlFopenEnabled()
+    {
+        if (!self::functionExists('ini_get')) {
+            // is impossibile to know so is considered enabled
+            return true;
+        }
+        return filter_var(ini_get('allow_url_fopen'), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * Set whether a client disconnect should abort script execution
+     *
+     * @param bool|null $enable true to enable, false to disable
+     *
+     * @return bool|int false if function can't be run, otherwise the value of the setting as integer before running this function
+     */
+    public static function ignoreUserAbort($enable)
+    {
+        if (!self::functionExists('ignore_user_abort')) {
+            return false;
+        }
+
+        return ignore_user_abort($enable);
+    }
+
+    /**
+     * Checks if a function exists
+     *
+     * @param string $name The name of the function to check.
+     *
+     * @return bool
+     */
+    public static function functionExists($name): bool
+    {
+        try {
+            if (!is_callable($name)) {
+                return false;
+            }
+
+            $func = new \ReflectionFunction($name);
+            if ($func->getName() !== $name) {
+                return false;
+            }
+        } catch (Throwable $e) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
      * Wrapper for error_log to call only if it is enabled.
      *
      * @param string      $message            The error message that should be logged.
-     * @param int         $message_type       The type of error. It can be 0, 1, 2, 3 or 4.
+     * @param int<0,4>    $message_type       The type of error. It can be 0, 1, 2, 3 or 4.
      * @param string|null $destination        The destination of the error message. It can be a file, email, or a syslog.
      * @param string|null $additional_headers Additional headers to be sent with the email.
      *

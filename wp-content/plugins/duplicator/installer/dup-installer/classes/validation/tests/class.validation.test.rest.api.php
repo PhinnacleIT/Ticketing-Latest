@@ -7,23 +7,25 @@
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
  *
- * @package SC\DUPX\U
  */
 
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Installer\REST\RESTPoints;
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 
 class DUPX_Validation_test_rest_api extends DUPX_Validation_abstract_item
 {
+    /** @var string */
     protected $errorMessage = '';
-    protected $restUrl      = '';
+    /** @var string */
+    protected $restUrl = '';
 
-    protected function runTest()
+    protected function runTest(): int
     {
-        if (true) {
-            // REST API for future feathures
+        if (!InstState::isAddSiteOnMultisite()) {
             return self::LV_SKIP;
         }
 
@@ -36,14 +38,14 @@ class DUPX_Validation_test_rest_api extends DUPX_Validation_abstract_item
 
 
         $this->errorMessage = "REST API call to WordPress backend failed";
-        if (DUPX_REST::getInstance()->checkRest(true, $this->errorMessage)) {
+        if (RESTPoints::getInstance()->checkRest(true, $this->errorMessage)) {
             return self::LV_PASS;
         }
 
         return self::LV_FAIL;
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'REST API test';
     }
@@ -52,10 +54,10 @@ class DUPX_Validation_test_rest_api extends DUPX_Validation_abstract_item
     {
         return dupxTplRender(
             'parts/validation/tests/rest-api',
-            array(
-                "isOk"         => true,
-                "restUrl"      => $this->restUrl
-            ),
+            [
+                "isOk"    => true,
+                "restUrl" => $this->restUrl,
+            ],
             false
         );
     }
@@ -64,11 +66,11 @@ class DUPX_Validation_test_rest_api extends DUPX_Validation_abstract_item
     {
         return dupxTplRender(
             'parts/validation/tests/rest-api',
-            array(
+            [
                 "isOk"         => false,
                 "errorMessage" => $this->errorMessage,
-                "restUrl"      => $this->restUrl
-            ),
+                "restUrl"      => $this->restUrl,
+            ],
             false
         );
     }

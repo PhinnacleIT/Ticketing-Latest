@@ -1,11 +1,15 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
+
+/**
+ * Variables
+ *
+ * @var string $message
+ * @var string $trace
+ */
 ?>
 <!DOCTYPE html>
 <html>

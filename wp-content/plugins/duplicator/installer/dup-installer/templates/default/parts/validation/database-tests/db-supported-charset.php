@@ -1,29 +1,27 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
 
-use Duplicator\Installer\Utils\InstallerLinkManager;
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $testResult int // DUPX_Validation_abstract_item::[LV_FAIL|LV_HARD_WARNING|...] */
-/* @var $invalidCharsets string[] */
-/* @var $invalidCollations string[] */
-/* @var $charsetsList string[] */
-/* @var $collationsList string[] */
-/* @var $usedCharset string */
-/* @var $usedCollate string */
-/* @var $errorMessage string */
+/**
+ * Variables
+ *
+ * @var int $testResult DUPX_Validation_abstract_item::[LV_FAIL|LV_HARD_WARNING|...]
+ * @var string[] $invalidCharsets
+ * @var string[] $invalidCollations
+ * @var string[] $charsetsList
+ * @var string[] $collationsList
+ * @var string $usedCharset
+ * @var string $usedCollate
+ * @var string $errorMessage
+ */
 
 
 
 $statusClass = $testResult > DUPX_Validation_abstract_item::LV_SOFT_WARNING ? 'green' : 'red';
 
-$dupDatabase          = basename(DUPX_Package::getSqlFilePath());
+$dupDatabase          = basename(DUPX_Package::getSqlDumpDirPath());
 $dupDatabaseDupFolder = basename(DUPX_INIT) . '/' . $dupDatabase;
 $invalidCheckboxTitle = '';
 $subTitle             = '';
@@ -70,8 +68,8 @@ $subTitle             = '';
 
 <div class="sub-title">DETAILS</div>
 <p>
-    This test checks to make sure this database can support the character set and collations found in the 
-    <b><?php echo htmlentities($dupDatabaseDupFolder); ?></b> script.
+    This test checks to make sure this database can support the character set and collations found in the SQL files in
+    <b><?php echo htmlentities($dupDatabaseDupFolder); ?></b>.
 </p>
 
 <table class="validation-charset-list margin-bottom-1">
@@ -127,7 +125,7 @@ $subTitle             = '';
 <ul>
     <li>
         <i class="far fa-file-code"></i> 
-        <a href="<?php echo InstallerLinkManager::getDocUrl('how-to-fix-database-write-issues', 'install', 'validation db charset'); ?>" target="_help">
+        <a href='<?php echo DUPX_U::esc_attr(DUPX_Constants::FAQ_URL); ?>how-to-fix-database-write-issues/' target='_help'>
             What is Compatibility mode & 'Unknown Collation' errors?
         </a>
     </li>

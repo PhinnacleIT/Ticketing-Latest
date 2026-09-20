@@ -1,9 +1,6 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
@@ -14,10 +11,15 @@ $importSiteInfo = PrmMng::getInstance()->getValue(PrmMng::PARAM_FROM_SITE_IMPORT
 if (isset($importSiteInfo['color-scheme'])) {
     $colorScheme = $importSiteInfo['color-scheme'];
 } else {
-    $colorScheme           = array();
-    $colorScheme['colors'] = array('#222', '#333', '#0073aa', '#00a0d2');
+    $colorScheme           = [];
+    $colorScheme['colors'] = [
+        '#222',
+        '#333',
+        '#0073aa',
+        '#00a0d2',
+    ];
 }
-$colorPrimaryButton = isset($importSiteInfo['color-primary-button']) ? $importSiteInfo['color-primary-button'] : $colorScheme->colors[2];
+$colorPrimaryButton = $importSiteInfo['color-primary-button'] ?? $colorScheme->colors[2];
 ?>
 <style>
     body.backend-import {
@@ -130,12 +132,19 @@ $colorPrimaryButton = isset($importSiteInfo['color-primary-button']) ? $importSi
     }
 
     .backend-import .default-btn.disabled,
+    .backend-import .default-btn.disabled:hover,
+
     .backend-import .default-btn:disabled,
+    .backend-import .default-btn:disabled:hover,
+
     .backend-import .secondary-btn.disabled,
-    .backend-import .secondary-btn:disabled  {
+    .backend-import .secondary-btn.disabled:hover,
+    .backend-import .secondary-btn:disabled,
+    .backend-import .secondary-btn:disabled:hover {
         color:silver;         
         background-color: #f3f5f6;
         border: 1px solid silver;
+        cursor: not-allowed;
     }
 
     .backend-import .secondary-btn {

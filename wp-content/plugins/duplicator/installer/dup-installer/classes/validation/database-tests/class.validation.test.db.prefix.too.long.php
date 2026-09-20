@@ -6,8 +6,6 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -16,9 +14,10 @@ use Duplicator\Installer\Core\Params\PrmMng;
 
 class DUPX_Validation_test_db_prefix_too_long extends DUPX_Validation_abstract_item
 {
+    /** @var string */
     protected $errorMessage = '';
 
-    protected function runTest()
+    protected function runTest(): int
     {
         if (DUPX_Validation_database_service::getInstance()->skipDatabaseTests()) {
             return self::LV_SKIP;
@@ -33,26 +32,26 @@ class DUPX_Validation_test_db_prefix_too_long extends DUPX_Validation_abstract_i
         }
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'Prefix too long';
     }
 
     protected function failContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-prefix-too-long', array(
-            'isOk'         => false,
-            'errorMessage' => $this->errorMessage,
-            'tooLongNewTableNames' => DUPX_Validation_database_service::getInstance()->getTooLongNewTableNames()
-            ), false);
+        return dupxTplRender('parts/validation/database-tests/db-prefix-too-long', [
+            'isOk'                 => false,
+            'errorMessage'         => $this->errorMessage,
+            'tooLongNewTableNames' => DUPX_Validation_database_service::getInstance()->getTooLongNewTableNames(),
+        ], false);
     }
 
     protected function passContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-prefix-too-long', array(
-            'isOk'         => true,
-            'errorMessage' => $this->errorMessage,
-            'tooLongNewTableNames' => DUPX_Validation_database_service::getInstance()->getTooLongNewTableNames()
-            ), false);
+        return dupxTplRender('parts/validation/database-tests/db-prefix-too-long', [
+            'isOk'                 => true,
+            'errorMessage'         => $this->errorMessage,
+            'tooLongNewTableNames' => DUPX_Validation_database_service::getInstance()->getTooLongNewTableNames(),
+        ], false);
     }
 }

@@ -1,16 +1,6 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
- */
-
 namespace Duplicator\Libs\Snap;
-
-// phpcs:disable
-require_once(__DIR__ . '/JsonSerializable.php'); 
-// phpcs:enable
 
 class SnapJson
 {
@@ -38,11 +28,18 @@ class SnapJson
          * We need to make sure we call it with the correct arguments.
          */
         if (version_compare(PHP_VERSION, '5.5', '>=')) {
-            $args = array($data, $options, $depth);
+            $args = [
+                $data,
+                $options,
+                $depth,
+            ];
         } elseif (version_compare(PHP_VERSION, '5.3', '>=')) {
-            $args = array($data, $options);
+            $args = [
+                $data,
+                $options,
+            ];
         } else {
-            $args = array($data);
+            $args = [$data];
         }
 
         $preparedData = self::jsonPrepareData($data);
@@ -68,7 +65,7 @@ class SnapJson
     }
 
     /**
-     * wp_json_encode with pretty print if define exists
+     * json_encode with pretty print if define exists
      *
      * @param mixed $data    Variable (usually an array or object) to encode as JSON.
      * @param int   $options Optional. Options to be passed to json_encode(). Default 0.
@@ -80,7 +77,6 @@ class SnapJson
     public static function jsonEncodePPrint($data, $options = 0, $depth = 512)
     {
         if (defined('JSON_PRETTY_PRINT')) {
-            // phpcs:ignore PHPCompatibility.Constants.NewConstants.json_pretty_printFound
             return self::jsonEncode($data, JSON_PRETTY_PRINT | $options, $depth);
         } else {
             return self::jsonEncode($data, $options, $depth);
@@ -116,19 +112,14 @@ class SnapJson
 
             case 'array':
                 // Arrays must be mapped in case they also return objects.
-                return array_map(array(__CLASS__, 'jsonPrepareData'), $data);
+                return array_map([self::class, 'jsonPrepareData'], $data);
 
             case 'object':
-                // If this is an incomplete object (__PHP_Incomplete_Class), bail.
-                if (!is_object($data)) {
+                if ($data instanceof \__PHP_Incomplete_Class) {
                     return null;
                 }
 
-                if ($data instanceof \JsonSerializable) {
-                    $data = $data->jsonSerialize();
-                } else {
-                    $data = get_object_vars($data);
-                }
+                $data = $data instanceof \JsonSerializable ? $data->jsonSerialize() : get_object_vars($data);
 
                 // Now, pass the array (or whatever was returned from jsonSerialize through).
                 return self::jsonPrepareData($data);
@@ -140,12 +131,6 @@ class SnapJson
 
     /**
      * Perform sanity checks on data that shall be encoded to JSON.
-     *
-     * @ignore
-     * @since  4.1.0
-     * @access private
-     *
-     * @see wp_json_encode()
      *
      * @param mixed $data  Variable (usually an array or object) to encode as JSON.
      * @param int   $depth Maximum depth to walk through $data. Must be greater than 0.
@@ -163,14 +148,10 @@ class SnapJson
         }
 
         if (is_array($data)) {
-            $output = array();
+            $output = [];
             foreach ($data as $id => $el) {
                 // Don't forget to sanitize the ID!
-                if (is_string($id)) {
-                    $clean_id = self::jsonConvertString($id);
-                } else {
-                    $clean_id = $id;
-                }
+                $clean_id = is_string($id) ? self::jsonConvertString($id) : $id;
 
                 // Check the element type, so that we're only recursing if we really have to.
                 if (is_array($el) || is_object($el)) {
@@ -184,11 +165,7 @@ class SnapJson
         } elseif (is_object($data)) {
             $output = new \stdClass();
             foreach ($data as $id => $el) {
-                if (is_string($id)) {
-                    $clean_id = self::jsonConvertString($id);
-                } else {
-                    $clean_id = $id;
-                }
+                $clean_id = is_string($id) ? self::jsonConvertString($id) : $id;
 
                 if (is_array($el) || is_object($el)) {
                     $output->$clean_id = self::jsonSanityCheck($el, $depth - 1);
@@ -214,7 +191,7 @@ class SnapJson
      *
      * @return string
      */
-    private static function jsonConvertString($string)
+    private static function jsonConvertString(string $string)
     {
         static $use_mb = null;
         if (is_null($use_mb)) {
@@ -291,7 +268,7 @@ class SnapJson
      *
      * @return string
      */
-    public static function getJsonWithoutQuotes($string)
+    public static function getJsonWithoutQuotes($string): string
     {
         if (!is_string($string)) {
             throw new \Exception('the function getJsonStringWithoutQuotes take only strings');

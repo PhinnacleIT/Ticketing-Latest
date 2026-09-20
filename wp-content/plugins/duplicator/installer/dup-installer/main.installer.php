@@ -5,7 +5,7 @@
  * Copyright (C) 2018, Snap Creek LLC
  * website: snapcreek.com
  *
- * Duplicator (Pro) Plugin is distributed under the GNU General Public License, Version 3,
+ * Duplicator Plugin is distributed under the GNU General Public License, Version 3,
  * June 2007. Copyright (C) 2007 Free Software Foundation, Inc., 51 Franklin
  * St, Fifth Floor, Boston, MA 02110, USA
  *
@@ -21,24 +21,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Prevent direct access in wordpress install
-$disabledDirs = array(
-    '/installer/dup-installer',
-    '/backups-dup-lite',
-    '/wp-snapshots'
-);
-$currentDir   = str_replace('\\', '/', __DIR__);
-foreach ($disabledDirs as $disableDir) {
-    if (strpos($currentDir, $disableDir) === (strlen($currentDir) - strlen($disableDir))) {
-        exit;
-    }
-}
-
 if (!defined('DUPXABSPATH')) {
     define('DUPXABSPATH', __DIR__);
 }
 
-define('DUPX_VERSION', '1.5.16.1');
+define('DUPX_VERSION', '5.0.4');
 define('DUPX_INIT', str_replace('\\', '/', __DIR__));
 define('DUPX_ROOT', preg_match('/^[\\\\\/]?$/', dirname(DUPX_INIT)) ? '/' : dirname(DUPX_INIT));
 
@@ -60,21 +47,22 @@ try {
     DUPX_Ctrl_ajax::controller();
 } catch (Exception $ex) {
     Log::logException($ex, Log::LV_DEFAULT, 'EXCEPTION ON INIT: ');
-    dupxTplRender('page-boot-error', array(
+    dupxTplRender('page-boot-error', [
         'message' => $ex->getMessage(),
-        'trace'   => $ex->getTraceAsString()
-    ));
+        'trace'   => $ex->getTraceAsString(),
+    ]);
     die();
 }
 
 ob_start();
+$controller = null;
 try {
     $controller     = DUPX_CTRL::getInstance();
     $exceptionError = false;
     // Log::error thotw an exception
     Log::setThrowExceptionOnError(true);
-    Log::logTime('CONTROLLER START', Log::LV_DETAILED);
 
+    Log::logTime('CONTROLLER START', Log::LV_DETAILED);
     $controller->mainController();
 } catch (Exception $e) {
     SnapUtil::obCleanAll(false);
@@ -88,7 +76,7 @@ $unespectOutput = trim(ob_get_clean());
 ob_end_clean();
 if (!empty($unespectOutput)) {
     Log::info('ERROR: Unespect output ' . Log::v2str($unespectOutput));
-    $exceptionError = new Exception('Unespected output ' . Log::v2str($unespectOutput));
+    $exceptionError = new Exception('Unexpected output ' . Log::v2str($unespectOutput));
     $controller->setExceptionPage($exceptionError);
 }
 

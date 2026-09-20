@@ -6,8 +6,6 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -22,17 +20,10 @@ use Duplicator\Installer\Core\Params\Items\ParamFormTables;
  */
 final class DUPX_DB_Tables
 {
-    /**
-     *
-     * @var self
-     */
-    private static $instance = null;
-
-    /**
-     *
-     * @var DUPX_DB_Table_item[]
-     */
-    private $tables = array();
+    /** @var ?self */
+    private static $instance;
+    /** @var DUPX_DB_Table_item[] */
+    private $tables = [];
 
     /**
      *
@@ -47,6 +38,9 @@ final class DUPX_DB_Tables
         return self::$instance;
     }
 
+    /**
+     * Class constructor
+     */
     private function __construct()
     {
         $confTables = (array) DUPX_ArchiveConfig::getInstance()->dbInfo->tablesList;
@@ -72,7 +66,7 @@ final class DUPX_DB_Tables
      *
      * @return string[]
      */
-    public function getTablesNames()
+    public function getTablesNames(): array
     {
         return array_keys($this->tables);
     }
@@ -82,9 +76,9 @@ final class DUPX_DB_Tables
      *
      * @return string[]
      */
-    public function getNewTablesNames()
+    public function getNewTablesNames(): array
     {
-        $result = array();
+        $result = [];
 
         foreach ($this->tables as $tableObj) {
             if (!$tableObj->extract()) {
@@ -104,12 +98,40 @@ final class DUPX_DB_Tables
      *
      * @return string[]
      */
-    public function getReplaceTablesNames()
+    public function getReplaceTablesNames(): array
     {
-        $result = array();
+        $result = [];
 
         foreach ($this->tables as $tableObj) {
             if (!$tableObj->replaceEngine()) {
+                continue;
+            }
+            $newName = $tableObj->getNewName();
+            if (strlen($newName) == 0) {
+                continue;
+            }
+            $result[] = $newName;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get tables new subsite table names
+     *
+     * @param int $subsiteId susbsit ID
+     *
+     * @return string[]
+     */
+    public function getSubsiteTablesNewNames($subsiteId): array
+    {
+        $result = [];
+
+        foreach ($this->tables as $tableObj) {
+            if (!$tableObj->extract()) {
+                continue;
+            }
+            if ($tableObj->getSubsisteId() != $subsiteId) {
                 continue;
             }
             $newName = $tableObj->getNewName();
@@ -130,9 +152,9 @@ final class DUPX_DB_Tables
      *
      * @return string[]
      */
-    public function getTablesByNameWithoutPrefix($filter)
+    public function getTablesByNameWithoutPrefix($filter): array
     {
-        $result = array();
+        $result = [];
 
         foreach ($this->tables as $tableObj) {
             $newName = $tableObj->getNewName();
@@ -152,13 +174,36 @@ final class DUPX_DB_Tables
     }
 
     /**
+     * return list of current standalone site tables without prefix
+     *
+     * @return string[]
+     */
+    public function getStandaoneTablesWithoutPrefix()
+    {
+        static $standaloneTables = null;
+
+        if (is_null($standaloneTables)) {
+            $standaloneTables = [];
+            $standaloneId     = PrmMng::getInstance()->getValue(PrmMng::PARAM_SUBSITE_ID);
+
+            foreach ($this->tables as $tableObj) {
+                if ($tableObj->getSubsisteId() === $standaloneId) {
+                    $standaloneTables[] = $tableObj->getNameWithoutPrefix();
+                }
+            }
+        }
+
+        return $standaloneTables;
+    }
+
+    /**
      * Retust tables to skip
      *
      * @return string[]
      */
-    public function getTablesToSkip()
+    public function getTablesToSkip(): array
     {
-        $result = array();
+        $result = [];
 
         foreach ($this->tables as $tableObj) {
             if (!$tableObj->extract()) {
@@ -174,9 +219,9 @@ final class DUPX_DB_Tables
      *
      * @return string[]
      */
-    public function getTablesCreateSkip()
+    public function getTablesCreateSkip(): array
     {
-        $result = array();
+        $result = [];
 
         foreach ($this->tables as $tableObj) {
             if ($tableObj->extract() && !$tableObj->createTable()) {
@@ -188,10 +233,11 @@ final class DUPX_DB_Tables
     }
 
     /**
+     * Get table object by table name
      *
-     * @param type $table
+     * @param string $table table name
      *
-     * @return DUPX_DB_Table_item // false if table don't exists
+     * @return DUPX_DB_Table_item false if table don't exists
      */
     public function getTableObjByName($table)
     {
@@ -203,13 +249,14 @@ final class DUPX_DB_Tables
     }
 
     /**
+     * Retrun rename tables mapping
      *
-     * @return array
+     * @return array<string,array<string,array<int, string>>>
      */
-    public function getRenameTablesMapping()
+    public function getRenameTablesMapping(): array
     {
-        $mapping  = array();
-        $diffData = array();
+        $mapping  = [];
+        $diffData = [];
 
         foreach ($this->tables as $tableObj) {
             if (!$tableObj->extract()) {
@@ -222,17 +269,17 @@ final class DUPX_DB_Tables
             }
 
             if (!isset($mapping[$diffData['oldPrefix']])) {
-                $mapping[$diffData['oldPrefix']] = array();
+                $mapping[$diffData['oldPrefix']] = [];
             }
 
             if (!isset($mapping[$diffData['oldPrefix']][$diffData['newPrefix']])) {
-                $mapping[$diffData['oldPrefix']][$diffData['newPrefix']] = array();
+                $mapping[$diffData['oldPrefix']][$diffData['newPrefix']] = [];
             }
 
             $mapping[$diffData['oldPrefix']][$diffData['newPrefix']][] = $diffData['commonPart'];
         }
 
-        uksort($mapping, function ($a, $b) {
+        uksort($mapping, function ($a, $b): int {
             $lenA = strlen($a);
             $lenB = strlen($b);
 
@@ -246,7 +293,8 @@ final class DUPX_DB_Tables
         });
 
         // maximise prefix length
-        $optimizedMapping = array();
+        $optimizedMapping = [];
+        $char             = '';
 
         foreach ($mapping as $oldPrefix => $newMapping) {
             foreach ($newMapping as $newPrefix => $commons) {
@@ -271,12 +319,10 @@ final class DUPX_DB_Tables
                 $optNewPrefix = $newPrefix . substr($commons[0], 0, $pos);
 
                 if (!isset($optimizedMapping[$optOldPrefix])) {
-                    $optimizedMapping[$optOldPrefix] = array();
+                    $optimizedMapping[$optOldPrefix] = [];
                 }
 
-                $optimizedMapping[$optOldPrefix][$optNewPrefix] = array_map(function ($val) use ($pos) {
-                    return substr($val, $pos);
-                }, $commons);
+                $optimizedMapping[$optOldPrefix][$optNewPrefix] = array_map(fn($val): string => substr($val, $pos), $commons);
             }
         }
 
@@ -286,11 +332,11 @@ final class DUPX_DB_Tables
     /**
      * return param table default
      *
-     * @return array
+     * @return array<array{name: string, extract: bool, replace: bool}>
      */
-    public function getDefaultParamValue()
+    public function getDefaultParamValue(): array
     {
-        $result = array();
+        $result = [];
 
         foreach ($this->tables as $table) {
             $result[$table->getOriginalName()] = ParamFormTables::getParamItemValueFromData(
@@ -303,19 +349,19 @@ final class DUPX_DB_Tables
         return $result;
     }
 
-        /**
+    /**
      * return param table default filtered
      *
      * @param string[] $filterTables Table names to filter
      *
      * @return array<string, array{name: string, extract: bool, replace: bool}>
      */
-    public function getFilteredParamValue($filterTables)
+    public function getFilteredParamValue($filterTables): array
     {
-        $result = array();
+        $result = [];
 
         foreach ($this->tables as $table) {
-            $extract = !in_array($table->getOriginalName(), $filterTables) ? $table->canBeExctracted() : false;
+            $extract = !in_array($table->getOriginalName(), $filterTables) && $table->canBeExctracted();
 
             $result[$table->getOriginalName()] = ParamFormTables::getParamItemValueFromData(
                 $table->getOriginalName(),

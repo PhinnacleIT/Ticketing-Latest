@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
- */
-
 namespace Duplicator\Installer\Models;
 
 use DUPX_Package;
@@ -15,10 +10,10 @@ use Exception;
  */
 final class ScanInfo
 {
-    /** @var array */
-    private $data = array();
-    /** @var self */
-    private static $instance = null;
+    /** @var array<string, mixed> */
+    private $data = [];
+    /** @var ?self */
+    private static $instance;
 
     /**
      * Get instance
@@ -60,7 +55,7 @@ final class ScanInfo
      */
     public function getUSize()
     {
-        return isset($this->data['ARC']['Usize']) ? $this->data['ARC']['Usize'] : -1;
+        return $this->data['ARC']['Usize'] ?? -1;
     }
 
     /**

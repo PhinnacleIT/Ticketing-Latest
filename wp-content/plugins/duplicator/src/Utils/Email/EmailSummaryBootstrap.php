@@ -2,13 +2,15 @@
 
 namespace Duplicator\Utils\Email;
 
-use DUP_Log;
-use DUP_Package;
-use DUP_Settings;
-use DUP_PackageStatus;
-use Duplicator\Utils\CronUtils;
-use Duplicator\Libs\Snap\SnapWP;
+use Duplicator\Models\GlobalEntity;
+use Duplicator\Utils\Logging\DupLog;
+use Duplicator\Package\Storage\UploadInfo;
 use Duplicator\Core\Views\TplMng;
+use Duplicator\Libs\Snap\SnapWP;
+use Duplicator\Package\AbstractPackage;
+use Duplicator\Utils\CronUtils;
+use Exception;
+use Throwable;
 
 /**
  * Email summary bootstrap
@@ -18,117 +20,119 @@ class EmailSummaryBootstrap
     const CRON_HOOK = 'duplicator_email_summary_cron';
 
     /**
-     * Init Email Summaries
+     * Init
      *
      * @return void
      */
-    public static function init()
+    public static function init(): void
     {
+        //Init Preview page
+        \Duplicator\Controllers\EmailSummaryPreviewPageController::getInstance();
+
+        //Storage hooks
+        add_action('duplicator_after_storage_create', function ($storageId): void {
+            EmailSummary::getInstance()->addStorage($storageId);
+        });
+        add_action('duplicator_after_storage_delete', function ($storageId): void {
+            EmailSummary::getInstance()->removeStorage($storageId);
+        });
+
         //Package hooks
-        add_action('duplicator_package_after_set_status', array(__CLASS__, 'addPackage'), 10, 2);
+        add_action('duplicator_build_completed', function (AbstractPackage $package): void {
+            EmailSummary::getInstance()->addPackage($package);
+        });
+        add_action('duplicator_build_fail', function (AbstractPackage $package, int $previousStatus, Throwable $exception): void {
+            EmailSummary::getInstance()->addFailed($package);
+        }, 10, 3);
 
-        //Set cron action
-        add_action(self::CRON_HOOK, array(__CLASS__, 'send'));
+        //Backup transfer hooks
+        add_action('duplicator_transfer_failed', function (UploadInfo $uploadInfo): void {
+            if ($uploadInfo->isDownloadFromRemote()) {
+                return;
+            }
 
-        //Activation/deactivation hooks
-        add_action('duplicator_after_activation', array(__CLASS__, 'activationAction'));
-        add_action('duplicator_after_deactivation', array(__CLASS__, 'deactivationAction'));
+            EmailSummary::getInstance()->addFailedUpload($uploadInfo);
+        });
+
+        add_action('duplicator_transfer_cancelled', function (UploadInfo $uploadInfo): void {
+            if ($uploadInfo->isDownloadFromRemote()) {
+                return;
+            }
+
+            EmailSummary::getInstance()->addCancelledUpload($uploadInfo);
+        });
+
+        add_action('duplicator_upload_complete', function (UploadInfo $uploadInfo): void {
+            if ($uploadInfo->isDownloadFromRemote()) {
+                return;
+            }
+
+            EmailSummary::getInstance()->addSuccessfulUpload($uploadInfo);
+        });
     }
 
     /**
-     * Add package to summary
-     *
-     * @param DUP_Package $package The package
-     * @param int         $status  The status
+     * Init cron on activation
      *
      * @return void
      */
-    public static function addPackage(DUP_Package $package, $status)
+    public static function activationAction(): void
     {
-        EmailSummary::getInstance()->addPackage($package, $status);
-    }
-
-    /**
-     * Send email summary
-     *
-     * @return bool True if email was sent
-     */
-    public static function send()
-    {
-        $frequency = DUP_Settings::Get('email_summary_frequency');
-        if (($recipient = get_option('admin_email')) === false || $frequency === EmailSummary::SEND_FREQ_NEVER) {
-            return false;
-        }
-
-        $parsedHomeUrl = wp_parse_url(home_url());
-        $siteDomain    = $parsedHomeUrl['host'];
-
-        if (is_multisite() && isset($parsedHomeUrl['path'])) {
-            $siteDomain .= $parsedHomeUrl['path'];
-        }
-
-        $subject = sprintf(
-            esc_html_x(
-                'Your Weekly Duplicator Summary for %s',
-                '%s is the site domain',
-                'duplicator'
-            ),
-            $siteDomain
-        );
-
-        $content = TplMng::getInstance()->render('mail/email_summary', array(
-            'packages' => EmailSummary::getInstance()->getPackagesInfo(),
-        ), false);
-
-        add_filter('wp_mail_content_type', array(__CLASS__, 'getMailContentType'));
-        if (!wp_mail($recipient, $subject, $content)) {
-            DUP_Log::Trace("FAILED TO SEND EMAIL SUMMARY.");
-            DUP_Log::Trace("Recipients: " . $recipient);
-            return false;
-        } elseif (!EmailSummary::getInstance()->resetData()) {
-            DUP_Log::Trace("FAILED TO RESET EMAIL SUMMARY DATA.");
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Get mail content type
-     *
-     * @return string
-     */
-    public static function getMailContentType()
-    {
-        return 'text/html';
-    }
-
-    /**
-     * Activation action
-     *
-     * @return void
-     */
-    public static function activationAction()
-    {
-        $frequency = DUP_Settings::Get('email_summary_frequency');
+        $frequency = GlobalEntity::getInstance()->getEmailSummaryFrequency();
         if ($frequency === EmailSummary::SEND_FREQ_NEVER) {
             return;
         }
 
         if (self::updateCron($frequency) == false) {
-            DUP_Log::Trace("FAILED TO INIT EMAIL SUMMARY CRON. Frequency: {$frequency}");
+            DupLog::trace("FAILED TO INIT EMAIL SUMMARY CRON. Frequency: {$frequency}");
         }
     }
 
     /**
-     * Deactivation action
+     * Removes cron on deactivation
      *
      * @return void
      */
-    public static function deactivationAction()
+    public static function deactivationAction(): void
     {
         if (self::updateCron(EmailSummary::SEND_FREQ_NEVER) == false) {
-            DUP_Log::Trace("FAILED TO REMOVE EMAIL SUMMARY CRON.");
+            DupLog::trace("FAILED TO REMOVE EMAIL SUMMARY CRON.");
+        }
+    }
+
+    /**
+     * Updates the WP Cron job base on frequency or settings
+     *
+     * @param string $frequency The frequency
+     *
+     * @return bool True if the cron was updated or false on error
+     */
+    private static function updateCron($frequency = '')
+    {
+        if (strlen($frequency) === 0) {
+            $frequency = GlobalEntity::getInstance()->getEmailSummaryFrequency();
+        }
+
+        if ($frequency === EmailSummary::SEND_FREQ_NEVER) {
+            if (wp_next_scheduled(self::CRON_HOOK)) {
+                //have to check return like this because
+                //wp_clear_scheduled_hook returns void in WP < 5.1
+                return !self::isFalseOrWpError(wp_clear_scheduled_hook(self::CRON_HOOK));
+            } else {
+                return true;
+            }
+        } else {
+            if (wp_next_scheduled(self::CRON_HOOK) && self::isFalseOrWpError(wp_clear_scheduled_hook(self::CRON_HOOK))) {
+                return false;
+            }
+
+            return !self::isFalseOrWpError(
+                wp_schedule_event(
+                    self::getFirstRunTime($frequency),
+                    self::getCronSchedule($frequency),
+                    self::CRON_HOOK
+                )
+            );
         }
     }
 
@@ -150,39 +154,23 @@ class EmailSummaryBootstrap
     }
 
     /**
-     * Updates the WP Cron job base on frequency or settings
+     * Get the cron schedule
      *
      * @param string $frequency The frequency
      *
-     * @return bool True if the cron was updated or false on error
+     * @return string
      */
-    private static function updateCron($frequency = '')
+    private static function getCronSchedule($frequency): string
     {
-        if (strlen($frequency) === 0) {
-            $frequency = DUP_Settings::Get('email_summary_frequency');
-        }
-
-        if ($frequency === EmailSummary::SEND_FREQ_NEVER) {
-            if (wp_next_scheduled(self::CRON_HOOK)) {
-                //have to check return like this because
-                //wp_clear_scheduled_hook returns void in WP < 5.1
-                return !self::isFalseOrWpError(wp_clear_scheduled_hook(self::CRON_HOOK));
-            } else {
-                return true;
-            }
-        } else {
-            if (
-                wp_next_scheduled(self::CRON_HOOK)
-                && self::isFalseOrWpError(wp_clear_scheduled_hook(self::CRON_HOOK))
-            ) {
-                return false;
-            }
-
-            return !self::isFalseOrWpError(wp_schedule_event(
-                self::getFirstRunTime($frequency),
-                self::getCronSchedule($frequency),
-                self::CRON_HOOK
-            ));
+        switch ($frequency) {
+            case EmailSummary::SEND_FREQ_DAILY:
+                return CronUtils::INTERVAL_DAILY;
+            case EmailSummary::SEND_FREQ_WEEKLY:
+                return CronUtils::INTERVAL_WEEKLY;
+            case EmailSummary::SEND_FREQ_MONTHLY:
+                return CronUtils::INTERVAL_MONTHLY;
+            default:
+                throw new Exception("Unknown frequency: " . $frequency);
         }
     }
 
@@ -208,31 +196,62 @@ class EmailSummaryBootstrap
             case EmailSummary::SEND_FREQ_NEVER:
                 return 0;
             default:
-                throw new \Exception("Unknown frequency: " . $frequency);
+                throw new Exception("Unknown frequency: " . $frequency);
         }
 
         return $firstRunTime - SnapWP::getGMTOffset();
     }
 
     /**
-     * Get the cron schedule
+     * Send email
      *
-     * @param string $frequency The frequency
-     *
-     * @return string
+     * @return void
      */
-    private static function getCronSchedule($frequency)
+    public static function send(): void
     {
-        switch ($frequency) {
-            case EmailSummary::SEND_FREQ_DAILY:
-                return CronUtils::INTERVAL_DAILTY;
-            case EmailSummary::SEND_FREQ_WEEKLY:
-                return CronUtils::INTERVAL_WEEKLY;
-            case EmailSummary::SEND_FREQ_MONTHLY:
-                return CronUtils::INTERVAL_MONTHLY;
-            default:
-                throw new Exception("Unknown frequency: " . $frequency);
+        DupLog::trace("CRON: Sending email summary");
+        $recipients = GlobalEntity::getInstance()->getEmailSummaryRecipients();
+        $frequency  = GlobalEntity::getInstance()->getEmailSummaryFrequency();
+        if (count($recipients) === 0 || $frequency === EmailSummary::SEND_FREQ_NEVER) {
+            DupLog::trace("CRON: No recipients or frequency is never");
+            return;
         }
+
+        $parsedHomeUrl = wp_parse_url(home_url());
+        $siteDomain    = ($parsedHomeUrl['host'] ?? '');
+
+        if (is_multisite() && isset($parsedHomeUrl['path'])) {
+            $siteDomain .= $parsedHomeUrl['path'];
+        }
+
+        // Emails use the site language regardless of the sending request's locale
+        $switchedLocale = switch_to_locale(get_locale());
+
+        $subject = sprintf(
+            _x(
+                'Your Duplicator Summary for %s',
+                '%s is the site domain',
+                'duplicator'
+            ),
+            $siteDomain
+        );
+
+        $content = TplMng::getInstance()->render('mail/email_summary', EmailSummary::getInstance()->getData(), false);
+
+        $sent = wp_mail($recipients, $subject, $content, ['Content-Type: text/html; charset=UTF-8']);
+
+        if ($switchedLocale) {
+            restore_previous_locale();
+        }
+
+        if (!$sent) {
+            DupLog::trace("FAILED TO SEND EMAIL SUMMARY.");
+            DupLog::traceObject("RECIPIENTS: ", $recipients);
+            return;
+        }
+
+        DupLog::trace("EMAIL SUMMARY SENT SUCCESSFULLY.");
+        EmailSummary::getInstance()->reset();
     }
 
     /**
@@ -242,7 +261,7 @@ class EmailSummaryBootstrap
      *
      * @return bool
      */
-    private static function isFalseOrWpError($value)
+    private static function isFalseOrWpError($value): bool
     {
         return $value === false || is_wp_error($value);
     }

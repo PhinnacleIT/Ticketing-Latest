@@ -5,20 +5,19 @@ namespace Duplicator\Utils\Help;
 class Category
 {
     /** @var int The ID */
-    private $id = -1;
+    private $id;
 
     /** @var string The name */
-    private $name = '';
+    private $name;
 
     /** @var int Number of articles */
-    private $articleCount = 0;
+    private $articleCount;
 
     /** @var Category|null The parent */
-    private $parent = null;
+    private $parent;
 
     /** @var Category[] The children */
     private $children = [];
-
 
     /**
      * Constructor
@@ -81,7 +80,7 @@ class Category
      *
      * @return void
      */
-    public function addChild(Category $child)
+    public function addChild(Category $child): void
     {
         if (isset($this->children[$child->getId()])) {
             return;
@@ -107,7 +106,7 @@ class Category
      *
      * @return void
      */
-    public function setParent(Category $parent)
+    public function setParent(Category $parent): void
     {
         $this->parent = $parent;
     }

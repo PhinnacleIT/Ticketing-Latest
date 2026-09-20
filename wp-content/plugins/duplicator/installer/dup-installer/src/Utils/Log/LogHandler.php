@@ -6,8 +6,6 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\Log
  */
 
 namespace Duplicator\Installer\Utils\Log;
@@ -27,20 +25,19 @@ class LogHandler
      *
      * @return void
      */
-    public static function initErrorHandler()
+    public static function initErrorHandler(): void
     {
         Bootstrap::disableBootShutdownFunction();
 
-        set_error_handler(array(__CLASS__, 'error'));
-        register_shutdown_function(array(__CLASS__, 'shutdown'));
+        set_error_handler([self::class, 'error']);
+        register_shutdown_function([self::class, 'shutdown']);
     }
+
     /**
      *
-     * @var array
+     * @var array<string, mixed>
      */
-    private static $shutdownReturns = array(
-        'tm' => 'timeout'
-    );
+    private static $shutdownReturns = ['tm' => 'timeout'];
 
     /**
      *
@@ -62,7 +59,7 @@ class LogHandler
 
     /**
      *
-     * @var string // php errors in MODE_VAR
+     * @var string PHP errors in MODE_VAR
      */
     private static $varModeLog = '';
 
@@ -74,9 +71,9 @@ class LogHandler
      * @param string  $errfile Error file
      * @param integer $errline Error line
      *
-     * @return void
+     * @return bool
      */
-    public static function error($errno, $errstr, $errfile, $errline)
+    public static function error($errno, $errstr, $errfile, $errline): bool
     {
         switch (self::$handlerMode) {
             case self::MODE_OFF:
@@ -103,6 +100,8 @@ class LogHandler
                         break;
                 }
         }
+
+        return true;
     }
 
     /**
@@ -115,12 +114,12 @@ class LogHandler
      *
      * @return string
      */
-    private static function getMessage($errno, $errstr, $errfile, $errline)
+    private static function getMessage($errno, $errstr, $errfile, $errline): string
     {
         $result = '';
 
         if (self::$errPrefix) {
-            $result = '[PHP ERR]' . '[' . self::errnoToString($errno) . '] MSG:';
+            $result = '[PHP ERR][' . self::errnoToString($errno) . '] MSG:';
         }
 
         $result .= $errstr;
@@ -128,7 +127,8 @@ class LogHandler
         if (self::$codeReference) {
             $result .= ' [CODE:' . $errno . '|FILE:' . $errfile . '|LINE:' . $errline . ']';
             if (Log::isLevel(Log::LV_DEBUG)) {
-                Log::info(Log::traceToString(debug_backtrace(), 1));
+                // phpcs:ignore PHPCompatibility.FunctionUse.ArgumentFunctionsReportCurrentValue.NeedsInspection
+                $result .= "\n" . Log::traceToString(debug_backtrace(), 1, 1);
             }
         }
 
@@ -142,7 +142,7 @@ class LogHandler
      *
      * @return string
      */
-    public static function errnoToString($errno)
+    public static function errnoToString($errno): string
     {
         switch ($errno) {
             case E_PARSE:
@@ -191,7 +191,7 @@ class LogHandler
      *
      * @return void
      */
-    public static function setMode($mode = self::MODE_LOG, $errPrefix = true, $codeReference = true)
+    public static function setMode($mode = self::MODE_LOG, $errPrefix = true, $codeReference = true): void
     {
         switch ($mode) {
             case self::MODE_OFF:
@@ -236,7 +236,7 @@ class LogHandler
      *
      * @return void
      */
-    public static function setShutdownReturn($status, $str)
+    public static function setShutdownReturn($status, $str): void
     {
         self::$shutdownReturns[$status] = $str;
     }
@@ -246,7 +246,7 @@ class LogHandler
      *
      * @return void
      */
-    public static function shutdown()
+    public static function shutdown(): void
     {
         if (($error = error_get_last())) {
             if (preg_match('/^Maximum execution time (?:.+) exceeded$/i', $error['message'])) {

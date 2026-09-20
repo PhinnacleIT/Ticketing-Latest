@@ -1,15 +1,9 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
- */
-
 namespace Duplicator\Libs\Snap;
 
-use Error;
 use Exception;
+use Throwable;
 
 class SnapIO
 {
@@ -29,7 +23,7 @@ class SnapIO
      *
      * @throws Exception // thorw exception if is $required and file can't be read
      */
-    public static function getInclude($path, $args = array(), $required = true)
+    public static function getInclude($path, $args = [], $required = true)
     {
         if (!is_readable($path)) {
             if ($required) {
@@ -70,7 +64,9 @@ class SnapIO
                 return false;
             }
         }
-        return copy($source, $dest);
+        return self::callWithPhpErrorCapture(static function () use ($source, $dest): bool {
+            return copy($source, $dest);
+        });
     }
 
     /**
@@ -85,49 +81,58 @@ class SnapIO
      */
     public static function copyFilePart($from, $to, $offset = 0, $length = -1)
     {
-        $closeFrom  = false;
-        $closeTo    = false;
-        $fromStream = null;
-        $toStream   = null;
-        if (is_resource($from)) {
-            $fromStream = $from;
-        } else {
-            if (!is_file((string) $from)) {
+        try {
+            $closeFrom  = false;
+            $closeTo    = false;
+            $fromStream = null;
+            $toStream   = null;
+            if (is_resource($from)) {
+                $fromStream = $from;
+            } else {
+                if (!is_file((string) $from)) {
+                    return false;
+                }
+                if (($fromStream = self::fopen($from, 'r')) === false) {
+                    return false;
+                }
+                $closeFrom = true;
+            }
+            if (is_resource($to)) {
+                $toStream = $to;
+            } else {
+                $mode = ($offset == 0 ? 'w+' : 'c+');
+                if (($toStream = SnapIO::fopen($to, $mode)) === false) {
+                    return false;
+                }
+                $closeTo = true;
+            }
+            if ($offset === 0) {
+                if (ftruncate($toStream, 0) === false) {
+                    return false;
+                }
+            }
+            if (fseek($toStream, $offset) === -1) {
                 return false;
             }
-            if (($fromStream = self::fopen($from, 'r')) === false) {
-                return false;
+            return (stream_copy_to_stream($fromStream, $toStream, ($length < 0 ? null : $length), $offset) !== false);
+        } finally {
+            if ($closeFrom && is_resource($fromStream)) {
+                fclose($fromStream);
             }
-            $closeFrom = true;
-        }
-        if (is_resource($to)) {
-            $toStream = $to;
-        } else {
-            $mode = ($offset == 0 ? 'w+' : 'c+');
-            if (($toStream = SnapIO::fopen($to, $mode)) === false) {
-                return false;
-            }
-            $closeTo = true;
-        }
-        if ($offset === 0) {
-            if (ftruncate($toStream, 0) === false) {
-                return false;
+            if ($closeTo && is_resource($toStream)) {
+                fclose($toStream);
             }
         }
-        if (fseek($toStream, $offset) === -1) {
-            return false;
-        }
-        if ($closeFrom && is_resource($fromStream)) {
-            fclose($fromStream);
-        }
-        if ($closeTo && is_resource($toStream)) {
-            fclose($toStream);
-        }
-        return (stream_copy_to_stream($fromStream, $toStream, ($length < 0 ? null : $length), $offset) !== false);
     }
 
     /**
      * Copy recursive folder content
+     *
+     * On failure error_get_last() holds the PHP error of the operation that
+     * failed, or no error when a precondition failed (unreadable source,
+     * mkdir failure) before any capture ran; either way callers can report
+     * the reason with SnapException::fromLastError() or
+     * DupliException::fromLastError() without picking up a stale error.
      *
      * @param string $source source path
      * @param string $dest   detination path
@@ -136,6 +141,7 @@ class SnapIO
      */
     public static function rcopy($source, $dest)
     {
+        error_clear_last();
         if (!is_readable($source)) {
             return false;
         }
@@ -147,7 +153,10 @@ class SnapIO
                 }
             }
 
-            if (($handle = opendir($source)) == false) {
+            $handle = self::callWithPhpErrorCapture(static function () use ($source) {
+                return opendir($source);
+            });
+            if ($handle == false) {
                 return false;
             }
 
@@ -164,7 +173,9 @@ class SnapIO
             closedir($handle);
             return true;
         } else {
-            return copy($source, $dest);
+            return self::callWithPhpErrorCapture(static function () use ($source, $dest): bool {
+                return copy($source, $dest);
+            });
         }
     }
 
@@ -175,7 +186,7 @@ class SnapIO
      *
      * @return string
      */
-    public static function untrailingslashit($path)
+    public static function untrailingslashit($path): string
     {
         return rtrim($path, '/\\');
     }
@@ -187,7 +198,7 @@ class SnapIO
      *
      * @return string
      */
-    public static function trailingslashit($path)
+    public static function trailingslashit($path): string
     {
         return self::untrailingslashit($path) . '/';
     }
@@ -220,7 +231,7 @@ class SnapIO
      *
      * @return string
      */
-    public static function safePathUntrailingslashit($path, $real = false)
+    public static function safePathUntrailingslashit($path, $real = false): string
     {
         if ($real) {
             if (($res = realpath($path)) === false) {
@@ -240,7 +251,7 @@ class SnapIO
      *
      * @return string
      */
-    public static function safePathTrailingslashit($path, $real = false)
+    public static function safePathTrailingslashit($path, $real = false): string
     {
         return self::safePathUntrailingslashit($path, $real) . '/';
     }
@@ -263,15 +274,19 @@ class SnapIO
             }
             self::chmod($file, 'u+rw');
             return @unlink($file);
-        } catch (Exception $e) {
-            return false;
-        } catch (Error $e) {
+        } catch (Throwable $e) {
             return false;
         }
     }
 
     /**
      * Rename file from old name to new name
+     *
+     * On failure error_get_last() holds the PHP error of the rename, or no
+     * error when a precondition failed (missing source, destination removal
+     * failure) before the rename ran; either way callers can report the
+     * reason with SnapException::fromLastError() or
+     * DupliException::fromLastError() without picking up a stale error.
      *
      * @param string $oldname        path
      * @param string $newname        path
@@ -281,6 +296,7 @@ class SnapIO
      */
     public static function rename($oldname, $newname, $removeIfExists = false)
     {
+        error_clear_last();
         try {
             if (!file_exists($oldname) || !function_exists('rename')) {
                 return false;
@@ -291,10 +307,10 @@ class SnapIO
                     return false;
                 }
             }
-            return @rename($oldname, $newname);
-        } catch (Exception $e) {
-            return false;
-        } catch (Error $e) {
+            return self::callWithPhpErrorCapture(static function () use ($oldname, $newname): bool {
+                return rename($oldname, $newname);
+            });
+        } catch (Throwable $e) {
             return false;
         }
     }
@@ -315,7 +331,9 @@ class SnapIO
         }
 
         if (SnapString::startsWith($mode, 'w') || SnapString::startsWith($mode, 'c') || file_exists($filepath)) {
-            $file_handle = @fopen($filepath, $mode);
+            $file_handle = self::callWithPhpErrorCapture(static function () use ($filepath, $mode) {
+                return @fopen($filepath, $mode);
+            });
         } else {
             if ($throwOnError) {
                 throw new Exception("$filepath doesn't exist");
@@ -352,7 +370,32 @@ class SnapIO
         if ($time === null) {
             $time = time();
         }
-        return @touch($filepath, $time);
+        return self::callWithPhpErrorCapture(static function () use ($filepath, $time): bool {
+            return touch($filepath, $time);
+        });
+    }
+
+    /**
+     * Run an operation with PHP's default error handler so error_get_last()
+     * captures suppressed filesystem warnings even while Duplicator's logging
+     * handler is active. Wrap any raw filesystem call whose failure reason is
+     * then read with SnapException::fromLastError() or
+     * DupliException::fromLastError(); a raw call made while the logging
+     * handler is registered leaves error_get_last() empty.
+     *
+     * @param callable $callback Operation to run
+     *
+     * @return mixed Operation result
+     */
+    public static function callWithPhpErrorCapture(callable $callback)
+    {
+        error_clear_last();
+        set_error_handler(null);
+        try {
+            return @$callback();
+        } finally {
+            restore_error_handler();
+        }
     }
 
     /**
@@ -363,7 +406,7 @@ class SnapIO
      *
      * @return void
      */
-    public static function rmdir($dirname, $mustExist = false)
+    public static function rmdir($dirname, $mustExist = false): void
     {
         if (file_exists($dirname)) {
             self::chmod($dirname, 'u+rwx');
@@ -383,7 +426,7 @@ class SnapIO
      *
      * @return void
      */
-    public static function rm($filepath, $mustExist = false)
+    public static function rm($filepath, $mustExist = false): void
     {
         if (file_exists($filepath)) {
             self::chmod($filepath, 'u+rw');
@@ -396,19 +439,28 @@ class SnapIO
     }
 
     /**
-     * string string in file
+     * Writes a string to the handle and throws on failure or partial write,
+     * with the last PHP error reason attached (disk-full is recognized by the
+     * exception code).
      *
-     * @param resource $handle file handle
-     * @param string   $string fwrite string
+     * @param resource    $handle       file handle
+     * @param string      $string       fwrite string
+     * @param string|null $errorMessage optional failure message replacing the generic one
+     * @param int         $errorCode    optional failure exception code
      *
      * @return int bytes written
      */
-    public static function fwrite($handle, $string)
+    public static function fwrite($handle, $string, ?string $errorMessage = null, int $errorCode = 0)
     {
-        $bytes_written = @fwrite($handle, $string);
+        $bytes_written = self::callWithPhpErrorCapture(static function () use ($handle, $string) {
+            return fwrite($handle, $string);
+        });
 
         if ($bytes_written != strlen($string)) {
-            throw new Exception('Error writing all bytes to file.');
+            throw SnapException::fromLastError(
+                $errorMessage === null ? 'Error writing all bytes to file.' : $errorMessage,
+                $errorCode
+            );
         } else {
             return $bytes_written;
         }
@@ -424,7 +476,7 @@ class SnapIO
      *
      * @throws Exception
      */
-    public static function fwriteChunked($handle, $content)
+    public static function fwriteChunked($handle, $content): int
     {
         if (strlen($content) == 0) {
             return 0;
@@ -434,17 +486,106 @@ class SnapIO
         $written = 0;
 
         foreach ($pieces as $piece) {
-            if (($fwResult = @fwrite($handle, $piece, self::FWRITE_CHUNK_SIZE)) === false) {
-                throw new Exception('Error writing to file.');
+            $fwResult = self::callWithPhpErrorCapture(static function () use ($handle, $piece) {
+                return fwrite($handle, $piece, self::FWRITE_CHUNK_SIZE);
+            });
+            if ($fwResult === false) {
+                throw SnapException::fromLastError('Error writing to file.');
             }
             $written += $fwResult;
         }
 
         if ($written != strlen($content)) {
-            throw new Exception('Error writing all bytes to file.');
+            throw SnapException::fromLastError(
+                'Error writing all bytes to file. Written ' . $written . ' of ' . strlen($content) . ' bytes.'
+            );
         }
 
         return $written;
+    }
+
+    /**
+     * Flush a handle to disk (fsync, or fflush on PHP < 8.1) then close it.
+     *
+     * Note: fsync forces a physical disk write and is costly. Use only for
+     * critical files (chunk checkpoints, index), not for every fclose.
+     *
+     * @param resource $handle Open file handle to sync and close
+     *
+     * @return bool True on success
+     */
+    public static function closeSync($handle): bool
+    {
+        if (!is_resource($handle)) {
+            return false;
+        }
+
+        $synced = true;
+        if (function_exists('fsync')) {
+            $synced = fsync($handle) !== false;
+        } elseif (function_exists('fflush')) {
+            $synced = fflush($handle) !== false;
+        }
+
+        return (fclose($handle) !== false) && $synced;
+    }
+
+    /**
+     * Write one or more files via temp-sibling + rename.
+     *
+     * Each file is written to a temp sibling and synced; only after all temps
+     * are written are they renamed into place. If any write fails, no rename
+     * happens, so the write phase is all-or-nothing. The rename phase is NOT:
+     * once renames start, a failure partway leaves the already-renamed files
+     * committed (reported via the false return value), not rolled back across
+     * files.
+     *
+     * Note: each file is fsync'd (costly physical write). Use only for critical
+     * files (chunk checkpoints, index), not for routine writes.
+     *
+     * @param array<string, string> $files Map of destination path => contents
+     *
+     * @return bool True if every file was written, synced and renamed
+     */
+    public static function atomicWrite(array $files): bool
+    {
+        if (empty($files)) {
+            return true;
+        }
+
+        $tmpByDest = [];
+        try {
+            foreach ($files as $dest => $content) {
+                $tmpPath = $dest . '.tmp.' . uniqid('', true);
+
+                $handle = self::fopen($tmpPath, 'w', false);
+                if ($handle === false) {
+                    throw new Exception('Could not open temp file for atomic write: ' . $tmpPath);
+                }
+                $tmpByDest[$dest] = $tmpPath;
+
+                self::fwriteChunked($handle, $content);
+
+                if (self::closeSync($handle) === false) {
+                    throw new Exception('Could not sync temp file for atomic write: ' . $tmpPath);
+                }
+            }
+        } catch (Throwable $e) {
+            foreach ($tmpByDest as $tmpPath) {
+                unlink($tmpPath);
+            }
+            return false;
+        }
+
+        $allRenamed = true;
+        foreach ($tmpByDest as $dest => $tmpPath) {
+            if (rename($tmpPath, $dest) === false) {
+                unlink($tmpPath);
+                $allRenamed = false;
+            }
+        }
+
+        return $allRenamed;
     }
 
     /**
@@ -456,7 +597,7 @@ class SnapIO
      *
      * @return int writte bytes
      */
-    public static function appendFileToFile($from, $to)
+    public static function appendFileToFile($from, $to): int
     {
         try {
             $written = 0;
@@ -484,14 +625,19 @@ class SnapIO
             }
 
             while ($buffer = fread($fromHd, self::FWRITE_CHUNK_SIZE)) {
-                if (($fwResult = @fwrite($toHd, $buffer)) === false) {
-                    throw new Exception('Error writing to file ' . $to);
+                $fwResult = self::callWithPhpErrorCapture(static function () use ($toHd, $buffer) {
+                    return fwrite($toHd, $buffer);
+                });
+                if ($fwResult === false) {
+                    throw SnapException::fromLastError('Error writing to file ' . $to);
                 }
                 $written += $fwResult;
             }
 
             if ($written != $fromStat['size']) {
-                throw new Exception('Error on file append, written bytes ' . $written . ' expected ' . $fromStat['size']);
+                throw SnapException::fromLastError(
+                    'Error on file append, written bytes ' . $written . ' expected ' . $fromStat['size']
+                );
             }
         } catch (Exception $e) {
             if ($fromHd !== false) {
@@ -517,7 +663,7 @@ class SnapIO
      *
      * @return string
      */
-    public static function fgets($handle, $length)
+    public static function fgets($handle, $length): string
     {
         $line = fgets($handle, $length);
 
@@ -536,7 +682,7 @@ class SnapIO
      *
      * @return void
      */
-    public static function fclose($handle, $exception_on_fail = true)
+    public static function fclose($handle, $exception_on_fail = true): void
     {
         if ((@fclose($handle) === false) && $exception_on_fail) {
             throw new Exception("Error closing file");
@@ -551,7 +697,7 @@ class SnapIO
      *
      * @return void
      */
-    public static function flock($handle, $operation)
+    public static function flock($handle, $operation): void
     {
         if (@flock($handle, $operation) === false) {
             throw new Exception("Error locking file");
@@ -566,7 +712,7 @@ class SnapIO
      *
      * @return int
      */
-    public static function ftell($file_handle)
+    public static function ftell($file_handle): int
     {
         $position = @ftell($file_handle);
 
@@ -586,46 +732,51 @@ class SnapIO
      */
     public static function rrmdir($path)
     {
-        if (is_dir($path)) {
-            if (($dh = opendir($path)) === false) {
-                return false;
-            }
-            while (($object = readdir($dh)) !== false) {
-                if ($object == "." || $object == "..") {
-                    continue;
-                }
-                if (!self::rrmdir($path . "/" . $object)) {
-                    closedir($dh);
-                    return false;
-                }
-            }
-            closedir($dh);
-            return @rmdir($path);
+        if (is_file($path) || is_link($path)) {
+            self::chmod($path, 'u+rw');
+            return @unlink($path);
         } else {
-            if (is_writable($path)) {
-                return @unlink($path);
-            } else {
+            self::chmod($path, 'u+rwx');
+            if (($dh = @opendir($path)) === false) {
                 return false;
+            }
+            try {
+                while (($object = readdir($dh)) !== false) {
+                    if ($object == "." || $object == "..") {
+                        continue;
+                    }
+                    if (!self::rrmdir($path . "/" . $object)) {
+                        return false;
+                    }
+                }
+                return @rmdir($path);
+            } finally {
+                closedir($dh);
             }
         }
     }
 
     /**
-     * Return files size, throw eception on failure
+     * Return file size, or 0 if the file does not exist or its size can't be read
      *
-     * @param string $filename file path
+     * @param string $filename   file path
+     * @param bool   $clearCache whether to clear the stat cache before reading the size
      *
      * @return int
      */
-    public static function filesize($filename)
+    public static function filesize($filename, $clearCache = false): int
     {
-        $file_size = @filesize($filename);
-
-        if ($file_size === false) {
-            throw new Exception("Error retrieving file size of $filename");
+        if (!file_exists($filename)) {
+            return 0;
         }
 
-        return $file_size;
+        if ($clearCache) {
+            clearstatcache(true, $filename);
+        }
+
+        $file_size = filesize($filename);
+
+        return $file_size === false ? 0 : $file_size;
     }
 
     /**
@@ -640,7 +791,7 @@ class SnapIO
      *
      * @return void
      */
-    public static function fseek($handle, $offset, $whence = SEEK_SET)
+    public static function fseek($handle, $offset, $whence = SEEK_SET): void
     {
         $ret_val = @fseek($handle, $offset, $whence);
 
@@ -663,14 +814,29 @@ class SnapIO
     }
 
     /**
+     * Whether the file was last modified at least the given number of seconds ago.
+     * False when the modification time cannot be read.
+     *
+     * @param string $path    file path
+     * @param int    $seconds age threshold in seconds
+     *
+     * @return bool
+     */
+    public static function isOlderThan(string $path, int $seconds): bool
+    {
+        $mtime = self::callWithPhpErrorCapture(static fn() => filemtime($path));
+        return $mtime !== false && $mtime <= time() - $seconds;
+    }
+
+    /**
      * Gets file modification time
      *
      * @param string $filename file path
      *
-     * @return int|false the time the file was last modified, or false on failure.
+     * @return int the time the file was last modified, or false on failure.
      *                   The time is returned as a Unix timestamp, which is suitable for the date function
      */
-    public static function filemtime($filename)
+    public static function filemtime($filename): int
     {
         $mtime = filemtime($filename);
 
@@ -689,7 +855,7 @@ class SnapIO
 
      * @return bool
      */
-    public static function filePutContents($filename, $data)
+    public static function filePutContents($filename, $data): bool
     {
         if (($dirFile = realpath(dirname($filename))) === false) {
             throw new Exception('FILE ERROR: put_content for file ' . $filename . ' failed [realpath fail]');
@@ -708,6 +874,65 @@ class SnapIO
             throw new Exception('FILE ERROR: put_content for file ' . $filename . ' failed [Couldn\'t write data to ' . $realFileName . ']');
         }
         return true;
+    }
+
+    /**
+     * Check whether an error message indicates disk full or quota exhaustion.
+     *
+     * Works with both PHP error strings (error_get_last()) and shell command
+     * output (e.g. zip binary stderr).
+     *
+     * @param string $errorMessage The error text to inspect
+     *
+     * @return bool
+     */
+    public static function isDiskFullError(string $errorMessage): bool
+    {
+        $patterns = [
+            'No space left on device',
+            'quota',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (stripos($errorMessage, $pattern) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Read file contents with retry logic for distributed/NFS filesystems.
+     *
+     * On clustered hosting (e.g. SiteGround), file_exists() may return true from stale NFS metadata cache
+     * while the file is not yet visible for reading. This method retries with clearstatcache() and short
+     * delays to wait for filesystem synchronization.
+     *
+     * Returns false if the file does not exist or cannot be read after all retry attempts.
+     *
+     * @param string $filepath   File path to read
+     * @param int    $retries    Number of retry attempts (default 5)
+     * @param int    $delayMicro Microseconds between retries (default 50000 = 50ms)
+     *
+     * @return string|false File contents, or false if the file does not exist or cannot be read
+     */
+    public static function safeFileGetContents(string $filepath, int $retries = 5, int $delayMicro = 50000)
+    {
+        if (!file_exists($filepath)) {
+            return false;
+        }
+
+        for ($i = 0; $i < $retries; $i++) {
+            $content = @file_get_contents($filepath);
+            if ($content !== false) {
+                return $content;
+            }
+            clearstatcache(true, $filepath);
+            usleep($delayMicro);
+        }
+
+        return false;
     }
 
     /**
@@ -778,43 +1003,43 @@ class SnapIO
                     for ($i = 0; $i < $ugoLen; $i++) {
                         switch ($group[$i]) {
                             case 'u':
-                                $octalGroupMode = $octalGroupMode | $subPerm << 6; // mask xxx000000
-                                $ugoMaskInvert  = $ugoMaskInvert & 077;
+                                $octalGroupMode |= $subPerm << 6; // mask xxx000000
+                                $ugoMaskInvert  &= 077;
                                 break;
                             case 'g':
-                                $octalGroupMode = $octalGroupMode | $subPerm << 3; // mask 000xxx000
-                                $ugoMaskInvert  = $ugoMaskInvert & 0707;
+                                $octalGroupMode |= $subPerm << 3; // mask 000xxx000
+                                $ugoMaskInvert  &= 0707;
                                 break;
                             case 'o':
-                                $octalGroupMode = $octalGroupMode | $subPerm; // mask 000000xxx
-                                $ugoMaskInvert  = $ugoMaskInvert & 0770;
+                                $octalGroupMode |= $subPerm; // mask 000000xxx
+                                $ugoMaskInvert  &= 0770;
                                 break;
                         }
                     }
                     // apply = action
-                    $octalMode = $octalMode & ($ugoMaskInvert | $octalGroupMode);
+                    $octalMode &= $ugoMaskInvert | $octalGroupMode;
                 } else {
                     // generate octal group permsissions
                     for ($i = 0; $i < $ugoLen; $i++) {
                         switch ($group[$i]) {
                             case 'u':
-                                $octalGroupMode = $octalGroupMode | $subPerm << 6; // mask xxx000000
+                                $octalGroupMode |= $subPerm << 6; // mask xxx000000
                                 break;
                             case 'g':
-                                $octalGroupMode = $octalGroupMode | $subPerm << 3; // mask 000xxx000
+                                $octalGroupMode |= $subPerm << 3; // mask 000xxx000
                                 break;
                             case 'o':
-                                $octalGroupMode = $octalGroupMode | $subPerm; // mask 000000xxx
+                                $octalGroupMode |= $subPerm; // mask 000000xxx
                                 break;
                         }
                     }
                     // apply + or - action
                     switch ($action) {
                         case '+':
-                            $octalMode = $octalMode | $octalGroupMode;
+                            $octalMode |= $octalGroupMode;
                             break;
                         case '-':
-                            $octalMode = $octalMode & ~$octalGroupMode;
+                            $octalMode &= ~$octalGroupMode;
                             break;
                     }
                 }
@@ -934,7 +1159,6 @@ class SnapIO
             $fileContent = <<<INDEXPHP
 <?php
 // silence
-
 INDEXPHP;
             return (file_put_contents($path, $fileContent) !== false);
         }
@@ -942,8 +1166,9 @@ INDEXPHP;
         return true;
     }
 
+
     /**
-     * from wordpress function wp_is_stream
+     * from WordPress function wp_is_stream
      *
      * @param string $path The resource path or URL.
      *
@@ -964,7 +1189,7 @@ INDEXPHP;
     }
 
     /**
-     * From Wordpress function: wp_mkdir_p
+     * From WordPress function: wp_mkdir_p
      *
      * Recursive directory creation based on full path.
      *
@@ -980,7 +1205,10 @@ INDEXPHP;
 
         // Strip the protocol.
         if (self::isStream($target)) {
-            list( $wrapper, $target ) = explode('://', $target, 2);
+            [
+                $wrapper,
+                $target,
+            ] = explode('://', $target, 2);
         }
 
         // From php.net/mkdir user contributed notes.
@@ -1011,18 +1239,15 @@ INDEXPHP;
         }
 
         // Get the permission bits.
-        if ($stat = @stat($target_parent)) {
-            $dir_perms = $stat['mode'] & 0007777;
-        } else {
-            $dir_perms = 0777;
-        }
+        $stat      = stat($target_parent);
+        $dir_perms = $stat ? $stat['mode'] & 0007777 : 0777;
 
         if (@mkdir($target, $dir_perms, true)) {
             /*
              * If a umask is set that modifies $dir_perms, we'll have to re-set
              * the $dir_perms correctly with chmod()
              */
-            if ($dir_perms != ( $dir_perms & ~umask() )) {
+            if ($dir_perms != ($dir_perms & ~umask())) {
                 $folder_parts = explode('/', substr($target, strlen($target_parent) + 1));
                 for ($i = 1, $c = count($folder_parts); $i <= $c; $i++) {
                     @chmod($target_parent . '/' . implode('/', array_slice($folder_parts, 0, $i)), $dir_perms);
@@ -1041,11 +1266,17 @@ INDEXPHP;
      * @param string $path     file path
      * @param string $mainPath main path
      * @param bool   $real     if true check real path
+     * @param bool   $fullPath if true return the full original path if isn't a sub path of main path
      *
-     * @return bool|string  false if path isn't a sub path of main path or return the relative path
+     * @return ($fullPath is true ? string : false|string) Returns the relative path if path is a sub path of main path,
+     *         if fullPath is true returns the full path otherwise returns false
      */
-    public static function getRelativePath($path, $mainPath, $real = false)
-    {
+    public static function getRelativePath(
+        string $path,
+        string $mainPath,
+        bool $real = false,
+        bool $fullPath = false
+    ) {
         if (strlen($mainPath) == 0) {
             return ltrim(self::safePathUntrailingslashit($path, $real), '/');
         }
@@ -1058,8 +1289,20 @@ INDEXPHP;
         } elseif (strpos($safePath, self::trailingslashit($safeMainPath)) === 0) {
             return ltrim(substr($safePath, strlen($safeMainPath)), '/');
         } else {
-            return false;
+            return $fullPath ? ltrim($safePath, '/') : false;
         }
+    }
+
+    /**
+     * True if the path contains a ".." segment
+     *
+     * @param string $path file path, absolute or relative
+     *
+     * @return bool
+     */
+    public static function hasTraversalSegment(string $path): bool
+    {
+        return preg_match('#(?:^|/)\.\.(?:/|$)#', str_replace('\\', '/', $path)) === 1;
     }
 
     /**
@@ -1069,12 +1312,13 @@ INDEXPHP;
      * @param string  $mainPath     main path
      * @param boolean $reverseCheck if true check if path is child of mainpath and  if mainPash is child of path
      * @param boolean $trueIfEquals if paths are equals and is true return true else false
+     * @param bool    $real         if true check real path
      *
      * @return boolean
      */
-    public static function isChildPath($path, $mainPath, $reverseCheck = false, $trueIfEquals = true)
+    public static function isChildPath($path, $mainPath, $reverseCheck = false, $trueIfEquals = true, $real = false)
     {
-        if (strlen($mainPath) == 0) {
+        if ($trueIfEquals && strlen($mainPath) == 0) {
             return true;
         }
 
@@ -1082,8 +1326,8 @@ INDEXPHP;
             return true;
         }
 
-        $safePath     = self::safePathUntrailingslashit($path);
-        $safeMainPath = self::safePathUntrailingslashit($mainPath);
+        $safePath     = self::safePathUntrailingslashit($path, $real);
+        $safeMainPath = self::safePathUntrailingslashit($mainPath, $real);
 
         if ($safePath === $safeMainPath) {
             return $trueIfEquals;
@@ -1116,7 +1360,7 @@ INDEXPHP;
             $function = 'usort';
         }
 
-        $function($paths, function ($a, $b) use ($childsFirst) {
+        $function($paths, function ($a, $b) use ($childsFirst): int {
             $lenA = count(preg_split('/[\\\\\/]+/', $a));
             $lenB = count(preg_split('/[\\\\\/]+/', $b));
             if ($lenA === $lenB) {
@@ -1141,8 +1385,11 @@ INDEXPHP;
     {
         $wrapper = '';
         if (self::isStream($path)) {
-            list( $wrapper, $path ) = explode('://', $path, 2);
-            $wrapper               .= '://';
+            [
+                $wrapper,
+                $path,
+            ]         = explode('://', $path, 2);
+            $wrapper .= '://';
         }
 
         // Standardise all paths to use /
@@ -1169,17 +1416,14 @@ INDEXPHP;
      *
      * @return string common parent path
      */
-    public static function getCommonPath($paths = array())
+    public static function getCommonPath($paths = []): string
     {
         if (empty($paths)) {
             return '';
-        } if (!is_array($paths)) {
-            $paths = array($paths);
-        } else {
-            $paths = array_values($paths);
         }
+        $paths = !is_array($paths) ? [$paths] : array_values($paths);
 
-        $pathAssoc    = array();
+        $pathAssoc    = [];
         $numPaths     = count($paths);
         $minPathCouts = PHP_INT_MAX;
 
@@ -1215,9 +1459,25 @@ INDEXPHP;
      *
      * @return string
      */
-    public static function removeRootPath($path)
+    public static function removeRootPath($path): ?string
     {
-        return preg_replace('/^(?:[A-Za-z]:)?[\/](.*)/', '$1', $path);
+        return (string) preg_replace('/^(?:[A-Za-z]:)?[\/](.*)/', '$1', $path);
+    }
+
+    /**
+     * Checks if a path is a filesystem root ("/", "\") or a Windows drive root ("C:", "C:\", "C://").
+     *
+     * @param string $path path to check
+     *
+     * @return bool
+     */
+    public static function isRootPath($path): bool
+    {
+        if (!is_string($path)) {
+            return false;
+        }
+        $path = trim($path);
+        return $path === '/' || $path === '\\' || preg_match('#^[a-zA-Z]:[/\\\\]*$#', $path) === 1;
     }
 
     /**
@@ -1228,7 +1488,7 @@ INDEXPHP;
      *
      * @return false|string The last N parts of the file, flse on failure
      */
-    public static function tailFile($filepath, $lines = 2)
+    public static function tailFile(string $filepath, int $lines = 2)
     {
         // Open file
         $f = @fopen($filepath, "rb");
@@ -1277,66 +1537,36 @@ INDEXPHP;
     }
 
     /**
-     * @param string $filepath     path to file to be downloaded
-     * @param string $downloadName name to be downloaded as
-     * @param int    $bufferSize   file chunks to be served
-     * @param bool   $limitRate    if set to true the download rate will be limited to $bufferSize/seconds
+     * Get real path of readlink
      *
-     * @return void
+     * @param string $link Path to the symbolic link
+     *
+     * @return false|string The resolved path
      */
-    public static function serveFileForDownload($filepath, $downloadName, $bufferSize = 0, $limitRate = false)
+    public static function readlinkReal($link)
     {
-        // Process download
-        if (!file_exists($filepath)) {
-            throw new Exception("File does not exist!");
+        if (!is_link($link) || ($target = readlink($link)) === false) {
+            return false;
         }
 
-        if (!is_file($filepath)) {
-            throw new Exception("'$filepath' is not a file!");
-        }
+        $isAbsolute = false;
 
-        // Clean output buffers
-        SnapUtil::obCleanAll(false);
-
-        header('Content-Description: File Transfer');
-        header('Content-Type: application/octet-stream');
-        header('Content-Disposition: attachment; filename="' . $downloadName . '"');
-        header('Expires: 0');
-        header('Cache-Control: must-revalidate');
-        header('Pragma: public');
-        header('Content-Length: ' . filesize($filepath));
-        flush(); // Flush system output buffer
-
-        if ($bufferSize <= 0) {
-            readfile($filepath);
-            exit;
-        }
-
-        $fp = @fopen($filepath, 'r');
-        if (!is_resource($fp)) {
-            throw new Exception('Fail to open the file ' . $filepath);
-        }
-
-        while (!feof($fp) && ($data = fread($fp, $bufferSize)) !== false) {
-            echo $data;
-
-            if ($limitRate) {
-                sleep(1);
+        if (SnapServer::isWindows()) {
+            if (preg_match('/^[A-Za-z]:[\\\\\/]/', $target)) {
+                $isAbsolute = true;
+            }
+        } else {
+            if (strpos($target, '/') === 0) {
+                $isAbsolute = true;
             }
         }
-        @fclose($fp);
-        exit;
-    }
 
-    /**
-     * Serve error 500 and exit
-     *
-     * @return never
-     */
-    public static function serverError500()
-    {
-        header('HTTP/1.1 500 Internal Server Error');
-        exit;
+        if (!$isAbsolute) {
+            $linkDir = dirname($link);
+            $target  = realpath($linkDir . '/' . $target);
+        }
+
+        return realpath($target);
     }
 
     /**
@@ -1346,7 +1576,7 @@ INDEXPHP;
      * @param int    $n         Number of lines to get
      * @param int    $charLimit Number of chars to include in each line
      *
-     * @return bool|string[] Last $n lines of file
+     * @return string[]|false Last $n lines of file or false on failure
      */
     public static function getLastLinesOfFile($path, $n, $charLimit = null)
     {
@@ -1358,13 +1588,20 @@ INDEXPHP;
             return false;
         }
 
-        $result      = array();
+        $result      = [];
         $pos         = -1;
         $currentLine = '';
         $counter     = 0;
+        $size        = filesize($path);
 
         while ($counter < $n && -1 !== fseek($handle, $pos, SEEK_END)) {
             $char = fgetc($handle);
+            //handling case of reaching the beginning of the file
+            if (abs($pos) === $size) {
+                $currentLine = $char . $currentLine;
+                $char        = PHP_EOL;
+            }
+
             if (PHP_EOL == $char) {
                 $trimmedValue = trim($currentLine);
                 if (is_null($charLimit)) {
@@ -1414,11 +1651,11 @@ INDEXPHP;
      *
      * @return string[] paths lists
      */
-    public static function regexGlob($dir, $options)
+    public static function regexGlob($dir, $options = []): array
     {
-        $result = array();
+        $result = [];
 
-        self::regexGlobCallback($dir, function ($path) use (&$result) {
+        self::regexGlobCallback($dir, function ($path) use (&$result): void {
             $result[] = $path;
         }, $options);
 
@@ -1437,21 +1674,21 @@ INDEXPHP;
      * childFirst: bool                 if false is parsed parent folters first or child folders first
      * symlinks: string[]               list a symblink parsed
      *
-     * @param string                              $dir      dir to scan
-     * @param callable                            $callback callback function
-     * @param array<string, bool|string|string[]> $options  array{
-     *                                                      regexFile?: bool|string,
-     *                                                      regexFolder?: bool|string,
-     *                                                      checkFullPath?: bool,
-     *                                                      recursive?: bool,
-     *                                                      invert?: bool,
-     *                                                      childFirst?: bool,
-     *                                                      symlinks?: string[]
-     *                                                      }
+     * @param string              $dir      dir to scan
+     * @param callable            $callback callback function
+     * @param array<string,mixed> $options  array{
+     *                                      regexFile?: bool|string,
+     *                                      regexFolder?: bool|string,
+     *                                      checkFullPath?: bool,
+     *                                      recursive?: bool,
+     *                                      invert?: bool,
+     *                                      childFirst?: bool,
+     *                                      symlinks?: string[]
+     *                                      }
      *
      * @return boolean Returns true on success or false on failure.
      */
-    protected static function regexGlobCallbackPrivate($dir, $callback, &$options)
+    protected static function regexGlobCallbackPrivate($dir, $callback, &$options): bool
     {
         if (($dh = opendir($dir)) == false) {
             return false;
@@ -1535,7 +1772,7 @@ INDEXPHP;
      *
      * @return boolean Returns true on success or false on failure.
      */
-    public static function regexGlobCallback($dir, $callback, $options = array())
+    public static function regexGlobCallback($dir, $callback, $options = [])
     {
         $dir = self::safePathTrailingslashit($dir);
 
@@ -1547,26 +1784,26 @@ INDEXPHP;
             return false;
         }
 
-        $options = array_merge(array(
+        $options = array_merge([
             'regexFile'     => true,
             'regexFolder'   => true,
             'checkFullPath' => false,
             'recursive'     => false,
             'invert'        => false,
             'childFirst'    => false,
-            'symlinks'      => array()
-            ), (array) $options);
+            'symlinks'      => [],
+        ], (array) $options);
 
         if (is_bool($options['regexFile'])) {
             $options['regexFile'] = ($options['regexFile'] xor $options['invert']);
         } elseif (is_scalar($options['regexFile'])) {
-            $options['regexFile'] = array($options['regexFile']);
+            $options['regexFile'] = [$options['regexFile']];
         }
 
         if (is_bool($options['regexFolder'])) {
             $options['regexFolder'] = ($options['regexFolder'] xor $options['invert']);
         } elseif (is_scalar($options['regexFolder'])) {
-            $options['regexFolder'] = array($options['regexFolder']);
+            $options['regexFolder'] = [$options['regexFolder']];
         }
 
         // optimizization
@@ -1577,6 +1814,36 @@ INDEXPHP;
     }
 
     /**
+     * Check if folder is empty
+     *
+     * @param string $dir folder path
+     *
+     * @return bool true if folder is empty or false in case of error or isn't empty
+     */
+    public static function isDirEmpty($dir): bool
+    {
+        if (!is_dir($dir)) {
+            return false;
+        }
+
+        if (($dh = opendir($dir)) == false) {
+            return false;
+        }
+
+        while (($elem = readdir($dh)) !== false) {
+            if ($elem === '.' || $elem === '..') {
+                continue;
+            }
+
+            closedir($dh);
+            return false;
+        }
+        closedir($dh);
+
+        return true;
+    }
+
+    /**
      * Empty passed dir
      *
      * @param string   $dir    folder to empty
@@ -1584,7 +1851,7 @@ INDEXPHP;
      *
      * @return boolean Returns true on success or false on failure.
      */
-    public static function emptyDir($dir, $filter = array())
+    public static function emptyDir($dir, $filter = []): bool
     {
         $dir = self::safePathTrailingslashit($dir);
         if (!is_dir($dir) || !is_readable($dir)) {
@@ -1595,7 +1862,7 @@ INDEXPHP;
             return false;
         }
 
-        $listToDelete = array();
+        $listToDelete = [];
 
         while (($elem = readdir($dh)) !== false) {
             if ($elem === '.' || $elem === '..') {
@@ -1631,55 +1898,12 @@ INDEXPHP;
     {
         $path = self::safePathUntrailingslashit($path, true);
 
-        if (!self::isOpenBaseDirEnabled()) {
+        if (!SnapOpenBasedir::isEnabled()) {
             $parts = explode("/", $path);
             return $parts[0] . "/";
         } else {
-            return self::getOpenBaseDirRootOfPath($path);
+            return SnapOpenBasedir::getRootOfPath($path);
         }
-    }
-
-    /**
-     * Check if php.ini open_basedir is enabled
-     *
-     * @return bool true if open_basedir is set
-     */
-    public static function isOpenBaseDirEnabled()
-    {
-        $iniVar = ini_get("open_basedir");
-        return (strlen($iniVar) > 0);
-    }
-
-    /**
-     * Get open_basedir list paths
-     *
-     * @return string[] Paths contained in the open_basedir setting. Empty array if the setting is not enabled.
-     */
-    public static function getOpenBaseDirPaths()
-    {
-        if (!($openBase = ini_get("open_basedir"))) {
-            return array();
-        }
-        return explode(PATH_SEPARATOR, $openBase);
-    }
-
-    /**
-     * Get open base dir root path of path
-     *
-     * @param string $path file path
-     *
-     * @return bool|string Path to the base dir of $path if it exists, otherwise false
-     */
-    public static function getOpenBaseDirRootOfPath($path)
-    {
-        foreach (self::getOpenBaseDirPaths() as $allowedPath) {
-            $allowedPath = $allowedPath !== "/" ? self::safePathUntrailingslashit($allowedPath) : "/";
-            if (strpos($path, $allowedPath) === 0) {
-                return $allowedPath;
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -1690,7 +1914,7 @@ INDEXPHP;
      *
      * @return string
      */
-    public static function getRelativeDirname($path)
+    public static function getRelativeDirname($path): string
     {
         if (preg_match('/^(.*)[\/]+/', $path, $matches) !== 1) {
             return '';
@@ -1706,7 +1930,7 @@ INDEXPHP;
      *
      * @return boolean // return false if folder don't have read write permission on folder
      */
-    public static function dirAddFullPermsAndCheckResult($path)
+    public static function dirAddFullPermsAndCheckResult($path): bool
     {
         if (!SnapIO::chmod($path, 'u+rwx')) {
             return false;
@@ -1716,7 +1940,7 @@ INDEXPHP;
             return false;
         }
 
-        if (function_exists('is_executable') && !is_executable($path) && !SnapOS::isWindows()) {
+        if (function_exists('is_executable') && !is_executable($path) && !SnapServer::isWindows()) {
             return false;
         }
 
@@ -1730,7 +1954,7 @@ INDEXPHP;
      *
      * @return boolean // return false if folder don't have read write permission on folder
      */
-    public static function fileAddFullPermsAndCheckResult($path)
+    public static function fileAddFullPermsAndCheckResult($path): bool
     {
         if (!SnapIO::chmod($path, 'u+rw')) {
             return false;
@@ -1750,7 +1974,7 @@ INDEXPHP;
      *
      * @return int rturn number of bytes or -1 on failure
      */
-    public static function diskTotalSpace($directory)
+    public static function diskTotalSpace($directory): int
     {
         if (!function_exists('disk_total_space')) {
             return -1;
@@ -1770,7 +1994,7 @@ INDEXPHP;
      *
      * @return int rturn number of bytes or -1 on failure
      */
-    public static function diskFreeSpace($directory)
+    public static function diskFreeSpace($directory): int
     {
         if (!function_exists('disk_free_space')) {
             return -1;

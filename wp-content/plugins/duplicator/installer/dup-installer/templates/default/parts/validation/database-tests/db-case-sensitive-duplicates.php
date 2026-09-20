@@ -1,9 +1,6 @@
 <?php
 
-/**
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 

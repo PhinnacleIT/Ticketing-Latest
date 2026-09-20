@@ -1,11 +1,5 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
- */
-
 namespace Duplicator\Libs\Snap;
 
 use Error;
@@ -14,9 +8,9 @@ use Exception;
 class SnapLog
 {
     /** @var ?string */
-    public static $logFilepath = null;
+    public static $logFilepath;
     /** @var ?resource */
-    public static $logHandle = null;
+    public static $logHandle;
 
     /**
      * Init log file
@@ -25,13 +19,13 @@ class SnapLog
      *
      * @return void
      */
-    public static function init($logFilepath)
+    public static function init($logFilepath): void
     {
         self::$logFilepath = $logFilepath;
     }
 
     /**
-     * write in PHP error log with DUP prefix
+     * Write a static message to the PHP error log with the plugin prefix. No paths, hashes or exception text.
      *
      * @param string $message error message
      * @param int    $type    error type
@@ -42,11 +36,7 @@ class SnapLog
      */
     public static function phpErr($message, $type = 0)
     {
-        if (function_exists('error_log')) {
-            return error_log('DUP:' . $message, $type);
-        } else {
-            return true;
-        }
+        return SnapUtil::errorLog('Duplicator: ' . $message, $type);
     }
 
     /**
@@ -54,7 +44,7 @@ class SnapLog
      *
      * @return void
      */
-    public static function clearLog()
+    public static function clearLog(): void
     {
         if (file_exists(self::$logFilepath)) {
             if (self::$logHandle !== null) {
@@ -75,7 +65,7 @@ class SnapLog
      *
      * @return void
      */
-    public static function logObject($s, $o, $flush = false)
+    public static function logObject($s, $o, $flush = false): void
     {
         self::log($s, $flush);
         self::log(print_r($o, true), $flush);
@@ -90,22 +80,24 @@ class SnapLog
      *
      * @return void
      */
-    public static function log($s, $flush = false, $callingFunctionOverride = null)
+    public static function log($s, $flush = false, $callingFunctionOverride = null): void
     {
-        //   echo "{$s}<br/>";
-        $lfp = self::$logFilepath;
-        //  echo "logging $s to {$lfp}<br/>";
         if (self::$logFilepath === null) {
             throw new Exception('Logging not initialized');
         }
 
-        if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
-            $timepart = $_SERVER['REQUEST_TIME_FLOAT'];
+        $requestTimeFloat = (float) SnapUtil::sanitizeTextInput(INPUT_SERVER, 'REQUEST_TIME_FLOAT', '');
+        if ($requestTimeFloat > 0.0) {
+            $timepart = $requestTimeFloat;
         } else {
-            $timepart = $_SERVER['REQUEST_TIME'];
+            $timepart = SnapUtil::sanitizeIntInput(INPUT_SERVER, 'REQUEST_TIME', -1);
+            $timepart = $timepart > 0 ? $timepart : '';
         }
 
-        $thread_id = sprintf("%08x", abs(crc32($_SERVER['REMOTE_ADDR'] . $timepart . $_SERVER['REMOTE_PORT'])));
+        $remoteAddr = SnapUtil::sanitizeTextInput(INPUT_SERVER, 'REMOTE_ADDR', '');
+        $remotePort = SnapUtil::sanitizeIntInput(INPUT_SERVER, 'REMOTE_PORT', -1);
+        $remotePort = $remotePort > 0 ? $remotePort : '';
+        $thread_id  = sprintf("%08x", abs(crc32($remoteAddr . $timepart . $remotePort)));
 
         $s = $thread_id . ' ' . date('h:i:s') . ":$s";
 
@@ -132,7 +124,7 @@ class SnapLog
      *
      * @return string
      */
-    public static function v2str($var, $checkCallable = false)
+    public static function v2str($var, $checkCallable = false): string
     {
         if ($checkCallable && is_callable($var)) {
             return '(callable) ' . print_r($var, true);
@@ -160,11 +152,12 @@ class SnapLog
     /**
      * Get backtrace of calling line
      *
-     * @param string $message message
+     * @param string $message   message
+     * @param int    $fromLevel level to start
      *
      * @return string
      */
-    public static function getCurrentbacktrace($message = 'getCurrentLineTrace')
+    public static function getCurrentbacktrace(string $message = 'getCurrentLineTrace', int $fromLevel = 0): string
     {
         $callers = debug_backtrace();
         array_shift($callers);
@@ -172,8 +165,7 @@ class SnapLog
         $line    = $callers[0]['line'];
         $result  = 'BACKTRACE: ' . $message . "\n";
         $result .= "\t[" . $file . ':' . $line . "]\n";
-        $result .= self::traceToString($callers, 1, true);
-        return $result;
+        return $result . self::traceToString($callers, $fromLevel, true);
     }
 
     /**
@@ -185,7 +177,7 @@ class SnapLog
      *
      * @return string
      */
-    public static function traceToString($callers, $fromLevel = 0, $tab = false)
+    public static function traceToString($callers, $fromLevel = 0, $tab = false): string
     {
         $result = '';
         for ($i = $fromLevel; $i < count($callers); $i++) {
@@ -214,10 +206,10 @@ class SnapLog
      *
      * @return string
      */
-    public static function getTextException($e, $displayMessage = true)
+    public static function getTextException($e, $displayMessage = true): string
     {
         $result = ($displayMessage ? $e->getMessage() . "\n" : '');
         return $result . "FILE:" . $e->getFile() . '[' . $e->getLIne() . "]\n" .
-        "TRACE:\n" . $e->getTraceAsString();
+            "TRACE:\n" . $e->getTraceAsString();
     }
 }

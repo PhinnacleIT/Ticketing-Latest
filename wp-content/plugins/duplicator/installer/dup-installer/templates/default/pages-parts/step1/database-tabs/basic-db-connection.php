@@ -1,18 +1,19 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
 
-$state         = DUPX_InstallerState::getInstance();
+$state         = InstState::getInstance();
 $paramsManager = PrmMng::getInstance();
 
-if ($state->getMode() === DUPX_InstallerState::MODE_OVR_INSTALL && $paramsManager->getValue(PrmMng::PARAM_DB_DISPLAY_OVERWIRE_WARNING)) {
+if (
+    $state->getMode() === InstState::MODE_OVR_INSTALL &&
+    $paramsManager->getValue(PrmMng::PARAM_DB_DISPLAY_OVERWIRE_WARNING)
+) {
     $displayOverwrite = true;
 } else {
     $displayOverwrite = false;
@@ -23,10 +24,10 @@ if ($state->getMode() === DUPX_InstallerState::MODE_OVR_INSTALL && $paramsManage
         <i class="fas fa-database"></i> Database Connection
     </div>
     <?php if ($displayOverwrite) : ?>
-        <div id="s2-db-basic-overwrite">
+        <div id="s2-db-basic-overwrite" class="requires-db-hide">
             <b style='color:maroon'>Ready to connect to existing sites database? </b><br/>
             <div class="warn-text">
-                The existing site's database settings are ready to be applied below. 
+                The existing sites database settings are ready to be applied below. 
                 If you want to connect to this database and replace all its data then
                 click the 'Apply button' to set the placeholder values. 
                 To use different database settings click the 'Reset button' to clear and set new values.

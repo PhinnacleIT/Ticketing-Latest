@@ -2,18 +2,21 @@
 
 namespace Duplicator\Utils\Help;
 
-use DUP_LITE_Plugin_Upgrade;
-use DUP_Log;
-use DUP_Settings;
+use Duplicator\Utils\Logging\DupLog;
 use Duplicator\Controllers\HelpPageController;
+use Duplicator\Controllers\PackagesPageController;
+use Duplicator\Controllers\StoragePageController;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapJson;
 use Duplicator\Core\Controllers\ControllersManager;
+use Duplicator\Libs\Snap\SnapUtil;
+use Duplicator\Utils\Crypt\CryptBlowfish;
 use Duplicator\Utils\ExpireOptions;
 
 /*
  * Dynamic Help from site documentation
  */
+
 class Help
 {
     /** @var string The doc article endpoint */
@@ -38,7 +41,7 @@ class Help
     const PER_PAGE = 100;
 
     /** @var string Cron hook */
-    const DOCS_EXPIRE_OPT_KEY = 'duplicator_help_docs_expire';
+    const DOCS_EXPIRE_OPT_KEY = 'dupli_opt_help_docs_expire';
 
     /** @var Article[] The articles */
     private $articles = [];
@@ -50,7 +53,7 @@ class Help
     private $tags = [];
 
     /** @var self The instance */
-    private static $instance = null;
+    private static $instance;
 
     /**
      * Init
@@ -87,9 +90,9 @@ class Help
      *
      * @return string The URL with tag
      */
-    public static function getHelpPageUrl()
+    public static function getHelpPageUrl(): string
     {
-        return HelpPageController::getHelpLink() . '&tag=' . self::getCurrentPageTag();
+        return HelpPageController::getInstance()->getPageUrl() . '&tag=' . self::getCurrentPageTag();
     }
 
     /**
@@ -99,11 +102,9 @@ class Help
      *
      * @return Article[] The articles
      */
-    public function getArticlesByCategory($categoryId)
+    public function getArticlesByCategory($categoryId): array
     {
-        return array_filter($this->articles, function (Article $article) use ($categoryId) {
-            return in_array($categoryId, $article->getCategories());
-        });
+        return array_filter($this->articles, fn(Article $article): bool => in_array($categoryId, $article->getCategories()));
     }
 
     /**
@@ -113,28 +114,26 @@ class Help
      *
      * @return Article[] The articles
      */
-    public function getArticlesByTag($tag)
+    public function getArticlesByTag($tag): array
     {
         if ($tag === '') {
             return [];
         }
 
-        return array_filter($this->articles, function (Article $article) use ($tag) {
-            return in_array($tag, $article->getTags());
-        });
+        return array_filter($this->articles, fn(Article $article): bool => in_array($tag, $article->getTags()));
     }
 
     /**
-     * Get top level categories.
-     * E.g. categories without parents & with children or articles
+     * Get all categories
      *
      * @return Category[] The categories
      */
-    public function getTopLevelCategories()
+    public function getTopLevelCategories(): array
     {
-        return array_filter($this->categories, function (Category $category) {
-            return $category->getParent() === null && (count($category->getChildren()) > 0 || $category->getArticleCount() > 0);
-        });
+        return array_filter(
+            $this->categories,
+            fn(Category $category): bool => $category->getParent() === null && (count($category->getChildren()) > 0 || $category->getArticleCount() > 0)
+        );
     }
 
     /**
@@ -142,7 +141,7 @@ class Help
      *
      * @return array{articles: mixed[], categories: mixed[], tags: mixed[]}|array<mixed> The data
      */
-    private function getDataFromApi()
+    private function getDataFromApi(): array
     {
         $categories = $this->fetchDataFromEndpoint(
             self::CATEGORY_ENDPOINT,
@@ -177,7 +176,7 @@ class Help
         );
 
         if ($categories === [] || $articles === [] || $tags === []) {
-            DUP_Log::Trace('Failed to load from API. No data.');
+            DupLog::trace('Failed to load from API. No data.');
             return [];
         }
 
@@ -197,7 +196,7 @@ class Help
      *
      * @return array<mixed> The data
      */
-    private function fetchDataFromEndpoint($endpoint, $limit, $fields = [])
+    private function fetchDataFromEndpoint(string $endpoint, int $limit, array $fields = []): array
     {
         $result      = [];
         $endpointUrl = $endpoint . '?per_page=' . self::PER_PAGE;
@@ -213,20 +212,20 @@ class Help
                 ['timeout' => 15]
             );
             if (is_wp_error($response)) {
-                DUP_Log::Trace("Failed to load from API: {$endpointUrl}");
-                DUP_Log::Trace($response->get_error_message());
+                DupLog::trace("Failed to load from API: {$endpointUrl}");
+                DupLog::trace($response->get_error_message());
                 return [];
             }
 
             $code = wp_remote_retrieve_response_code($response);
             if ($code !== 200) {
-                DUP_Log::Trace("Failed to load from API: {$endpointUrl}, code: {$code}");
+                DupLog::trace("Failed to load from API: {$endpointUrl}, code: {$code}");
                 return [];
             }
 
             $body = wp_remote_retrieve_body($response);
             if (($data = json_decode($body, true)) === null) {
-                DUP_Log::Trace("Failed to decode response: {$body}");
+                DupLog::trace("Failed to decode response: {$body}");
                 return [];
             }
 
@@ -236,9 +235,7 @@ class Help
                 break;
             }
         }
-
-        $result = array_combine(array_column($result, 'id'), $result);
-        return $result;
+        return array_combine(array_column($result, 'id'), $result);
     }
 
     /**
@@ -246,45 +243,42 @@ class Help
      *
      * @return string The tag
      */
-    private static function getCurrentPageTag()
+    private static function getCurrentPageTag(): string
     {
-        if (!isset($_GET['page'])) {
+        $levels    = ControllersManager::getInstance()->getMenuLevels();
+        $page      = $levels[ControllersManager::QUERY_STRING_MENU_KEY_L1];
+        $tab       = $levels[ControllersManager::QUERY_STRING_MENU_KEY_L2];
+        $innerPage = SnapUtil::sanitizeTextInput(SnapUtil::INPUT_REQUEST, ControllersManager::QUERY_STRING_INNER_PAGE, '');
+
+        if ($page === '') {
             return '';
         }
 
-        $page      = $_GET['page'];
-        $tab       = isset($_GET['tab']) ? $_GET['tab'] : '';
-        $innerPage = isset($_GET['inner_page']) ? $_GET['inner_page'] : '';
-
         switch ($page) {
             case ControllersManager::PACKAGES_SUBMENU_SLUG:
-                if ($innerPage === 'new1') {
+                if ($innerPage === PackagesPageController::LIST_INNER_PAGE_NEW_STEP1) {
                     return 'backup_step_1';
-                } elseif ($tab === 'new2') {
+                } elseif ($innerPage === PackagesPageController::LIST_INNER_PAGE_NEW_STEP2) {
                     return 'backup_step_2';
-                } elseif ($tab === 'new3') {
-                    return 'backup_step_3';
                 }
 
                 return 'backups';
-            case ControllersManager::IMPORT_SUBMENU_SLUG:
-                return 'import';
-            case ControllersManager::SCHEDULES_SUBMENU_SLUG:
-                return 'schedules';
             case ControllersManager::STORAGE_SUBMENU_SLUG:
-                return 'storages';
-            case ControllersManager::TOOLS_SUBMENU_SLUG:
-                if ($tab === 'templates') {
-                    return 'templates';
-                } elseif ($tab === 'recovery') {
-                    return 'recovery';
+                if ($innerPage === StoragePageController::INNER_PAGE_EDIT) {
+                    return 'storage_edit';
                 }
 
-                return 'tools';
+                return 'storages';
+            case ControllersManager::TOOLS_SUBMENU_SLUG:
+                return apply_filters('duplicator_help_tools_context', 'tools', $tab, $innerPage);
             case ControllersManager::SETTINGS_SUBMENU_SLUG:
                 return 'settings';
             default:
-                DUP_Log::Trace("No tag for page.");
+                $context = apply_filters('duplicator_help_page_context', '', $page, $innerPage);
+                if ($context !== '') {
+                    return $context;
+                }
+                DupLog::trace("No tag for page.");
         }
 
         return '';
@@ -295,10 +289,9 @@ class Help
      *
      * @return string The cache path
      */
-    private static function getCacheFilePath()
+    private static function getCacheFilePath(): string
     {
-        $installInfo = DUP_LITE_Plugin_Upgrade::getInstallInfo();
-        return DUP_Settings::getSsdirPath() . '/cache_' . md5($installInfo['time']) . '/duplicator_help_cache.json';
+        return DUPLICATOR_SSDIR_PATH . '/cache_' . md5(CryptBlowfish::getDefaultKey()) . '/dupli_help_cache.json';
     }
 
     /**
@@ -308,10 +301,10 @@ class Help
      *
      * @return bool True if set
      */
-    private function setFromArray($data)
+    private function setFromArray($data): bool
     {
         if (!isset($data['articles']) || !isset($data['categories']) || !isset($data['tags'])) {
-            DUP_Log::Trace("Invalid data.");
+            DupLog::trace("Invalid data.");
             return false;
         }
 
@@ -345,9 +338,7 @@ class Help
                 $article['title']['rendered'],
                 $article['link'],
                 $article['ht-kb-category'],
-                array_map(function ($tagId) {
-                    return $this->tags[$tagId];
-                }, $article['ht-kb-tag'])
+                array_map(fn($tagId) => $this->tags[$tagId], $article['ht-kb-tag'])
             );
         }
 
@@ -362,17 +353,17 @@ class Help
     private function loadData()
     {
         if (!file_exists(self::getCacheFilePath())) {
-            DUP_Log::Trace("Cache file does not exist: " . self::getCacheFilePath());
+            DupLog::trace("Cache file does not exist: " . self::getCacheFilePath());
             return false;
         }
 
         if (($contents = file_get_contents(self::getCacheFilePath())) === false) {
-            DUP_Log::Trace("Failed to read cache file: " . self::getCacheFilePath());
+            DupLog::trace("Failed to read cache file: " . self::getCacheFilePath());
             return false;
         }
 
         if (($data = json_decode($contents, true)) === null) {
-            DUP_Log::Trace("Failed to decode cache file: " . self::getCacheFilePath());
+            DupLog::trace("Failed to decode cache file: " . self::getCacheFilePath());
             return false;
         }
 
@@ -387,24 +378,24 @@ class Help
     public function updateData()
     {
         if (($data = $this->getDataFromApi()) === []) {
-            DUP_Log::Trace("Failed to load data from API.");
+            DupLog::trace("Failed to load data from API.");
             return false;
         }
 
         $cachePath = self::getCacheFilePath();
         $cacheDir  = dirname($cachePath);
         if (!file_exists($cacheDir) && !SnapIO::mkdir($cacheDir, 0755, true)) {
-            DUP_Log::Trace("Failed to create cache directory: {$cacheDir}");
+            DupLog::trace("Failed to create cache directory: {$cacheDir}");
             return false;
         }
 
         if (($encoded = SnapJson::jsonEncode($data)) === false) {
-            DUP_Log::Trace("Failed to encode cache data.");
+            DupLog::trace("Failed to encode cache data.");
             return false;
         }
 
         if (file_put_contents(self::getCacheFilePath(), $encoded) === false) {
-            DUP_Log::Trace("Failed to write cache file: {$cachePath}");
+            DupLog::trace("Failed to write cache file: {$cachePath}");
             return false;
         }
 

@@ -7,25 +7,30 @@
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
  *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
 
 class DUPX_Validation_test_recovery extends DUPX_Validation_abstract_item
 {
-    protected $importSiteInfo      = array();
-    protected $recoveryPage        = false;
-    protected $importPage          = false;
+    /** @var array<string, mixed> */
+    protected $importSiteInfo = [];
+    /** @var bool */
+    protected $recoveryPage = false;
+    /** @var bool */
+    protected $importPage = false;
+    /** @var bool */
     protected $recoveryIsOutToDate = false;
+    /** @var int */
     protected $recoveryPackageLife = -1;
 
-    protected function runTest()
+    protected function runTest(): int
     {
         $paramsManager = PrmMng::getInstance();
-        if (!DUPX_InstallerState::isImportFromBackendMode()) {
+        if (!InstState::isImportFromBackendMode()) {
             return self::LV_SKIP;
         }
         $this->importSiteInfo      = PrmMng::getInstance()->getValue(PrmMng::PARAM_FROM_SITE_IMPORT_INFO);
@@ -46,41 +51,41 @@ class DUPX_Validation_test_recovery extends DUPX_Validation_abstract_item
         }
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
-        return 'Recovery Point';
+        return 'Disaster Recovery';
     }
 
     protected function hwarnContent()
     {
-        return dupxTplRender('parts/validation/tests/recovery', array(
+        return dupxTplRender('parts/validation/tests/recovery', [
             'testResult'          => $this->testResult,
             'importPage'          => $this->importPage,
             'recoveryPage'        => $this->recoveryPage,
             'recoveryIsOutToDate' => $this->recoveryIsOutToDate,
-            'recoveryPackageLife' => $this->recoveryPackageLife
-            ), false);
+            'recoveryPackageLife' => $this->recoveryPackageLife,
+        ], false);
     }
 
     protected function swarnContent()
     {
-        return dupxTplRender('parts/validation/tests/recovery', array(
+        return dupxTplRender('parts/validation/tests/recovery', [
             'testResult'          => $this->testResult,
             'importPage'          => $this->importPage,
             'recoveryPage'        => $this->recoveryPage,
             'recoveryIsOutToDate' => $this->recoveryIsOutToDate,
-            'recoveryPackageLife' => $this->recoveryPackageLife
-            ), false);
+            'recoveryPackageLife' => $this->recoveryPackageLife,
+        ], false);
     }
 
     protected function goodContent()
     {
-        return dupxTplRender('parts/validation/tests/recovery', array(
+        return dupxTplRender('parts/validation/tests/recovery', [
             'testResult'          => $this->testResult,
             'importPage'          => $this->importPage,
             'recoveryPage'        => $this->recoveryPage,
             'recoveryIsOutToDate' => $this->recoveryIsOutToDate,
-            'recoveryPackageLife' => $this->recoveryPackageLife
-            ), false);
+            'recoveryPackageLife' => $this->recoveryPackageLife,
+        ], false);
     }
 }

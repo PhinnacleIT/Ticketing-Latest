@@ -1,10 +1,15 @@
 <?php
+
+
+
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
-?>
-<!-- ============================================
-STEP 1
-============================================== -->
-<?php
+
+/**
+ * Variables
+ *
+ * @var bool $open_section;
+ */
+
 $sectionId   = 'section-step-1';
 $expandClass = $sectionId == $open_section ? 'open' : 'close';
 ?>

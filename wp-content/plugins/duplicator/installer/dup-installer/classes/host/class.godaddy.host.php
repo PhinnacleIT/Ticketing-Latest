@@ -5,8 +5,7 @@
  *
  * Standard: PSR-2
  *
- * @package SC\DUPX\DB
- * @link    http://www.php-fig.org/psr/psr-2/
+ * @link http://www.php-fig.org/psr/psr-2/
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -25,7 +24,7 @@ class DUPX_GoDaddy_Host implements DUPX_Host_interface
      *
      * @return string
      */
-    public static function getIdentifier()
+    public static function getIdentifier(): string
     {
         return DUPX_Custom_Host_Manager::HOST_GODADDY;
     }
@@ -33,7 +32,7 @@ class DUPX_GoDaddy_Host implements DUPX_Host_interface
     /**
      * @return bool true if is current host
      */
-    public function isHosting()
+    public function isHosting(): bool
     {
         // check only mu plugin file exists
 
@@ -47,7 +46,7 @@ class DUPX_GoDaddy_Host implements DUPX_Host_interface
      *
      * @return void
      */
-    public function init()
+    public function init(): void
     {
     }
 
@@ -55,19 +54,21 @@ class DUPX_GoDaddy_Host implements DUPX_Host_interface
      *
      * @return string
      */
-    public function getLabel()
+    public function getLabel(): string
     {
         return 'GoDaddy';
     }
 
     /**
      * this function is called if current hosting is this
+     *
+     * @return void
      */
-    public function setCustomParams()
+    public function setCustomParams(): void
     {
-        PrmMng::getInstance()->setValue(PrmMng::PARAM_IGNORE_PLUGINS, array(
+        PrmMng::getInstance()->setValue(PrmMng::PARAM_IGNORE_PLUGINS, [
             'gd-system-plugin.php',
-            'object-cache.php'
-        ));
+            'object-cache.php',
+        ]);
     }
 }

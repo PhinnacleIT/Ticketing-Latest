@@ -1,18 +1,20 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
-
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 use Duplicator\Installer\Core\Params\PrmMng;
-use Duplicator\Installer\Utils\InstallerLinkManager;
 
+/**
+ * Class for final step
+ */
 final class DUPX_Ctrl_S4
 {
-    public static function updateFinalReport()
+    /**
+     * Update the final report
+     *
+     * @return void
+     */
+    public static function updateFinalReport(): void
     {
         self::finalReportDatabase();
         self::finalReportSearchReplace();
@@ -20,31 +22,40 @@ final class DUPX_Ctrl_S4
         DUPX_NOTICE_MANAGER::getInstance()->sortFinalReport();
     }
 
-    public static function getNoticesCount()
+    /**
+     * Get the final report notices count
+     *
+     * @return array<string, int>
+     */
+    public static function getNoticesCount(): array
     {
         $nManager = DUPX_NOTICE_MANAGER::getInstance();
 
-        return array(
+        return [
             'general'        => $nManager->countFinalReportNotices('general', DUPX_NOTICE_ITEM::NOTICE, '>='),
             'files'          => $nManager->countFinalReportNotices('files', DUPX_NOTICE_ITEM::NOTICE, '>='),
             'database'       => $nManager->countFinalReportNotices('database', DUPX_NOTICE_ITEM::NOTICE, '>'),
             'search_replace' => $nManager->countFinalReportNotices('search_replace', DUPX_NOTICE_ITEM::NOTICE, '>='),
-            'plugins'        => $nManager->countFinalReportNotices('plugins', DUPX_NOTICE_ITEM::NOTICE, '>=')
-        );
+            'plugins'        => $nManager->countFinalReportNotices('plugins', DUPX_NOTICE_ITEM::NOTICE, '>='),
+        ];
     }
 
-    protected static function finalReportDatabase()
+    /**
+     * Return the final report search replace notices
+     *
+     * @return void
+     */
+    protected static function finalReportDatabase(): void
     {
         $paramsManager   = PrmMng::getInstance();
         $finalReportData = $paramsManager->getValue(PrmMng::PARAM_FINAL_REPORT_DATA);
         $nManager        = DUPX_NOTICE_MANAGER::getInstance();
-        $logLink         = DUPX_View_Funcs::installerLogLink(false);
-        $faqUrl          = InstallerLinkManager::getDocUrl('how-to-fix-database-write-issues', 'final-report', 'How to Fix Database Write Issues');
 
         if ($finalReportData['extraction']['query_errs'] > 0) {
-            $longMsg = <<<LONGMSG
-Queries that error during the deploy step are logged to the {$logLink} file and
-marked with an **ERROR** status.   If you experience a few errors (under 5), in many cases they can be ignored as long as your site is working correctly.
+            $longMsg  = 'Queries that error during the deploy step are logged to the ' . DUPX_View_Funcs::installerLogLink(false);
+            $longMsg .= <<<LONGMSG
+file and
+and marked with an **ERROR** status.   If you experience a few errors (under 5), in many cases they can be ignored as long as your site is working correctly.
 However if you see a large amount of errors or you experience an issue with your site then the error messages in the log file will need to be investigated.
 <br/><br/>
 
@@ -52,7 +63,7 @@ However if you see a large amount of errors or you experience an issue with your
 <ul>
     <li>
         <b>Unknown collation:</b> See Online FAQ:
-        <a href="{$faqUrl}" target="_blank">What is Compatibility mode & 'Unknown collation' errors?</a>
+        <a href="https://duplicator.com/knowledge-base/how-to-fix-database-write-issues" target="_blank">What is Compatibility mode & 'Unknown collation' errors?</a>
     </li>
     <li>
         <b>Query Limits:</b> Update MySQL server with the <a href="https://dev.mysql.com/doc/refman/5.5/en/packet-too-large.html" target="_blank">max_allowed_packet</a>
@@ -61,15 +72,15 @@ However if you see a large amount of errors or you experience an issue with your
 </ul>
 LONGMSG;
 
-            $nManager->addFinalReportNotice(array(
+            $nManager->addFinalReportNotice([
                 'shortMsg'    => 'DB EXTRACTION - INSTALL NOTICES (' . $finalReportData['extraction']['query_errs'] . ')',
                 'level'       => DUPX_NOTICE_ITEM::HARD_WARNING,
                 'longMsg'     => $longMsg,
                 'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_HTML,
-                'sections'    => array('database'),
+                'sections'    => ['database'],
                 'priority'    => 5,
-                'open'        => true
-            ));
+                'open'        => true,
+            ]);
         }
 
         if ($finalReportData['replace']['errsql_sum'] > 0) {
@@ -79,14 +90,14 @@ Please validate the query, if it looks to be of concern please try to run the qu
 In many cases if your site performs well without any issues you can ignore the error.
 LONGMSG;
 
-            $nManager->addFinalReportNotice(array(
+            $nManager->addFinalReportNotice([
                 'shortMsg' => 'STEP 3 - UPDATE NOTICES (' . $finalReportData['replace']['errsql_sum'] . ')',
                 'level'    => DUPX_NOTICE_ITEM::HARD_WARNING,
                 'longMsg'  => $longMsg,
-                'sections' => array('database'),
+                'sections' => ['database'],
                 'priority' => 5,
-                'open'     => true
-            ));
+                'open'     => true,
+            ]);
         }
 
         if ($finalReportData['replace']['errkey_sum'] > 0) {
@@ -102,19 +113,24 @@ On some databases you can remove these notices by checking the box 'Enable Full 
 </small>
 LONGMSG;
 
-            $nManager->addFinalReportNotice(array(
+            $nManager->addFinalReportNotice([
                 'shortMsg'    => 'TABLE KEY NOTICES  (' . $finalReportData['replace']['errkey_sum'] . ')',
                 'level'       => DUPX_NOTICE_ITEM::SOFT_WARNING,
                 'longMsg'     => $longMsg,
                 'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_HTML,
-                'sections'    => array('database'),
+                'sections'    => ['database'],
                 'priority'    => 5,
-                'open'        => true
-            ));
+                'open'        => true,
+            ]);
         }
     }
 
-    protected static function finalReportSearchReplace()
+    /**
+     * Final report search replace
+     *
+     * @return void
+     */
+    protected static function finalReportSearchReplace(): void
     {
         $paramsManager   = PrmMng::getInstance();
         $finalReportData = $paramsManager->getValue(PrmMng::PARAM_FINAL_REPORT_DATA);
@@ -127,14 +143,14 @@ The SQL below will show data that may have not been updated during the serializa
 Best practices for serialization notices is to just re-save the plugin/post/page in question.
 LONGMSG;
 
-            $nManager->addFinalReportNotice(array(
+            $nManager->addFinalReportNotice([
                 'shortMsg' => 'SERIALIZATION NOTICES  (' . $finalReportData['replace']['errser_sum'] . ')',
                 'level'    => DUPX_NOTICE_ITEM::SOFT_WARNING,
                 'longMsg'  => $longMsg,
-                'sections' => array('search_replace'),
+                'sections' => ['search_replace'],
                 'priority' => 5,
-                'open'     => true
-            ));
+                'open'     => true,
+            ]);
         }
     }
 }

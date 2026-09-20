@@ -1,17 +1,15 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
 
-use Duplicator\Installer\Utils\InstallerLinkManager;
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $isOk bool */
-/* @var $hostDBVersion string */
+/**
+ * Variables
+ *
+ * @var bool $isOk
+ * @var string $hostDBVersion
+ */
 ?>
 <div class="sub-title">STATUS</div>
 <p>
@@ -31,7 +29,9 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 <p>
     The minimum supported database server is MySQL Server 5.0 or the 
     <a href="https://mariadb.com/kb/en/mariadb/mariadb-vs-mysql-compatibility/" target="_blank">MariaDB equivalent</a>.
-    Versions prior to MySQL 5.0 are over 10 years old and will not be compatible with Duplicator.  
+    Versions prior to MySQL 5.0 are over 10 years old and will not be compatible with
+    <?php echo DUPX_U::esc_html(DUPX_ArchiveConfig::getInstance()->getInstallerName()); ?>.
+
     If your host is using a legacy version, please ask them
     to upgrade the MySQL database engine to a more recent version.
 </p>
@@ -40,11 +40,8 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 <ul>
     <li>Contact your host and have them upgrade your MySQL server.</li>
     <li>
-        <a 
-            href="<?php echo InstallerLinkManager::getDocUrl('how-to-fix-database-connection-issues', 'install', 'validation db version'); ?>" 
-            target="_help"
-            title="I'm running into issues with the Database what can I do?"
-        >
+        <a href="<?php echo DUPX_U::esc_attr(DUPX_Constants::FAQ_URL); ?>how-to-fix-database-connection-issues/" target="_help"
+           title="I'm running into issues with the Database what can I do?">
             [Additional FAQ Help]
         </a>
     </li>

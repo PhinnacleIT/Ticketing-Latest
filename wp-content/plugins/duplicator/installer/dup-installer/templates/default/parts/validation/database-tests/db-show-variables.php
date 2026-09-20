@@ -1,16 +1,14 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
 
-use Duplicator\Installer\Utils\InstallerLinkManager;
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var bool $pass */
+/**
+ * Variables
+ *
+ * @var bool $pass
+ */
 ?>
 <div class="sub-title">STATUS</div>
 <?php if ($pass) : ?>
@@ -32,7 +30,7 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
     "SHOW VARIABLES" when called from PHP.  <br/><br/>
 
     Additional FAQ resources for this issue can be found here:<br/>
-    <a href="<?php echo InstallerLinkManager::getDocUrl('digital-ocean-digitalocean-com', 'install', 'validation digital ocean'); ?>" target="_blank">
-        DigitalOcean --  digitalocean.com
+    <a href="<?php echo DUPX_Constants::FAQ_URL; ?>digital-ocean-digitalocean-com" target="_blank">
+        Digital Ocean --  digitalocean.com
     </a>
 </p>

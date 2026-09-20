@@ -1,16 +1,16 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $isOk bool */
-/* @var $host string */
-/* @var $fixedHost string */
+/**
+ * Variables
+ *
+ * @var bool $isOk
+ * @var string $host
+ * @var string $fixedHost
+ */
 ?>
 <p>
     <b>Database host:</b> 

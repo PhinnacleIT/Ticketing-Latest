@@ -2,22 +2,19 @@
 
 /**
  * Expire options
- *
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
  */
 
 namespace Duplicator\Utils;
 
-use Duplicator\Libs\Snap\JsonSerialize\JsonSerialize;
+use VendorDuplicator\Amk\JsonSerialize\JsonSerialize;
 use Duplicator\Libs\Snap\SnapDB;
 
 final class ExpireOptions
 {
-    const OPTION_PREFIX = 'duplicator_expire_';
+    const OPTION_PREFIX = 'dupli_opt_expire_';
 
     /** @var array<string, array{expire: int, value: mixed}> */
-    private static $cacheOptions = array();
+    private static $cacheOptions = [];
 
 
     /**
@@ -36,10 +33,10 @@ final class ExpireOptions
     {
         $time = ($expiration > 0 ? time() + $expiration : 0);
 
-        self::$cacheOptions[$key] = array(
+        self::$cacheOptions[$key] = [
             'expire' => $time,
             'value'  => $value,
-        );
+        ];
 
         return update_option(self::OPTION_PREFIX . $key, JsonSerialize::serialize(self::$cacheOptions[$key]), true);
     }
@@ -80,6 +77,55 @@ final class ExpireOptions
     }
 
     /**
+     * Retrieves the value of a expire option reading the database directly.
+     *
+     * Bypasses the in-memory cache and the WordPress options caches, so a value
+     * written by another PHP process after this request started is visible.
+     * The in-memory cache is refreshed with the value read.
+     *
+     * @param string $key     Expire option key.
+     * @param mixed  $default Return this value if option don't exists or is expired
+     *
+     * @return mixed Value of expire option.
+     */
+    public static function getFresh($key, $default = false)
+    {
+        /** @var \wpdb $wpdb */
+        global $wpdb;
+
+        $optionValue = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT `option_value` FROM `{$wpdb->options}` WHERE `option_name` = %s",
+                self::OPTION_PREFIX . $key
+            )
+        );
+
+        if (empty($optionValue)) {
+            self::$cacheOptions[$key] = self::unexistsKeyValue();
+        } else {
+            self::$cacheOptions[$key] = JsonSerialize::unserialize($optionValue);
+        }
+
+        return self::get($key, $default);
+    }
+
+    /**
+     * Retrieves the value of a expire option.
+     *
+     * If the option does not exist, does not have a value, or has expired,
+     * then the return value will be false.
+     *
+     * @param string $key Expire option key.
+     *
+     * @return int Expire time stamp, -1 if option don't exists or is expired
+     */
+    public static function getExpireTime($key)
+    {
+        self::get($key);
+        return self::$cacheOptions[$key]['expire'];
+    }
+
+    /**
      * This function returns the value of the option or false if it has expired. In case the option has expired then it is updated.
      * It does the same thing as a get and a set but with one less query.
      *
@@ -114,7 +160,7 @@ final class ExpireOptions
      *
      * @return bool True if the option was deleted, false otherwise.
      */
-    public static function delete($key)
+    public static function delete($key): bool
     {
         if (delete_option(self::OPTION_PREFIX . $key)) {
             self::$cacheOptions[$key] = self::unexistsKeyValue();
@@ -129,22 +175,25 @@ final class ExpireOptions
      *
      * @return bool
      */
-    public static function deleteAll()
+    public static function deleteAll(): bool
     {
         /** @var \wpdb $wpdb */
         global $wpdb;
 
-        $optionsTableName = esc_sql($wpdb->base_prefix . "options");
-        $query            = $wpdb->prepare(
-            "SELECT `option_name` FROM `{$optionsTableName}` WHERE `option_name` REGEXP %s",
+        $optionsTableName = $wpdb->base_prefix . "options";
+        /** @var literal-string */ // @phpstan-ignore varTag.nativeType
+        $prepare = 'SELECT `option_name` FROM `' . $optionsTableName . '` WHERE `option_name` REGEXP %s';
+        /** @var string */
+        $query          = $wpdb->prepare(
+            $prepare,
             SnapDB::quoteRegex(self::OPTION_PREFIX)
         );
-        $dupOptionNames   = $wpdb->get_col($query);
+        $dupOptionNames = $wpdb->get_col($query);
 
         foreach ($dupOptionNames as $dupOptionName) {
             delete_option($dupOptionName);
         }
-        self::$cacheOptions = array();
+        self::$cacheOptions = [];
 
         return true;
     }
@@ -154,11 +203,11 @@ final class ExpireOptions
      *
      * @return array{expire: int, value: false}
      */
-    private static function unexistsKeyValue()
+    private static function unexistsKeyValue(): array
     {
-        return array(
+        return [
             'expire' => -1,
             'value'  => false,
-        );
+        ];
     }
 }

@@ -1,7 +1,10 @@
 <?php
+
+use Duplicator\Installer\Utils\InstDescMng;
+
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-use Duplicator\Installer\Utils\InstallerLinkManager;
+$descMng = InstDescMng::getInstance();
 ?>
 
 If no passwords were set on the installer or archive file then users will initially see step one of the installer.  The installer has two operating views
@@ -19,23 +22,16 @@ An overview of each view is explained below.
     <li>
         <b>Advanced:</b>
         This four-step mode allows for higher levels of customization with various detail settings. The Advanced view allows users to implement and apply
-        additional settings/features to the install process.   <br/>
-        <small class="hlp-lite-only">This is the only mode that Duplicator supported before version 1.5</small>
+        additional settings/features to the install process.
     </li>
 </ul>
+
 
 <!-- ===================================
 OVERVIEW  -->
 <h3>Overview</h3>
 The overview section allows users to identify the status, mode and select from the install type based on the user's install status.  Additionally there are
-other details about the archive file.   Below is an overview of the various status, mode and install types. <br/>
-
-<small class="hlp-lite-only">
-    Note: Duplicator Lite supports only single WordPress sites, while
-    <a href="<?php echo InstallerLinkManager::getCampaignUrl('installer', "Help section - Get Pro for Multisite"); ?>" target="_blank">
-        Duplicator Pro
-    </a> supports single and multisite websites.
-</small>
+other details about the archive file.   Below is an overview of the various status, mode and install types.
 <br/><br/>
 
 <h4>
@@ -52,45 +48,37 @@ This section will give an overview of the various install modes, methods and typ
         This will perform the installation of a single WordPress site based on the associated method.
     </li>
     <li>
-        <sup class="hlp-pro-lbl">Pro</sup>
-        <b>Install - Multisite-Subdomain:</b><br/>
+        <b>Install - Multisite-Subdomain:</b>
         This is a full Multisite installation subdomain (i.e. subdomain.mysite.com) install. All sites in the network will be extracted and installed.
     </li>
     <li>
-        <sup class="hlp-pro-lbl">Pro</sup>
-        <b>Install - Multisite-Subfolder:</b><br/>
+        <b>Install - Multisite-Subfolder:</b>
         This is a full Multisite installation via sub-folders install. All sites in the network will be extracted and installed.
     </li>
     <li>
-        <sup class="hlp-pro-lbl">Pro</sup>
-        <b>Install - Standalone Site:</b><br/>
+        <b>Install - Standalone Site:</b>
         This installation converts the selected subsite into a standalone website.
     </li>
     <li>
-        <sup class="hlp-pro-lbl">Pro</sup>
-        <b>Install - Archive Single Site into Subdomain/Subfolder Multisite:</b><br/>
+        <b>Install - Archive Single Site into Subdomain/Subfolder Multisite:</b>
         This installation will insert the package site into the current multisite subdomain/subfolder setup.
     </li>
     <li>
-        <sup class="hlp-pro-lbl">Pro</sup>
-        <b>Install - Selected Subsite in Subdomain/Subfolder Multisite:</b><br/>
+        <b>Install - Selected Subsite in Subdomain/Subfolder Multisite:</b>
         This installation will insert the selected subsite of the package into the current subdomain/subfolder multisite installation.
     </li>
     <li>
-        <sup class="hlp-pro-lbl">Pro</sup>
-        <b>Recovery - [Site Type]:</b><br/>
+        <b>Recovery - [Site Type]:</b>
         This status is enabled when the installer detects recovery mode installer was launched.  This process will overwrite this site from the recovery
         point made on a specific date.  The site type will represent the type of site being recovered.
     </li>
     <li>
-         <sup class="hlp-pro-lbl">Pro</sup>
-        <b>Restore Site Backup:</b><br/>
+        <b>Restore Site Backup:</b>
         This method is enabled when the installer detects an archive is imported that matches the current setup.  The restore backup status restores the
         original site by not performing any processing on the database or tables to ensure an exact copy of the original site exists.  Restore has the
         following status types: <i>Restore: Single Site Backup, Restore - Multisite-Subdomain Backup, Restore - Multisite-Subfolder Backup</i>
     </li>
 </ul>
-
 
 <b><i class="fas fa-angle-double-right"></i> Mode:</b>
 <ul>
@@ -130,8 +118,7 @@ This section will give an overview of the various install modes, methods and typ
         </ul>
     </li>
     <li>
-        <sup class="hlp-pro-lbl">Pro</sup>
-        <b>Custom Install</b><br/>
+        <b>Custom Install</b>
         <ul>
             <li>When the mode is custom this indicates the install is specifically driven by the status type.</li>
             <li>See the status type of the install for all exact install details.</li>
@@ -139,11 +126,13 @@ This section will give an overview of the various install modes, methods and typ
     </li>
 </ul>
 
+
+
 <b><i class="fas fa-angle-double-right"></i> Install Type:</b>
 <ul>
     <li><b>Full/Restore:</b> This is the default install type.</li>
-    <li><sup class="hlp-pro-lbl">Pro</sup> <b>Convert:</b> This is a Multisite feature used to convert a network subsite to a standalone site.</li>
-    <li><sup class="hlp-pro-lbl">Pro</sup> <b>Import:</b> This is a Multisite feature used to import a subsite into a Multisite network.</li>
+    <li><b>Convert:</b> This is a Multisite feature used to convert a network subsite to a standalone site.</li>
+    <li><b>Import:</b> This is a Multisite feature used to import a subsite into a Multisite network.</li>
 </ul>
 <small>* The Restore, Convert and Import types are only visible when the installer detects that it can perform the action.</small>
 <br/><br/>
@@ -152,26 +141,25 @@ This section will give an overview of the various install modes, methods and typ
     <i class="far fa-folder fa-fw"></i>
     Archive Tab
 </h4>
-The archive tab shows various details about the archive file and site details related to the site that was archived. With Duplicator the following
+The archive tab shows various details about the archive file and site details related to the site that was archived.
+With <?php echo DUPX_U::esc_html(DUPX_ArchiveConfig::getInstance()->getInstallerName()); ?> the following
 install modes are currently supported:
 <ul>
     <li>
-        <b><a href="<?php echo InstallerLinkManager::getDocUrl('classic-install', 'install', 'Classic Install'); ?>" target="_blank">Classic Install:</a></b>
+        <b><a href="<?php echo DUPX_Constants::FAQ_URL; ?>classic-install" target="_blank">Classic Install:</a></b>
         With this mode users can install to an empty directory like a new WordPress install does.
+
     </li>
     <li>
-        <b><a href="<?php echo InstallerLinkManager::getDocUrl('overwrite-install', 'install', 'Overwrite Install'); ?>" target="_blank">
-            Overwrite Install:
-        </a></b>
+        <b><a href="<?php echo DUPX_Constants::FAQ_URL; ?>overwrite-install" target="_blank">Overwrite Install:</a></b>
         This mode allows users to quickly overwrite an existing WordPress site in a few clicks.
     </li>
     <li>
-        <sup class="hlp-pro-lbl">Pro</sup>
-        <b><a href="<?php echo InstallerLinkManager::getDocUrl('import-install', 'install', 'Import Install'); ?>" target="_blank">Import Install:</a></b> 
-        Drag and drop or use a URL for super-fast installs.  This Pro-only feature will import both Pro and Lite archives.
+        <b><a href="<?php echo DUPX_Constants::FAQ_URL; ?>import-install" target="_blank">Import Install:</a></b> 
+        Drag and drop or use a URL for super-fast installs.
         <ul>
-            <li><b>Import File:</b>  Drag and drop an existing Duplicator Lite or Pro archive and quickly replace the existing WordPress site</li>
-            <li><b>Import Link:</b> Provide a link to an existing Duplicator Lite or Pro archive and quickly replace the existing WordPress site.</li>
+            <li><b>Import File:</b> Drag and drop an existing Duplicator archive and quickly replace the existing WordPress site</li>
+            <li><b>Import Link:</b> Provide a link to an existing Duplicator archive and quickly replace the existing WordPress site.</li>
         </ul>
     </li>
 </ul>
@@ -191,7 +179,6 @@ two options you can use to perform the database setup:
         <b>Default:</b> This option requires knowledge about the existing server, and requires the database be created ahead of time on most hosts.
     </li>
     <li>
-        <sup class="hlp-pro-lbl">Pro</sup>
         <b>cPanel:</b> 
         The cPanel option is for hosts that support <a href="https://cpanel.net">cPanel software</a>. This option will automatically show you the existing
         databases and users in your cPanel server and allow you to create new databases directly from the installer.
@@ -223,10 +210,10 @@ two options you can use to perform the database setup:
             <br/><br/>
 
             <b>Skip Database Extraction</b><br/>
-            This option requires that you manually run your own SQL import to an existing database before running the installer. 
-            When this action is selected the
-            dup-database__[hash].sql file found inside the dup-installer folder of the archive.zip file will NOT be processed. The database you're connecting to
-            should already be a valid WordPress installed database.  This option is viable when you need to perform custom SQL work or advanced installs.
+            This option requires that you manually run your own SQL import to an existing database before running the installer. When this action is
+            selected the <?php echo $descMng->getGenericName(InstDescMng::TYPE_DB_DUMP); ?> file found inside the dup-installer folder of 
+            the archive.zip file will NOT be processed. The database you're connecting to should already be a valid WordPress installed database.
+            This option is viable when you need to perform custom SQL work or advanced installs.
             <br/><br/>
             
             <b>Create New Database</b><br/>
@@ -235,7 +222,6 @@ two options you can use to perform the database setup:
             the database.  <i>If your host supports cPanel then you can use this option to create a new database after logging in via your cPanel account.</i>
             <br/><br/>
             
-            <sup class="hlp-pro-lbl">Pro</sup>
             <b>Overwrite Existing Tables</b><br/>
             Overwrite only the tables that are extracted. This option is useful if you want to install WordPress in a database containing other WordPress
             installations or applications. <i>Note: When performing an install alongside another installation be sure to change the prefix since only those
@@ -260,11 +246,8 @@ two options you can use to perform the database setup:
     </tr>
     <tr>
         <td class="col-opt">User</td>
-        <td>
-            The name of MySQL/MariaDB database server user. 
-            This is a special account that has privileges to access a database and can read from or write to that database.
-            <i>This is <b>not</b> the WordPress administrator account</i>.
-        </td>
+        <td>The name of MySQL/MariaDB database server user. This is a special account that has privileges to access a database and can read from
+            or write to that database.  <i>This is <b>not</b> the WordPress administrator account</i>.</td>
     </tr>
     <tr>
         <td class="col-opt">Password</td>
@@ -272,12 +255,12 @@ two options you can use to perform the database setup:
     </tr>
     <tr>
         <td colspan="2" class="section">
-            cPanel <sup class="hlp-pro-lbl">Pro</sup>
+            cPanel 
         </td>
     </tr>
     <tr>
         <td class="col-opt">Host</td>
-        <td><sup class="hlp-pro-lbl">Pro</sup>
+        <td>
             This should be the primary domain account URL that is associated with your host.   Most hosts will require you to register a primary domain name.
             This should be the URL that you place in the host field.  For example if your primary domain name is "mysite.com" then you would enter in
             "https://mysite.com:2083."  The port 2083 is the common port number that cPanel works on.   If you do not know your primary domain name please
@@ -287,7 +270,6 @@ two options you can use to perform the database setup:
     <tr>
         <td class="col-opt">Username</td>
         <td>
-            <sup class="hlp-pro-lbl">Pro</sup>
             The cPanel username used to login to your cPanel account.  <i>This is <b>not</b> the same thing as your WordPress administrator account</i>.
             If you're unsure of this name please contact your hosting provider or server administrator.
         </td>
@@ -295,20 +277,20 @@ two options you can use to perform the database setup:
     <tr>
         <td class="col-opt">Password</td>
         <td>
-            <sup class="hlp-pro-lbl">Pro</sup>
             The password of the cPanel user.
         </td>
     </tr>
     <tr>
         <td class="col-opt">Troubleshoot</td>
         <td>
-            <sup class="hlp-pro-lbl">Pro</sup>
             <b>Common cPanel Connection Issues:</b><br/>
             - Your host does not use <a href="http://cpanel.com" target="_blank">cPanel software</a>. <br/>
             - Your host has disabled cPanel API access. <br/>
             - Your host has configured cPanel to work differently (please contact your host). <br/>
-            <?php $url = InstallerLinkManager::getDocUrl('what-host-providers-are-recommended-for-duplicator', 'install', 'cpanel issues'); ?>
-            - View a list of valid cPanel <a href='<?php echo DUPX_U::esc_attr($url); ?>' target='_blank'>Supported Hosts</a>.
+            - View a list of valid cPanel
+            <a href='<?php echo DUPX_Constants::DUP_SITE_URL; ?>best-wordpress-hosting/' target='_blank'>
+             Supported Hosts
+            </a>.
         </td>
     </tr>
 </table>

@@ -4,23 +4,28 @@
  * controller step 2 db install test
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package CTRL
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 use Duplicator\Installer\Core\Params\Descriptors\ParamDescUsers;
 use Duplicator\Installer\Core\Deploy\Database\DbCleanup;
+use Duplicator\Installer\Core\Deploy\Database\DbDumpIterator;
 use Duplicator\Installer\Core\Deploy\Database\DbUserMode;
+use Duplicator\Installer\Core\Deploy\Database\DbUtils;
 use Duplicator\Installer\Core\Deploy\Database\QueryFixes;
-use Duplicator\Installer\Utils\InstallerLinkManager;
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Utils\Log\Log;
 use Duplicator\Installer\Core\Params\PrmMng;
-use Duplicator\Libs\Snap\JsonSerialize\AbstractJsonSerializable;
-use Duplicator\Libs\Snap\JsonSerialize\JsonSerialize;
+use Duplicator\Installer\Utils\InstDescMng;
+use VendorDuplicator\Amk\JsonSerialize\AbstractJsonSerializable;
+use VendorDuplicator\Amk\JsonSerialize\JsonSerialize;
+use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapJson;
 use Duplicator\Libs\Snap\SnapDB;
+use Duplicator\Libs\Snap\SnapUtil;
+
+require_once(DUPX_INIT . '/api/class.cpnl.ctrl.php');
 
 class DUPX_DBInstall extends AbstractJsonSerializable
 {
@@ -32,48 +37,67 @@ class DUPX_DBInstall extends AbstractJsonSerializable
     const DBACTION_RENAME                   = 'rename';
     const DBACTION_MANUAL                   = 'manual';
     const DBACTION_ONLY_CONNECT             = 'onlyconnect';
-    const TEMP_DB_PREFIX                    = 'dpro___tmp__';
+    const DBACTION_DO_NOTHING               = 'dbdonothing';
+    const TEMP_DB_PREFIX                    = 'dupli___tmp__';
     const TABLE_CREATION_END_MARKER         = "/***** TABLE CREATION END *****/\n";
     const QUERY_ERROR_LOG_LEN               = 200;
     const SQL_CREATE_VIEW_PROC_FUNC_PATTERN = "/^\s*(?:\/\*!\d+\s)?\s*CREATE\s.*?(?:VIEW|PROCEDURE|FUNCTION).*$/ms";
     const BUILD_MODE_MYSQLDUMP              = 'MYSQLDUMP';
     const TABLES_REGEX_CHUNK_SIZE           = 100;
 
-    /** @var \mysqli */
-    private $dbh              = null;
-    public $post              = array();
-    public $dbaction          = self::DBACTION_EMPTY;
-    public $dbcharset         = '';
-    public $dbcollate         = '';
-    public $dbvar_maxtime     = 300;
-    public $dbvar_maxpacks    = MB_IN_BYTES;
-    public $dbvar_sqlmode     = 'NOT_SET';
-    public $sql_file_path     = '';
-    public $table_count       = 0;
-    public $table_rows        = 0;
-    public $query_errs        = 0;
-    public $drop_tbl_log      = 0;
-    public $rename_tbl_log    = 0;
-    public $dbquery_errs      = 0;
-    public $dbquery_rows      = 0;
-    public $dbtable_count     = 0;
-    public $dbtable_rows      = 0;
-    public $profile_start     = 0;
-    public $start_microtime   = 0;
+    /** @var ?mysqli */
+    private $dbh;
+    /** @var mixed[] */
+    public $post = [];
+    /** @var string */
+    public $dbaction = self::DBACTION_EMPTY;
+    /** @var string */
+    public $dbcharset = '';
+    /** @var string */
+    public $dbcollate = '';
+    /** @var int */
+    public $dbvar_maxtime = 300;
+    /** @var int */
+    public $dbvar_maxpacks = MB_IN_BYTES;
+    /** @var string */
+    public $dbvar_sqlmode = 'NOT_SET';
+    /** @var DbDumpIterator */
+    public $dbDumpIterator;
+    /** @var int */
+    public $table_count = 0;
+    /** @var int */
+    public $table_rows = 0;
+    /** @var int */
+    public $query_errs = 0;
+    /** @var int */
+    public $drop_tbl_log = 0;
+    /** @var int */
+    public $rename_tbl_log = 0;
+    /** @var int */
+    public $dbquery_errs = 0;
+    /** @var int */
+    public $dbquery_rows = 0;
+    /** @var int */
+    public $dbtable_count = 0;
+    /** @var int */
+    public $dbtable_rows = 0;
+    /** @var float */
+    public $profile_start = 0;
+    /** @var float */
+    public $start_microtime = 0;
+    /** @var float */
     public $thread_start_time = 0;
-    public $dbsplit_creates   = true;
-    public $dbFileSize        = 0;
-    public $setQueries        = array();
+    /** @var bool */
+    public $dbsplit_creates = true;
+    /** @var string[] */
+    public $setQueries = [];
     /** @var DbUserMode */
-    protected $dbUserMode = null;
+    protected $dbUserMode;
     /** @var QueryFixes */
-    protected $queryFixes = null;
+    protected $queryFixes;
 
-    /**
-     *
-     * @var DUPX_DBInstall
-     */
-    protected static $instance = null;
+    /** @var ?self */
+    protected static $instance;
 
     /**
      *
@@ -87,6 +111,9 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         return self::$instance;
     }
 
+    /**
+     * Class constructor
+     */
     private function __construct()
     {
         if (!DUPX_Validation_manager::isValidated()) {
@@ -96,7 +123,9 @@ class DUPX_DBInstall extends AbstractJsonSerializable
     }
 
     /**
-     * inizialize extraction data
+     * Inizialize extraction data
+     *
+     * @return void
      */
     protected function initData()
     {
@@ -114,15 +143,19 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         }
     }
 
+
+    /**
+     * DATA INIT
+     *
+     * @return void
+     */
     protected function constructData()
     {
         $paramsManager         = PrmMng::getInstance();
         $this->start_microtime = DUPX_U::getMicrotime();
-        $this->sql_file_path   = DUPX_Package::getSqlFilePath();
-        $this->dbFileSize      = DUPX_Package::getSqlFileSize();
         $this->profile_start   = DUPX_U::getMicrotime();
 
-        $this->post = array(
+        $this->post = [
             'view_mode'         => $paramsManager->getValue(PrmMng::PARAM_DB_VIEW_MODE),
             'dbname'            => $paramsManager->getValue(PrmMng::PARAM_DB_NAME),
             'dbuser'            => $paramsManager->getValue(PrmMng::PARAM_DB_USER),
@@ -130,6 +163,10 @@ class DUPX_DBInstall extends AbstractJsonSerializable
             'dbport'            => parse_url($paramsManager->getValue(PrmMng::PARAM_DB_HOST), PHP_URL_PORT),
             'dbmysqlmode'       => $paramsManager->getValue(PrmMng::PARAM_DB_MYSQL_MODE),
             'dbmysqlmode_opts'  => $paramsManager->getValue(PrmMng::PARAM_DB_MYSQL_MODE_OPTS),
+            'cpnl-host'         => $paramsManager->getValue(PrmMng::PARAM_CPNL_HOST),
+            'cpnl-user'         => $paramsManager->getValue(PrmMng::PARAM_CPNL_USER),
+            'cpnl-pass'         => $paramsManager->getValue(PrmMng::PARAM_CPNL_PASS),
+            'cpnl-dbuser-chk'   => $paramsManager->getValue(PrmMng::PARAM_CPNL_DB_USER_CHK),
             'pos'               => 0,
             'pass'              => false,
             'first_chunk'       => true,
@@ -138,23 +175,29 @@ class DUPX_DBInstall extends AbstractJsonSerializable
             'progress'          => 0,
             'delimiter'         => ';',
             'is_error'          => 0,
-            'error_msg'         => ''
-        );
+            'error_msg'         => '',
+        ];
 
         $this->dbaction        = $paramsManager->getValue(PrmMng::PARAM_DB_ACTION);
         $this->dbcharset       = $paramsManager->getValue(PrmMng::PARAM_DB_CHARSET);
         $this->dbcollate       = $paramsManager->getValue(PrmMng::PARAM_DB_COLLATE);
         $this->dbsplit_creates = $paramsManager->getValue(PrmMng::PARAM_DB_SPLIT_CREATES);
 
-        $this->dbUserMode = new DbUserMode();
+        $this->dbUserMode     = new DbUserMode();
+        $this->dbDumpIterator = new DbDumpIterator();
     }
 
+    /**
+     * Write Log file header
+     *
+     * @return void
+     */
     protected function initLogDbInstall()
     {
         $paramsManager = PrmMng::getInstance();
         $labelPadSize  = 20;
         Log::info("\n\n\n********************************************************************************");
-        Log::info('* DUPLICATOR LITE: INSTALL-LOG');
+        Log::info('* DUPLICATOR INSTALL-LOG');
         Log::info('* STEP-2 START @ ' . @date('h:i:s'));
         Log::info('* NOTICE: Do NOT post to public sites or forums!!');
         Log::info("********************************************************************************");
@@ -179,13 +222,22 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         Log::info(str_pad('REMOVE DEFINER', $labelPadSize, '_', STR_PAD_RIGHT) . ': ' . Log::v2str($paramsManager->getValue(PrmMng::PARAM_DB_REMOVE_DEFINER)));
         Log::info(str_pad('SPLIT CREATES', $labelPadSize, '_', STR_PAD_RIGHT) . ': ' . Log::v2str($paramsManager->getValue(PrmMng::PARAM_DB_SPLIT_CREATES)));
 
+        $dbDumpTotalSize  = DUPX_U::readableByteSize($this->dbDumpIterator->totalSize());
+        $dbDumpTotalCount = $this->dbDumpIterator->count();
+        Log::info(str_pad('SQL FILES', $labelPadSize, '_', STR_PAD_RIGHT) . ': ' . $dbDumpTotalCount . ' (' . $dbDumpTotalSize . ')');
+        foreach ($this->dbDumpIterator as $i => $path) {
+            $currentSize = DUPX_U::readableByteSize(@filesize($path));
+            Log::info("\t" . ($i + 1) . ")" . basename($path) . " (" . $currentSize . ")");
+        }
+        $this->dbDumpIterator->rewind();
+
         $tables = DUPX_DB_Tables::getInstance()->getTables();
         Log::info("--------------------------------------");
         Log::info('TABLES');
         Log::info("--------------------------------------");
         foreach ($tables as $tablesObj) {
             Log::info('TABLE ' . str_pad(Log::v2str($tablesObj->getOriginalName()), 50, '_', STR_PAD_RIGHT)
-                . '[ROWS:' . str_pad($tablesObj->getRows(), 8, " ", STR_PAD_LEFT) . ']'
+                . '[ROWS:' . str_pad((string) $tablesObj->getRows(), 8, " ", STR_PAD_LEFT) . ']'
                 . ' [' . ($tablesObj->extract() ? 'EXTRACT' : 'NO EXTR') . '|' . ($tablesObj->replaceEngine() ? 'REPLACE' : 'NO REPL') . '] '
                 . '[INST NAME: ' . $tablesObj->getNewName() . ']');
         }
@@ -193,6 +245,11 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         Log::flush();
     }
 
+    /**
+     * Deploy
+     *
+     * @return mixed[]
+     */
     public function deploy()
     {
         $paramsManager = PrmMng::getInstance();
@@ -203,15 +260,15 @@ class DUPX_DBInstall extends AbstractJsonSerializable
                 Log::info("## >> Last DB Chunk installation was failed, so retrying from start point. Retrying count: " . $this->post['dbchunk_retry']);
             }
 
+            $this->prepareCpanel();
             $this->prepareDB();
 
             //Fatal Memory errors from file_get_contents is not catchable.
             //Try to warn ahead of time with a check on buffer in memory difference
-            $current_php_mem = DUPX_U::returnBytes($GLOBALS['PHP_MEMORY_LIMIT']);
-            $current_php_mem = is_numeric($current_php_mem) ? $current_php_mem : null;
+            $current_php_mem = SnapUtil::convertToBytes($GLOBALS['PHP_MEMORY_LIMIT']);
 
-            if ($current_php_mem != null && $this->dbFileSize > $current_php_mem) {
-                $readable_size = DUPX_U::readableByteSize($this->dbFileSize);
+            if ($current_php_mem >= 0 && $this->dbDumpIterator->currentSize() > $current_php_mem) {
+                $readable_size = DUPX_U::readableByteSize($this->dbDumpIterator->currentSize());
                 $msg           = "\nWARNING: The database script is '{$readable_size}' in size.  The PHP memory allocation is set\n";
                 $msg          .= "at '{$GLOBALS['PHP_MEMORY_LIMIT']}'.  There is a high possibility that the installer script will fail with\n";
                 $msg          .= "a memory allocation error when trying to load the database.sql file.  It is\n";
@@ -227,6 +284,12 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         }
 
         switch ($paramsManager->getValue(PrmMng::PARAM_DB_ACTION)) {
+            case self::DBACTION_DO_NOTHING:
+                Log::info("\n** SQL EXECUTION IS BEING SKIPPED **");
+                Log::info("- The database was excluded during build -");
+                $this->post['pass']              = 1;
+                $this->post['continue_chunking'] = false;
+                break;
             case self::DBACTION_MANUAL:
                 Log::info("\n** SQL EXECUTION IS IN MANUAL MODE **");
                 Log::info("- No SQL script has been executed -");
@@ -257,45 +320,30 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         return $this->getResultData();
     }
 
+
     /**
+     * Insert database
      *
-     * @throws Exception
+     * @return void
      */
     protected function insertDatabase()
     {
         $paramsManager = PrmMng::getInstance();
-        $validation    = false;
         if ($paramsManager->getValue(PrmMng::PARAM_DB_CHUNK)) {
             if ($this->post['continue_chunking'] == true) {
                 if ($this->deployDatabaseChunkMode() == false) {
                     throw new Exception('Error on db extraction');
                 }
-            } elseif ($this->post['pass'] == 1) {
-                $validation = true;
-            } else {
-                throw new Exception('Error on db extraction');
+            } elseif ($this->post['pass'] !== 1) {
+                throw new Exception('The chunked db extraction did not pass.');
             }
         } else {
-            $this->deployDatabaseSingleMode();
-            $validation = true;
-        }
+            if ($this->deployDatabaseSingleMode() == false) {
+                throw new Exception('Error on single-step db extraction');
+            }
 
-        if ($validation) {
-            $rowCountMisMatchTables = $this->getRowCountMisMatchTables();
-            $this->post['pass']     = 1;
-            if (!empty($rowCountMisMatchTables)) {
-                $nManager = DUPX_NOTICE_MANAGER::getInstance();
-                $errMsg   = 'Database Table row count verification was failed for table(s): '
-                    . implode(', ', $rowCountMisMatchTables) . '.';
-                Log::info($errMsg);
-                $nManager->addBothNextAndFinalReportNotice(
-                    array(
-                        'shortMsg' => 'Database Table row count was validation failed',
-                        'level' => DUPX_NOTICE_ITEM::NOTICE,
-                        'longMsg' => $errMsg,
-                        'sections' => 'database'
-                    )
-                );
+            if ($this->post['pass'] !== 1) {
+                throw new Exception('The single-step db extraction did not pass.');
             }
         }
     }
@@ -315,6 +363,11 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         $this->saveData();
     }
 
+    /**
+     * After install database actions
+     *
+     * @return void
+     */
     protected function afterInstallDatabaseActions()
     {
         $this->dbUserMode->generateImportReport();
@@ -329,6 +382,81 @@ class DUPX_DBInstall extends AbstractJsonSerializable
     }
 
     /**
+     * Prepare cpanel
+     *
+     * @return void
+     */
+    protected function prepareCpanel()
+    {
+        if ($this->dbaction === self::DBACTION_MANUAL || InstState::dbDoNothing()) {
+            return;
+        }
+
+        if ($this->post['view_mode'] != 'cpnl') {
+            return;
+        }
+
+        try {
+            //===============================================
+            //CPANEL LOGIC: From Postback
+            //===============================================
+
+            $cpnllog  = "";
+            $cpnllog .= "--------------------------------------\n";
+            $cpnllog .= "CPANEL API\n";
+            $cpnllog .= "--------------------------------------\n";
+
+            $cpnlApiErr = 'The cPanel API had the following issues when trying to communicate on this host: <br/> %s';
+
+            $CPNL = new DUPX_cPanel_Controller();
+
+            $cpnlToken = $CPNL->create_token($this->post['cpnl-host'], $this->post['cpnl-user'], $this->post['cpnl-pass']);
+            $cpnlHost  = $CPNL->connect($cpnlToken);
+
+            //CREATE DB USER: Attempt to create user should happen first in the case that the
+            //user passwords requirements are not met.
+            if ($this->post['cpnl-dbuser-chk']) {
+                $result = $CPNL->create_db_user($cpnlToken, $this->post['dbuser'], $this->post['dbpass']);
+                if ($result['status'] !== true) {
+                    Log::info('CPANEL API ERROR: create_db_user ' . print_r($result['cpnl_api'], true), 2);
+                    Log::error(sprintf($cpnlApiErr, $result['status']));
+                } else {
+                    $cpnllog .= "- A new database user was created\n";
+                }
+            }
+
+            //CREATE NEW DB
+            if ($this->dbaction == self::DBACTION_CREATE) {
+                $result = $CPNL->create_db($cpnlToken, $this->post['dbname']);
+                if ($result['status'] !== true) {
+                    Log::info('CPANEL API ERROR: create_db ' . print_r($result['cpnl_api'], true), 2);
+                    Log::error(sprintf($cpnlApiErr, $result['status']));
+                } else {
+                    $cpnllog .= "- A new database was created\n";
+                }
+            } else {
+                $cpnllog .= "- Used to connect to existing database named [" . $this->post['dbname'] . "]\n";
+            }
+
+            //ASSIGN USER TO DB IF NOT ASSIGNED
+            $result = $CPNL->is_user_in_db($cpnlToken, $this->post['dbname'], $this->post['dbuser']);
+            if (!$result['status']) {
+                $result = $CPNL->assign_db_user($cpnlToken, $this->post['dbname'], $this->post['dbuser']);
+                if ($result['status'] !== true) {
+                    Log::info('CPANEL API ERROR: assign_db_user ' . print_r($result['cpnl_api'], true), 2);
+                    Log::error(sprintf($cpnlApiErr, $result['status']));
+                } else {
+                    $cpnllog .= "- Database user was assigned to database";
+                }
+            }
+
+            Log::info($cpnllog);
+        } catch (Exception $ex) {
+            Log::error($ex);
+        }
+    }
+
+    /**
      *
      * @return string
      */
@@ -336,28 +464,29 @@ class DUPX_DBInstall extends AbstractJsonSerializable
     {
         static $path = null;
         if (is_null($path)) {
-            $path = DUPX_INIT . '/dup-installer-dbinstall__' . DUPX_Package::getPackageHash() . '.json';
+            $path = DUPX_INIT . '/' . InstDescMng::getInstance()->getName(InstDescMng::TYPE_INST_DB_DATA);
         }
         return $path;
     }
 
     /**
+     * Seek tell log file path
      *
-     * @staticvar string $path
-     * @return    string
+     * @return string
      */
     protected static function seekTellFilePath()
     {
         static $path = null;
         if (is_null($path)) {
-            $path = DUPX_INIT . "/dup-database-seek-tell-log__" . DUPX_ArchiveConfig::getInstance()->package_hash . ".txt";
+            $path = DUPX_INIT . '/' . InstDescMng::getInstance()->getName(InstDescMng::TYPE_INST_DB_SEEK_TELL_LOG);
         }
         return $path;
     }
 
     /**
+     * Save data to file
      *
-     * @return boolean
+     * @return bool
      */
     protected function saveData()
     {
@@ -382,21 +511,18 @@ class DUPX_DBInstall extends AbstractJsonSerializable
     public function __sleep()
     {
         $props = array_keys(get_object_vars($this));
-        return array_diff($props, array('dbh'));
+        return array_diff($props, ['dbh']);
     }
 
     /**
+     * Load data from file
      *
      * @return boolean
      */
     protected function loadData()
     {
-        if (!file_exists(self::dbinstallDataFilePath())) {
+        if (($json = SnapIO::safeFileGetContents(self::dbinstallDataFilePath())) === false) {
             return false;
-        }
-
-        if (($json = file_get_contents(self::dbinstallDataFilePath())) === false) {
-            throw new Exception('Can\'t load dbinstall data file');
         }
 
         JsonSerialize::unserializeToObj($json, $this);
@@ -405,6 +531,7 @@ class DUPX_DBInstall extends AbstractJsonSerializable
     }
 
     /**
+     * Reset all data
      *
      * @return boolean
      */
@@ -416,18 +543,51 @@ class DUPX_DBInstall extends AbstractJsonSerializable
                 throw new Exception('Can\'t delete dbinstall data file');
             }
         }
+
+        self::resetSeekTellData();
+
+        return $result;
+    }
+
+    /**
+     * Reset seek tell data
+     *
+     * @return boolean
+     */
+    public static function resetSeekTellData()
+    {
         if (file_exists(self::seekTellFilePath())) {
             if (unlink(self::seekTellFilePath()) === false) {
                 throw new Exception('Can\'t delete dbinstall chunk seek data file');
             }
         }
-        return $result;
+
+        return true;
     }
 
     /**
-     * execute a connection if db isn't connected
+     * Reset seek tell data
      *
-     * @return resource
+     * @param int $offset The offset in the current file
+     *
+     * @return boolean
+     */
+    private function appendSeekTellData($offset): bool
+    {
+        $logLine = $this->post['pos'] . '-' . $offset;
+        if (file_exists(self::seekTellFilePath()) && filesize(self::seekTellFilePath()) > 0) {
+            $logLine = ',' . $logLine;
+        }
+
+        return file_put_contents(self::seekTellFilePath(), $logLine, FILE_APPEND) !== false;
+    }
+
+    /**
+     * Execute a connection if db isn't connected
+     *
+     * @param bool $reconnect if true force a new connection
+     *
+     * @return ?mysqli
      */
     protected function dbConnect($reconnect = false)
     {
@@ -446,30 +606,41 @@ class DUPX_DBInstall extends AbstractJsonSerializable
                     //ESTABLISH CONNECTION
                     if (($this->dbh = DUPX_DB_Functions::getInstance()->dbConnection()) == false) {
                         $this->dbh = null;
-                        Log::error(ERR_DBCONNECT . mysqli_connect_error());
+                        Log::error('DATABASE CONNECTION FAILED!<br/>' . mysqli_connect_error());
                     }
 
                     // EXEC ALWAYS A DB SELECT is required when chunking is activated
                     if (DUPX_DB::selectDB($this->dbh, $paramsManager->getValue(PrmMng::PARAM_DB_NAME)) == false) {
-                        Log::error(sprintf(ERR_DBCREATE, $paramsManager->getValue(PrmMng::PARAM_DB_NAME)));
+                        Log::error(
+                            sprintf(
+                                'The database "%s" does not exist.<br/>  Change the action to create in order to "Create New Database" to ' .
+                                    'create the database.  Some hosting providers do not allow database creation except through their control panels. ' .
+                                    'In this case, you will need to login to your hosting providers control panel and create the database manually. ' .
+                                    'Please contact your hosting provider for further details on how to create the database.',
+                                $paramsManager->getValue(PrmMng::PARAM_DB_NAME)
+                            )
+                        );
                     }
                     break;
                 case self::DBACTION_CREATE:
                     //ESTABLISH CONNECTION WITHOUT DATABASE NAME
-                    $connParams = array(
+                    $connParams = [
                         'dbhost' => $paramsManager->getValue(PrmMng::PARAM_DB_HOST),
                         'dbname' => null,
                         'dbuser' => $paramsManager->getValue(PrmMng::PARAM_DB_USER),
-                        'dbpass' => $paramsManager->getValue(PrmMng::PARAM_DB_PASS)
-                    );
+                        'dbpass' => $paramsManager->getValue(PrmMng::PARAM_DB_PASS),
+                    ];
 
                     if (($this->dbh = DUPX_DB_Functions::getInstance()->dbConnection($connParams)) == false) {
                         $this->dbh = null;
-                        Log::error(ERR_DBCONNECT . mysqli_connect_error());
+                        Log::error('DATABASE CONNECTION FAILED!<br/>' . mysqli_connect_error());
                     }
 
                     // don't check for success because in the create new database option the database may not exist.
                     DUPX_DB::selectDB($this->dbh, $paramsManager->getValue(PrmMng::PARAM_DB_NAME));
+                    break;
+                case self::DBACTION_DO_NOTHING:
+                    Log::info('DB ACTION DO NOTHING');
                     break;
                 case self::DBACTION_MANUAL:
                     Log::info('DB ACTION MANUAL');
@@ -494,6 +665,11 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         return $this->dbh;
     }
 
+    /**
+     * Close the database connection
+     *
+     * @return void
+     */
     protected function dbClose()
     {
         if (!is_null($this->dbh)) {
@@ -503,28 +679,14 @@ class DUPX_DBInstall extends AbstractJsonSerializable
     }
 
     /**
-     * Re-execute all SET queries collected during the first chunk.
-     * Called after any reconnection to restore session variables
-     * (e.g. FOREIGN_KEY_CHECKS=0) that are lost on a new connection.
+     * Pings the database and reconnects if the connection is lost
      *
      * @return void
      */
-    protected function reApplySetQueries()
-    {
-        if (empty($this->setQueries)) {
-            return;
-        }
-        foreach ($this->setQueries as $setQuery) {
-            Log::info('RECONNECT RE-APPLY SET QUERY: ' . Log::v2str($setQuery), Log::LV_DETAILED);
-            DUPX_DB::mysqli_query($this->dbh, $setQuery);
-        }
-    }
-
     protected function pingAndReconnect()
     {
         if (!$this->dbh instanceof mysqli) {
             $this->dbConnect(true);
-            $this->reApplySetQueries();
             return;
         }
 
@@ -538,13 +700,17 @@ class DUPX_DBInstall extends AbstractJsonSerializable
             Log::info('DB PING FAILED: ' . $e->getMessage());
             Log::info('Attempting to reconnect');
             $this->dbConnect(true);
-            $this->reApplySetQueries();
         }
     }
 
+    /**
+     * Prepare the database for the install
+     *
+     * @return void
+     */
     protected function prepareDB()
     {
-        if ($this->dbaction === self::DBACTION_MANUAL) {
+        if ($this->dbaction === self::DBACTION_MANUAL || InstState::dbDoNothing()) {
             return;
         }
 
@@ -557,17 +723,15 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         //Set defaults incase the variable could not be read
         $this->drop_tbl_log   = 0;
         $this->rename_tbl_log = 0;
-        $sql_file_size1       = DUPX_U::readableByteSize(DUPX_Package::getSqlFileSize());
 
         Log::info("--------------------------------------");
         Log::info('DATABASE-ENVIRONMENT');
         Log::info("--------------------------------------");
         Log::info(
             "MYSQL VERSION:\tThis Server: " .
-            DUPX_DB::getVersion($this->dbh) .
-            " -- Build Server: {$archiveConfig->version_db}"
+                DUPX_DB::getVersion($this->dbh) .
+                " -- Build Server: {$archiveConfig->version_db}"
         );
-        Log::info("FILE SIZE:\t" . basename(DUPX_Package::getSqlFilePath()) . " ({$sql_file_size1})");
         Log::info("TIMEOUT:\t{$this->dbvar_maxtime}");
         Log::info("MAXPACK:\t{$this->dbvar_maxpacks}");
         Log::info("SQLMODE-GLOBAL:\t{$this->dbvar_sqlmode}");
@@ -586,6 +750,7 @@ class DUPX_DBInstall extends AbstractJsonSerializable
             case self::DBACTION_RENAME:
                 $this->dbActionRename();
                 break;
+            case self::DBACTION_DO_NOTHING:
             case self::DBACTION_MANUAL:
             case self::DBACTION_ONLY_CONNECT:
                 break;
@@ -595,6 +760,11 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         }
     }
 
+    /**
+     * DBACTION_CREATE
+     *
+     * @return void
+     */
     protected function dbActionCreate()
     {
         if ($this->post['view_mode'] == 'basic') {
@@ -602,13 +772,38 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         }
 
         if (mysqli_select_db($this->dbh, mysqli_real_escape_string($this->dbh, $this->post['dbname'])) == false) {
-            Log::error(sprintf(ERR_DBCONNECT_CREATE, $this->post['dbname']));
+            Log::error(
+                sprintf(
+                    'DATABASE CREATION FAILURE!<br/> Unable to create database "%s". ' .
+                        'Check to make sure the user has "Create" privileges.  Some hosts will restrict the creation of a database only through the cpanel. ' .
+                        'Try creating the database manually to proceed with the installation.  If the database already exists select the action ' .
+                        '"Connect and Remove All Data" which will remove all existing tables.',
+                    $this->post['dbname']
+                )
+            );
         }
     }
 
+    /**
+     * DB action empty
+     *
+     * @return void
+     */
     protected function dbActionEmpty()
     {
         $excludeDropTable = DUPX_DB_Functions::getExcludedTables();
+
+        if (InstState::isBridgeInstall()) {
+            Log::info('EXCLUDE OPTION TABLE TO REMOVE');
+            $excludeDropTable[] = DUPX_DB_Functions::getOptionsTableName();
+            DUPX_DB::emptyTable($this->dbh, DUPX_DB_Functions::getOptionsTableName());
+            DbUtils::updateWpOption($this->dbh, 'siteurl', PrmMng::getInstance()->getValue(PrmMng::PARAM_SITE_URL));
+            DbUtils::updateWpOption($this->dbh, 'home', PrmMng::getInstance()->getValue(PrmMng::PARAM_URL_NEW));
+        }
+
+        if ($this->restoreBackupPackagesPreAction()) {
+            $excludeDropTable[] = DUPX_DB_Functions::getPackagesTableName();
+        }
 
         //Drop all tables, views and procs
         $this->dropTables($excludeDropTable);
@@ -617,40 +812,113 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         DbCleanup::dropFuncs();
     }
 
+    /**
+     * DB action remove only tables
+     *
+     * @return void
+     */
     protected function dbActionRemoveOnlyTables()
     {
         $excludeDropTable = DUPX_DB_Functions::getExcludedTables();
 
+        if ($this->restoreBackupPackagesPreAction()) {
+            $excludeDropTable[] = DUPX_DB_Functions::getPackagesTableName();
+        }
+
         $this->dropTables($excludeDropTable, DUPX_DB_Tables::getInstance()->getNewTablesNames());
 
-        DbCleanup::dropProcs();
-        DbCleanup::dropFuncs();
-        DbCleanup::dropViews();
+        if (!InstState::isAddSiteOnMultisite()) {
+            DbCleanup::dropProcs();
+            DbCleanup::dropFuncs();
+            DbCleanup::dropViews();
+        }
+
+        $this->skippedPrefixlessTablesNotice();
     }
 
+    /**
+     * Add a notice listing prefixless tables skipped by the only-prefixed-tables option
+     *
+     * @return void
+     */
+    protected function skippedPrefixlessTablesNotice(): void
+    {
+        if (!PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_ONLY_PREFIXED_TABLES)) {
+            return;
+        }
+
+        $skipped = [];
+        foreach (DUPX_DB_Tables::getInstance()->getTables() as $tableObj) {
+            if (!$tableObj->havePrefix() && !$tableObj->extract()) {
+                $skipped[] = $tableObj->getOriginalName();
+            }
+        }
+
+        if (count($skipped) === 0) {
+            return;
+        }
+
+        Log::info('SKIPPED PREFIXLESS TABLES: ' . implode(', ', $skipped));
+        DUPX_NOTICE_MANAGER::getInstance()->addFinalReportNotice(
+            [
+                'shortMsg' => 'Some database tables were skipped',
+                'level'    => DUPX_NOTICE_ITEM::SOFT_WARNING,
+                'longMsg'  => 'This installation imports only tables with the WordPress table prefix, '
+                    . 'so tables without it were skipped: ' . implode(', ', $skipped),
+                'sections' => 'database',
+            ],
+            DUPX_NOTICE_MANAGER::ADD_UNIQUE,
+            'skipped-prefixless-tables'
+        );
+    }
+
+
+    /**
+     * Restore backup packages pre action
+     *
+     * @return bool Return true if restore backup pre action is required otherwise false
+     */
+    protected function restoreBackupPackagesPreAction()
+    {
+        if (!InstState::isRestoreBackup()) {
+            return false;
+        }
+
+        $overwriteData = PrmMng::getInstance()->getValue(PrmMng::PARAM_OVERWRITE_SITE_DATA);
+        if (!$overwriteData['packagesTableExists']) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Db action rename
+     *
+     * @return void
+     */
     protected function dbActionRename()
     {
         Log::info('TABLE RENAME TO BACKUP');
 
-        $copyTables = array();
+        $copyTables = [];
         if (ParamDescUsers::getUsersMode() !== ParamDescUsers::USER_MODE_OVERWRITE) {
             $paramsManager = PrmMng::getInstance();
             $overwriteData = $paramsManager->getValue(PrmMng::PARAM_OVERWRITE_SITE_DATA);
-            $copyTables    = array(
+            $copyTables    = [
                 DUPX_DB_Functions::getUserTableName($overwriteData['table_prefix']),
-                DUPX_DB_Functions::getUserMetaTableName($overwriteData['table_prefix'])
-            );
+                DUPX_DB_Functions::getUserMetaTableName($overwriteData['table_prefix']),
+            ];
         }
 
-        DUPX_DB_Functions::getInstance()->pregReplaceTableName('/^(.+)$/', $GLOBALS['DB_RENAME_PREFIX'] . '$1', array(
+        DUPX_DB_Functions::getInstance()->pregReplaceTableName('/^(.+)$/', $GLOBALS['DB_RENAME_PREFIX'] . '$1', [
             'prefixFilter'         => DUPX_Constants::BACKUP_RENAME_PREFIX,
             'regexTablesDropFkeys' => '^' . SnapDB::quoteRegex($GLOBALS['DB_RENAME_PREFIX']) . '.+',
             'copyTables'           => $copyTables,
-            'exclude'              => array(
+            'exclude'              => [
                 DUPX_DB_Functions::getUserTableName(self::TEMP_DB_PREFIX),
-                DUPX_DB_Functions::getUserMetaTableName(self::TEMP_DB_PREFIX)
-            )
-        ));
+                DUPX_DB_Functions::getUserMetaTableName(self::TEMP_DB_PREFIX),
+            ],
+        ]);
     }
 
     /**
@@ -673,6 +941,11 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         }
     }
 
+    /**
+     * Deploy database in chunk mode
+     *
+     * @return boolean
+     */
     protected function deployDatabaseChunkMode()
     {
         Log::info("--------------------------------------");
@@ -684,14 +957,23 @@ class DUPX_DBInstall extends AbstractJsonSerializable
             Log::info("DATABASE CHUNK RETRY COUNT: " . Log::v2str($this->post['dbchunk_retry']));
         }
 
-        $delimiter = $this->post['delimiter'];
+        $delimiter    = $this->post['delimiter'];
+        $query_offset = 0;
 
-        $handle = fopen($this->sql_file_path, 'rb');
+        if (!$this->dbDumpIterator->valid()) {
+            Log::info('DATABASE CHUNK: No more sql files to process');
+            return false;
+        }
+
+        $sqlFilePath = $this->dbDumpIterator->current();
+        $handle      = fopen($sqlFilePath, 'rb');
         if ($handle === false) {
             return false;
         }
 
-        Log::info("DATABASE CHUNK SEEK POSITION: " . Log::v2str($this->post['pos']));
+        Log::info("PROCESSING SQL FILE " . basename($sqlFilePath) . " (" . ($this->dbDumpIterator->key() + 1) .
+            " of " . $this->dbDumpIterator->count() . ")");
+        Log::info("OFFSET " . Log::v2str($this->post['pos']) . " OF " . $this->dbDumpIterator->currentSize());
 
         if (-1 !== fseek($handle, $this->post['pos'])) {
             DUPX_DB::setCharset($this->dbh, $this->dbcharset, $this->dbcollate);
@@ -700,7 +982,7 @@ class DUPX_DBInstall extends AbstractJsonSerializable
 
             $this->thread_start_time = DUPX_U::getMicrotime();
 
-            Log::info('DATABASE CHUNK START POS:' . Log::v2str($this->post['pos']), Log::LV_DETAILED);
+            Log::info('DATABASE CHUNK START FILE: ' . basename($sqlFilePath) . ' POS:' . Log::v2str($this->post['pos']), Log::LV_DETAILED);
             $this->pingAndReconnect();
 
             if (@mysqli_autocommit($this->dbh, false)) {
@@ -732,11 +1014,7 @@ class DUPX_DBInstall extends AbstractJsonSerializable
                 if ($this->post['first_chunk']) {
                     //Matches ordinary set queries e.g "SET @saved_cs_client = @@character_set_client;"
                     //and version dependent set queries e.g. "/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;"
-                    //Also captures "SET FOREIGN_KEY_CHECKS = 0;" written by PHP build mode (no @ variable).
-                    if (
-                        preg_match('/^[\s\t]*(?:\/\*!\d+)?[\s\t]*SET[\s\t]*@.+;/', $line) ||
-                        preg_match('/^\s*SET\s+FOREIGN_KEY_CHECKS\s*=\s*0\s*;/i', $line)
-                    ) {
+                    if (preg_match('/^[\s\t]*(?:\/\*!\d+)?[\s\t]*SET[\s\t]*@.+;/', $line)) {
                         $setQuery = trim($line);
                         if (!in_array($setQuery, $this->setQueries)) {
                             Log::info("FIRST CHUNK SET QUERY " . Log::v2str($setQuery), Log::LV_DEBUG);
@@ -790,23 +1068,27 @@ class DUPX_DBInstall extends AbstractJsonSerializable
             }
 
             $query_offset = ftell($handle);
+            $this->appendSeekTellData($query_offset);
 
-            $seek_tell_log_line = (
-                file_exists(self::seekTellFilePath()) &&
-                filesize(self::seekTellFilePath()) > 0
-                ) ? ',' : '';
-
-            $seek_tell_log_line .= $this->post['pos'] . '-' . $query_offset;
-            file_put_contents(self::seekTellFilePath(), $seek_tell_log_line, FILE_APPEND);
-
-            $this->post['progress'] = ceil($query_offset / $this->dbFileSize * 100);
+            $this->post['progress'] = ceil($this->dbDumpIterator->totalOffset($query_offset) / $this->dbDumpIterator->totalSize() * 100);
             $this->post['pos']      = $query_offset;
 
             if (feof($handle)) {
                 if ($this->seekIntegrityCheck()) {
                     Log::info('DATABASE CHUNK: DB install chunk process integrity check has been just passed successfully.', Log::LV_DETAILED);
-                    $this->post['pass']              = 1;
-                    $this->post['continue_chunking'] = false;
+                    $this->dbDumpIterator->next();
+                    if ($this->dbDumpIterator->valid()) {
+                        $this->post['pos']               = 0;
+                        $this->post['pass']              = 0;
+                        $this->post['continue_chunking'] = true;
+                        self::resetSeekTellData();
+                        Log::info("FINISHED PROCESSING " . basename($sqlFilePath));
+                        Log::info("NEXT " . basename($this->dbDumpIterator->current()));
+                    } else {
+                        Log::info("ALL SQL FILES PROCESSED");
+                        $this->post['pass']              = 1;
+                        $this->post['continue_chunking'] = false;
+                    }
                 } else {
                     Log::info('DB install chunk process integrity check has been just failed.');
                     $this->post['pass']      = 0;
@@ -835,6 +1117,11 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         return true;
     }
 
+    /**
+     * Seek integrity check
+     *
+     * @return bool
+     */
     protected function seekIntegrityCheck()
     {
         // ensure integrity
@@ -844,7 +1131,7 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         $last_end               = 0;
         foreach ($seek_tell_log_explodes as $seek_tell_log_explode) {
             $temp_arr = explode('-', $seek_tell_log_explode);
-            if (is_array($temp_arr) && 2 == count($temp_arr)) {
+            if (2 == count($temp_arr)) {
                 $start = $temp_arr[0];
                 $end   = $temp_arr[1];
                 if ($start != $last_end) {
@@ -861,7 +1148,7 @@ class DUPX_DBInstall extends AbstractJsonSerializable
             }
         }
 
-        if ($last_end != DUPX_Package::getSqlFileSize()) {
+        if ($last_end != $this->dbDumpIterator->currentSize()) {
             return false;
         }
         return true;
@@ -879,14 +1166,12 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         static $skipRegex = null;
 
         if (is_null($skipRegex)) {
-            $skipRegex  = array();
+            $skipRegex  = [];
             $skipTables = DUPX_DB_Tables::getInstance()->getTablesToSkip();
             $skipCreate = DUPX_DB_Tables::getInstance()->getTablesCreateSkip();
 
             if (count($skipTables) > 0) {
-                $skipTables = array_map(function ($table) {
-                    return preg_quote($table, '/');
-                }, $skipTables);
+                $skipTables = array_map(fn($table): string => preg_quote($table, '/'), $skipTables);
 
                 for ($i = 0; $i < ceil(count($skipTables) / self::TABLES_REGEX_CHUNK_SIZE); $i++) {
                     $subArray = array_slice($skipTables, $i * self::TABLES_REGEX_CHUNK_SIZE, self::TABLES_REGEX_CHUNK_SIZE);
@@ -905,9 +1190,7 @@ class DUPX_DBInstall extends AbstractJsonSerializable
             }
 
             if (count($skipCreate) > 0) {
-                $skipCreate = array_map(function ($table) {
-                    return preg_quote($table, '/');
-                }, $skipCreate);
+                $skipCreate = array_map(fn($table): string => preg_quote($table, '/'), $skipCreate);
 
                 for ($i = 0; $i < ceil(count($skipCreate) / self::TABLES_REGEX_CHUNK_SIZE); $i++) {
                     $subArray = array_slice($skipCreate, $i * self::TABLES_REGEX_CHUNK_SIZE, self::TABLES_REGEX_CHUNK_SIZE);
@@ -931,9 +1214,10 @@ class DUPX_DBInstall extends AbstractJsonSerializable
                 default:
                     Log::info(
                         'TABLES TO SKIP FOUND ' . Log::v2str(
-                            array(
-                            'Extraction' => $skipTables,
-                            'Create only' => $skipCreate)
+                            [
+                                'Extraction'  => $skipTables,
+                                'Create only' => $skipCreate,
+                            ]
                         ) . "\n"
                     );
                     Log::info('SKIP TABLE EXTRACTION REGEX ' . Log::v2str($skipRegex), Log::LV_DETAILED);
@@ -957,63 +1241,11 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         }
     }
 
-    protected function getRowCountMisMatchTables()
-    {
-        $nManager      = DUPX_NOTICE_MANAGER::getInstance();
-        $archiveConfig = DUPX_ArchiveConfig::getInstance();
-
-        $this->dbConnect();
-
-        if (is_null($this->dbh)) {
-            $errorMsg = "**ERROR** database DBH is null";
-            $this->dbquery_errs++;
-            $nManager->addBothNextAndFinalReportNotice(array(
-                'shortMsg' => $errorMsg,
-                'level'    => DUPX_NOTICE_ITEM::CRITICAL,
-                'sections' => 'database'
-                ), DUPX_NOTICE_MANAGER::ADD_UNIQUE, 'query-dbh-null');
-            Log::info($errorMsg);
-            $nManager->saveNotices();
-            return false;
-        }
-
-        $tablesList     = $archiveConfig->dbInfo->tablesList;
-        $tablePrefix    = PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_TABLE_PREFIX);
-        $skipTables     = array(
-            $tablePrefix . "duplicator_packages",
-            DUPX_DB_Functions::getOptionsTableName(),
-            DUPX_DB_Functions::getPackagesTableName()
-        );
-        $misMatchTables = array();
-        foreach ($tablesList as $table => $tableInfo) {
-            if ($tableInfo->insertedRows === false) {
-                // if it is false it means that no precise count is available to perform the validity test.
-                continue;
-            }
-            $table = $archiveConfig->getTableWithNewPrefix($table);
-            if (in_array($table, $skipTables)) {
-                continue;
-            }
-            $sql    = "SELECT count(*) as cnt FROM `" . mysqli_real_escape_string($this->dbh, $table) . "`";
-            $result = DUPX_DB::mysqli_query($this->dbh, $sql);
-            if (false !== $result) {
-                $row = mysqli_fetch_assoc($result);
-                if ($tableInfo->insertedRows != ($row['cnt'])) {
-                    $errMsg = 'DATABASE: table ' . Log::v2str($table) . ' row count mismatch; expected ' . Log::v2str($tableInfo->insertedRows) . ' in database' . Log::v2str($row['cnt']);
-                    Log::info($errMsg);
-                    $nManager->addBothNextAndFinalReportNotice(array(
-                        'shortMsg' => 'Database Table row count validation was failed',
-                        'level'    => DUPX_NOTICE_ITEM::NOTICE,
-                        'longMsg'  => $errMsg . "\n",
-                        'sections' => 'database'
-                        ), DUPX_NOTICE_MANAGER::ADD_UNIQUE_APPEND, 'row-count-mismatch');
-                    $misMatchTables[] = $table;
-                }
-            }
-        }
-        return $misMatchTables;
-    }
-
+    /**
+     * Deploys the database in single mode
+     *
+     * @return bool True on success, false on failure
+     */
     protected function deployDatabaseSingleMode()
     {
         Log::info("--------------------------------------");
@@ -1021,56 +1253,66 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         Log::info("--------------------------------------");
         $this->dbConnect();
 
-        $handle = fopen($this->sql_file_path, 'rb');
-        if ($handle === false) {
-            return false;
-        }
-
         $nManager = DUPX_NOTICE_MANAGER::getInstance();
         if (is_null($this->dbh)) {
             $errorMsg = "**ERROR** database DBH is null";
             $this->dbquery_errs++;
             $nManager->addNextStepNoticeMessage($errorMsg, DUPX_NOTICE_ITEM::CRITICAL, DUPX_NOTICE_MANAGER::ADD_UNIQUE, 'query-dbh-null');
-            $nManager->addFinalReportNotice(array(
+            $nManager->addFinalReportNotice([
                 'shortMsg' => $errorMsg,
                 'level'    => DUPX_NOTICE_ITEM::CRITICAL,
-                'sections' => 'database'
-                ), DUPX_NOTICE_MANAGER::ADD_UNIQUE, 'query-dbh-null');
+                'sections' => 'database',
+            ], DUPX_NOTICE_MANAGER::ADD_UNIQUE, 'query-dbh-null');
             Log::info($errorMsg);
             $nManager->saveNotices();
-            return;
+            return false;
         }
 
         $query     = '';
         $delimiter = ';';
 
-        while (($line      = fgets($handle)) !== false) {
-            if (($res = self::isDelimiterLine($line)) !== false) {
-                $query     = '';
-                $delimiter = $this->post['delimiter'] = $res;
-                continue;
+        while ($this->dbDumpIterator->valid()) {
+            $sqlFilePath = $this->dbDumpIterator->current();
+            if (($handle = @fopen($sqlFilePath, 'rb')) === false) {
+                return false;
+            }
+            Log::info("PROCESSING SQL FILE " . basename($sqlFilePath) . " (" . ($this->dbDumpIterator->key() + 1) . " of "
+                . $this->dbDumpIterator->count() . ")");
+
+            while (($line = fgets($handle)) !== false) {
+                if (($res = self::isDelimiterLine($line)) !== false) {
+                    $query     = '';
+                    $delimiter = $this->post['delimiter'] = $res;
+                    continue;
+                }
+
+                $query .= $line;
+
+                if (preg_match('/' . preg_quote($delimiter, '/') . '\s*$/S', $line)) {
+                    $this->writeQueryInDB($query);
+                    $query = '';
+                }
             }
 
-            $query .= $line;
-
-            if (preg_match('/' . preg_quote($delimiter, '/') . '\s*$/S', $line)) {
-                $this->writeQueryInDB($query);
-                $query = '';
-            }
+            @fclose($handle);
+            $this->dbDumpIterator->next();
         }
 
+        $this->post['pass'] = 1;
+        Log::info("ALL SQL FILES PROCESSED");
         $nManager->saveNotices();
+        return true;
     }
 
     /**
-     * @param string $query
+     * @param string $query query to write
      *
-     * @return boolean // false on failure
+     * @return bool true if query was written successfully
      */
     protected function writeQueryInDB($query)
     {
         $query = trim($query);
-        if ($this->skipQuery($query)) {
+        if (static::skipQuery($query)) {
             return true;
         }
 
@@ -1087,21 +1329,17 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         if (($queryLen = strlen($query)) > $this->dbvar_maxpacks) {
             $errorMsg = "FAILED QUERY LIMIT [QLEN:" . $queryLen . "|MAX:{$this->dbvar_maxpacks}]\n\t[SQL=" . substr($query, 0, self::QUERY_ERROR_LOG_LEN) . "...]\n\n";
             $this->dbquery_errs++;
-            $nManager->addBothNextAndFinalReportNotice(array(
+            $nManager->addBothNextAndFinalReportNotice([
                 'shortMsg'    => 'Query size limit error (max limit ' . $this->dbvar_maxpacks . ')',
                 'level'       => DUPX_NOTICE_ITEM::SOFT_WARNING,
                 'longMsg'     => $errorMsg,
                 'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_PRE,
                 'sections'    => 'database',
-                'faqLink'     => array(
-                    'url'   => InstallerLinkManager::getDocUrl(
-                        'how-to-fix-database-errors-or-general-warnings-on-the-install-report',
-                        'install',
-                        'DB error notice'
-                    ),
-                    'label' => 'FAQ Link'
-                )
-                ), DUPX_NOTICE_MANAGER::ADD_UNIQUE_APPEND, 'query-size-limit-msg');
+                'faqLink'     => [
+                    'url'   => DUPX_Constants::FAQ_URL . 'how-to-fix-database-errors-or-general-warnings-on-the-install-report',
+                    'label' => 'FAQ Link',
+                ],
+            ], DUPX_NOTICE_MANAGER::ADD_UNIQUE_APPEND, 'query-size-limit-msg');
             Log::info($errorMsg);
             $return = false;
         }
@@ -1111,44 +1349,43 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         if (($query_res = DUPX_DB::mysqli_query($this->dbh, $query)) === false) {
             $err    = mysqli_error($this->dbh);
             $errMsg = "DATABASE ERROR: '{$err}'\n\t[SQL=" . substr($query, 0, self::QUERY_ERROR_LOG_LEN) . "...]\n\n";
-            $url    = InstallerLinkManager::getDocUrl('how-to-fix-database-write-issues', 'install', 'DB error notice');
 
             if (DUPX_U::contains($err, 'Unknown collation')) {
-                $nManager->addNextStepNotice(array(
+                $nManager->addNextStepNotice([
                     'shortMsg'    => 'DATABASE ERROR: ' . $err,
                     'level'       => DUPX_NOTICE_ITEM::HARD_WARNING,
-                    'longMsg'     => 'Unknown collation<br>RECOMMENDATION: Try resolutions found at ' . $url,
+                    'longMsg'     => 'Unknown collation<br>RECOMMENDATION: Try resolutions found at ' . DUPX_Constants::FAQ_URL . 'how-to-fix-database-write-issues',
                     'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_HTML,
-                    'faqLink'     => array(
-                        'url'   => $url,
-                        'label' => 'FAQ Link'
-                    )
-                    ), DUPX_NOTICE_MANAGER::ADD_UNIQUE, 'query-collation-write-msg');
-                $nManager->addFinalReportNotice(array(
+                    'faqLink'     => [
+                        'url'   => DUPX_Constants::FAQ_URL . 'how-to-fix-database-write-issues',
+                        'label' => 'FAQ Link',
+                    ],
+                ], DUPX_NOTICE_MANAGER::ADD_UNIQUE, 'query-collation-write-msg');
+                $nManager->addFinalReportNotice([
                     'shortMsg'    => 'DATABASE ERROR: ' . $err,
                     'level'       => DUPX_NOTICE_ITEM::HARD_WARNING,
-                    'longMsg'     => 'Unknown collation<br>RECOMMENDATION: Try resolutions found at ' . $url . '<br>' . $errMsg,
+                    'longMsg'     => 'Unknown collation<br>RECOMMENDATION: Try resolutions found at ' . DUPX_Constants::FAQ_URL . 'how-to-fix-database-write-issues' . '<br>' . $errMsg,
                     'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_HTML,
                     'sections'    => 'database',
-                    'faqLink'     => array(
-                        'url'   => $url,
-                        'label' => 'FAQ Link'
-                    )
-                ));
-                Log::info('RECOMMENDATION: Try resolutions found at ' . $url);
+                    'faqLink'     => [
+                        'url'   => DUPX_Constants::FAQ_URL . 'how-to-fix-database-write-issues',
+                        'label' => 'FAQ Link',
+                    ],
+                ]);
+                Log::info('RECOMMENDATION: Try resolutions found at ' . DUPX_Constants::FAQ_URL . 'how-to-fix-database-write-issues');
             } elseif (!$this->skipErrorNotice($err, $query)) {
-                $nManager->addNextStepNotice(array(
+                $nManager->addNextStepNotice([
                     'shortMsg'    => 'DATABASE ERROR: database error write',
                     'level'       => DUPX_NOTICE_ITEM::SOFT_WARNING,
                     'longMsg'     => $errMsg,
-                    'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_PRE
-                    ), DUPX_NOTICE_MANAGER::ADD_UNIQUE_APPEND, 'query-write-msg');
-                $nManager->addFinalReportNotice(array(
+                    'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_PRE,
+                ], DUPX_NOTICE_MANAGER::ADD_UNIQUE_APPEND, 'query-write-msg');
+                $nManager->addFinalReportNotice([
                     'shortMsg' => 'DATABASE ERROR: ' . $err,
                     'level'    => DUPX_NOTICE_ITEM::SOFT_WARNING,
                     'longMsg'  => $errMsg,
-                    'sections' => 'database'
-                ));
+                    'sections' => 'database',
+                ]);
             }
 
             $this->pingAndReconnect();
@@ -1169,6 +1406,11 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         return $return;
     }
 
+    /**
+     *  SQL Session Mode
+     *
+     *  @return string
+     */
     private function getSQLSessionMode()
     {
         $this->dbConnect();
@@ -1188,9 +1430,9 @@ class DUPX_DBInstall extends AbstractJsonSerializable
      * be overriden by values set in the database.sql script such as:
      * !40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO'
      *
-     * @throws Exception
+     * @return void
      */
-    private function setSQLSessionMode()
+    private function setSQLSessionMode(): void
     {
         $this->dbConnect();
         switch ($this->post['dbmysqlmode']) {
@@ -1212,24 +1454,25 @@ class DUPX_DBInstall extends AbstractJsonSerializable
             $long      = "WARNING: A custom sql_mode setting issue has been detected:\n{$sql_error}.<br>";
             $long     .= "The installation continue with the default MySQL Mode of the database.<br><br>";
             $long     .= "For more details visit: <a href=\"https://dev.mysql.com/doc/refman/8.0/en/sql-mode.html\" target=\"_blank\">sql-mode documentation</a>";
-            DUPX_NOTICE_MANAGER::getInstance()->addBothNextAndFinalReportNotice(array(
+            DUPX_NOTICE_MANAGER::getInstance()->addBothNextAndFinalReportNotice([
                 'shortMsg'    => 'SET SQL MODE ERROR',
                 'level'       => DUPX_NOTICE_ITEM::SOFT_WARNING,
                 'longMsg'     => $long,
                 'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_HTML,
-                'sections'    => 'database'
-                ), DUPX_NOTICE_MANAGER::ADD_UNIQUE, 'drop-mysql-mode-set');
+                'sections'    => 'database',
+            ], DUPX_NOTICE_MANAGER::ADD_UNIQUE, 'drop-mysql-mode-set');
         }
     }
 
     /**
+     * Drops tables in the database
      *
-     * @param array      $exclude tables to exclude
-     * @param bool|array $tables  // if true drop all tables or table in list
+     * @param string[]      $exclude tables to exclude
+     * @param bool|string[] $tables  if true drop all tables or table in list
      *
      * @return void
      */
-    private function dropTables($exclude = array(), $tables = true)
+    private function dropTables(array $exclude = [], $tables = true): void
     {
         $logMsg = 'DROP' . ($tables === true ? ' ALL TABLES' : ' TABLES ' . Log::v2str($tables));
         if (count($exclude) > 0) {
@@ -1237,7 +1480,7 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         }
         Log::info($logMsg);
 
-        $found_tables = array();
+        $found_tables = [];
 
         $sql = "SHOW FULL TABLES WHERE Table_Type != 'VIEW'";
         if (($result = DUPX_DB::mysqli_query($this->dbh, $sql)) === false) {
@@ -1269,7 +1512,18 @@ class DUPX_DBInstall extends AbstractJsonSerializable
             Log::info('DROP TABLE ' . $table_name);
             $sql = "DROP TABLE `" . mysqli_real_escape_string($this->dbh, $this->post['dbname']) . "`.`" . mysqli_real_escape_string($this->dbh, $table_name) . "`";
             if (!$result = DUPX_DB::mysqli_query($this->dbh, $sql)) {
-                Log::error(sprintf(ERR_DROP_TABLE_TRYCLEAN, $table_name, $this->post['dbname'], mysqli_error($this->dbh)));
+                Log::error(
+                    sprintf(
+                        'TABLE CLEAN FAILURE' .
+                            'Unable to remove TABLE "%s" from database "%s".<br/>'  .
+                            'Please remove all tables from this database and try the installation again. ' .
+                            'If no tables show in the database, then Drop the database and re-create it.<br/>' .
+                            'ERROR MESSAGE: %s',
+                        $table_name,
+                        $this->post['dbname'],
+                        mysqli_error($this->dbh)
+                    )
+                );
             }
         }
         DUPX_DB::mysqli_query($this->dbh, "SET FOREIGN_KEY_CHECKS = 1;");
@@ -1277,6 +1531,11 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         $this->drop_tbl_log = count($found_tables);
     }
 
+    /**
+     * Write Log
+     *
+     * @return void
+     */
     protected function writeLog()
     {
         $this->dbConnect();
@@ -1294,7 +1553,7 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         Log::info("TABLES ROWS IN DATABASE AFTER EXTRACTION\n");
         if (($result = DUPX_DB::mysqli_query($this->dbh, "SHOW TABLES")) != false) {
             while ($row = mysqli_fetch_array($result, MYSQLI_NUM)) {
-                $table_rows          = DUPX_DB::countTableRows($this->dbh, $row[0]);
+                $table_rows          = (string) DUPX_DB::countTableRows($this->dbh, $row[0]);
                 $this->dbtable_rows += $table_rows;
                 Log::info('TABLE ' . str_pad(Log::v2str($row[0]), 50, '_', STR_PAD_RIGHT) . '[ROWS:' . str_pad($table_rows, 6, " ", STR_PAD_LEFT) . ']');
                 $this->dbtable_count++;
@@ -1306,12 +1565,12 @@ class DUPX_DBInstall extends AbstractJsonSerializable
             $tablePrefix = $paramsManager->getValue(PrmMng::PARAM_DB_TABLE_PREFIX);
             $longMsg     = "You may have to manually run the installer-data.sql to validate data input. " .
                 "Also check to make sure your installer file is correct and the table prefix '" . $tablePrefix . " is correct for this particular version of WordPress.";
-            $nManager->addBothNextAndFinalReportNotice(array(
+            $nManager->addBothNextAndFinalReportNotice([
                 'shortMsg' => 'No table in database',
                 'level'    => DUPX_NOTICE_ITEM::NOTICE,
                 'longMsg'  => $longMsg,
-                'sections' => 'database'
-            ));
+                'sections' => 'database',
+            ]);
             Log::info("NOTICE: " . $longMsg . "\n");
         }
 
@@ -1325,17 +1584,24 @@ class DUPX_DBInstall extends AbstractJsonSerializable
         $nManager->saveNotices();
     }
 
+    /**
+     * Return result data
+     *
+     * @return mixed[]
+     */
     public function getResultData()
     {
-        $result                      = array();
+        $result                      = [];
         $result['pass']              = $this->post['pass'];
         $result['continue_chunking'] = $this->post['continue_chunking'];
+        $totalSize                   = $this->dbDumpIterator->totalSize();
+        $totalOffset                 = $this->dbDumpIterator->totalOffset($this->post['pos']);
         if ($result['continue_chunking'] == 0 && $result['pass']) {
             $result['perc']        = '100%';
-            $result['queryOffset'] = 'Bytes processed ' . number_format($this->dbFileSize) . ' of ' . number_format($this->dbFileSize);
+            $result['queryOffset'] = 'Bytes processed ' . number_format($totalSize) . ' of ' . number_format($totalSize);
         } else {
-            $result['perc']        = round(($this->post['pos'] * 100 / $this->dbFileSize), 2) . '%';
-            $result['queryOffset'] = 'Bytes processed ' . number_format($this->post['pos']) . ' of ' . number_format($this->dbFileSize);
+            $result['perc']        = round(($totalOffset * 100 / $totalSize), 2) . '%';
+            $result['queryOffset'] = 'Bytes processed ' . number_format($totalOffset) . ' of ' . number_format($totalSize);
         }
         $result['is_error']    = $this->post['is_error'];
         $result['error_msg']   = $this->post['error_msg'];
@@ -1347,21 +1613,37 @@ class DUPX_DBInstall extends AbstractJsonSerializable
     }
 
     /**
-     * @param $err   string Error message
-     * @param $query string the SQL query
+     * Skip error notice
+     *
+     * @param string $err   Error message
+     * @param string $query the SQL query
      *
      * @return bool if true will skip front-end notice of error message
      */
-    private function skipErrorNotice($err, $query)
+    private function skipErrorNotice(string $err, $query): bool
     {
+        if (preg_match(self::SQL_CREATE_VIEW_PROC_FUNC_PATTERN, $query) && DUPX_U::contains($err, "already exists") && InstState::isAddSiteOnMultisite()) {
+            return true;
+        }
+
         return false;
     }
 
+    /**
+     * Is firt chunk or not chunking
+     *
+     * @return bool
+     */
     protected function firstOrNotChunking()
     {
         return $this->post['first_chunk'] || !PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_CHUNK);
     }
 
+    /**
+     * Destructor
+     *
+     * @return void
+     */
     public function __destruct()
     {
         $this->dbClose();

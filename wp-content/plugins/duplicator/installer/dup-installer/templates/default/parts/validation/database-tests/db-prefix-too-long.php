@@ -1,16 +1,16 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $isOk bool */
-/* @var $errorMessage string */
-/* @var $tooLongNewTableNames array */
+/**
+ * Variables
+ *
+ * @var bool $isOk
+ * @var string $errorMessage
+ * @var string[] $tooLongNewTableNames
+ */
 
 $statusClass = $isOk ? 'green' : 'red';
 ?>
@@ -31,7 +31,7 @@ $statusClass = $isOk ? 'green' : 'red';
 
 <div class="sub-title">DETAILS</div>
 <p>
-    This test checks if there are any table names that would be too long after adding prefix to them.
+    This test checks if there are any tablenames that would be too long after adding prefix to them.
     MySQL accepts length of table names with maximum of 64 characters 
     (see <a href="https://dev.mysql.com/doc/refman/8.0/en/identifier-length.html" target="_blank">length limits</a>).
     With a too long prefix, tables can exceed this limit.    
@@ -50,5 +50,5 @@ $statusClass = $isOk ? 'green' : 'red';
 
 <div class="sub-title">TROUBLESHOOT</div>
 <ul>
-    <li>Choose a shorter prefix in Options ❯ Database Settings ❯ Table Prefix.</li>
+    <li>Choose a shorter prefix in Options -> Database Settings -> Table Prefix.</li>
 </ul>

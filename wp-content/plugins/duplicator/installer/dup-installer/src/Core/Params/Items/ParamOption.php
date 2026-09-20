@@ -1,15 +1,5 @@
 <?php
 
-/**
- * option descriptor for select, radio, multiple checkbox ...
- *
- * Standard: PSR-2
- *
- * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
- */
-
 namespace Duplicator\Installer\Core\Params\Items;
 
 /**
@@ -17,26 +7,32 @@ namespace Duplicator\Installer\Core\Params\Items;
  */
 class ParamOption
 {
-    const OPT_ENABLED  = 'enabled';
-    const OPT_DISABLED = 'disabled';
-    const OPT_HIDDEN   = 'hidden';
+    const OPT_ENABLED  = 'opt_enabled';
+    const OPT_DISABLED = 'opt_disabled';
+    const OPT_HIDDEN   = 'opt_hidden';
 
-    public $value         = '';
-    public $label         = '';
-    public $attrs         = array();
-    protected $optStatus  = self::OPT_ENABLED;
-    protected $note       = '';
+    /** @var string */
+    public $value = '';
+    /** @var string */
+    public $label = '';
+    /** @var array<string, mixed> */
+    public $attrs = [];
+    /** @var string */
+    protected $optStatus = self::OPT_ENABLED;
+    /** @var string */
+    protected $note = '';
+    /** @var string */
     protected $groupLabel = '';
 
     /**
      * Class constructor
      *
-     * @param mixed           $value     option value
-     * @param string          $label     label
-     * @param string|function $optStatus option status. can be a fixed status or a callback
-     * @param array           $attrs     option attributes
+     * @param mixed                $value     option value
+     * @param string               $label     label
+     * @param string|callable      $optStatus option status. can be a fixed status or a callback
+     * @param array<string, mixed> $attrs     option attributes
      */
-    public function __construct($value, $label, $optStatus = self::OPT_ENABLED, $attrs = array())
+    public function __construct($value, $label, $optStatus = self::OPT_ENABLED, $attrs = [])
     {
         $this->value     = $value;
         $this->label     = $label;
@@ -65,7 +61,7 @@ class ParamOption
      *
      * @return void
      */
-    public function setStatus($optStatus)
+    public function setStatus($optStatus): void
     {
         $this->optStatus = $optStatus;
     }
@@ -77,7 +73,7 @@ class ParamOption
      *
      * @return void
      */
-    public function setNote($note)
+    public function setNote($note): void
     {
         $this->note = is_callable($note) ? $note : ((string) $note);
     }
@@ -86,15 +82,9 @@ class ParamOption
      *
      * @return string
      */
-    public function getNote()
+    public function getNote(): string
     {
-        $note = '';
-        if (is_callable($this->note)) {
-            $note = call_user_func($this->note, $this);
-        } else {
-            $note = $this->note;
-        }
-
+        $note = is_callable($this->note) ? call_user_func($this->note, $this) : $this->note;
         return (empty($note) ? '' : '<div class="sub-note" >' . $note . '</div>');
     }
 
@@ -105,7 +95,7 @@ class ParamOption
      *
      * @return void
      */
-    public function setOptGroup($label)
+    public function setOptGroup($label): void
     {
         $this->groupLabel = (string) $label;
     }
@@ -124,7 +114,7 @@ class ParamOption
      *
      * @return bool
      */
-    public function isEnable()
+    public function isEnable(): bool
     {
         return $this->getStatus() == self::OPT_ENABLED;
     }
@@ -133,7 +123,7 @@ class ParamOption
      *
      * @return bool
      */
-    public function isDisabled()
+    public function isDisabled(): bool
     {
         return $this->getStatus() == self::OPT_DISABLED;
     }
@@ -142,7 +132,7 @@ class ParamOption
      *
      * @return bool
      */
-    public function isHidden()
+    public function isHidden(): bool
     {
         return $this->getStatus() == self::OPT_HIDDEN;
     }

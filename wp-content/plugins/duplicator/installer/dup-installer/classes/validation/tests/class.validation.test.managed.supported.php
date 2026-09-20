@@ -7,23 +7,35 @@
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
  *
- * @package SC\DUPX\U
  */
+
+use Duplicator\Installer\Core\InstState;
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 class DUPX_Validation_test_managed_supported extends DUPX_Validation_abstract_item
 {
-    private $managed     = false;
+    /** @var bool */
+    private $managed = false;
+    /** @var string */
     private $failMessage = '';
 
-    protected function runTest()
+    protected function runTest(): int
     {
         if (!($this->managed = DUPX_Custom_Host_Manager::getInstance()->isManaged())) {
             return self::LV_SKIP;
         }
 
-        if (DUPX_InstallerState::isImportFromBackendMode()) {
+        if (InstState::isRecoveryMode()) {
+            return self::LV_PASS;
+        }
+
+        if (InstState::isNewSiteIsMultisite()) {
+            $this->failMessage = "Installing multisites on managed hosts is not supported";
+            return self::LV_FAIL;
+        }
+
+        if (InstState::isImportFromBackendMode()) {
             return self::LV_PASS;
         }
 
@@ -44,7 +56,7 @@ class DUPX_Validation_test_managed_supported extends DUPX_Validation_abstract_it
         }
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'Managed hosting supported';
     }
@@ -53,11 +65,11 @@ class DUPX_Validation_test_managed_supported extends DUPX_Validation_abstract_it
     {
         return dupxTplRender(
             'parts/validation/tests/managed-supported',
-            array(
-            'isOk'           => false,
-            'managedHosting' => $this->managed,
-            'failMessage'    => $this->failMessage
-            ),
+            [
+                'isOk'           => false,
+                'managedHosting' => $this->managed,
+                'failMessage'    => $this->failMessage,
+            ],
             false
         );
     }
@@ -66,11 +78,11 @@ class DUPX_Validation_test_managed_supported extends DUPX_Validation_abstract_it
     {
         return dupxTplRender(
             'parts/validation/tests/managed-supported',
-            array(
-            'isOk'           => true,
-            'managedHosting' => $this->managed,
-            'failMessage'    => $this->failMessage
-            ),
+            [
+                'isOk'           => true,
+                'managedHosting' => $this->managed,
+                'failMessage'    => $this->failMessage,
+            ],
             false
         );
     }

@@ -1,9 +1,6 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 ?>
@@ -15,7 +12,6 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
     The prefix is only applied to existing tables and not the new tables that will be installed.
 </span>
 <span class="s2-warning-manualdb">
-    Notice: The 'Skip Database Extraction' action will prevent the SQL script (dup-database__[HASH].sql) in the archive from being executed.
-    The database above should already be pre-populated with the data for the site.   The updates routines for updating the site URL and paths will be the
-    only SQL database commands applied to the database.
+    Notice: The 'Skip Database Extraction' action will prevent the SQL script in the archive from running. The database above should already be
+    pre-populated with data which will be updated in the next step. No data in the database will be modified until after Step 3 runs.
 </span>

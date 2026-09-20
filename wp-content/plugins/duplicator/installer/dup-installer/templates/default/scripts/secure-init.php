@@ -1,20 +1,19 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\Security;
 use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Installer\Utils\SecureCsrf;
 use Duplicator\Libs\Snap\SnapJson;
 
-$nextStepPrams = array(
+$nextStepPrams = [
     PrmMng::PARAM_CTRL_ACTION => 'ctrl-step1',
-    DUPX_Security::CTRL_TOKEN               => DUPX_CSRF::generate('ctrl-step1'),
-    PrmMng::PARAM_STEP_ACTION => DUPX_CTRL::ACTION_STEP_INIZIALIZED
-);
+    Security::CTRL_TOKEN      => SecureCsrf::generate('ctrl-step1'),
+    PrmMng::PARAM_STEP_ACTION => DUPX_CTRL::ACTION_STEP_INIZIALIZED,
+];
 ?>
 <script>
     $(document).ready(function () {
@@ -30,15 +29,15 @@ $nextStepPrams = array(
             if (!passForm.parsley().isValid()) {
                 return;
             }
-            var formData = passForm.serializeForm();
+            var formData = passForm.serializeJSON();
 
-            DUPX.StandardJsonAjaxWrapper(
+            DUPX.StandarJsonAjaxWrapper(
                     secureAction,
                     secureToken,
                     formData,
                     function (data) {
                         if (data.actionData) {
-                            DUPX.redirect(DUPX.dupInstallerUrl, 'post', <?php echo SnapJson::jsonEncode($nextStepPrams); ?>);
+                            DUPX.redirectMainInstaller('post', <?php echo SnapJson::jsonEncode($nextStepPrams); ?>);
                         } else {
                             $('#pwd-check-fail').show();
                         }

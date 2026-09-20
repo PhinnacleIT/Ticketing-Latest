@@ -1,17 +1,20 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-dupxTplRender('pages-parts/page-header', array(
+/**
+ * Variables
+ *
+ * @var string $bodyClasses
+ */
+
+dupxTplRender('pages-parts/page-header', [
     'paramView'   => 'step1',
     'bodyId'      => 'page-step1',
-    'bodyClasses' => $bodyClasses
-));
+    'bodyClasses' => $bodyClasses,
+]);
 ?>
 <div id="content-inner">
     <?php dupxTplRender('pages-parts/step1/step-title'); ?>
@@ -20,9 +23,9 @@ dupxTplRender('pages-parts/page-header', array(
     </div>
     <?php
     dupxTplRender('parts/ajax-error');
-    dupxTplRender('parts/progress-bar', array(
-        'display' => DUPX_Validation_manager::validateOnLoad()
-    ));
+    dupxTplRender('parts/progress-bar', [
+        'display' => DUPX_Validation_manager::validateOnLoad(),
+    ]);
     ?>
 </div>
 <?php

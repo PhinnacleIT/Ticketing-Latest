@@ -6,11 +6,12 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 namespace Duplicator\Installer\Utils\Tests;
+
+use Duplicator\Installer\Utils\InstDescMng;
+use Duplicator\Libs\Snap\SnapIO;
 
 class MessageCustomizer
 {
@@ -23,11 +24,11 @@ class MessageCustomizer
      *
      * @param string $shortMessage short message of notice to be customized
      * @param string $longMessage  long message of notice to be customized
-     * @param string $noticeId     notice IDfinal-tests.php
+     * @param string $noticeId     notice ID
      *
      * @return bool true if any of the customizations were applied, false otherwise
      */
-    public static function applyAllNoticeCustomizations(&$shortMessage, &$longMessage, &$noticeId)
+    public static function applyAllNoticeCustomizations(&$shortMessage, &$longMessage, &$noticeId): bool
     {
         foreach (self::getCustomizationItems() as $item) {
             if ($item->conditionSatisfied($longMessage)) {
@@ -45,45 +46,44 @@ class MessageCustomizer
      * Get customization to apply at error messages
      *
      * @return MessageCustomizerItem[] customizations list
-     * @throws \Exception
      */
-    protected static function getCustomizationItems()
+    protected static function getCustomizationItems(): array
     {
-        $items   = array();
+        $items   = [];
         $items[] = new MessageCustomizerItem(
-            function ($string) {
-                if (MessageCustomizer::getArchiveConfigData() == false) {
+            function ($string): bool {
+                if (self::getArchiveConfigData() == false) {
                     return false;
                 }
                 return preg_match("/undefined.*create_function/", $string) &&
                     version_compare(phpversion(), "8") >= 0 &&
-                    version_compare(MessageCustomizer::getArchiveConfigData()->version_php, "8") < 0;
+                    version_compare(self::getArchiveConfigData()->version_php, "8") < 0;
             },
             function ($string, $context) {
-                if (MessageCustomizer::getArchiveConfigData() == false) {
+                if (self::getArchiveConfigData() == false) {
                     return $string;
                 }
-                $phpVersionNew = MessageCustomizer::getTwoLevelVersion(phpversion());
-                $phpVersionOld = MessageCustomizer::getTwoLevelVersion(MessageCustomizer::getArchiveConfigData()->version_php);
+                $phpVersionNew = self::getTwoLevelVersion(phpversion());
+                $phpVersionOld = self::getTwoLevelVersion(self::getArchiveConfigData()->version_php);
                 $longMsgPrefix = "There is code in this site that is not compatible with PHP " . $phpVersionNew . ". " .
                     "To make the install work you will either have to\ninstall on PHP " .
                     $phpVersionOld . " or ";
 
                 switch ($context) {
-                    case MessageCustomizer::CONTEXT_SHORT_MESSAGE:
+                    case self::CONTEXT_SHORT_MESSAGE:
                         return "Source site or plugins are incompatible with PHP " . $phpVersionNew;
-                    case MessageCustomizer::CONTEXT_LONG_MESSAGE:
-                        if (($plugin = MessageCustomizer::getProblematicPluginFromError($string)) !== false) {
+                    case self::CONTEXT_LONG_MESSAGE:
+                        if (($plugin = self::getProblematicPluginFromError($string)) !== false) {
                             return $longMsgPrefix . "disable the plugin '{$plugin->name}' (slug: $plugin->slug) using a " .
                                 "file manager of your choice.\nSee full error message below: \n\n" . $string;
-                        } elseif (($theme = MessageCustomizer::getProblematicThemeFromError($string)) !== false) {
+                        } elseif (($theme = self::getProblematicThemeFromError($string)) !== false) {
                             return $longMsgPrefix . "disable the theme '{$theme->themeName}' (slug: $theme->slug) using a " .
                                 "file manager of your choice.\nSee full error message below: \n\n" . $string;
                         } else {
-                            return $longMsgPrefix . "manually modify the affected files mentioned in the error trace below: \n\n" .
+                            return $longMsgPrefix . "manually modify the affected files mentioned in error trace below: \n\n" .
                                 $string;
                         }
-                    case MessageCustomizer::CONTEXT_NOTICE_ID:
+                    case self::CONTEXT_NOTICE_ID:
                         return $string . '_php8';
                 }
             }
@@ -101,14 +101,14 @@ class MessageCustomizer
      */
     protected static function getProblematicPluginFromError($longMessage)
     {
-        if (($archiveConfig     = self::getArchiveConfigData()) === false) {
+        if (($archiveConfig = self::getArchiveConfigData()) === false) {
             return false;
         }
         $oldMain           = $archiveConfig->wpInfo->targetRoot;
         $oldMuPlugins      = $archiveConfig->wpInfo->configs->realValues->originalPaths->muplugins;
         $oldPlugins        = $archiveConfig->wpInfo->configs->realValues->originalPaths->plugins;
-        $relativeMuPlugins = str_replace($oldMain, "", $oldMuPlugins);
-        $relativePlugins   = str_replace($oldMain, "", $oldPlugins);
+        $relativeMuPlugins = SnapIO::getRelativePath($oldMuPlugins, $oldMain);
+        $relativePlugins   = SnapIO::getRelativePath($oldPlugins, $oldMain);
         $regex             = "/(?:" . preg_quote($relativePlugins, "/") . "\/|" . preg_quote($relativeMuPlugins, "/") . "\/)(.*?)(\/|\.php).*$/m";
         if (!preg_match($regex, $longMessage, $matches)) {
             return false;
@@ -134,10 +134,13 @@ class MessageCustomizer
      */
     protected static function getProblematicThemeFromError($longMessage)
     {
-        $archiveConfig  = self::getArchiveConfigData();
+        if (($archiveConfig  = self::getArchiveConfigData()) === false) {
+            return false;
+        }
+
         $oldMain        = $archiveConfig->wpInfo->targetRoot;
         $oldThemes      = $archiveConfig->wpInfo->configs->realValues->originalPaths->themes;
-        $relativeThemes = str_replace($oldMain, "", $oldThemes);
+        $relativeThemes = SnapIO::getRelativePath($oldThemes, $oldMain);
 
         file_put_contents(
             DUPX_INIT . "/my_log.txt",
@@ -169,15 +172,16 @@ class MessageCustomizer
     {
         static $archiveConfig = null;
         if (is_null($archiveConfig)) {
-            if (
-                ($path = glob(DUPX_INIT . "/dup-archive__*.txt")) === false ||
-                count($path) !== 1
-            ) {
-                return $archiveConfig = false;
+            $archiveConfigPath = DUPX_INIT . "/" . InstDescMng::getInstance()->getName(InstDescMng::TYPE_ARCHIVE_CONFIG);
+
+            if (!file_exists($archiveConfigPath)) {
+                $archiveConfig = false;
+                return $archiveConfig;
             }
 
-            if (($json = file_get_contents($path[0])) === false) {
-                return $archiveConfig = false;
+            if (($json = file_get_contents($archiveConfigPath)) === false) {
+                $archiveConfig = false;
+                return $archiveConfig;
             }
 
             $archiveConfig = json_decode($json);
@@ -193,7 +197,7 @@ class MessageCustomizer
      *
      * @return string returns only the first 2 levels of the version numbers
      */
-    private static function getTwoLevelVersion($version)
+    private static function getTwoLevelVersion($version): string
     {
         $arr = explode(".", $version);
         return $arr[0] . "." . $arr[1];

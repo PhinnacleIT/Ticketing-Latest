@@ -7,13 +7,14 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\WPConfig
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\Deploy\ServerConfigs;
 use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Installer\Utils\InstallerOrigFileMng;
+use Duplicator\Installer\Utils\Log\Log;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\WpConfig\WPConfigTransformer;
 
@@ -21,12 +22,12 @@ class DUPX_WPConfig
 {
     const ADMIN_SERIALIZED_SECURITY_STRING = 'a:1:{s:13:"administrator";b:1;}';
     const ADMIN_LEVEL                      = 10;
-/**
+    /**
      * get wp-config default path (not relative to orig file manger)
      *
      * @return string
      */
-    public static function getWpConfigDeafultPath()
+    public static function getWpConfigDeafultPath(): string
     {
         return PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_NEW) . '/wp-config.php';
     }
@@ -37,7 +38,7 @@ class DUPX_WPConfig
      */
     public static function getWpConfigPath()
     {
-        $origWpConfTarget = DUPX_Orig_File_Manager::getInstance()->getEntryTargetPath(DUPX_ServerConfig::CONFIG_ORIG_FILE_WPCONFIG_ID, self::getWpConfigDeafultPath());
+        $origWpConfTarget = InstallerOrigFileMng::getInstance()->getEntryTargetPath(ServerConfigs::CONFIG_ORIG_FILE_WPCONFIG_ID, self::getWpConfigDeafultPath());
         $origWpDir        = SnapIO::safePath(dirname($origWpConfTarget));
         if ($origWpDir === PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_NEW)) {
             return $origWpConfTarget;
@@ -48,7 +49,6 @@ class DUPX_WPConfig
 
     /**
      *
-     * @staticvar boolean|WPConfigTransformer $confTransformer
      *
      * @return boolean|WPConfigTransformer
      */
@@ -57,7 +57,7 @@ class DUPX_WPConfig
         static $confTransformer = null;
         if (is_null($confTransformer)) {
             try {
-                if (($wpConfigPath = DUPX_ServerConfig::getWpConfigLocalStoredPath()) === false) {
+                if (($wpConfigPath = ServerConfigs::getWpConfigLocalStoredPath()) === false) {
                     $wpConfigPath = DUPX_WPConfig::getWpConfigPath();
                 }
                 if (is_readable($wpConfigPath)) {
@@ -75,9 +75,9 @@ class DUPX_WPConfig
 
     /**
      *
-     * @param string $name
-     * @param string $type  // constant | variable
-     * @param mixed $default
+     * @param string $name    constant name
+     * @param string $type    constant | variable
+     * @param mixed  $default default value
      *
      * @return mixed
      */
@@ -88,5 +88,39 @@ class DUPX_WPConfig
         } else {
             return null;
         }
+    }
+
+    /**
+     * Check if the wp-config of the source site is valid.
+     *
+     * @return bool true on success, false on failure
+     */
+    public static function isSourceWpConfigValid()
+    {
+        static $wpConfigValid = null;
+        if (is_null($wpConfigValid)) {
+            try {
+                if (($wpConfigPath = ServerConfigs::getSourceWpConfigPath()) == false) {
+                    throw new Exception('Source wp-config.php don\'t exists');
+                }
+                $configTransformer = new WPConfigTransformer($wpConfigPath);
+                $requiredConst     = [
+                    'DB_NAME',
+                    'DB_USER',
+                    'DB_PASSWORD',
+                    'DB_HOST',
+                ];
+                foreach ($requiredConst as $constName) {
+                    if (!$configTransformer->exists('constant', $constName)) {
+                        throw new Exception($constName . ' don\'t exist');
+                    }
+                }
+                $wpConfigValid = true;
+            } catch (Exception | Error $e) {
+                Log::info('CHECK WP CONFIG FAIL msg: ' .  $e->getMessage());
+                $wpConfigValid = false;
+            }
+        }
+        return $wpConfigValid;
     }
 }

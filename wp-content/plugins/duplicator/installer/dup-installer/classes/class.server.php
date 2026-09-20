@@ -3,6 +3,7 @@
 defined("DUPXABSPATH") or die("");
 
 use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Libs\Shell\Shell;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapWP;
 
@@ -11,77 +12,21 @@ use Duplicator\Libs\Snap\SnapWP;
  * Wrapper Class for cPanel API  */
 class DUPX_Server
 {
-    /**
-     * A list of the core WordPress directories
-     */
-    public static $wpCoreDirsList = array(
+    /** @var string[] A list of the core WordPress directories */
+    public static $wpCoreDirsList = [
         'wp-admin',
-        'wp-includes'
-    );
-
-    public static function phpSafeModeOn()
-    {
-        if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
-            // safe_mode  has been DEPRECATED as of PHP 5.3.0 and REMOVED as of PHP 5.4.0.
-            return false;
-        } else {
-            return filter_var(
-                ini_get('safe_mode'),
-                FILTER_VALIDATE_BOOLEAN,
-                array(
-                    'options' => array(
-                        'default' => false
-                    )
-                )
-            );
-        }
-    }
+        'wp-includes',
+    ];
 
     /**
-     * Check given path prefixed with path array
+     * Return PHP safe nome, on PHP 5.4 is always false
      *
-     * @param string $checkPath Path to check
-     * @param array $pathsArr check against
-     *
-     * @return boolean
+     * @return bool
      */
-    private static function isPathPrefixedWithArrayPath($checkPath, $pathsArr)
+    public static function phpSafeModeOn(): bool
     {
-        foreach ($pathsArr as $path) {
-            if (0 === strpos($checkPath, $path)) {
-                return true;
-            }
-        }
+        // safe_mode  has been DEPRECATED as of PHP 5.3.0 and REMOVED as of PHP 5.4.0.
         return false;
-    }
-
-    /**
-     *  Can this server process in shell_exec mode
-     *
-     *  @return bool
-     */
-    public static function is_shell_exec_available()
-    {
-        if (array_intersect(array('shell_exec', 'escapeshellarg', 'escapeshellcmd', 'extension_loaded'), array_map('trim', explode(',', @ini_get('disable_functions'))))) {
-            return false;
-        }
-
-        //Suhosin: http://www.hardened-php.net/suhosin/
-        //Will cause PHP to silently fail.
-        if (extension_loaded('suhosin')) {
-            return false;
-        }
-
-        if (! function_exists('shell_exec')) {
-            return false;
-        }
-
-        // Can we issue a simple echo command?
-        if (!@shell_exec('echo duplicator')) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -89,14 +34,18 @@ class DUPX_Server
      *
      *  @return null|string     // null if can't find unzip
      */
-    public static function get_unzip_filepath()
+    public static function get_unzip_filepath(): ?string
     {
         $filepath = null;
-        if (self::is_shell_exec_available()) {
-            if (shell_exec('hash unzip 2>&1') == null) {
+        if (Shell::test() !== false) {
+            $shellOutput = Shell::runCommandBuffered('hash unzip 2>&1');
+            if ($shellOutput->getCode() >= 0 && $shellOutput->isEmpty()) {
                 $filepath = 'unzip';
             } else {
-                $possible_paths = array('/usr/bin/unzip', '/opt/local/bin/unzip');
+                $possible_paths = [
+                    '/usr/bin/unzip',
+                    '/opt/local/bin/unzip',
+                ];
                 foreach ($possible_paths as $path) {
                     if (file_exists($path)) {
                         $filepath = $path;
@@ -112,24 +61,24 @@ class DUPX_Server
      *
      * @return string[]
      */
-    public static function getWpAddonsSiteLists()
+    public static function getWpAddonsSiteLists(): array
     {
-        $addonsSites  = array();
+        $addonsSites  = [];
         $pathsToCheck = DUPX_ArchiveConfig::getInstance()->getPathsMapping();
 
         if (is_scalar($pathsToCheck)) {
-            $pathsToCheck = array($pathsToCheck);
+            $pathsToCheck = [$pathsToCheck];
         }
 
         foreach ($pathsToCheck as $mainPath) {
-            SnapIO::regexGlobCallback($mainPath, function ($path) use (&$addonsSites) {
+            SnapIO::regexGlobCallback($mainPath, function ($path) use (&$addonsSites): void {
                 if (SnapWP::isWpHomeFolder($path)) {
                     $addonsSites[] = $path;
                 }
-            }, array(
+            }, [
                 'regexFile' => false,
-                'recursive' => true
-            ));
+                'recursive' => true,
+            ]);
         }
 
         return $addonsSites;
@@ -146,7 +95,7 @@ class DUPX_Server
         if (!is_dir($absPathNew)) {
             return false;
         }
-        if (($root_files = scandir($absPathNew)) == false) {
+        if (($root_files = scandir($absPathNew)) === false) {
             return false;
         }
         $file_count = 0;

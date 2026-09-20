@@ -1,12 +1,5 @@
 <?php
 
-/**
- * Installer Params Manager
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
- */
-
 namespace Duplicator\Installer\Core\Params;
 
 use Duplicator\Installer\Core\Bootstrap;
@@ -14,10 +7,15 @@ use Duplicator\Installer\Core\Hooks\HooksMng;
 use Duplicator\Installer\Utils\Log\Log;
 use Duplicator\Installer\Core\Params\Items\ParamForm;
 use Duplicator\Installer\Core\Params\Descriptors\ParamsDescriptors;
+use Duplicator\Installer\Core\Params\Items\ParamItem;
+use Duplicator\Installer\Utils\InstDescMng;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapJson;
 use Duplicator\Libs\Snap\SnapString;
 
+/**
+ * Params Manager
+ */
 class PrmMng
 {
     const ENV_PARAMS_KEY = 'DUPLICATOR_PARAMS';
@@ -40,7 +38,7 @@ class PrmMng
      * JSON;
      * // OVERWRITE FILE END
      */
-    const LOCAL_OVERWRITE_PARAMS           = 'dup_params_owr';
+    const LOCAL_OVERWRITE_PARAMS           = 'duplicator_params_overwrite';
     const LOCAL_OVERWRITE_PARAMS_EXTENSION = '.php';
     // actionsLOCAL_OVERWRITE_PARAMS
     const PARAM_INSTALLER_MODE             = 'inst_mode';
@@ -78,6 +76,8 @@ class PrmMng
     const PARAM_SET_DIR_PERMS                    = 'set_dir_perms';
     const PARAM_DIR_PERMS_VALUE                  = 'dir_perms_value';
     const PARAM_INST_TYPE                        = 'install-type';
+    const PARAM_SUBSITE_ID                       = 'subsite_id';
+    const PARAM_SUBSITE_OVERWRITE_MAPPING        = 'subsite_owr_mapping';
     const PARAM_DB_DISPLAY_OVERWIRE_WARNING      = 'db-display-overwarn';
     const PARAM_DB_ENGINE                        = 'db-engine';
     const PARAM_DB_VIEW_MODE                     = 'view_mode';
@@ -87,6 +87,7 @@ class PrmMng
     const PARAM_DB_USER                          = 'dbuser';
     const PARAM_DB_FLAG                          = 'dbflag';
     const PARAM_DB_TABLE_PREFIX                  = 't_prefix';
+    const PARAM_DB_ONLY_PREFIXED_TABLES          = 'db_only_prefixed_tables';
     const PARAM_DB_PASS                          = 'dbpass';
     const PARAM_DB_CHARSET                       = 'dbcharset';
     const PARAM_DB_COLLATE                       = 'dbcollate';
@@ -99,6 +100,20 @@ class PrmMng
     const PARAM_DB_MYSQL_MODE                    = 'dbmysqlmode';
     const PARAM_DB_MYSQL_MODE_OPTS               = 'dbmysqlmode_opts';
     const PARAM_DB_DONE_CREATES                  = 'db_done_creates';
+    const PARAM_CPNL_CAN_SELECTED                = 'cpnl-can-sel';
+    const PARAM_CPNL_HOST                        = 'cpnl-host';
+    const PARAM_CPNL_USER                        = 'cpnl-user';
+    const PARAM_CPNL_PASS                        = 'cpnl-pass';
+    const PARAM_CPNL_IGNORE_PREFIX               = 'cpnl_ignore_prefix';
+    const PARAM_CPNL_DB_ACTION                   = 'cpnl-dbaction';
+    const PARAM_CPNL_DB_HOST                     = 'cpnl-dbhost';
+    const PARAM_CPNL_PREFIX                      = 'cpnl-prefix';
+    const PARAM_CPNL_DB_NAME_SEL                 = 'cpnl-dbname-select';
+    const PARAM_CPNL_DB_NAME_TXT                 = 'cpnl-dbname-txt';
+    const PARAM_CPNL_DB_USER_SEL                 = 'cpnl-dbuser-select';
+    const PARAM_CPNL_DB_USER_TXT                 = 'cpnl-dbuser-txt';
+    const PARAM_CPNL_DB_USER_CHK                 = 'cpnl-dbuser-chk';
+    const PARAM_CPNL_DB_PASS                     = 'cpnl-dbpass';
     const PARAM_URL_OLD                          = 'url_old';
     const PARAM_URL_NEW                          = 'url_new';
     const PARAM_SITE_URL_OLD                     = 'siteurl_old';
@@ -125,17 +140,23 @@ class PrmMng
     const PARAM_URL_MUPLUGINS_NEW                = 'url_muplug_new';
     const PARAM_WP_ADDON_SITES_PATHS             = 'wpaddon_sites';
     const PARAM_BLOGNAME                         = 'blogname';
+    const PARAM_MU_REPLACE                       = 'mu_replace';
     const PARAM_REPLACE_ENGINE                   = 'mode_chunking';
     const PARAM_SKIP_PATH_REPLACE                = 'skip_path_replace';
+    const PARAM_EMPTY_SCHEDULE_STORAGE           = 'empty_schedule_storage';
     const PARAM_DB_TABLES                        = 'tables';
     const PARAM_EMAIL_REPLACE                    = 'search_replace_email_domain';
     const PARAM_FULL_SEARCH                      = 'fullsearch';
     const PARAM_POSTGUID                         = 'postguid';
     const PARAM_MAX_SERIALIZE_CHECK              = 'mstrlim';
+    const PARAM_MULTISITE_CROSS_SEARCH           = 'cross_search';
     const PARAM_PLUGINS                          = 'plugins';
     const PARAM_IGNORE_PLUGINS                   = 'ignore_plugins';
     const PARAM_FORCE_DIABLE_PLUGINS             = 'fd_plugins';
+    const PARAM_CUSTOM_SEARCH                    = 'search';
+    const PARAM_CUSTOM_REPLACE                   = 'replace';
     const PARAM_USERS_MODE                       = 'users_mode';
+    const PARAM_ADD_SUBSITE_USER_MODE            = 'subsite_users_mode';
     const PARAM_USERS_PWD_RESET                  = 'users_pwd_reset';
     const PARAM_WP_ADMIN_CREATE_NEW              = 'wp_new_admin';
     const PARAM_WP_ADMIN_NAME                    = 'wp_username';
@@ -144,7 +165,6 @@ class PrmMng
     const PARAM_WP_ADMIN_NICKNAME                = 'wp_nickname';
     const PARAM_WP_ADMIN_FIRST_NAME              = 'wp_first_name';
     const PARAM_WP_ADMIN_LAST_NAME               = 'wp_last_name';
-    const PARAM_SUBSCRIBE_EMAIL                  = 'subscribe_email';
     // WP CONFIG
     const PARAM_GEN_WP_AUTH_KEY                        = 'auth_keys_and_salts';
     const PARAM_WP_CONF_WP_SITEURL                     = 'wpc_WP_SITEURL';
@@ -207,29 +227,14 @@ class PrmMng
     const PARAM_FINAL_REPORT_DATA          = 'final_report';
     const PARAM_AUTO_CLEAN_INSTALLER_FILES = 'auto-delete';
 
-    /**
-     *
-     * @var self
-     */
-    private static $instance = null;
-
-    /**
-     *
-     * @var bool
-     */
+    /** @var ?self */
+    private static $instance;
+    /** @var bool */
     private static $initialized = false;
-
-    /**
-     *
-     * @var ParamForm[]
-     */
-    private $params = array();
-
-    /**
-     *
-     * @var array
-     */
-    private $paramsHtmlInfo = array();
+    /** @var array<ParamItem|ParamForm> */
+    private $params = [];
+    /** @var string[] */
+    private $paramsHtmlInfo = [];
 
     /**
      *
@@ -259,7 +264,7 @@ class PrmMng
      * @return boolean
      * @throws \Exception
      */
-    public function initParams()
+    public function initParams(): bool
     {
         if (self::$initialized) {
             // prevent multiple inizialization
@@ -320,7 +325,7 @@ class PrmMng
      *
      * @throws \Exception
      */
-    public function getLabel($key)
+    public function getLabel($key): string
     {
         if (!isset($this->params[$key])) {
             throw new \Exception('Param key ' . Log::v2str($key) . 'don\' exists');
@@ -338,7 +343,7 @@ class PrmMng
      *
      * @throws \Exception // if key don't exists
      */
-    public function setValue($key, $value)
+    public function setValue($key, $value): bool
     {
         if (!isset($this->params[$key])) {
             throw new \Exception('Param key ' . Log::v2str($key) . 'don\' exists');
@@ -385,19 +390,19 @@ class PrmMng
      *
      * @return void
      */
-    public function addParamValidationFaliedNotice($key)
+    public function addParamValidationFaliedNotice($key): void
     {
         if (!isset($this->params[$key])) {
             throw new \Exception('Param key ' . Log::v2str($key) . 'don\' exists');
         }
 
         $longMessage = '<b>' . $this->getLabel($key) . '</b> ' . $this->params[$key]->getInvalidMessage() . "<br>\n";
-        \DUPX_NOTICE_MANAGER::getInstance()->addNextStepNotice(array(
+        \DUPX_NOTICE_MANAGER::getInstance()->addNextStepNotice([
             'shortMsg'    => 'Parameter validation failed',
             'level'       => \DUPX_NOTICE_ITEM::CRITICAL,
             'longMsg'     => $longMessage,
-            'longMsgMode' => \DUPX_NOTICE_ITEM::MSG_MODE_HTML
-        ), \DUPX_NOTICE_MANAGER::ADD_UNIQUE_APPEND, 'params_validation_fail');
+            'longMsgMode' => \DUPX_NOTICE_ITEM::MSG_MODE_HTML,
+        ], \DUPX_NOTICE_MANAGER::ADD_UNIQUE_APPEND, 'params_validation_fail');
     }
 
     /**
@@ -466,16 +471,17 @@ class PrmMng
      * @param string          $key    param key
      * @param string|callable $status STATUS_ENABLED , STATUS_READONLY or callable function
      *
-     * @return boolean|string return false if the item key isn't a instance of ParamForm
+     * @return bool return false if the item key isn't a instance of ParamForm
      */
-    public function setFormStatus($key, $status)
+    public function setFormStatus($key, $status): bool
     {
         if (!isset($this->params[$key])) {
             throw new \Exception('Param key ' . Log::v2str($key) . 'don\' exists');
         }
 
         if (method_exists($this->params[$key], 'setFormAttr')) {
-            return $this->params[$key]->setFormAttr('status', $status);
+            $this->params[$key]->setFormAttr('status', $status);
+            return true;
         } else {
             return false;
         }
@@ -487,16 +493,17 @@ class PrmMng
      * @param string $key   param key
      * @param string $class wrapper class
      *
-     * @return boolean|string return false if the item key isn't a instance of ParamForm
+     * @return bool return false if the item key isn't a instance of ParamForm
      */
-    public function addFormWrapperClass($key, $class)
+    public function addFormWrapperClass($key, $class): bool
     {
         if (!isset($this->params[$key])) {
             throw new \Exception('Param key ' . Log::v2str($key) . 'don\' exists');
         }
 
         if (method_exists($this->params[$key], 'addWrapperClass')) {
-            return $this->params[$key]->addWrapperClass($class);
+            $this->params[$key]->addWrapperClass($class);
+            return true;
         } else {
             return false;
         }
@@ -508,16 +515,17 @@ class PrmMng
      * @param string $key   param key
      * @param string $class wrapper class
      *
-     * @return boolean|string return false if the item key isn't a instance of ParamForm
+     * @return bool return false if the item key isn't a instance of ParamForm
      */
-    public function removeFormWrapperClass($key, $class)
+    public function removeFormWrapperClass($key, $class): bool
     {
         if (!isset($this->params[$key])) {
             throw new \Exception('Param key ' . Log::v2str($key) . 'don\' exists');
         }
 
         if (method_exists($this->params[$key], 'removeWrapperClass')) {
-            return $this->params[$key]->removeWrapperClass($class);
+            $this->params[$key]->removeWrapperClass($class);
+            return true;
         } else {
             return false;
         }
@@ -531,7 +539,7 @@ class PrmMng
      *
      * @return boolean
      */
-    public function setFormNote($key, $htmlString)
+    public function setFormNote($key, $htmlString): bool
     {
         if (!isset($this->params[$key])) {
             throw new \Exception('Param key ' . Log::v2str($key) . 'don\' exists');
@@ -553,7 +561,7 @@ class PrmMng
      *
      * @return boolean
      */
-    public function isHtmlInput($key)
+    public function isHtmlInput($key): bool
     {
         $status = $this->getFormStatus($key);
         switch ($status) {
@@ -607,21 +615,17 @@ class PrmMng
      *
      * @return boolean
      */
-    public function load($reset = false)
+    public function load($reset = false): bool
     {
         if ($reset) {
             $this->resetParams();
             $this->initParamsOverwrite();
             return true;
         } else {
-            if (!file_exists(self::getPersistanceFilePath())) {
+            if (($json = SnapIO::safeFileGetContents(self::getPersistanceFilePath())) === false) {
                 return false;
             }
             $this->paramsHtmlInfo[] = '***** LOAD PARAMS FROM PERSISTENCE FILE';
-
-            if (($json = file_get_contents(self::getPersistanceFilePath())) === false) {
-                throw new \Exception('Can\'t read param persistence file ' . Log::v2str(self::getPersistanceFilePath()));
-            }
 
             $arrayData = json_decode($json, true);
             if ($this->setParamsValues($arrayData) === false) {
@@ -636,11 +640,11 @@ class PrmMng
      *
      * @return boolean
      */
-    protected function resetParams()
+    protected function resetParams(): bool
     {
         $this->paramsHtmlInfo[] = '***** RESET PARAMS';
         SnapIO::rm(self::getPersistanceFilePath());
-        $this->params      = array();
+        $this->params      = [];
         self::$initialized = false;
         return $this->initParams();
     }
@@ -650,7 +654,7 @@ class PrmMng
      *
      * @return boolean
      */
-    public function initParamsOverwrite()
+    public function initParamsOverwrite(): bool
     {
         Log::info('OVERWRITE PARAMS');
         $this->paramsHtmlInfo[] = '***** LOAD OVERWRITE INFO';
@@ -675,6 +679,7 @@ class PrmMng
         $localOverwritePath = DUPX_ROOT . '/' . self::LOCAL_OVERWRITE_PARAMS . self::LOCAL_OVERWRITE_PARAMS_EXTENSION;
         if (is_readable($localOverwritePath)) {
             // json file is set in $localOverwritePath php file
+            /** @var ?string $json */
             $json = null;
             include($localOverwritePath);
             if (empty($json)) {
@@ -717,9 +722,9 @@ class PrmMng
     /**
      * Update params values from arrayData
      *
-     * @param array   $arrayData      params data
-     * @param boolean $overwrite      if true overwrite status
-     * @param integer $logginLevelSet log level
+     * @param array<string, mixed> $arrayData      params data
+     * @param boolean              $overwrite      if true overwrite status
+     * @param integer              $logginLevelSet log level
      *
      * @return bool returns false if a parameter has not been set
      */
@@ -734,12 +739,13 @@ class PrmMng
         foreach ($arrayData as $key => $arrayValues) {
             if (isset($this->params[$key])) {
                 $arrayValues      = (array) $arrayValues;
-                $arrayValValToStr = array_map(array('Duplicator\\Installer\\Utils\\Log\\Log', 'v2str'), $arrayValues);
+                $arrayValValToStr = array_map([Log::class, 'v2str'], $arrayValues);
 
                 $this->paramsHtmlInfo[] = 'SET PARAM <b>' . $key . '</b> ARRAY DATA: ' .
                     SnapString::implodeKeyVals(', ', $arrayValValToStr, '[<b>%s</b> = %s]');
                 if ($this->params[$key]->fromArrayData($arrayValues) === false) {
                     Log::info('PARAM ISSUE SET KEY[' . $key . '] VALUE: ' . SnapString::implodeKeyVals(', ', $arrayValValToStr, '[%s = %s]'));
+                    // phpcs:ignore PHPCompatibility.FunctionUse.ArgumentFunctionsReportCurrentValue.NeedsInspection
                     Log::info(Log::traceToString(debug_backtrace()));
                     // $result = false;
                 } else {
@@ -758,13 +764,13 @@ class PrmMng
     /**
      * update persistance file
      *
-     * @return bool\int // This function returns the number of bytes that were written to the file, or FALSE on failure.
+     * @return bool|int // This function returns the number of bytes that were written to the file, or FALSE on failure.
      */
     public function save()
     {
-        Log::info("SAVE PARAMS\n" . Log::traceToString(debug_backtrace()), Log::LV_DEBUG);
+        Log::info("SAVE PARAMS\n" . Log::traceToString(debug_backtrace(), 0, 1), Log::LV_DEBUG);
 
-        $arrayData = array();
+        $arrayData = [];
         foreach ($this->params as $param) {
             if ($param->isPersistent()) {
                 $arrayData[$param->getName()] = $param->toArrayData();
@@ -779,15 +785,14 @@ class PrmMng
 
     /**
      *
-     * @staticvar string $path
-     * @return    string
+     * @return string
      */
     protected static function getPersistanceFilePath()
     {
         static $path = null;
 
         if (is_null($path)) {
-            $path = DUPX_INIT . '/' . 'dup-params__' . \DUPX_Package::getPackageHash() . '.json';
+            $path = DUPX_INIT . '/' . InstDescMng::getInstance()->getName(InstDescMng::TYPE_PARAMS);
         }
 
         return $path;
@@ -798,7 +803,7 @@ class PrmMng
      *
      * @return void
      */
-    public function getParamsHtmlInfo()
+    public function getParamsHtmlInfo(): void
     {
         if (!$this->getValue(self::PARAM_DEBUG_PARAMS)) {
             return;
@@ -835,9 +840,9 @@ class PrmMng
      *
      * @return string
      */
-    public function getParamsToText()
+    public function getParamsToText(): string
     {
-        $result = array();
+        $result = [];
 
         foreach ($this->params as $param) {
             if (method_exists($param, 'getFormStatus')) {

@@ -1,13 +1,12 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\Security;
 use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Installer\Utils\SecureCsrf;
 use Duplicator\Libs\Snap\SnapJson;
 
 $paramsManager = PrmMng::getInstance();
@@ -58,14 +57,6 @@ $paramsManager = PrmMng::getInstance();
                     break;
             }
             console.log("mode set to" + mode);
-        };
-
-        DUPX.blinkAnimation = function (id, duration= 500, steps = 1)
-        {
-            for (var i = 0; i < steps; i++) {
-                $(`#${id}`).fadeOut(duration);
-                $(`#${id}`).fadeIn(duration);
-            }
         };
 
         DUPX.toggleSetupType = function ()
@@ -164,7 +155,6 @@ $paramsManager = PrmMng::getInstance();
         DUPX.resetValidationResult = function () {
             DUPX.setValidationBadge('#validate-global-badge-status', false);
             $('.database-setup-title').removeClass('warning');
-            $('.database-setup-title i.fas.fa-database').show();
             validateArea.find('#validation-result').empty().append(validateNoResult);
         }
 
@@ -204,7 +194,6 @@ $paramsManager = PrmMng::getInstance();
 
             if (validateData.categoriesLevels.database == 0) {
                 $('.database-setup-title').addClass('warning');
-                $('.database-setup-title i.fas.fa-database').hide();
                 DUPX.openBasicSetupArea();
             } else {
                 DUPX.closeBasicSetupArea();
@@ -282,40 +271,34 @@ $paramsManager = PrmMng::getInstance();
 
         $('#validate-button').click(function () {
             DUPX.sendParamsStep1(step1Form, function () {
-                <?php
-                // reload page to reinit interface
-                $onValidatePrams = array(
-                    PrmMng::PARAM_CTRL_ACTION => 'ctrl-step1',
-                    DUPX_Security::CTRL_TOKEN => DUPX_CSRF::generate('ctrl-step1'),
-                    PrmMng::PARAM_STEP_ACTION => DUPX_CTRL::ACTION_STEP_ON_VALIDATE
-                );
-                ?>
+<?php
+// reload page to reinit interface
+$onValidatePrams = [
+    PrmMng::PARAM_CTRL_ACTION => 'ctrl-step1',
+    Security::CTRL_TOKEN      => SecureCsrf::generate('ctrl-step1'),
+    PrmMng::PARAM_STEP_ACTION => DUPX_CTRL::ACTION_STEP_ON_VALIDATE,
+];
+?>
                 let onValidateParam = <?php echo SnapJson::jsonEncode($onValidatePrams); ?>;
-                DUPX.redirect(DUPX.dupInstallerUrl, 'post', onValidateParam);
+                DUPX.redirectMainInstaller('post', onValidateParam);
             });
         });
 
         $('.s1-switch-template-btn').click(function () {
             let tplButton = $(this);
-           
             if (tplButton.hasClass('active') || !tplButton.data('template')) {
                 return;
-            } else if (!tplButton.hasClass('active'))  {
-                tplButton.append('<i class="fas fa-circle-notch fa-spin"></i>');
-                tplButton.addClass('active');
             }
-            
-            <?php
-            $switchPrams = array(
-                PrmMng::PARAM_CTRL_ACTION => 'ctrl-step1',
-                DUPX_Security::CTRL_TOKEN => DUPX_CSRF::generate('ctrl-step1'),
-                PrmMng::PARAM_STEP_ACTION => DUPX_CTRL::ACTION_STEP_SET_TEMPLATE,
-            );
-            ?>
-           
+<?php
+$switchPrams = [
+    PrmMng::PARAM_CTRL_ACTION => 'ctrl-step1',
+    Security::CTRL_TOKEN      => SecureCsrf::generate('ctrl-step1'),
+    PrmMng::PARAM_STEP_ACTION => DUPX_CTRL::ACTION_STEP_SET_TEMPLATE,
+];
+?>
             let redirectParam = <?php echo SnapJson::jsonEncode($switchPrams); ?>;
             redirectParam[<?php echo SnapJson::jsonEncode(PrmMng::PARAM_TEMPLATE); ?>] = tplButton.data('template');
-            DUPX.redirect(DUPX.dupInstallerUrl, 'post', redirectParam);
+            DUPX.redirectMainInstaller('post', redirectParam);
         });
 
         validateArea.on("click", ".test-title", function () {
@@ -330,9 +313,12 @@ $paramsManager = PrmMng::getInstance();
             }
         });
 
-        <?php if (DUPX_Validation_manager::validateOnLoad()) { ?>
+<?php
+if (DUPX_Validation_manager::validateOnLoad()) {
+    ?>
+
             DUPX.initialValidateAction(DUPX.onValidateResult, true, true);
-        <?php } ?>
+<?php } ?>
     });
 </script>
 <?php

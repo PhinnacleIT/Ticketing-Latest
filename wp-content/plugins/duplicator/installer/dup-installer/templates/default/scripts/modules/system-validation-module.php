@@ -1,9 +1,6 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
@@ -21,14 +18,13 @@ $paramsManager = PrmMng::getInstance();
             DUPX.pageComponents.resetTopMessages();
         }
         DUPX.pageComponents.showProgress({
-            'title': 'System Validation',
+            'title': 'System validation',
             'bottomText':
                     '<i>Keep this window open during the validation process.</i><br/>' +
-                    '<i>This can take several minutes.</i>',
-            'showUpsell': false
+                    '<i>This can take several minutes.</i>'
         });
 
-        DUPX.StandardJsonAjaxWrapper(
+        DUPX.StandarJsonAjaxWrapper(
                 validateAction,
                 validateToken,
                 {},

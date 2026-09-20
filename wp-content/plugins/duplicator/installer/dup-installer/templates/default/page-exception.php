@@ -1,29 +1,29 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-dupxTplRender('pages-parts/page-header', array(
+/**
+ * Variables
+ *
+ * @var string $bodyClasses
+ * @var Exception $exception
+ */
+
+dupxTplRender('pages-parts/page-header', [
     'paramView'   => 'exception',
     'bodyId'      => 'page-exception',
-    'bodyClasses' => $bodyClasses
-));
+    'bodyClasses' => $bodyClasses,
+]);
 ?>
 <div id="content-inner">
     <?php
-    dupxTplRender('pages-parts/head/header-main', array(
-        'htmlTitle' => 'Exception error'
-    ));
+    dupxTplRender('pages-parts/head/header-main', ['htmlTitle' => 'Exception error']);
     ?>
     <div id="main-content-wrapper" >
         <?php
-        dupxTplRender('pages-parts/exception/main', array(
-            'exception' => $exception
-        ));
+        dupxTplRender('pages-parts/exception/main', ['exception' => $exception]);
         ?>
     </div>
 </div>

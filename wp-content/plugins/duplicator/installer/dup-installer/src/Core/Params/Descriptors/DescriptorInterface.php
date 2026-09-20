@@ -6,20 +6,19 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 namespace Duplicator\Installer\Core\Params\Descriptors;
 
 use Duplicator\Installer\Core\Params\Items\ParamForm;
+use Duplicator\Installer\Core\Params\Items\ParamItem;
 
 interface DescriptorInterface
 {
     /**
      * Init params
      *
-     * @param ParamItem[]|ParamForm[] $params params list
+     * @param (ParamItem|ParamForm)[] $params params list
      *
      * @return void
      */
@@ -28,7 +27,7 @@ interface DescriptorInterface
     /**
      * Update params after overwrite logic
      *
-     * @param ParamItem[]|ParamForm[] $params params list
+     * @param (ParamItem|ParamForm)[] $params params list
      *
      * @return void
      */

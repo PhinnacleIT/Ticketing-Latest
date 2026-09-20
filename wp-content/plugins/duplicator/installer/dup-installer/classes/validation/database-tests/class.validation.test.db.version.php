@@ -6,8 +6,6 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -17,13 +15,23 @@ use Duplicator\Libs\Snap\SnapDB;
 
 class DUPX_Validation_test_db_version extends DUPX_Validation_abstract_item
 {
-    protected $sourceDBVersion = null;
-    protected $hostDBVersion   = null;
-    protected $hostDBEngine    = null;
-    protected $sourceDBEngine  = null;
-    protected $dbsOfSameType   = true;
+    /** @var string */
+    protected $sourceDBVersion = '';
+    /** @var string */
+    protected $hostDBVersion = '';
+    /** @var string */
+    protected $hostDBEngine = '';
+    /** @var string */
+    protected $sourceDBEngine = '';
+    /** @var bool */
+    protected $dbsOfSameType = true;
 
-    protected function runTest()
+    /**
+     * Run the test
+     *
+     * @return int Enum LV_* result
+     */
+    protected function runTest(): int
     {
         if (DUPX_Validation_database_service::getInstance()->skipDatabaseTests()) {
             return self::LV_SKIP;
@@ -51,35 +59,50 @@ class DUPX_Validation_test_db_version extends DUPX_Validation_abstract_item
         return self::LV_PASS;
     }
 
-    public function getTitle()
+    /**
+     * Get the title of the test
+     *
+     * @return string
+     */
+    public function getTitle(): string
     {
         return 'Database Version';
     }
 
+
+    /**
+     * @return string
+     */
     protected function failContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-version', array(
+        return dupxTplRender('parts/validation/database-tests/db-version', [
             'isOk'          => false,
             'hostDBVersion' => $this->hostDBVersion,
-        ), false);
+        ], false);
     }
 
+    /**
+     * @return string
+     */
     protected function swarnContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-version-swarn', array(
+        return dupxTplRender('parts/validation/database-tests/db-version-swarn', [
             'hostDBVersion'   => $this->hostDBVersion,
             'sourceDBVersion' => $this->sourceDBVersion,
             'hostDBEngine'    => $this->hostDBEngine,
             'sourceDBEngine'  => $this->sourceDBEngine,
-            'dbsOfSameType'   => $this->dbsOfSameType
-        ), false);
+            'dbsOfSameType'   => $this->dbsOfSameType,
+        ], false);
     }
 
+    /**
+     * @return string
+     */
     protected function passContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-version', array(
+        return dupxTplRender('parts/validation/database-tests/db-version', [
             'isOk'          => true,
             'hostDBVersion' => $this->hostDBVersion,
-        ), false);
+        ], false);
     }
 }

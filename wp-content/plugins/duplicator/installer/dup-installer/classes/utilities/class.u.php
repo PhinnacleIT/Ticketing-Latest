@@ -6,8 +6,6 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -15,6 +13,7 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 use Duplicator\Installer\Core\Bootstrap;
 use Duplicator\Installer\Utils\Log\Log;
 use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Installer\Utils\InstDescMng;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapJson;
 
@@ -22,20 +21,10 @@ class DUPX_U
 {
     const MAINTENANCE_INDEX_MARKER = '<!-- DUPLICATOR INSTALLER MAINTENANCE -->';
 
-    public static function init()
-    {
-        if (!isset($_SERVER['REQUEST_URI'])) {
-            $_SERVER['REQUEST_URI'] = substr($_SERVER['SCRIPT_NAME'], 0);
-            if (isset($_SERVER['QUERY_STRING']) and $_SERVER['QUERY_STRING'] != "") {
-                $_SERVER['REQUEST_URI'] .= '?' . $_SERVER['QUERY_STRING'];
-            }
-        }
-    }
-
     /**
      * Adds a slash to the end of a file or directory path
      *
-     * @param string $path      A path
+     * @param string $path A path
      *
      * @return string The original $path with a with '/' added to the end.
      */
@@ -51,12 +40,12 @@ class DUPX_U
     /**
      * Does one string contain other
      *
-     * @param string $haystack      The full string to search
-     * @param string $needle        The substring to search on
+     * @param string $haystack The full string to search
+     * @param string $needle   The substring to search on
      *
      * @return bool Returns true if the $needle was found in the $haystack
      */
-    public static function contains($haystack, $needle)
+    public static function contains($haystack, $needle): bool
     {
         $pos = strpos($haystack, $needle);
         return ($pos !== false);
@@ -65,7 +54,7 @@ class DUPX_U
     /**
      * move all folder content up to parent
      *
-     * @param string $subFolderName full path
+     * @param string  $subFolderName   full path
      * @param boolean $deleteSubFolder if true delete subFolder after moved all
      *
      * @return boolean
@@ -89,7 +78,7 @@ class DUPX_U
             foreach ($subList as $cName) {
                 $destination = $parentFolder . '/' . basename($cName);
                 if (file_exists($destination)) {
-                    $success = self::deletePath($destination);
+                    $success = SnapIO::rrmdir($destination);
                 }
 
                 if ($success) {
@@ -100,7 +89,7 @@ class DUPX_U
             }
 
             if ($success && $deleteSubFolder) {
-                $success = self::deleteDirectory($subFolderName, true);
+                $success = SnapIO::rrmdir($subFolderName);
             }
         }
 
@@ -112,20 +101,24 @@ class DUPX_U
     }
 
     /**
-     * @param string $archive_filepath  full path of zip archive
+     * @param string $archive_filepath full path of zip archive
+     * @param string $password         archive password
      *
      * @return boolean|string  path of dup-installer folder of false if not found
      */
-    public static function findDupInstallerFolder($archive_filepath)
+    public static function findDupInstallerFolder($archive_filepath, $password)
     {
-        if (!class_exists('ZipArchive')) {
+        if (!DUPX_Conf_Utils::isPhpZipAvailable()) {
             return '';
         }
-        $zipArchive    = new ZipArchive();
-        $result        = false;
-        $dupArchiveTxt = Bootstrap::ARCHIVE_PREFIX . Bootstrap::getPackageHash() . Bootstrap::ARCHIVE_EXTENSION;
+        $zipArchive = new ZipArchive();
+        $result     = false;
+        $descFolder = InstDescMng::getInstance()->getDescriptorsFolder();
 
         if ($zipArchive->open($archive_filepath) === true) {
+            if (strlen($password)) {
+                $zipArchive->setPassword($password);
+            }
             for ($i = 0; $i < $zipArchive->numFiles; $i++) {
                 $stat     = $zipArchive->statIndex($i);
                 $safePath = rtrim(self::setSafePath($stat['name']), '/');
@@ -134,7 +127,7 @@ class DUPX_U
                 }
                 $exploded = explode('/', $safePath);
                 if (
-                    ($dup_index = array_search($dupArchiveTxt, $exploded)) !== false &&
+                    ($dup_index = array_search($descFolder, $exploded)) !== false &&
                     $exploded[$dup_index - 1] === 'dup-installer'
                 ) {
                     $result = implode('/', array_slice($exploded, 0, $dup_index - 1));
@@ -154,74 +147,14 @@ class DUPX_U
     }
 
     /**
-     * Safely remove a directory and recursively files only if needed
-     *
-     * @param string $directory The full path to the directory to remove
-     * @param string $recursive recursively remove all items
-     *
-     * @return bool Returns true if all content was removed
-     */
-    public static function deleteDirectory($directory, $recursive)
-    {
-        $success = true;
-        if ($excepted_subdirectories = null) {
-            $excepted_subdirectories = array();
-        }
-
-        if (!file_exists($directory)) {
-            return false;
-        }
-
-        $filenames = array_diff(scandir($directory), array('.', '..'));
-        foreach ($filenames as $filename) {
-            if (is_dir("$directory/$filename")) {
-                if ($recursive) {
-                    $success = self::deleteDirectory("$directory/$filename", true);
-                }
-            } else {
-                $success = @unlink("$directory/$filename");
-            }
-
-            if ($success === false) {
-                //self::log("Problem deleting $directory/$filename");
-                break;
-            }
-        }
-
-        return $success && rmdir($directory);
-    }
-
-    /**
-     * Safely remove a file or directory and recursively if needed
-     *
-     * @param string $directory The full path to the directory to remove
-     *
-     * @return bool Returns true if all content was removed
-     */
-    public static function deletePath($path)
-    {
-        $success = true;
-        if (is_dir($path)) {
-            $success = self::deleteDirectory($path, true);
-        } else {
-            $success = @unlink($path);
-            if ($success === false) {
-                Log::info(__FUNCTION__ . ": Problem deleting file:" . $path);
-            }
-        }
-
-        return $success;
-    }
-
-    /**
      * Dumps a variable for debugging
      *
-     * @param string $var The variable to view
-     * @param bool   $pretty Pretty print the var
+     * @param mixed $var    The variable to view
+     * @param bool  $pretty Pretty print the var
      *
-     * @return object A visual representation of an object
+     * @return void
      */
-    public static function dump($var, $pretty = false)
+    public static function dump($var, $pretty = false): void
     {
         if ($pretty) {
             echo '<pre>';
@@ -237,28 +170,28 @@ class DUPX_U
      *
      * @see getMicrotime()
      *
-     * @param mixed number $end     The final time in the sequence to measure
-     * @param mixed number $start   The start time in the sequence to measure
+     * @param int|float $end   The final time in the sequence to measure
+     * @param int|float $start The start time in the sequence to measure
      *
-     * @return string   The time elapsed from $start to $end
+     * @return string The time elapsed from $start to $end
      */
-    public static function elapsedTime($end, $start)
+    public static function elapsedTime($end, $start): string
     {
         return sprintf("%.4f sec.", abs($end - $start));
     }
 
     /**
-     *  Returns 256 spaces
+     *  Echo 256 spaces
      *
      *  PHP_SAPI for fcgi requires a data flush of at least 256
      *  bytes every 40 seconds or else it forces a script halt
      *
-     * @return string A series of 256 spaces ' '
+     * @return void
      */
-    public static function fcgiFlush()
+    public static function fcgiFlush(): void
     {
-        echo(str_repeat(' ', 256));
-        @flush();
+        echo (str_repeat(' ', 256));
+        flush();
     }
 
     /**
@@ -266,25 +199,11 @@ class DUPX_U
      *
      * @see elapsedTime
      *
-     * @return string   A float in the form "msec sec", where sec is the number of seconds since the Unix epoch
+     * @return float A float in the form "msec sec", where sec is the number of seconds since the Unix epoch
      */
-    public static function getMicrotime()
+    public static function getMicrotime(): float
     {
         return microtime(true);
-    }
-
-    /**
-     *  Gets the size of a variable in memory
-     *
-     *  @param string $var     A valid PHP variable
-     *
-     *  @return int    The amount of memory the variable has consumed
-     */
-    public static function getVarSize($var)
-    {
-        $start_memory = memory_get_usage();
-        $var          = unserialize(serialize($var));
-        return memory_get_usage() - $start_memory - PHP_INT_SIZE * 8;
     }
 
     /**
@@ -294,23 +213,29 @@ class DUPX_U
      *
      * @return bool Returns true if the string is JSON encoded
      */
-    public static function isJSON($string)
+    public static function isJSON($string): bool
     {
 
-        return is_string($string) && is_array(json_decode($string, true)) ? true : false;
+        return is_string($string) && is_array(json_decode($string, true));
     }
 
     /**
      * Display human readable byte sizes
      *
-     * @param string $size  The size in bytes
+     * @param int $size The size in bytes
      *
      * @return string Human readable bytes such as 50MB, 1GB
      */
-    public static function readableByteSize($size)
+    public static function readableByteSize($size): string
     {
         try {
-            $units = array('B', 'KB', 'MB', 'GB', 'TB');
+            $units = [
+                'B',
+                'KB',
+                'MB',
+                'GB',
+                'TB',
+            ];
             for ($i = 0; $size >= 1024 && $i < 4; $i++) {
                 $size /= 1024;
             }
@@ -321,114 +246,49 @@ class DUPX_U
     }
 
     /**
-     * Converts shorthand memory notation value to bytes
-     * From http://php.net/manual/en/function.ini-get.php
-     *
-     * @param $val Memory size shorthand notation string
-     *
-     * @return int  Returns the numeric byte from 1MB to 1024
-     */
-    public static function returnBytes($val)
-    {
-        $val  = trim($val);
-        $last = strtolower($val[strlen($val) - 1]);
-        $val  = intval($val);
-        switch ($last) {
-            // The 'G' modifier is available since PHP 5.1.0
-            case 'g':
-                $val *= 1024;
-                // no break
-            case 'm':
-                $val *= 1024;
-                // no break
-            case 'k':
-                $val *= 1024;
-                break;
-            default:
-                $val = null;
-        }
-        return $val;
-    }
-
-    /**
      *  Makes path safe for any OS for PHP
      *
      *  Paths should ALWAYS READ be "/"
      *      uni:  /home/path/file.txt
      *      win:  D:/home/path/file.txt
      *
-     *  @param string $path     The path to make safe
+     * @param string $path The path to make safe
      *
-     *  @return string The original $path with a with all slashes facing '/'.
+     * @return string The original $path with a with all slashes facing '/'.
      */
-    public static function setSafePath($path)
+    public static function setSafePath($path): string
     {
         return str_replace("\\", "/", $path);
     }
 
-    /**
-     * Tests a CDN URL to see if it responds
-     *
-     * @param string $url   The URL to ping
-     * @param string $port  The URL port to use
-     *
-     * @return bool Returns true if the CDN URL is active
-     */
-    public static function tryCDN($url, $port)
-    {
-        if ($GLOBALS['FW_USECDN']) {
-            return DUPX_HTTP::is_url_active($url, $port);
-        } else {
-            return false;
-        }
-    }
 
     /**
      *  Check PHP version
      *
-     *  @param string $version      PHP version we looking for
+     *  @param string $version PHP version we looking for
      *
      *  @return boolean Returns true if version is same or above.
      */
-    public static function isVersion($version)
+    public static function isVersion($version): bool
     {
         return (version_compare(PHP_VERSION, $version) >= 0);
     }
 
     /**
-     * Checks if ssl is enabled
+     * The domain part of the given URL
+     *                     www.myurl.co.uk     => myurl.co.uk
+     *                     www.google.com      => google.com
+     *                     my.test.myurl.co.uk => myurl.co.uk
+     *                     www.myurl.localweb  => myurl.localweb
      *
-     * @return bool
-     */
-    public static function is_ssl()
-    {
-        if (isset($_SERVER['HTTPS'])) {
-            if ('on' == strtolower($_SERVER['HTTPS'])) {
-                return true;
-            }
-            if ('1' == $_SERVER['HTTPS']) {
-                return true;
-            }
-        } elseif (isset($_SERVER['SERVER_PORT']) && ( '443' == $_SERVER['SERVER_PORT'] )) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * @param $url string The URL whichs domain you want to get
+     * @param string $url string The URL whichs domain you want to get
      *
-     * @return string The domain part of the given URL
-     *                  www.myurl.co.uk     => myurl.co.uk
-     *                  www.google.com      => google.com
-     *                  my.test.myurl.co.uk => myurl.co.uk
-     *                  www.myurl.localweb  => myurl.localweb
+     * @return string
      */
     public static function getDomain($url)
     {
         $pieces = parse_url($url);
-        $domain = isset($pieces['host']) ? $pieces['host'] : '';
+        $domain = $pieces['host'] ?? '';
         if (strpos($domain, ".") !== false) {
             if (preg_match('/(?P<domain>[a-z0-9][a-z0-9\-]{1,63}\.[a-z\.]{2,6})$/i', $domain, $regs)) {
                 return $regs['domain'];
@@ -443,12 +303,12 @@ class DUPX_U
 
     /**
      *
-     * @param string $oldSubUrl
-     * @param string $oldMainUrl
+     * @param string $oldSubUrl  The old sub url
+     * @param string $oldMainUrl The old main url
      *
      * @return string
      */
-    public static function getDefaultURL($oldSubUrl, $oldMainUrl)
+    public static function getDefaultURL($oldSubUrl, $oldMainUrl): string
     {
         $paramsManager    = PrmMng::getInstance();
         $newMainUrl       = $paramsManager->getValue(PrmMng::PARAM_URL_NEW);
@@ -458,9 +318,9 @@ class DUPX_U
         $oldMainDomain    = $parsedOldMainUrl['host'];
         $oldSubDomain     = $parsedOldSubUrl['host'];
         $newMainDomain    = $parsedNewMainUrl['host'];
-// PARSE SCHEME
-        $resultScheme = isset($parsedNewMainUrl['scheme']) ? $parsedNewMainUrl['scheme'] : 'http';
-// PARSE HOST
+        // PARSE SCHEME
+        $resultScheme = $parsedNewMainUrl['scheme'] ?? 'http';
+        // PARSE HOST
         if ($oldMainDomain === $oldSubDomain) {
             $resultDomain = $newMainDomain;
         } else {
@@ -476,9 +336,9 @@ class DUPX_U
         }
 
         // PARSE PATH
-        $oldMainPath = isset($parsedOldMainUrl['path']) ? $parsedOldMainUrl['path'] : '';
-        $oldSubPath  = isset($parsedOldSubUrl['path']) ? $parsedOldSubUrl['path'] : '';
-        $newMainPath = isset($parsedNewMainUrl['path']) ? $parsedNewMainUrl['path'] : '';
+        $oldMainPath = $parsedOldMainUrl['path'] ?? '';
+        $oldSubPath  = $parsedOldSubUrl['path'] ?? '';
+        $newMainPath = $parsedNewMainUrl['path'] ?? '';
         if ($oldMainPath === $oldSubPath) {
             $resultPath = $newMainPath;
         } else {
@@ -505,25 +365,24 @@ class DUPX_U
      *
      * @return int An integer chunk size  byte value.
      */
-    public static function get_default_chunk_size_in_byte($min_chunk_size = '')
+    public static function get_default_chunk_size_in_byte($min_chunk_size = 0): int
     {
 
-        if (empty($min_chunk_size)) {
+        if ($min_chunk_size == 0) {
             $min_chunk_size = 2 * MB_IN_BYTES;
-        } // 2 MB;
+        }
         $post_max_size_in_bytes                  = self::get_bytes_from_shorthand(ini_get('post_max_size'));
         $considered_post_max_size_in_bytes       = $post_max_size_in_bytes - KB_IN_BYTES;
         $upload_max_filesize_in_bytes            = self::get_bytes_from_shorthand(ini_get('upload_max_filesize'));
         $considered_upload_max_filesize_in_bytes = $upload_max_filesize_in_bytes - KB_IN_BYTES;
         $memory_limit_in_bytes                   = self::get_bytes_from_shorthand(ini_get('memory_limit'));
         $considered_memory_limit_in_bytes        = $memory_limit_in_bytes - KB_IN_BYTES;
-        $chunk_size_in_byte                      = min(
+        return min(
             $considered_post_max_size_in_bytes,
             $considered_upload_max_filesize_in_bytes,
             $considered_memory_limit_in_bytes, // In extraction process, 2 MB is improving speed, so we are using 5MB instead of 10 MB
             $min_chunk_size
         );
-        return $chunk_size_in_byte;
     }
 
     /**
@@ -533,7 +392,7 @@ class DUPX_U
      *
      * @return int An integer byte value.
      */
-    private static function get_bytes_from_shorthand($value)
+    private static function get_bytes_from_shorthand($value): int
     {
         $value = strtolower(trim($value));
         $bytes = (int) $value;
@@ -551,58 +410,19 @@ class DUPX_U
         }
 
         return min($bytes, PHP_INT_MAX);
-// Deal with large (float) values which run into the maximum integer size.
+        // Deal with large (float) values which run into the maximum integer size.
     }
-
-    /**
-     * Get default chunk size in KB
-     *
-     * @param int $min_chunk_size Min minimum chunk size in bytes
-     *
-     * @return int An integer chunk size KB value.
-     */
-    public static function get_default_chunk_size_in_kb($min_chunk_size = '')
-    {
-        if (empty($min_chunk_size)) {
-            $min_chunk_size = 10 * MB_IN_BYTES;
-        } // 10 MB;
-
-        $chunk_size_in_byte = self::get_default_chunk_size_in_byte($min_chunk_size);
-        $chunk_size_in_kb   = floor($chunk_size_in_byte / KB_IN_BYTES);
-        return $chunk_size_in_kb;
-    }
-
-    /**
-     * Get default chunk size in MB
-     * Not used now, but for future use
-     *
-     * @param int $min_chunk_size Min minimum chunk size in bytes
-     *
-     * @return int An integer chunk size MB value.
-     */
-    public static function get_default_chunk_size_in_mb($min_chunk_size = '')
-    {
-        if (empty($min_chunk_size)) {
-            $min_chunk_size = 10 * MB_IN_BYTES;
-        } // 10 MB;
-
-        $chunk_size_in_byte = self::get_default_chunk_size_in_byte($min_chunk_size);
-        $chunk_size_in_mb   = floor($chunk_size_in_byte / MB_IN_BYTES);
-        return $chunk_size_in_mb;
-    }
-    // START ESCAPING AND SANITIZATION
 
     /**
      * Escaping for HTML blocks.
      *
-     * @param string $text
+     * @param string $text The text to be escaped.
      *
      * @return string
      */
     public static function esc_html($text)
     {
         $safe_text = SnapJson::checkInvalidUTF8($text);
-        $safe_text = self::wp_specialchars($safe_text, ENT_QUOTES);
         /**
          * Filters a string cleaned and escaped for output in HTML.
          *
@@ -612,7 +432,7 @@ class DUPX_U
          * @param string $safe_text The text after it has been escaped.
          * @param string $text      The text prior to being escaped.
          */
-        return $safe_text;
+        return self::_wp_specialchars($safe_text, ENT_QUOTES);
     }
 
     /**
@@ -626,13 +446,12 @@ class DUPX_U
      *
      * @return string Escaped text.
      */
-    public static function esc_js($text)
+    public static function esc_js($text): string
     {
         $safe_text = SnapJson::checkInvalidUTF8($text);
-        $safe_text = self::wp_specialchars($safe_text, ENT_COMPAT);
+        $safe_text = self::_wp_specialchars($safe_text, ENT_COMPAT);
         $safe_text = preg_replace('/&#(x)?0*(?(1)27|39);?/i', "'", stripslashes($safe_text));
         $safe_text = str_replace("\r", '', $safe_text);
-        $safe_text = str_replace("\n", '\\n', addslashes($safe_text));
         /**
          * Filters a string cleaned and escaped for output in JavaScript.
          *
@@ -642,20 +461,19 @@ class DUPX_U
          * @param string $safe_text The text after it has been escaped.
          * @param string $text      The text prior to being escaped.
          */
-        return $safe_text;
+        return str_replace("\n", '\\n', addslashes($safe_text));
     }
 
     /**
      * Escaping for HTML attributes.
      *
-     * @param string $text
+     * @param string $text The text to be escaped.
      *
      * @return string
      */
     public static function esc_attr($text)
     {
         $safe_text = SnapJson::checkInvalidUTF8($text);
-        $safe_text = self::wp_specialchars($safe_text, ENT_QUOTES);
         /**
          * Filters a string cleaned and escaped for output in an HTML attribute.
          *
@@ -665,45 +483,43 @@ class DUPX_U
          * @param string $safe_text The text after it has been escaped.
          * @param string $text      The text prior to being escaped.
          */
-        return $safe_text;
+        return self::_wp_specialchars($safe_text, ENT_QUOTES);
     }
 
     /**
      * Escaping for textarea values.
      *
-     * @param string $text
+     * @param string $text The text to be escaped.
      *
      * @return string
      */
-    public static function esc_textarea($text)
+    public static function esc_textarea($text): string
     {
-        $safe_text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
         /**
          * Filters a string cleaned and escaped for output in a textarea element.
          *
          * @param string $safe_text The text after it has been escaped.
          * @param string $text      The text prior to being escaped.
          */
-        return $safe_text;
+        return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
     }
 
     /**
      * Escape an HTML tag name.
      *
-     * @param string $tag_name
+     * @param string $tag_name The tag name to be escaped.
      *
      * @return string
      */
-    public function tag_escape($tag_name)
+    public function tag_escape($tag_name): string
     {
-        $safe_tag = strtolower(preg_replace('/[^a-zA-Z0-9_:]/', '', $tag_name));
         /**
          * Filters a string cleaned and escaped for output as an HTML tag.
          *
          * @param string $safe_tag The tag name after it has been escaped.
          * @param string $tag_name The text before it was escaped.
          */
-        return $safe_tag;
+        return strtolower(preg_replace('/[^a-zA-Z0-9_:]/', '', $tag_name));
     }
 
     /**
@@ -714,22 +530,19 @@ class DUPX_U
      * $quote_style can be set to ENT_COMPAT to encode " to
      * &quot;, or ENT_QUOTES to do both. Default is ENT_NOQUOTES where no quotes are encoded.
      *
-     * @access private
-     *
-     * @staticvar string $_charset
-     *
-     * @param string     $string         The text which is to be encoded.
-     * @param int|string $quote_style    Optional. Converts double quotes if set to ENT_COMPAT,
-     *                                   both single and double if set to ENT_QUOTES or none if set to ENT_NOQUOTES.
-     *                                   Also compatible with old values; converting single quotes if set to 'single',
-     *                                   double if set to 'double' or both if otherwise set.
-     *                                   Default is ENT_NOQUOTES.
-     * @param string     $charset        Optional. The character encoding of the string. Default is false.
-     * @param bool       $double_encode  Optional. Whether to encode existing html entities. Default is false.
+     * @param string      $string        The text which is to be encoded.
+     * @param int|string  $quote_style   Optional. Converts double quotes if set to ENT_COMPAT,
+     *                                   both single and double if set to ENT_QUOTES or none if
+     *                                   set to ENT_NOQUOTES. Also compatible with old values;
+     *                                   converting single quotes if set to 'single', double if
+     *                                   set to 'double' or both if otherwise set. Default is
+     *                                   ENT_NOQUOTES.
+     * @param bool|string $charset       Optional. The character encoding of the string. Default is false.
+     * @param bool        $double_encode Optional. Whether to encode existing html entities. Default is false.
      *
      * @return string The encoded text with HTML entities.
      */
-    public static function wp_specialchars($string, $quote_style = ENT_NOQUOTES, $charset = false, $double_encode = false)
+    public static function _wp_specialchars($string, $quote_style = ENT_NOQUOTES, $charset = false, $double_encode = false) // phpcs:ignore
     {
         $string = (string) $string;
         if (0 === strlen($string)) {
@@ -744,7 +557,7 @@ class DUPX_U
         // Account for the previous behaviour of the function when the $quote_style is not an accepted value
         if (empty($quote_style)) {
             $quote_style = ENT_NOQUOTES;
-        } elseif (!in_array($quote_style, array(0, 2, 3, 'single', 'double'), true)) {
+        } elseif (!in_array($quote_style, [0, 2, 3, 'single', 'double'], true)) {
             $quote_style = ENT_QUOTES;
         }
 
@@ -757,7 +570,7 @@ class DUPX_U
             $charset = $_charset;
         }
 
-        if (in_array($charset, array('utf8', 'utf-8', 'UTF8'))) {
+        if (in_array($charset, ['utf8', 'utf-8', 'UTF8'])) {
             $charset = 'UTF-8';
         }
 
@@ -770,83 +583,18 @@ class DUPX_U
         }
 
         if (!$double_encode) {
-// Guarantee every &entity; is valid, convert &garbage; into &amp;garbage;
+            // Guarantee every &entity; is valid, convert &garbage; into &amp;garbage;
             // This is required for PHP < 5.4.0 because ENT_HTML401 flag is unavailable.
             $string = self::wp_kses_normalize_entities($string);
         }
 
         $string = @htmlspecialchars($string, $quote_style, $charset, $double_encode);
-// Back-compat.
+        // Back-compat.
         if ('single' === $_quote_style) {
             $string = str_replace("'", '&#039;', $string);
         }
 
         return $string;
-    }
-
-    /**
-     * Converts a number of HTML entities into their special characters.
-     *
-     * Specifically deals with: &, <, >, ", and '.
-     *
-     * $quote_style can be set to ENT_COMPAT to decode " entities,
-     * or ENT_QUOTES to do both " and '. Default is ENT_NOQUOTES where no quotes are decoded.
-     *
-     * @param string     $string The text which is to be decoded.
-     * @param string|int $quote_style Optional. Converts double quotes if set to ENT_COMPAT,
-     *                                both single and double if set to ENT_QUOTES or
-     *                                none if set to ENT_NOQUOTES.
-     *                                Also compatible with old _wp_specialchars() values;
-     *                                converting single quotes if set to 'single',
-     *                                double if set to 'double' or both if otherwise set.
-     *                                Default is ENT_NOQUOTES.
-     *
-     * @return string The decoded text without HTML entities.
-     */
-    public static function wp_specialchars_decode($string, $quote_style = ENT_NOQUOTES)
-    {
-        $string = (string) $string;
-        if (0 === strlen($string)) {
-            return '';
-        }
-
-        // Don't bother if there are no entities - saves a lot of processing
-        if (strpos($string, '&') === false) {
-            return $string;
-        }
-
-        // Match the previous behaviour of _wp_specialchars() when the $quote_style is not an accepted value
-        if (empty($quote_style)) {
-            $quote_style = ENT_NOQUOTES;
-        } elseif (!in_array($quote_style, array(0, 2, 3, 'single', 'double'), true)) {
-            $quote_style = ENT_QUOTES;
-        }
-
-        // More complete than get_html_translation_table( HTML_SPECIALCHARS )
-        $single      = array('&#039;' => '\'', '&#x27;' => '\'');
-        $single_preg = array('/&#0*39;/' => '&#039;', '/&#x0*27;/i' => '&#x27;');
-        $double      = array('&quot;' => '"', '&#034;' => '"', '&#x22;' => '"');
-        $double_preg = array('/&#0*34;/' => '&#034;', '/&#x0*22;/i' => '&#x22;');
-        $others      = array('&lt;' => '<', '&#060;' => '<', '&gt;' => '>', '&#062;' => '>', '&amp;' => '&', '&#038;' => '&', '&#x26;' => '&');
-        $others_preg = array('/&#0*60;/' => '&#060;', '/&#0*62;/' => '&#062;', '/&#0*38;/' => '&#038;', '/&#x0*26;/i' => '&#x26;');
-        if ($quote_style === ENT_QUOTES) {
-            $translation      = array_merge($single, $double, $others);
-            $translation_preg = array_merge($single_preg, $double_preg, $others_preg);
-        } elseif ($quote_style === ENT_COMPAT || $quote_style === 'double') {
-            $translation      = array_merge($double, $others);
-            $translation_preg = array_merge($double_preg, $others_preg);
-        } elseif ($quote_style === 'single') {
-            $translation      = array_merge($single, $others);
-            $translation_preg = array_merge($single_preg, $others_preg);
-        } elseif ($quote_style === ENT_NOQUOTES) {
-            $translation      = $others;
-            $translation_preg = $others_preg;
-        }
-
-        // Remove zero padding on numeric entities
-        $string = preg_replace(array_keys($translation_preg), array_values($translation_preg), $string);
-// Replace characters according to translation table
-        return strtr($string, $translation);
     }
 
     /**
@@ -858,13 +606,13 @@ class DUPX_U
      *
      * @access private
      *
-     * @param string|array $search  The value being searched for, otherwise known as the needle.
-     *                              An array may be used to designate multiple needles.
-     * @param string       $subject The string being searched and replaced on, otherwise known as the haystack.
+     * @param string[] $search  The value being searched for, otherwise known as the needle.
+     *                          An array may be used to designate multiple needles.
+     * @param string   $subject The string being searched and replaced on, otherwise known as the haystack.
      *
      * @return string The string with the replaced svalues.
      */
-    private static function deep_replace($search, $subject)
+    private static function _deep_replace(array $search, string $subject) // phpcs:ignore
     {
         $subject = (string) $subject;
         $count   = 1;
@@ -885,15 +633,14 @@ class DUPX_U
      *
      * @return string Content with normalized entities
      */
-    public static function wp_kses_normalize_entities($string)
+    public static function wp_kses_normalize_entities($string): string
     {
         // Disarm all entities by converting & to &amp;
         $string = str_replace('&', '&amp;', $string);
-// Change back the allowed entities in our entity whitelist
-        $string = preg_replace_callback('/&amp;([A-Za-z]{2,8}[0-9]{0,2});/', array(__CLASS__, 'wp_kses_named_entities'), $string);
-        $string = preg_replace_callback('/&amp;#(0*[0-9]{1,7});/', array(__CLASS__, 'wp_kses_normalize_entities2'), $string);
-        $string = preg_replace_callback('/&amp;#[Xx](0*[0-9A-Fa-f]{1,6});/', array(__CLASS__, 'wp_kses_normalize_entities3'), $string);
-        return $string;
+        // Change back the allowed entities in our entity whitelist
+        $string = preg_replace_callback('/&amp;([A-Za-z]{2,8}[0-9]{0,2});/', [self::class, 'wp_kses_named_entities'], $string);
+        $string = preg_replace_callback('/&amp;#(0*[0-9]{1,7});/', [self::class, 'wp_kses_normalize_entities2'], $string);
+        return (string) preg_replace_callback('/&amp;#[Xx](0*[0-9A-Fa-f]{1,6});/', [self::class, 'wp_kses_normalize_entities3'], $string);
     }
 
     /**
@@ -902,65 +649,273 @@ class DUPX_U
      * This function only accepts valid named entity references, which are finite,
      * case-sensitive, and highly scrutinized by HTML and XML validators.
      *
-     * @global array $allowedentitynames
-     *
-     * @param array $matches preg_replace_callback() matches array
+     * @param string[] $matches preg_replace_callback() matches array
      *
      * @return string Correctly encoded entity
      */
-    public static function wp_kses_named_entities($matches)
+    public static function wp_kses_named_entities($matches): string
     {
         if (empty($matches[1])) {
             return '';
         }
 
-        $allowedentitynames = array(
-            'nbsp', 'iexcl', 'cent', 'pound', 'curren', 'yen',
-            'brvbar', 'sect', 'uml', 'copy', 'ordf', 'laquo',
-            'not', 'shy', 'reg', 'macr', 'deg', 'plusmn',
-            'acute', 'micro', 'para', 'middot', 'cedil', 'ordm',
-            'raquo', 'iquest', 'Agrave', 'Aacute', 'Acirc', 'Atilde',
-            'Auml', 'Aring', 'AElig', 'Ccedil', 'Egrave', 'Eacute',
-            'Ecirc', 'Euml', 'Igrave', 'Iacute', 'Icirc', 'Iuml',
-            'ETH', 'Ntilde', 'Ograve', 'Oacute', 'Ocirc', 'Otilde',
-            'Ouml', 'times', 'Oslash', 'Ugrave', 'Uacute', 'Ucirc',
-            'Uuml', 'Yacute', 'THORN', 'szlig', 'agrave', 'aacute',
-            'acirc', 'atilde', 'auml', 'aring', 'aelig', 'ccedil',
-            'egrave', 'eacute', 'ecirc', 'euml', 'igrave', 'iacute',
-            'icirc', 'iuml', 'eth', 'ntilde', 'ograve', 'oacute',
-            'ocirc', 'otilde', 'ouml', 'divide', 'oslash', 'ugrave',
-            'uacute', 'ucirc', 'uuml', 'yacute', 'thorn', 'yuml',
-            'quot', 'amp', 'lt', 'gt', 'apos', 'OElig',
-            'oelig', 'Scaron', 'scaron', 'Yuml', 'circ', 'tilde',
-            'ensp', 'emsp', 'thinsp', 'zwnj', 'zwj', 'lrm',
-            'rlm', 'ndash', 'mdash', 'lsquo', 'rsquo', 'sbquo',
-            'ldquo', 'rdquo', 'bdquo', 'dagger', 'Dagger', 'permil',
-            'lsaquo', 'rsaquo', 'euro', 'fnof', 'Alpha', 'Beta',
-            'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta',
-            'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi',
-            'Omicron', 'Pi', 'Rho', 'Sigma', 'Tau', 'Upsilon',
-            'Phi', 'Chi', 'Psi', 'Omega', 'alpha', 'beta',
-            'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
-            'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi',
-            'omicron', 'pi', 'rho', 'sigmaf', 'sigma', 'tau',
-            'upsilon', 'phi', 'chi', 'psi', 'omega', 'thetasym',
-            'upsih', 'piv', 'bull', 'hellip', 'prime', 'Prime',
-            'oline', 'frasl', 'weierp', 'image', 'real', 'trade',
-            'alefsym', 'larr', 'uarr', 'rarr', 'darr', 'harr',
-            'crarr', 'lArr', 'uArr', 'rArr', 'dArr', 'hArr',
-            'forall', 'part', 'exist', 'empty', 'nabla', 'isin',
-            'notin', 'ni', 'prod', 'sum', 'minus', 'lowast',
-            'radic', 'prop', 'infin', 'ang', 'and', 'or',
-            'cap', 'cup', 'int', 'sim', 'cong', 'asymp',
-            'ne', 'equiv', 'le', 'ge', 'sub', 'sup',
-            'nsub', 'sube', 'supe', 'oplus', 'otimes', 'perp',
-            'sdot', 'lceil', 'rceil', 'lfloor', 'rfloor', 'lang',
-            'rang', 'loz', 'spades', 'clubs', 'hearts', 'diams',
-            'sup1', 'sup2', 'sup3', 'frac14', 'frac12', 'frac34',
+        $allowedentitynames = [
+            'nbsp',
+            'iexcl',
+            'cent',
+            'pound',
+            'curren',
+            'yen',
+            'brvbar',
+            'sect',
+            'uml',
+            'copy',
+            'ordf',
+            'laquo',
+            'not',
+            'shy',
+            'reg',
+            'macr',
+            'deg',
+            'plusmn',
+            'acute',
+            'micro',
+            'para',
+            'middot',
+            'cedil',
+            'ordm',
+            'raquo',
+            'iquest',
+            'Agrave',
+            'Aacute',
+            'Acirc',
+            'Atilde',
+            'Auml',
+            'Aring',
+            'AElig',
+            'Ccedil',
+            'Egrave',
+            'Eacute',
+            'Ecirc',
+            'Euml',
+            'Igrave',
+            'Iacute',
+            'Icirc',
+            'Iuml',
+            'ETH',
+            'Ntilde',
+            'Ograve',
+            'Oacute',
+            'Ocirc',
+            'Otilde',
+            'Ouml',
+            'times',
+            'Oslash',
+            'Ugrave',
+            'Uacute',
+            'Ucirc',
+            'Uuml',
+            'Yacute',
+            'THORN',
+            'szlig',
+            'agrave',
+            'aacute',
+            'acirc',
+            'atilde',
+            'auml',
+            'aring',
+            'aelig',
+            'ccedil',
+            'egrave',
+            'eacute',
+            'ecirc',
+            'euml',
+            'igrave',
+            'iacute',
+            'icirc',
+            'iuml',
+            'eth',
+            'ntilde',
+            'ograve',
+            'oacute',
+            'ocirc',
+            'otilde',
+            'ouml',
+            'divide',
+            'oslash',
+            'ugrave',
+            'uacute',
+            'ucirc',
+            'uuml',
+            'yacute',
+            'thorn',
+            'yuml',
+            'quot',
+            'amp',
+            'lt',
+            'gt',
+            'apos',
+            'OElig',
+            'oelig',
+            'Scaron',
+            'scaron',
+            'Yuml',
+            'circ',
+            'tilde',
+            'ensp',
+            'emsp',
+            'thinsp',
+            'zwnj',
+            'zwj',
+            'lrm',
+            'rlm',
+            'ndash',
+            'mdash',
+            'lsquo',
+            'rsquo',
+            'sbquo',
+            'ldquo',
+            'rdquo',
+            'bdquo',
+            'dagger',
+            'Dagger',
+            'permil',
+            'lsaquo',
+            'rsaquo',
+            'euro',
+            'fnof',
+            'Alpha',
+            'Beta',
+            'Gamma',
+            'Delta',
+            'Epsilon',
+            'Zeta',
+            'Eta',
+            'Theta',
+            'Iota',
+            'Kappa',
+            'Lambda',
+            'Mu',
+            'Nu',
+            'Xi',
+            'Omicron',
+            'Pi',
+            'Rho',
+            'Sigma',
+            'Tau',
+            'Upsilon',
+            'Phi',
+            'Chi',
+            'Psi',
+            'Omega',
+            'alpha',
+            'beta',
+            'gamma',
+            'delta',
+            'epsilon',
+            'zeta',
+            'eta',
+            'theta',
+            'iota',
+            'kappa',
+            'lambda',
+            'mu',
+            'nu',
+            'xi',
+            'omicron',
+            'pi',
+            'rho',
+            'sigmaf',
+            'sigma',
+            'tau',
+            'upsilon',
+            'phi',
+            'chi',
+            'psi',
+            'omega',
+            'thetasym',
+            'upsih',
+            'piv',
+            'bull',
+            'hellip',
+            'prime',
+            'Prime',
+            'oline',
+            'frasl',
+            'weierp',
+            'image',
+            'real',
+            'trade',
+            'alefsym',
+            'larr',
+            'uarr',
+            'rarr',
+            'darr',
+            'harr',
+            'crarr',
+            'lArr',
+            'uArr',
+            'rArr',
+            'dArr',
+            'hArr',
+            'forall',
+            'part',
+            'exist',
+            'empty',
+            'nabla',
+            'isin',
+            'notin',
+            'ni',
+            'prod',
+            'sum',
+            'minus',
+            'lowast',
+            'radic',
+            'prop',
+            'infin',
+            'ang',
+            'and',
+            'or',
+            'cap',
+            'cup',
+            'int',
+            'sim',
+            'cong',
+            'asymp',
+            'ne',
+            'equiv',
+            'le',
+            'ge',
+            'sub',
+            'sup',
+            'nsub',
+            'sube',
+            'supe',
+            'oplus',
+            'otimes',
+            'perp',
+            'sdot',
+            'lceil',
+            'rceil',
+            'lfloor',
+            'rfloor',
+            'lang',
+            'rang',
+            'loz',
+            'spades',
+            'clubs',
+            'hearts',
+            'diams',
+            'sup1',
+            'sup2',
+            'sup3',
+            'frac14',
+            'frac12',
+            'frac34',
             'there4',
-        );
+        ];
         $i                  = $matches[1];
-        return (!in_array($i, $allowedentitynames) ) ? "&amp;$i;" : "&$i;";
+        return (!in_array($i, $allowedentitynames)) ? "&amp;$i;" : "&$i;";
     }
 
     /**
@@ -970,12 +925,12 @@ class DUPX_U
      *
      * @return bool True if the value was a valid Unicode number
      */
-    public static function wp_valid_unicode($i)
+    public static function wp_valid_unicode($i): bool
     {
-        return ( $i == 0x9 || $i == 0xa || $i == 0xd ||
+        return ($i == 0x9 || $i == 0xa || $i == 0xd ||
             ($i >= 0x20 && $i <= 0xd7ff) ||
             ($i >= 0xe000 && $i <= 0xfffd) ||
-            ($i >= 0x10000 && $i <= 0x10ffff) );
+            ($i >= 0x10000 && $i <= 0x10ffff));
     }
 
     /**
@@ -986,18 +941,18 @@ class DUPX_U
      *
      * @access private
      *
-     * @param array $matches preg_replace_callback() matches array
+     * @param string[] $matches preg_replace_callback() matches array
      *
      * @return string Correctly encoded entity
      */
-    public static function wp_kses_normalize_entities2($matches)
+    public static function wp_kses_normalize_entities2($matches): string
     {
         if (empty($matches[1])) {
             return '';
         }
 
         $i = $matches[1];
-        if (self::wp_valid_unicode($i)) {
+        if (self::wp_valid_unicode($i)) { // @phpstan-ignore-line
             $i = str_pad(ltrim($i, '0'), 3, '0', STR_PAD_LEFT);
             $i = "&#$i;";
         } else {
@@ -1015,18 +970,18 @@ class DUPX_U
      *
      * @access private
      *
-     * @param array $matches preg_replace_callback() matches array
+     * @param string[] $matches preg_replace_callback() matches array
      *
      * @return string Correctly encoded entity
      */
-    public static function wp_kses_normalize_entities3($matches)
+    public static function wp_kses_normalize_entities3($matches): string
     {
         if (empty($matches[1])) {
             return '';
         }
 
         $hexchars = $matches[1];
-        return (!self::wp_valid_unicode(hexdec($hexchars)) ) ? "&amp;#x$hexchars;" : '&#x' . ltrim($hexchars, '0') . ';';
+        return (!self::wp_valid_unicode(hexdec($hexchars))) ? "&amp;#x$hexchars;" : '&#x' . ltrim($hexchars, '0') . ';';
     }
 
     /**
@@ -1039,17 +994,35 @@ class DUPX_U
      * @see wp_kses()
      * @see esc_url()
      *
-     * @staticvar array $protocols
-     *
-     * @return array Array of allowed protocols. Defaults to an array containing 'http', 'https',
+     * @return string[] Array of allowed protocols. Defaults to an array containing 'http', 'https',
      *               'ftp', 'ftps', 'mailto', 'news', 'irc', 'gopher', 'nntp', 'feed', 'telnet',
      *               'mms', 'rtsp', 'svn', 'tel', 'fax', 'xmpp', 'webcal', and 'urn'.
      */
     public static function wp_allowed_protocols()
     {
-        static $protocols = array();
+        static $protocols = [];
         if (empty($protocols)) {
-            $protocols = array('http', 'https', 'ftp', 'ftps', 'mailto', 'news', 'irc', 'gopher', 'nntp', 'feed', 'telnet', 'mms', 'rtsp', 'svn', 'tel', 'fax', 'xmpp', 'webcal', 'urn');
+            $protocols = [
+                'http',
+                'https',
+                'ftp',
+                'ftps',
+                'mailto',
+                'news',
+                'irc',
+                'gopher',
+                'nntp',
+                'feed',
+                'telnet',
+                'mms',
+                'rtsp',
+                'svn',
+                'tel',
+                'fax',
+                'xmpp',
+                'webcal',
+                'urn',
+            ];
         }
 
         return $protocols;
@@ -1064,10 +1037,11 @@ class DUPX_U
      *
      * @since 2.8.0
      *
-     * @param string $url       The URL to be cleaned.
-     * @param array  $protocols Optional. An array of acceptable protocols.
-     *                          Defaults to return value of wp_allowed_protocols()
-     * @param string $_context  Private. Use esc_url_raw() for database usage.
+     * @param string   $url       The URL to be cleaned.
+     * @param string[] $protocols Optional. An array of acceptable protocols.
+     *                            Defaults to return value of
+     *                            wp_allowed_protocols()
+     * @param string   $_context  Private. Use esc_url_raw() for database usage.
      *
      * @return string The cleaned $url after the {@see 'clean_url'} filter is applied.
      */
@@ -1085,8 +1059,13 @@ class DUPX_U
         }
 
         if (0 !== stripos($url, 'mailto:')) {
-            $strip = array('%0d', '%0a', '%0D', '%0A');
-            $url   = self::deep_replace($strip, $url);
+            $strip = [
+                '%0d',
+                '%0a',
+                '%0D',
+                '%0A',
+            ];
+            $url   = self::_deep_replace($strip, $url);
         }
 
         $url = str_replace(';//', '://', $url);
@@ -1095,19 +1074,19 @@ class DUPX_U
          * link starting with /, # or ? or a php file).
          */
         if (
-            strpos($url, ':') === false && !in_array($url[0], array('/', '#', '?')) &&
+            strpos($url, ':') === false && !in_array($url[0], ['/', '#', '?']) &&
             !preg_match('/^[a-z0-9-]+?\.php/i', $url)
         ) {
             $url = 'http://' . $url;
         }
-// Replace ampersands and single quotes only when displaying.
+        // Replace ampersands and single quotes only when displaying.
         if ('display' == $_context) {
             $url = self::wp_kses_normalize_entities($url);
             $url = str_replace('&amp;', '&#038;', $url);
             $url = str_replace("'", '&#039;', $url);
         }
 
-        if (( false !== strpos($url, '[') ) || ( false !== strpos($url, ']') )) {
+        if ((false !== strpos($url, '[')) || (false !== strpos($url, ']'))) {
             $parsed = parse_url($url);
             $front  = '';
             if (isset($parsed['scheme'])) {
@@ -1137,7 +1116,7 @@ class DUPX_U
             }
 
             $end_dirty = str_replace($front, '', $url);
-            $end_clean = str_replace(array('[', ']'), array('%5B', '%5D'), $end_dirty);
+            $end_clean = str_replace(['[', ']'], ['%5B', '%5D'], $end_dirty);
             $url       = str_replace($end_dirty, $end_clean, $url);
         }
 
@@ -1153,6 +1132,15 @@ class DUPX_U
             }
         }
 
+        /**
+         * Filters a string cleaned and escaped for output as a URL.
+         *
+         * @since 2.3.0
+         *
+         * @param string $good_protocol_url The cleaned URL to be returned.
+         * @param string $original_url      The URL prior to cleaning.
+         * @param string $_context          If 'display', replace ampersands and single quotes only.
+         */
         return $good_protocol_url;
     }
 
@@ -1161,15 +1149,15 @@ class DUPX_U
      *
      * Also removes any instance of the '\0' string.
      *
-     * @param string $string
-     * @param array $options Set 'slash_zero' => 'keep' when '\0' is allowed. Default is 'remove'.
+     * @param string              $string  The text which is to be purified.
+     * @param array<string,mixed> $options Set 'slash_zero' => 'keep' when '\0' is allowed. Default is 'remove'.
      *
      * @return string
      */
     public static function wp_kses_no_null($string, $options = null)
     {
         if (!isset($options['slash_zero'])) {
-            $options = array('slash_zero' => 'remove');
+            $options = ['slash_zero' => 'remove'];
         }
 
         $string = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $string);
@@ -1188,12 +1176,12 @@ class DUPX_U
      * understand HTML entities. It does its work in a while loop, so it won't be
      * fooled by a string like "javascript:javascript:alert(57)".
      *
-     * @param string $string            Content to filter bad protocols from
-     * @param array  $allowed_protocols Allowed protocols to keep
+     * @param string   $string            Content to filter bad protocols from
+     * @param string[] $allowed_protocols Allowed protocols to keep
      *
      * @return string Filtered content
      */
-    public static function wp_kses_bad_protocol($string, $allowed_protocols)
+    public static function wp_kses_bad_protocol($string, $allowed_protocols): string
     {
         $string     = self::wp_kses_no_null($string);
         $iterations = 0;
@@ -1214,8 +1202,9 @@ class DUPX_U
      * This function searches for URL protocols at the beginning of $string, while
      * handling whitespace and HTML entities.
      *
-     * @param string $string            Content to check for bad protocols
-     * @param string $allowed_protocols Allowed protocols
+     * @param string   $string            Content to check for bad protocols
+     * @param string[] $allowed_protocols Allowed protocols
+     * @param int      $count             Optional. Number of times the function
      *
      * @return string Sanitized content
      */
@@ -1251,33 +1240,32 @@ class DUPX_U
      *
      * @return string Content after decoded entities
      */
-    public static function wp_kses_decode_entities($string)
+    public static function wp_kses_decode_entities($string): ?string
     {
-        $string = preg_replace_callback('/&#([0-9]+);/', array(__CLASS__, 'wp_kses_decode_entities_chr'), $string);
-        $string = preg_replace_callback('/&#[Xx]([0-9A-Fa-f]+);/', array(__CLASS__, 'wp_kses_decode_entities_chr_hexdec'), $string);
-        return $string;
+        $string = preg_replace_callback('/&#([0-9]+);/', [self::class, '_wp_kses_decode_entities_chr'], $string);
+        return preg_replace_callback('/&#[Xx]([0-9A-Fa-f]+);/', [self::class, '_wp_kses_decode_entities_chr_hexdec'], $string);
     }
 
     /**
      * Regex callback for wp_kses_decode_entities()
      *
-     * @param array $match preg match
+     * @param string[] $match preg match
      *
      * @return string
      */
-    public static function wp_kses_decode_entities_chr($match)
+    public static function _wp_kses_decode_entities_chr($match): string // phpcs:ignore
     {
-        return chr($match[1]);
+        return chr($match[1]); // @phpstan-ignore-line
     }
 
     /**
      * Regex callback for wp_kses_decode_entities()
      *
-     * @param array $match preg match
+     * @param string[] $match preg match
      *
      * @return string
      */
-    public static function wp_kses_decode_entities_chr_hexdec($match)
+    public static function _wp_kses_decode_entities_chr_hexdec($match): string // phpcs:ignore
     {
         return chr(hexdec($match[1]));
     }
@@ -1286,14 +1274,16 @@ class DUPX_U
      * Callback for wp_kses_bad_protocol_once() regular expression.
      *
      * This function processes URL protocols, checks to see if they're in the
-     * white-list or not, and returns different data depending on the answer
+     * white-list or not, and returns different data depending on the answer.
      *
-     * @param string $string            URI scheme to check against the whitelist
-     * @param string $allowed_protocols Allowed protocols
+     * @access private
+     *
+     * @param string   $string            URI scheme to check against the whitelist
+     * @param string[] $allowed_protocols Allowed protocols
      *
      * @return string Sanitized content
      */
-    public static function wp_kses_bad_protocol_once2($string, $allowed_protocols)
+    public static function wp_kses_bad_protocol_once2($string, $allowed_protocols): string
     {
         $string2 = self::wp_kses_decode_entities($string);
         $string2 = preg_replace('/\s/', '', $string2);
@@ -1315,19 +1305,6 @@ class DUPX_U
     }
 
     /**
-     * Performs esc_url() for database usage.
-     *
-     * @param string $url       The URL to be cleaned.
-     * @param array  $protocols An array of acceptable protocols.
-     *
-     * @return string The cleaned URL.
-     */
-    public static function esc_url_raw($url, $protocols = null)
-    {
-        return self::esc_url($url, $protocols, 'db');
-    }
-
-    /**
      * Toggle maintenance mode for the site.
      *
      * Creates/deletes the maintenance file to enable/disable maintenance mode.
@@ -1336,9 +1313,9 @@ class DUPX_U
      *
      * @return void
      */
-    public static function maintenanceMode($enable = false)
+    public static function maintenanceMode($enable = false): void
     {
-        $homePath = SnapIO::safePathTrailingslashit(PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_NEW));
+        $homePath = SnapIO::trailingslashit(PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_WP_CORE_NEW));
         if (!is_writable($homePath)) {
             Log::info('CAN\'T ' . ($enable ? 'SET' : 'REMOVE') . ' MAINTENANCE MODE, ROOT FOLDER NOT WRITABLE');
             return;
@@ -1376,9 +1353,9 @@ class DUPX_U
     /**
      * Check if string is base64 encoded
      *
-     * @param string $str
+     * @param string $str input string
      *
-     * @return boolean|string return false if isn't base64 string or decoded string
+     * @return false|string return false if isn't base64 string or decoded string
      */
     public static function is_base64($str)
     {
@@ -1403,7 +1380,7 @@ class DUPX_U
 
     /**
      *
-     * @param array $matches
+     * @param string[] $matches regex match
      *
      * @return string
      */
@@ -1423,18 +1400,21 @@ class DUPX_U
      * for example
      * abc'" become "abc'\""
      *
-     * @param string $str input string
-     * @param bool $addQuote if true add " before and after string
+     * @param string $str      input string
+     * @param bool   $addQuote if true add " before and after string
      *
      * @return string
      */
     public static function getEscapedGenericString($str, $addQuote = true)
     {
         $result = SnapJson::jsonEncode(trim($str));
-        $result = str_replace(array('\/', '$'), array('/', '\\$'), $result);
+        $result = str_replace(['\/', '$'], ['/', '\\$'], $result);
         $result = preg_replace_callback(
             '/\\\\u[a-fA-F0-9]{4}/m',
-            array(__CLASS__, 'encodeUtf8CharFromRegexMatch'),
+            [
+                self::class,
+                'encodeUtf8CharFromRegexMatch',
+            ],
             $result
         );
         if (!$addQuote) {

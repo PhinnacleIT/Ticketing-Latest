@@ -7,7 +7,6 @@
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
  *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -16,12 +15,13 @@ use Duplicator\Installer\Utils\Log\Log;
 
 class DUPX_Validation_test_extensions extends DUPX_Validation_abstract_item
 {
-    public $extensionTests = array(
-        "json" => array(
+    /** @var array<string, mixed> */
+    public $extensionTests = [
+        "json" => [
             "failLevel" => self::LV_FAIL,
-            "pass"  => false
-        )
-    );
+            "pass"      => false,
+        ],
+    ];
 
     protected function runTest()
     {
@@ -40,36 +40,36 @@ class DUPX_Validation_test_extensions extends DUPX_Validation_abstract_item
         return $result;
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'PHP Extensions';
     }
 
     protected function swarnContent()
     {
-        return dupxTplRender('parts/validation/tests/php-extensions', array(
-            'extensionTests' => $this->extensionTests
-        ), false);
+        return dupxTplRender('parts/validation/tests/php-extensions', [
+            'extensionTests' => $this->extensionTests,
+        ], false);
     }
 
     protected function hwarnContent()
     {
-        return dupxTplRender('parts/validation/tests/php-extensions', array(
-            'extensionTests' => $this->extensionTests
-        ), false);
+        return dupxTplRender('parts/validation/tests/php-extensions', [
+            'extensionTests' => $this->extensionTests,
+        ], false);
     }
 
     protected function failContent()
     {
-        return dupxTplRender('parts/validation/tests/php-extensions', array(
-            'extensionTests' => $this->extensionTests
-        ), false);
+        return dupxTplRender('parts/validation/tests/php-extensions', [
+            'extensionTests' => $this->extensionTests,
+        ], false);
     }
 
     protected function goodContent()
     {
-        return dupxTplRender('parts/validation/tests/php-extensions', array(
-            'extensionTests' => $this->extensionTests
-        ), false);
+        return dupxTplRender('parts/validation/tests/php-extensions', [
+            'extensionTests' => $this->extensionTests,
+        ], false);
     }
 }

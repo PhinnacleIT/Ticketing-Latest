@@ -7,7 +7,6 @@
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
  *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -17,18 +16,17 @@ use Duplicator\Libs\Snap\SnapIO;
 class DUPX_TemplateItem
 {
     /** @var string */
-    protected $name = null;
-    /** @var string */
-    protected $mainFolder = null;
+    protected $name;
+    protected string $mainFolder;
     /** @var null|DUPX_TemplateItem */
-    protected $parent = null;
+    protected $parent;
 
     /**
      * Class contructor
      *
-     * @param string $name
-     * @param string $mainFolder
-     * @param null|DUPX_TemplateItem $parentName
+     * @param string             $name       Template name
+     * @param string             $mainFolder Main folder
+     * @param ?DUPX_TemplateItem $parent     Parent template
      */
     public function __construct($name, $mainFolder, $parent = null)
     {
@@ -41,7 +39,7 @@ class DUPX_TemplateItem
         }
 
         if (!is_null($parent) && !$parent instanceof self) {
-            throw new Exception('the parent must be a instance of ' . __CLASS__);
+            throw new Exception('the parent must be a instance of ' . self::class);
         }
 
         $this->name       = $name;
@@ -52,13 +50,13 @@ class DUPX_TemplateItem
     /**
      * Render template
      *
-     * @param string $fileTpl   // template file is a relative path from root template folder
-     * @param array $args    // array key / val where key is the var name in template
-     * @param bool $echo    // if false return template in string
+     * @param string               $fileTpl Template file is a relative path from root template folder
+     * @param array<string, mixed> $args    Array key / val where key is the var name in template
+     * @param bool                 $echo    If false return template in string
      *
      * @return string
      */
-    public function render($fileTpl, $args = array(), $echo = true)
+    public function render($fileTpl, $args = [], $echo = true)
     {
         ob_start();
         if (($renderFile = $this->getFileTemplate($fileTpl)) !== false) {
@@ -80,7 +78,7 @@ class DUPX_TemplateItem
     /**
      * Acctept html of php extensions. if the file have unknown extension automatic add the php extension
      *
-     * @param string $fileTpl
+     * @param string $fileTpl File template
      *
      * @return boolean|string return false if don\'t find the template file
      */

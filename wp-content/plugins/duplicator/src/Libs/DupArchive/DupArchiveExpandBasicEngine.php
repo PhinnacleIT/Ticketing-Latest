@@ -1,36 +1,33 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
- */
-
 namespace Duplicator\Libs\DupArchive;
 
-use Duplicator\Libs\DupArchive\Headers\DupArchiveReaderDirectoryHeader;
-use Duplicator\Libs\DupArchive\Headers\DupArchiveReaderFileHeader;
-use Duplicator\Libs\DupArchive\Headers\DupArchiveReaderGlobHeader;
-use Duplicator\Libs\DupArchive\Headers\DupArchiveReaderHeader;
+use Duplicator\Libs\DupArchive\Headers\DupArchiveDirectoryHeader;
+use Duplicator\Libs\DupArchive\Headers\DupArchiveFileHeader;
+use Duplicator\Libs\DupArchive\Headers\DupArchiveGlobHeader;
+use Duplicator\Libs\DupArchive\Headers\DupArchiveHeader;
 use Duplicator\Libs\DupArchive\Info\DupArchiveExpanderInfo;
 use Exception;
 
 class DupArchiveExpandBasicEngine extends DupArchive
 {
-    protected static $logCallback   = null;
-    protected static $chmodCallback = null;
-    protected static $mkdirCallback = null;
+    /** @var ?callable */
+    protected static $logCallback;
+    /** @var ?callable */
+    protected static $chmodCallback;
+    /** @var ?callable */
+    protected static $mkdirCallback;
 
     /**
      * Set callabcks function
      *
-     * @param null|callable $log   function callback
-     * @param null|callable $chmod function callback
-     * @param null|callable $mkdir function callback
+     * @param ?callable $log   function callback
+     * @param ?callable $chmod function callback
+     * @param ?callable $mkdir function callback
      *
      * @return void
      */
-    public static function setCallbacks($log, $chmod, $mkdir)
+    public static function setCallbacks($log, $chmod, $mkdir): void
     {
         self::$logCallback   = (is_callable($log) ? $log : null);
         self::$chmodCallback = (is_callable($chmod) ? $chmod : null);
@@ -45,7 +42,7 @@ class DupArchiveExpandBasicEngine extends DupArchive
      *
      * @return void
      */
-    public static function log($s, $flush = false)
+    public static function log($s, $flush = false): void
     {
         if (self::$logCallback == null) {
             return;
@@ -59,40 +56,41 @@ class DupArchiveExpandBasicEngine extends DupArchive
      * @param string $archivePath  archive path
      * @param string $relativePath relative path
      * @param string $destPath     dest path
+     * @param string $password     ecrypt password, if empty archive isn't ecrypted
      * @param bool   $ignoreErrors if true ignore errors
      * @param int    $offset       start scan location
      *
      * @return void
      */
-    public static function expandDirectory($archivePath, $relativePath, $destPath, $ignoreErrors = false, $offset = 0)
+    public static function expandDirectory($archivePath, $relativePath, $destPath, $password, $ignoreErrors = false, $offset = 0): void
     {
-        self::expandItems($archivePath, $relativePath, $destPath, $ignoreErrors, $offset);
+        self::expandItems($archivePath, $relativePath, $destPath, $password, $ignoreErrors, $offset);
     }
 
     /**
      * Expand items
      *
-     * @param string   $archivePath     archive path
-     * @param string[] $inclusionFilter filters
-     * @param string   $destDirectory   dest path
-     * @param bool     $ignoreErrors    if true ignore errors
-     * @param int      $offset          start scan location
+     * @param string $archivePath     archive path
+     * @param string $inclusionFilter filters
+     * @param string $destDirectory   dest path
+     * @param string $password        ecrypt password, if empty archive isn't ecrypted
+     * @param bool   $ignoreErrors    if true ignore errors
+     * @param int    $offset          start scan location
      *
      * @return void
      */
-    private static function expandItems($archivePath, $inclusionFilter, $destDirectory, $ignoreErrors = false, $offset = 0)
+    private static function expandItems($archivePath, $inclusionFilter, $destDirectory, $password, $ignoreErrors = false, $offset = 0): void
     {
         $archiveHandle = fopen($archivePath, 'rb');
 
         if ($archiveHandle === false) {
-            throw new Exception("Can’t open archive at $archivePath!");
+            throw new Exception("Can’t open archive at $archivePath!", self::EXCEPTION_CODE_OPEN_ERROR);
         }
 
-        $archiveHeader = DupArchiveReaderHeader::readFromArchive($archiveHandle);
+        $archiveHeader = (new DupArchiveHeader())->readFromArchive($archiveHandle, $password);
         $writeInfo     = new DupArchiveExpanderInfo();
 
         $writeInfo->destDirectory = $destDirectory;
-        $writeInfo->isCompressed  = $archiveHeader->isCompressed;
 
         if ($offset > 0) {
             fseek($archiveHandle, $offset);
@@ -121,10 +119,10 @@ class DupArchiveExpandBasicEngine extends DupArchive
 
                 switch ($headerType) {
                     case self::HEADER_TYPE_FILE:
-                        $writeInfo->currentFileHeader = DupArchiveReaderFileHeader::readFromArchive($archiveHandle, false, true);
+                        $writeInfo->currentFileHeader = (new DupArchiveFileHeader($archiveHeader))->readFromArchive($archiveHandle, false, true);
                         break;
                     case self::HEADER_TYPE_DIR:
-                        $directoryHeader = DupArchiveReaderDirectoryHeader::readFromArchive($archiveHandle, true);
+                        $directoryHeader = (new DupArchiveDirectoryHeader($archiveHeader))->readFromArchive($archiveHandle, true);
                         //   self::log("considering $inclusionFilter and {$directoryHeader->relativePath}");
                         if (self::passesInclusionFilter($inclusionFilter, $directoryHeader->relativePath)) {
                             //    self::log("passed");
@@ -159,7 +157,7 @@ class DupArchiveExpandBasicEngine extends DupArchive
      *
      * @return void
      */
-    private static function writeToFile($archiveHandle, DupArchiveExpanderInfo $writeInfo)
+    private static function writeToFile($archiveHandle, DupArchiveExpanderInfo $writeInfo): void
     {
         $destFilePath = $writeInfo->getCurrentDestFilePath();
 
@@ -172,13 +170,13 @@ class DupArchiveExpandBasicEngine extends DupArchive
                     $res = mkdir($parentDir, 0755, true);
                 }
                 if (!$res) {
-                    throw new Exception("Couldn't create {$parentDir}");
+                    throw new Exception("Couldn't create {$parentDir}", self::EXCEPTION_CODE_EXTRACT_ERROR);
                 }
             }
 
             $destFileHandle = fopen($destFilePath, 'wb+');
             if ($destFileHandle === false) {
-                throw new Exception("Couldn't open {$destFilePath} for writing.");
+                throw new Exception("Couldn't open {$destFilePath} for writing.", self::EXCEPTION_CODE_OPEN_ERROR);
             }
 
             do {
@@ -197,34 +195,18 @@ class DupArchiveExpandBasicEngine extends DupArchive
                 chmod($destFilePath, 0644);
             }
 
-            self::validateExpandedFile($writeInfo);
+            if ($writeInfo->currentFileHeader->validateFile($destFilePath) == false) {
+                throw new Exception("HASH Validation fails for {$destFilePath}", self::EXCEPTION_CODE_VALIDATION_ERROR);
+            }
         } else {
             if (touch($destFilePath) === false) {
-                throw new Exception("Couldn't create $destFilePath");
+                throw new Exception("Couldn't create $destFilePath", self::EXCEPTION_CODE_EXTRACT_ERROR);
             }
 
             if (is_callable(self::$chmodCallback)) {
                 call_user_func(self::$chmodCallback, $destFilePath, 'u+rw');
             } else {
                 chmod($destFilePath, 0644);
-            }
-        }
-    }
-
-    /**
-     * Validate file
-     *
-     * @param DupArchiveExpanderInfo $writeInfo write info
-     *
-     * @return void
-     */
-    private static function validateExpandedFile(DupArchiveExpanderInfo $writeInfo)
-    {
-        if ($writeInfo->currentFileHeader->hash !== '00000000000000000000000000000000') {
-            $hash = hash_file('crc32b', $writeInfo->getCurrentDestFilePath());
-
-            if ($hash !== $writeInfo->currentFileHeader->hash) {
-                throw new Exception("MD5 validation fails for {$writeInfo->getCurrentDestFilePath()}");
             }
         }
     }
@@ -239,21 +221,13 @@ class DupArchiveExpandBasicEngine extends DupArchive
      *
      * @return void
      */
-    private static function appendGlobToFile($archiveHandle, $destFileHandle, DupArchiveExpanderInfo $writeInfo)
+    private static function appendGlobToFile($archiveHandle, $destFileHandle, DupArchiveExpanderInfo $writeInfo): void
     {
-        $globHeader   = DupArchiveReaderGlobHeader::readFromArchive($archiveHandle, false);
-        $globContents = fread($archiveHandle, $globHeader->storedSize);
+        $globHeader  = (new DupArchiveGlobHeader($writeInfo->currentFileHeader))->readFromArchive($archiveHandle);
+        $globContent = $globHeader->readContent($archiveHandle);
 
-        if ($globContents === false) {
-            throw new Exception("Error reading glob from " . $writeInfo->getCurrentDestFilePath());
-        }
-
-        if ($writeInfo->isCompressed) {
-            $globContents = gzinflate($globContents);
-        }
-
-        if (fwrite($destFileHandle, $globContents) !== strlen($globContents)) {
-            throw new Exception("Unable to write all bytes of data glob to storage.");
+        if (fwrite($destFileHandle, $globContent) !== strlen($globContent)) {
+            throw new Exception("Unable to write all bytes of data glob to storage.", self::EXCEPTION_CODE_EXTRACT_ERROR);
         }
     }
 
@@ -265,7 +239,7 @@ class DupArchiveExpandBasicEngine extends DupArchive
      *
      * @return bool
      */
-    private static function passesInclusionFilter($filter, $candidate)
+    private static function passesInclusionFilter($filter, $candidate): bool
     {
         return (substr($candidate, 0, strlen($filter)) == $filter);
     }

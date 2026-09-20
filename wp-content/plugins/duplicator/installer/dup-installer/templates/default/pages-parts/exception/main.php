@@ -1,11 +1,14 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
+
+ /**
+ * Variables
+  *
+ * @var Exception $exception
+ */
 
 use Duplicator\Installer\Core\Params\PrmMng;
 use Duplicator\Libs\Snap\SnapString;
@@ -33,12 +36,13 @@ if (SnapString::isHTML($exception->getMessage())) {
 <?php if (!empty($recoveryLink)) { ?>
     <p class="text-center">
         <a href="<?php echo DUPX_U::esc_url($recoveryLink); ?>" class="default-btn" target="_parent">
-            <i class="fas fa-undo-alt"></i> Restore Recovery Point
+            <i class="fas fa-house-fire"></i> Restore Backup
         </a> 
     </p>
 <?php } ?>
 
 <div style="text-align:center; margin:10px auto 0px auto">
-    <?php $url = DUPX_Constants::DUP_SITE_URL . 'contact/?form=1'; ?>
-    <i style='font-size:11px'>See online help for more details at <a href='<?php echo DUPX_U::esc_attr($url); ?>' target='_blank'>duplicator.com</a></i>
+    <i style='font-size:11px'>See online help for more details at <a href='https://duplicator.com/my-account/support/' target='_blank'>
+        duplicator.com
+    </a></i>
 </div>

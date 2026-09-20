@@ -2,9 +2,6 @@
 
 /**
  * Logger for dup archive
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
  */
 
 namespace Duplicator\Installer\Core\Deploy\DupArchive;
@@ -23,21 +20,21 @@ class DawsLogger extends DupArchiveLoggerBase
      *
      * @return void
      */
-    public static function init()
+    public static function init(): void
     {
-        set_error_handler(array(__CLASS__, "terminateMissingVariables"), E_ERROR);
+        set_error_handler([self::class, "terminateMissingVariables"], E_ERROR);
     }
 
     /**
      * Log function
      *
-     * @param string        $s                       string to log
-     * @param boolean       $flush                   if true flish log
-     * @param callback|null $callingFunctionOverride call back function
+     * @param string    $s                       string to log
+     * @param boolean   $flush                   if true flish log
+     * @param ?callable $callingFunctionOverride call back function
      *
      * @return void
      */
-    public function log($s, $flush = false, $callingFunctionOverride = null)
+    public function log($s, $flush = false, $callingFunctionOverride = null): void
     {
         Log::info($s, Log::LV_DEFAULT, $flush);
     }
@@ -48,16 +45,18 @@ class DawsLogger extends DupArchiveLoggerBase
      * @param int    $errno   errno
      * @param string $errstr  error message
      * @param string $errfile file
-     * @param string $errline line
+     * @param int    $errline line
      *
-     * @return void
+     * @return bool
      */
-    public static function terminateMissingVariables($errno, $errstr, $errfile, $errline)
+    public static function terminateMissingVariables($errno, $errstr, $errfile, $errline): bool
     {
         Log::info("ERROR $errno, $errstr, {$errfile}:{$errline}");
         /**
          * INTERCEPT ON processRequest AND RETURN JSON STATUS
          */
         throw new Exception("ERROR:{$errfile}:{$errline} | " . $errstr, $errno);
+
+        return true; // @phpstan-ignore-line
     }
 }

@@ -4,17 +4,18 @@
  * Plugin Name: Duplicator
  * Plugin URI: https://duplicator.com/
  * Description: Migrate and backup a copy of your WordPress files and database. Duplicate and move a site from one location to another quickly.
- * Version: 1.5.16.1
+ * Version: 5.0.4
  * Requires at least: 5.3
- * Tested up to: 7.0
+ * Tested up to: 7.1
  * Requires PHP: 7.4
  * Author: Duplicator
  * Author URI: https://duplicator.com/
  * Network: true
  * Text Domain: duplicator
  * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  *
- * Copyright 2011-2022 Snapcreek LLC
+ * Copyright 2011-2026 Snapcreek LLC
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
@@ -33,12 +34,15 @@
 defined('ABSPATH') || exit;
 
 // CHECK PHP VERSION
-define('DUPLICATOR_LITE_PHP_MINIMUM_VERSION', '7.4');
-define('DUPLICATOR_LITE_PHP_SUGGESTED_VERSION', '7.4');
-require_once dirname(__FILE__) . "/src/Utils/DuplicatorPhpVersionCheck.php";
-if (DuplicatorPhpVersionCheck::check(DUPLICATOR_LITE_PHP_MINIMUM_VERSION, DUPLICATOR_LITE_PHP_SUGGESTED_VERSION) === false) {
+require_once dirname(__FILE__) . "/src/Utils/DupliPhpVersionCheck.php";
+if (DupliPhpVersionCheck::check('7.4', '8.3') === false) {
     return;
 }
-$currentPluginBootFile = __FILE__;
+$currentPluginBootFile   = __FILE__;
+$currentPluginName       = 'Duplicator';
+$currentPluginType       = 'LITE';
+$currentPluginTextDomain = 'duplicator';
+// phpcs:ignore Generic.Files.LineLength
+$currentPluginHsh = '7b2273223a2237623139222c2272223a5b224c69746542617365225d2c226664223a5b2250726f42617365225d2c2276223a22352e302e34222c226b223a2264626361227d';
 
 require_once dirname(__FILE__) . '/duplicator-main.php';

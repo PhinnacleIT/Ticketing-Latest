@@ -2,51 +2,64 @@
 
 namespace Duplicator\Installer\Core\Deploy\Database;
 
+use Duplicator\Installer\Core\Security;
 use Duplicator\Installer\Core\Params\Descriptors\ParamDescUsers;
+use Duplicator\Installer\Core\Params\Models\SiteOwrMap;
 use Duplicator\Installer\Core\Params\PrmMng;
 use Duplicator\Installer\Models\ImportUser;
 use Duplicator\Installer\Utils\Log\Log;
-use Duplicator\Libs\Snap\JsonSerialize\AbstractJsonSerializable;
+use Duplicator\Installer\ViewHelpers\Resources;
+use VendorDuplicator\Amk\JsonSerialize\AbstractJsonSerializable;
 use Duplicator\Libs\Snap\SnapDB;
 use Duplicator\Libs\Snap\SnapUtil;
 use DUPX_ArchiveConfig;
 use DUPX_DB;
 use DUPX_DB_Functions;
 use DUPX_DB_Tables;
-use DUPX_InstallerState;
+use Duplicator\Installer\Core\InstState;
 use DUPX_NOTICE_ITEM;
 use DUPX_NOTICE_MANAGER;
-use DUPX_Security;
 use DUPX_UpdateEngine;
 use Error;
 use Exception;
 
+/**
+ * Class DbUserMode
+ *
+ * Manages WordPress user table special handling during site migration.
+ * Provides key functionalities for:
+ * 1. User Data Management (ID mapping, remapping, meta data migration)
+ * 2. Security Features (sensitive data protection, user permissions)
+ * 3. Multisite Support (table prefix changes, user relationships)
+ * 4. Data Integrity (consistency, auto-increment values, meta key updates)
+ *
+ * It's separated from core table handling due to special security and migration requirements.
+ */
 class DbUserMode extends AbstractJsonSerializable
 {
     /** @var ImportUser[] */
-    protected $targetUsersById = array();
+    protected $targetUsersById = [];
     /** @var ImportUser[] */
-    protected $targetUsersByMail = array();
+    protected $targetUsersByMail = [];
     /** @var ImportUser[] */
-    protected $targetUsersByLogin = array();
+    protected $targetUsersByLogin = [];
     /** @var int */
     protected $usersAutoIncrement = -1;
     /** @var int */
     protected $usersMetaAutoIncrement = -1;
     /** @var bool[] */
-    protected $addedUsers = array();
+    protected $addedUsers = [];
     /** @var int[] */
-    protected $mappingIds = array();
-    /** @var string[] */
-    protected $existingsMetaIsd = array();
+    protected $mappingIds = [];
+    /** @var (bool|int[])[] */
+    protected $existingsMetaIsd = [];
     /** @var int */
     protected $userTableNumCols = 0;
     /** @var string */
     protected $userMode = ParamDescUsers::USER_MODE_OVERWRITE;
-    /** @var string */
-    protected $prefixMetaRegexCheck = '';
-    /** @var array */
-    protected $prefixMetaMapping = array();
+    protected string $prefixMetaRegexCheck;
+    /** @var array<string, string> */
+    protected $prefixMetaMapping = [];
 
     /**
      * Class contructor
@@ -57,20 +70,48 @@ class DbUserMode extends AbstractJsonSerializable
         $this->userMode             = ParamDescUsers::getUsersMode();
         $this->prefixMetaRegexCheck = '/^' . preg_quote(DUPX_ArchiveConfig::getInstance()->wp_tableprefix, '/') . '(?:(\d+)_)?(.*)$/';
 
-        switch (DUPX_InstallerState::getInstType()) {
-            case DUPX_InstallerState::INSTALL_SINGLE_SITE:
+        switch (InstState::getInstType()) {
+            case InstState::TYPE_SINGLE:
                 $this->addPrefixMetaMapping(
                     0,
                     $prmMng->getValue(PrmMng::PARAM_DB_TABLE_PREFIX)
                 );
                 break;
-            case DUPX_InstallerState::INSTALL_SINGLE_SITE_ON_SUBDOMAIN:
-            case DUPX_InstallerState::INSTALL_SINGLE_SITE_ON_SUBFOLDER:
-                throw new Exception('Invalid mode');
-            case DUPX_InstallerState::INSTALL_RBACKUP_SINGLE_SITE:
+            case InstState::TYPE_STANDALONE:
+                $this->addPrefixMetaMapping(
+                    $prmMng->getValue(PrmMng::PARAM_SUBSITE_ID),
+                    $prmMng->getValue(PrmMng::PARAM_DB_TABLE_PREFIX)
+                );
                 break;
-            case DUPX_InstallerState::INSTALL_NOT_SET:
-                throw new Exception('Cannot change setup with current installation type [' . DUPX_InstallerState::getInstType() . ']');
+            case InstState::TYPE_SINGLE_ON_SUBDOMAIN:
+            case InstState::TYPE_SINGLE_ON_SUBFOLDER:
+            case InstState::TYPE_SUBSITE_ON_SUBDOMAIN:
+            case InstState::TYPE_SUBSITE_ON_SUBFOLDER:
+                /** @var SiteOwrMap[] $overwriteMapping */
+                $overwriteMapping = $prmMng->getValue(PrmMng::PARAM_SUBSITE_OVERWRITE_MAPPING);
+
+                foreach ($overwriteMapping as $map) {
+                    if (($targetInfo = $map->getTargetSiteInfo()) == false) {
+                        throw new Exception('Target site info ' . $map->getTargetId() . ' don\'t exists');
+                    }
+
+                    $this->addPrefixMetaMapping(
+                        $map->getSourceId(),
+                        $targetInfo['blog_prefix']
+                    );
+                }
+                break;
+            case InstState::TYPE_MSUBDOMAIN:
+            case InstState::TYPE_MSUBFOLDER:
+            case InstState::TYPE_RBACKUP_SINGLE:
+            case InstState::TYPE_RBACKUP_MSUBDOMAIN:
+            case InstState::TYPE_RBACKUP_MSUBFOLDER:
+            case InstState::TYPE_RECOVERY_SINGLE:
+            case InstState::TYPE_RECOVERY_MSUBDOMAIN:
+            case InstState::TYPE_RECOVERY_MSUBFOLDER:
+                break;
+            case InstState::TYPE_NOT_SET:
+                throw new Exception('Cannot change setup with current installation type [' . InstState::getInstType() . ']');
             default:
                 throw new Exception('Unknown mode');
         }
@@ -96,7 +137,7 @@ class DbUserMode extends AbstractJsonSerializable
      *
      * @return void
      */
-    public static function moveTargetUserTablesOnCurrentPrefix()
+    public static function moveTargetUserTablesOnCurrentPrefix(): void
     {
         $paramsManager = PrmMng::getInstance();
         if (ParamDescUsers::getUsersMode() === ParamDescUsers::USER_MODE_OVERWRITE) {
@@ -138,18 +179,19 @@ class DbUserMode extends AbstractJsonSerializable
      *
      * @return void
      */
-    public function removeAllUserMetaKeysOfCurrentPrefix()
+    public function removeAllUserMetaKeysOfCurrentPrefix(): void
     {
         $paramsManager = PrmMng::getInstance();
         if (
-            ParamDescUsers::getUsersMode() !== ParamDescUsers::USER_MODE_IMPORT_USERS
+            ParamDescUsers::getUsersMode() !== ParamDescUsers::USER_MODE_IMPORT_USERS ||
+            !InstState::isAddSiteOnMultisite()
         ) {
             return;
         }
         $dbh           = DUPX_DB_Functions::getInstance()->dbConnection();
         $overwriteData = $paramsManager->getValue(PrmMng::PARAM_OVERWRITE_SITE_DATA);
 
-        $loggedInUserId = (int) $overwriteData['loggedUser']['id'];
+        $loggedInUserId = (int) $overwriteData['loggedUser']['ID'];
 
         foreach ($this->prefixMetaMapping as $overwriteId => $prefix) {
             $where         = 'user_id != ' . $loggedInUserId;
@@ -172,12 +214,12 @@ class DbUserMode extends AbstractJsonSerializable
     /**
      * Filter props on json encode
      *
-     * @return strng[]
+     * @return string[]
      */
     public function __sleep()
     {
         $props = array_keys(get_object_vars($this));
-        return array_diff($props, array('targetUsersByMail', 'targetUsersByLogin'));
+        return array_diff($props, ['targetUsersByMail', 'targetUsersByLogin']);
     }
 
     /**
@@ -202,7 +244,7 @@ class DbUserMode extends AbstractJsonSerializable
     {
         static $remapTables = null;
         if (is_null($remapTables)) {
-            $remapTables = array();
+            $remapTables = [];
 
             foreach (DUPX_DB_Tables::getInstance()->getTablesByNameWithoutPrefix('posts') as $table) {
                 $remapTables[$table] = 1;
@@ -218,7 +260,7 @@ class DbUserMode extends AbstractJsonSerializable
      *
      * @return void
      */
-    public function initTargetSiteUsersData()
+    public function initTargetSiteUsersData(): void
     {
         if ($this->userMode !== ParamDescUsers::USER_MODE_IMPORT_USERS) {
             return;
@@ -329,8 +371,8 @@ class DbUserMode extends AbstractJsonSerializable
             return $query;
         }
 
-        $matches = array();
-        if (preg_match('/^\s*(?:\/\*.*\*\/|#.*\n|--.*\n)?\s*INSERT\s+INTO\s+`?([^\s`]*?)`?\s+VALUES/s', $query, $matches) !== 1) {
+        $matches = [];
+        if (preg_match('/^\s*(?:\/\*.*\*\/|#.*\n|--.*\n)?\s*INSERT\s+(?:IGNORE\s+)?INTO\s+`?([^\s`]*?)`?\s+VALUES/s', $query, $matches) !== 1) {
             return $query;
         }
 
@@ -360,7 +402,7 @@ class DbUserMode extends AbstractJsonSerializable
      *
      * @return void
      */
-    public function generateImportReport()
+    public function generateImportReport(): void
     {
         if ($this->userMode !== ParamDescUsers::USER_MODE_IMPORT_USERS) {
             return;
@@ -372,7 +414,7 @@ class DbUserMode extends AbstractJsonSerializable
         if (($fp = fopen(DUPX_INIT . '/' . self::getCsvReportName(), 'w')) === false) {
             Log::info('Can\'t open report file ' . DUPX_INIT . '/' . self::getCsvReportName());
         } else {
-            fputcsv($fp, ImportUser::getArrayReportTitles());
+            fputcsv($fp, ImportUser::getArrayReportTitles(), ',', '"', '\\');
         }
 
         foreach ($this->targetUsersById as $user) {
@@ -384,36 +426,36 @@ class DbUserMode extends AbstractJsonSerializable
                 continue;
             }
             if ($fp != false) {
-                fputcsv($fp, $user->getArrayReport());
+                fputcsv($fp, $user->getArrayReport(), ',', '"', '\\');
             }
         }
 
         if ($fp != false) {
             fclose($fp);
-            $csvUrl = DUPX_INIT_URL . '/' . self::getCsvReportName();
+            $csvUrl = Resources::getAssetsBaseUrl() . '/' . self::getCsvReportName();
         } else {
             $csvUrl = false;
         }
 
         $longMsg = dupxTplRender(
             'parts/reports/import_report',
-            array(
-                'numAdded' => $numAdded,
+            [
+                'numAdded'   => $numAdded,
                 'numChanged' => $numChanged,
-                'csvUrl' => $csvUrl
-            ),
+                'csvUrl'     => $csvUrl,
+            ],
             false
         );
 
         $nManager = DUPX_NOTICE_MANAGER::getInstance();
         $nManager->addFinalReportNotice(
-            array(
-                'shortMsg' => 'User import report',
-                'level'    => DUPX_NOTICE_ITEM::NOTICE,
-                'longMsg'  => $longMsg,
+            [
+                'shortMsg'    => 'User import report',
+                'level'       => DUPX_NOTICE_ITEM::NOTICE,
+                'longMsg'     => $longMsg,
                 'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_HTML,
-                'sections' => 'general'
-            )
+                'sections'    => 'general',
+            ]
         );
         $nManager->saveNotices();
     }
@@ -425,20 +467,20 @@ class DbUserMode extends AbstractJsonSerializable
      */
     protected static function getCsvReportName()
     {
-        return 'dup-installer-import-report__' . DUPX_Security::getInstance()->getSecondaryPackageHash() . '.csv';
+        return 'dup-installer-import-report__' . Security::getInstance()->getSecondaryPackageHash() . '.csv';
     }
 
     /**
      * Apply query fix for user table
      *
-     * @param array $queryValues two dimensional array where each item is a row containing the list of values
+     * @param mixed[] $queryValues two dimensional array where each item is a row containing the list of values
      *
      * @return string
      */
     protected function getUserTableQueryFix($queryValues)
     {
         $dbh              = DUPX_DB_Functions::getInstance()->dbConnection();
-        $resultValues     = array();
+        $resultValues     = [];
         $numColsQueryVals = isset($queryValues[0]) ? count($queryValues[0]) : 0;
         $colsDeltaDiff    = $this->userTableNumCols - $numColsQueryVals;
 
@@ -509,21 +551,21 @@ class DbUserMode extends AbstractJsonSerializable
             return '';
         }
 
-        return 'INSERT INTO `' . mysqli_real_escape_string($dbh, DUPX_DB_Functions::getUserTableName()) . '` ' .
+        return 'INSERT IGNORE INTO `' . mysqli_real_escape_string($dbh, DUPX_DB_Functions::getUserTableName()) . '` ' .
             'VALUES ' . SnapDB::getQueryInsertValuesFromArray($resultValues) . ';';
     }
 
     /**
      * Apply query fix for usermeta table
      *
-     * @param array $queryValues two dimensional array where each item is a row containing the list of values
+     * @param mixed[] $queryValues two dimensional array where each item is a row containing the list of values
      *
      * @return string
      */
     protected function getUserMetaTableQueryFix($queryValues)
     {
         $dbh          = DUPX_DB_Functions::getInstance()->dbConnection();
-        $resultValues = array();
+        $resultValues = [];
 
         // reset value
         $user = new ImportUser(-1, '', '');
@@ -535,7 +577,7 @@ class DbUserMode extends AbstractJsonSerializable
                 $rowMetakey = SnapDB::parsedQueryValueToString($rowVals[2]);
 
                 if ($user->getId() != $rowUserId) {
-                    $userId = isset($this->mappingIds[$rowUserId]) ? $this->mappingIds[$rowUserId] : $rowUserId;
+                    $userId = $this->mappingIds[$rowUserId] ?? $rowUserId;
                     if (isset($this->targetUsersById[$userId])) {
                         $user = $this->targetUsersById[$userId];
                     } else {
@@ -577,10 +619,8 @@ class DbUserMode extends AbstractJsonSerializable
 
                     $resultValues[] = $rowVals;
                 }
-            } catch (Exception $e) {
-                Log::logException($e, 'Error on parse user meta row');
-            } catch (Error $e) {
-                Log::logException($e, 'Error on parse user meta row');
+            } catch (Exception | Error $e) {
+                Log::logException($e, Log::LV_DEFAULT, 'Error on parse user meta row');
             }
         }
 
@@ -588,18 +628,18 @@ class DbUserMode extends AbstractJsonSerializable
             return '';
         }
 
-        return 'INSERT INTO `' . mysqli_real_escape_string($dbh, DUPX_DB_Functions::getUserMetaTableName()) .
+        return 'INSERT IGNORE INTO `' . mysqli_real_escape_string($dbh, DUPX_DB_Functions::getUserMetaTableName()) .
             '` VALUES ' . SnapDB::getQueryInsertValuesFromArray($resultValues) . ';';
     }
 
     /**
      * Apply query fix for table/colum user id
      *
-     * @param string $tableName   table name
-     * @param string $colNum      column index, 0 is first
-     * @param array  $queryValues two dimensional array where each item is a row containing the list of values
+     * @param string              $tableName   table name
+     * @param int                 $colNum      column index, 0 is first
+     * @param array<int, mixed[]> $queryValues two dimensional array where each item is a row containing the list of values
      *
-     * @return void
+     * @return string
      */
     protected function getTableUserRemapQueryFix($tableName, $colNum, $queryValues)
     {
@@ -612,7 +652,7 @@ class DbUserMode extends AbstractJsonSerializable
             }
         }
 
-        return 'INSERT INTO `' . mysqli_real_escape_string($dbh, $tableName) .
+        return 'INSERT IGNORE INTO `' . mysqli_real_escape_string($dbh, $tableName) .
             '` VALUES ' . SnapDB::getQueryInsertValuesFromArray($queryValues) . ';';
     }
 }

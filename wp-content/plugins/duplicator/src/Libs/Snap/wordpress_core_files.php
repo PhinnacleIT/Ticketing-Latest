@@ -3,9 +3,6 @@
 /**
  * Core wordpress file list
  *
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
- *
  * >>>>>> THIS FILE IS GENERATED WITH A SCRIPT, DON'T EDIT IT DIRECTLY <<<<<
  * >>>>>> USE THE GENERATOR SCRIPT <<<<<
  *
@@ -30,7 +27,7 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
  */
 
 // @phpstan-ignore-next-line
-self::$corePathList = array(
+self::$corePathList = [
     'wp-login.php'         => "f",
     'wp-cron.php'          => "f",
     'wp-mail.php'          => "f",
@@ -47,7 +44,7 @@ self::$corePathList = array(
     'xmlrpc.php'           => "f",
     'wp-trackback.php'     => "f",
     'wp-links-opml.php'    => "f",
-    'wp-admin'             => array(
+    'wp-admin'             => [
         'import.php'                => "f",
         'admin.php'                 => "f",
         'site-editor.php'           => "f",
@@ -63,7 +60,7 @@ self::$corePathList = array(
         'post-new.php'              => "f",
         'update-core.php'           => "f",
         'options-head.php'          => "f",
-        'js'                        => array(
+        'js'                        => [
             'tags-suggest.min.js'            => "f",
             'auth-app.js'                    => "f",
             'media-gallery.min.js'           => "f",
@@ -91,7 +88,7 @@ self::$corePathList = array(
             'color-picker.min.js'            => "f",
             'inline-edit-tax.min.js'         => "f",
             'bookmarklet.min.js'             => "f",
-            'widgets'                        => array(
+            'widgets'                        => [
                 'media-audio-widget.min.js'   => "f",
                 'custom-html-widgets.min.js'  => "f",
                 'text-widgets.min.js'         => "f",
@@ -106,7 +103,7 @@ self::$corePathList = array(
                 'media-image-widget.js'       => "f",
                 'media-gallery-widget.min.js' => "f",
                 'media-audio-widget.js'       => "f",
-            ),
+            ],
             'customize-widgets.js'           => "f",
             'language-chooser.min.js'        => "f",
             'updates.min.js'                 => "f",
@@ -185,7 +182,7 @@ self::$corePathList = array(
             'password-strength-meter.js'     => "f",
             'editor-expand.js'               => "f",
             'image-edit.min.js'              => "f",
-        ),
+        ],
         'link.php'                  => "f",
         'ms-sites.php'              => "f",
         'upgrade-functions.php'     => "f",
@@ -202,7 +199,7 @@ self::$corePathList = array(
         'customize.php'             => "f",
         'edit-form-blocks.php'      => "f",
         'upload.php'                => "f",
-        'images'                    => array(
+        'images'                    => [
             'freedom-2.svg'                => "f",
             'browser-rtl.png'              => "f",
             'about-texture.png'            => "f",
@@ -293,8 +290,8 @@ self::$corePathList = array(
             'about-header-credits.svg'     => "f",
             'yes.png'                      => "f",
             'menu-vs-2x.png'               => "f",
-        ),
-        'css'                       => array(
+        ],
+        'css'                       => [
             'nav-menus.css'                   => "f",
             'press-this-editor-rtl.css'       => "f",
             'about-rtl.css'                   => "f",
@@ -382,67 +379,67 @@ self::$corePathList = array(
             'themes.min.css'                  => "f",
             'press-this-rtl.min.css'          => "f",
             'customize-nav-menus-rtl.min.css' => "f",
-            'colors'                          => array(
+            'colors'                          => [
                 '_variables.scss' => "f",
                 '_admin.scss'     => "f",
-                'light'           => array(
+                'light'           => [
                     'colors.css'         => "f",
                     'colors.min.css'     => "f",
                     'colors.scss'        => "f",
                     'colors-rtl.css'     => "f",
                     'colors-rtl.min.css' => "f",
-                ),
-                'ocean'           => array(
+                ],
+                'ocean'           => [
                     'colors.css'         => "f",
                     'colors.min.css'     => "f",
                     'colors.scss'        => "f",
                     'colors-rtl.css'     => "f",
                     'colors-rtl.min.css' => "f",
-                ),
-                'ectoplasm'       => array(
+                ],
+                'ectoplasm'       => [
                     'colors.css'         => "f",
                     'colors.min.css'     => "f",
                     'colors.scss'        => "f",
                     'colors-rtl.css'     => "f",
                     'colors-rtl.min.css' => "f",
-                ),
-                'coffee'          => array(
+                ],
+                'coffee'          => [
                     'colors.css'         => "f",
                     'colors.min.css'     => "f",
                     'colors.scss'        => "f",
                     'colors-rtl.css'     => "f",
                     'colors-rtl.min.css' => "f",
-                ),
-                'sunrise'         => array(
+                ],
+                'sunrise'         => [
                     'colors.css'         => "f",
                     'colors.min.css'     => "f",
                     'colors.scss'        => "f",
                     'colors-rtl.css'     => "f",
                     'colors-rtl.min.css' => "f",
-                ),
+                ],
                 '_mixins.scss'    => "f",
-                'blue'            => array(
+                'blue'            => [
                     'colors.css'         => "f",
                     'colors.min.css'     => "f",
                     'colors.scss'        => "f",
                     'colors-rtl.css'     => "f",
                     'colors-rtl.min.css' => "f",
-                ),
-                'midnight'        => array(
+                ],
+                'midnight'        => [
                     'colors.css'         => "f",
                     'colors.min.css'     => "f",
                     'colors.scss'        => "f",
                     'colors-rtl.css'     => "f",
                     'colors-rtl.min.css' => "f",
-                ),
-                'modern'          => array(
+                ],
+                'modern'          => [
                     'colors.css'         => "f",
                     'colors.min.css'     => "f",
                     'colors.scss'        => "f",
                     'colors-rtl.css'     => "f",
                     'colors-rtl.min.css' => "f",
-                ),
-            ),
+                ],
+            ],
             'revisions-rtl.min.css'           => "f",
             'dashboard.min.css'               => "f",
             'deprecated-media.min.css'        => "f",
@@ -468,7 +465,7 @@ self::$corePathList = array(
             'edit.css'                        => "f",
             'deprecated-media-rtl.min.css'    => "f",
             'dashboard.css'                   => "f",
-        ),
+        ],
         'erase-personal-data.php'   => "f",
         'media.php'                 => "f",
         'nav-menus.php'             => "f",
@@ -488,7 +485,7 @@ self::$corePathList = array(
         'edit-link-form.php'        => "f",
         'edit-form-advanced.php'    => "f",
         'admin-header.php'          => "f",
-        'maint'                     => array('repair.php' => "f"),
+        'maint'                     => ['repair.php' => "f"],
         'options-reading.php'       => "f",
         'export.php'                => "f",
         'ms-admin.php'              => "f",
@@ -528,7 +525,7 @@ self::$corePathList = array(
         'options.php'               => "f",
         'link-parse-opml.php'       => "f",
         'admin-footer.php'          => "f",
-        'network'                   => array(
+        'network'                   => [
             'settings.php'       => "f",
             'admin.php'          => "f",
             'update.php'         => "f",
@@ -559,9 +556,9 @@ self::$corePathList = array(
             'theme-editor.php'   => "f",
             'about.php'          => "f",
             'themes.php'         => "f",
-        ),
+        ],
         'custom-header.php'         => "f",
-        'user'                      => array(
+        'user'                      => [
             'admin.php'      => "f",
             'privacy.php'    => "f",
             'credits.php'    => "f",
@@ -572,10 +569,10 @@ self::$corePathList = array(
             'user-edit.php'  => "f",
             'freedoms.php'   => "f",
             'about.php'      => "f",
-        ),
+        ],
         'themes.php'                => "f",
         'ms-edit.php'               => "f",
-        'includes'                  => array(
+        'includes'                  => [
             'import.php'                                            => "f",
             'admin-filters.php'                                     => "f",
             'image-edit.php'                                        => "f",
@@ -683,16 +680,16 @@ self::$corePathList = array(
             'class-wp-site-health-auto-updates.php'                 => "f",
             'privacy-tools.php'                                     => "f",
             'template.php'                                          => "f",
-        ),
+        ],
         'menu-header.php'           => "f",
-    ),
-    'wp-includes'          => array(
+    ],
+    'wp-includes'          => [
         'class-wp-customize-section.php'                 => "f",
-        'Requests'                                       => array(
+        'Requests'                                       => [
             'Session.php'     => "f",
             'SSL.php'         => "f",
-            'Exception'       => array(
-                'HTTP'          => array(
+            'Exception'       => [
+                'HTTP'          => [
                     '417.php'     => "f",
                     '502.php'     => "f",
                     '306.php'     => "f",
@@ -726,19 +723,19 @@ self::$corePathList = array(
                     '503.php'     => "f",
                     '403.php'     => "f",
                     '511.php'     => "f",
-                ),
+                ],
                 'Transport.php' => "f",
                 'HTTP.php'      => "f",
-                'Transport'     => array('cURL.php' => "f"),
-            ),
+                'Transport'     => ['cURL.php' => "f"],
+            ],
             'Hooker.php'      => "f",
-            'src'             => array(
+            'src'             => [
                 'Session.php'     => "f",
-                'Exception'       => array(
+                'Exception'       => [
                     'Http.php'            => "f",
                     'ArgumentCount.php'   => "f",
                     'Transport.php'       => "f",
-                    'Http'                => array(
+                    'Http'                => [
                         'Status503.php'     => "f",
                         'Status406.php'     => "f",
                         'Status405.php'     => "f",
@@ -772,16 +769,16 @@ self::$corePathList = array(
                         'Status402.php'     => "f",
                         'Status304.php'     => "f",
                         'Status511.php'     => "f",
-                    ),
-                    'Transport'           => array('Curl.php' => "f"),
+                    ],
+                    'Transport'           => ['Curl.php' => "f"],
                     'InvalidArgument.php' => "f",
-                ),
+                ],
                 'Auth.php'        => "f",
-                'Cookie'          => array('Jar.php' => "f"),
+                'Cookie'          => ['Jar.php' => "f"],
                 'Transport.php'   => "f",
-                'Auth'            => array('Basic.php' => "f"),
+                'Auth'            => ['Basic.php' => "f"],
                 'Ipv6.php'        => "f",
-                'Response'        => array('Headers.php' => "f"),
+                'Response'        => ['Headers.php' => "f"],
                 'Cookie.php'      => "f",
                 'HookManager.php' => "f",
                 'Proxy.php'       => "f",
@@ -792,51 +789,51 @@ self::$corePathList = array(
                 'Capability.php'  => "f",
                 'Requests.php'    => "f",
                 'Ssl.php'         => "f",
-                'Proxy'           => array('Http.php' => "f"),
+                'Proxy'           => ['Http.php' => "f"],
                 'Autoload.php'    => "f",
                 'Exception.php'   => "f",
-                'Utility'         => array(
+                'Utility'         => [
                     'InputValidator.php'            => "f",
                     'FilteredIterator.php'          => "f",
                     'CaseInsensitiveDictionary.php' => "f",
-                ),
+                ],
                 'Port.php'        => "f",
-                'Transport'       => array(
+                'Transport'       => [
                     'Fsockopen.php' => "f",
                     'Curl.php'      => "f",
-                ),
-            ),
+                ],
+            ],
             'IDNAEncoder.php' => "f",
             'Auth.php'        => "f",
-            'Cookie'          => array('Jar.php' => "f"),
+            'Cookie'          => ['Jar.php' => "f"],
             'Transport.php'   => "f",
-            'Auth'            => array('Basic.php' => "f"),
-            'Response'        => array('Headers.php' => "f"),
+            'Auth'            => ['Basic.php' => "f"],
+            'Response'        => ['Headers.php' => "f"],
             'Cookie.php'      => "f",
             'Proxy.php'       => "f",
             'IPv6.php'        => "f",
             'Response.php'    => "f",
             'Hooks.php'       => "f",
-            'library'         => array('Requests.php' => "f"),
-            'Proxy'           => array('HTTP.php' => "f"),
+            'library'         => ['Requests.php' => "f"],
+            'Proxy'           => ['HTTP.php' => "f"],
             'IRI.php'         => "f",
             'Exception.php'   => "f",
-            'Utility'         => array(
+            'Utility'         => [
                 'FilteredIterator.php'          => "f",
                 'CaseInsensitiveDictionary.php' => "f",
-            ),
-            'Transport'       => array(
+            ],
+            'Transport'       => [
                 'fsockopen.php' => "f",
                 'cURL.php'      => "f",
-            ),
-        ),
+            ],
+        ],
         'class-wp-oembed-controller.php'                 => "f",
         'category-template.php'                          => "f",
         'canonical.php'                                  => "f",
         'class-wp-http-requests-hooks.php'               => "f",
         'cache.php'                                      => "f",
-        'SimplePie'                                      => array(
-            'Cache'           => array(
+        'SimplePie'                                      => [
+            'Cache'           => [
                 'Redis.php'     => "f",
                 'Base.php'      => "f",
                 'Memcached.php' => "f",
@@ -844,20 +841,20 @@ self::$corePathList = array(
                 'DB.php'        => "f",
                 'File.php'      => "f",
                 'MySQL.php'     => "f",
-            ),
+            ],
             'autoloader.php'  => "f",
-            'Content'         => array(
-                'Type' => array('Sniffer.php' => "f"),
-            ),
+            'Content'         => [
+                'Type' => ['Sniffer.php' => "f"],
+            ],
             'Sanitize.php'    => "f",
             'Restriction.php' => "f",
             'Parser.php'      => "f",
             'Cache.php'       => "f",
             'Item.php'        => "f",
-            'HTTP'            => array('Parser.php' => "f"),
-            'src'             => array(
+            'HTTP'            => ['Parser.php' => "f"],
+            'src'             => [
                 'RegistryAware.php' => "f",
-                'Cache'             => array(
+                'Cache'             => [
                     'BaseDataCache.php'      => "f",
                     'Redis.php'              => "f",
                     'DataCache.php'          => "f",
@@ -870,31 +867,31 @@ self::$corePathList = array(
                     'File.php'               => "f",
                     'MySQL.php'              => "f",
                     'Psr16.php'              => "f",
-                ),
+                ],
                 'Gzdecode.php'      => "f",
-                'Content'           => array(
-                    'Type' => array('Sniffer.php' => "f"),
-                ),
+                'Content'           => [
+                    'Type' => ['Sniffer.php' => "f"],
+                ],
                 'Sanitize.php'      => "f",
                 'Restriction.php'   => "f",
                 'Parser.php'        => "f",
                 'Cache.php'         => "f",
                 'Item.php'          => "f",
-                'HTTP'              => array('Parser.php' => "f"),
+                'HTTP'              => ['Parser.php' => "f"],
                 'Misc.php'          => "f",
-                'Decode'            => array(
-                    'HTML' => array('Entities.php' => "f"),
-                ),
+                'Decode'            => [
+                    'HTML' => ['Entities.php' => "f"],
+                ],
                 'Enclosure.php'     => "f",
-                'XML'               => array(
-                    'Declaration' => array('Parser.php' => "f"),
-                ),
+                'XML'               => [
+                    'Declaration' => ['Parser.php' => "f"],
+                ],
                 'Caption.php'       => "f",
                 'Category.php'      => "f",
                 'Author.php'        => "f",
                 'File.php'          => "f",
-                'Net'               => array('IPv6.php' => "f"),
-                'Parse'             => array('Date.php' => "f"),
+                'Net'               => ['IPv6.php' => "f"],
+                'Parse'             => ['Date.php' => "f"],
                 'IRI.php'           => "f",
                 'SimplePie.php'     => "f",
                 'Exception.php'     => "f",
@@ -905,25 +902,25 @@ self::$corePathList = array(
                 'Locator.php'       => "f",
                 'Copyright.php'     => "f",
                 'Core.php'          => "f",
-            ),
+            ],
             'Misc.php'        => "f",
-            'Decode'          => array(
-                'HTML' => array('Entities.php' => "f"),
-            ),
+            'Decode'          => [
+                'HTML' => ['Entities.php' => "f"],
+            ],
             'gzdecode.php'    => "f",
             'Enclosure.php'   => "f",
-            'XML'             => array(
-                'Declaration' => array('Parser.php' => "f"),
-            ),
+            'XML'             => [
+                'Declaration' => ['Parser.php' => "f"],
+            ],
             'Caption.php'     => "f",
             'Category.php'    => "f",
             'Author.php'      => "f",
             'File.php'        => "f",
-            'Net'             => array('IPv6.php' => "f"),
-            'Parse'           => array('Date.php' => "f"),
-            'library'         => array(
-                'SimplePie'     => array(
-                    'Cache'           => array(
+            'Net'             => ['IPv6.php' => "f"],
+            'Parse'           => ['Date.php' => "f"],
+            'library'         => [
+                'SimplePie'     => [
+                    'Cache'           => [
                         'Redis.php'     => "f",
                         'Base.php'      => "f",
                         'Memcached.php' => "f",
@@ -931,31 +928,31 @@ self::$corePathList = array(
                         'DB.php'        => "f",
                         'File.php'      => "f",
                         'MySQL.php'     => "f",
-                    ),
-                    'Content'         => array(
-                        'Type' => array('Sniffer.php' => "f"),
-                    ),
+                    ],
+                    'Content'         => [
+                        'Type' => ['Sniffer.php' => "f"],
+                    ],
                     'Sanitize.php'    => "f",
                     'Restriction.php' => "f",
                     'Parser.php'      => "f",
                     'Cache.php'       => "f",
                     'Item.php'        => "f",
-                    'HTTP'            => array('Parser.php' => "f"),
+                    'HTTP'            => ['Parser.php' => "f"],
                     'Misc.php'        => "f",
-                    'Decode'          => array(
-                        'HTML' => array('Entities.php' => "f"),
-                    ),
+                    'Decode'          => [
+                        'HTML' => ['Entities.php' => "f"],
+                    ],
                     'gzdecode.php'    => "f",
                     'Enclosure.php'   => "f",
-                    'XML'             => array(
-                        'Declaration' => array('Parser.php' => "f"),
-                    ),
+                    'XML'             => [
+                        'Declaration' => ['Parser.php' => "f"],
+                    ],
                     'Caption.php'     => "f",
                     'Category.php'    => "f",
                     'Author.php'      => "f",
                     'File.php'        => "f",
-                    'Net'             => array('IPv6.php' => "f"),
-                    'Parse'           => array('Date.php' => "f"),
+                    'Net'             => ['IPv6.php' => "f"],
+                    'Parse'           => ['Date.php' => "f"],
                     'IRI.php'         => "f",
                     'Exception.php'   => "f",
                     'Source.php'      => "f",
@@ -965,9 +962,9 @@ self::$corePathList = array(
                     'Locator.php'     => "f",
                     'Copyright.php'   => "f",
                     'Core.php'        => "f",
-                ),
+                ],
                 'SimplePie.php' => "f",
-            ),
+            ],
             'IRI.php'         => "f",
             'Exception.php'   => "f",
             'Source.php'      => "f",
@@ -977,7 +974,7 @@ self::$corePathList = array(
             'Locator.php'     => "f",
             'Copyright.php'   => "f",
             'Core.php'        => "f",
-        ),
+        ],
         'embed-template.php'                             => "f",
         'class-wp-hook.php'                              => "f",
         'feed.php'                                       => "f",
@@ -987,7 +984,7 @@ self::$corePathList = array(
         'class-snoopy.php'                               => "f",
         'class-simplepie.php'                            => "f",
         'block-i18n.json'                                => "f",
-        'ID3'                                            => array(
+        'ID3'                                            => [
             'license.commercial.txt'           => "f",
             'module.audio.ogg.php'             => "f",
             'module.tag.id3v1.php'             => "f",
@@ -1007,22 +1004,22 @@ self::$corePathList = array(
             'module.audio-video.flv.php'       => "f",
             'module.audio-video.matroska.php'  => "f",
             'module.audio.mp3.php'             => "f",
-        ),
+        ],
         'theme.php'                                      => "f",
-        'Text'                                           => array(
+        'Text'                                           => [
             'Diff.php'      => "f",
-            'Diff'          => array(
-                'Engine'       => array(
+            'Diff'          => [
+                'Engine'       => [
                     'shell.php'  => "f",
                     'string.php' => "f",
                     'xdiff.php'  => "f",
                     'native.php' => "f",
-                ),
-                'Renderer'     => array('inline.php' => "f"),
+                ],
+                'Renderer'     => ['inline.php' => "f"],
                 'Renderer.php' => "f",
-            ),
+            ],
             'Exception.php' => "f",
-        ),
+        ],
         'update.php'                                     => "f",
         'ms-default-constants.php'                       => "f",
         'ms-load.php'                                    => "f",
@@ -1036,22 +1033,22 @@ self::$corePathList = array(
         'class-wp-user-meta-session-tokens.php'          => "f",
         'block-template.php'                             => "f",
         'script-loader.php'                              => "f",
-        'block-bindings'                                 => array(
+        'block-bindings'                                 => [
             'pattern-overrides.php' => "f",
             'post-meta.php'         => "f",
-        ),
-        'PHPMailer'                                      => array(
+        ],
+        'PHPMailer'                                      => [
             'SMTP.php'      => "f",
             'Exception.php' => "f",
             'PHPMailer.php' => "f",
-        ),
+        ],
         'class-wp-customize-manager.php'                 => "f",
         'vars.php'                                       => "f",
         'bookmark.php'                                   => "f",
         'class-wp-theme-json-schema.php'                 => "f",
         'class-wp-role.php'                              => "f",
         'default-constants.php'                          => "f",
-        'html-api'                                       => array(
+        'html-api'                                       => [
             'html5-named-character-references.php'         => "f",
             'class-wp-html-attribute-token.php'            => "f",
             'class-wp-html-stack-event.php'                => "f",
@@ -1066,32 +1063,32 @@ self::$corePathList = array(
             'class-wp-html-unsupported-exception.php'      => "f",
             'class-wp-html-tag-processor.php'              => "f",
             'class-wp-html-open-elements.php'              => "f",
-        ),
-        'sodium_compat'                                  => array(
+        ],
+        'sodium_compat'                                  => [
             'autoload.php'      => "f",
-            'src'               => array(
-                'PHP52'               => array('SplFixedArray.php' => "f"),
+            'src'               => [
+                'PHP52'               => ['SplFixedArray.php' => "f"],
                 'Crypto.php'          => "f",
                 'Compat.php'          => "f",
-                'Core32'              => array(
+                'Core32'              => [
                     'Poly1305.php'   => "f",
                     'Salsa20.php'    => "f",
                     'XChaCha20.php'  => "f",
                     'BLAKE2b.php'    => "f",
                     'X25519.php'     => "f",
-                    'SecretStream'   => array('State.php' => "f"),
-                    'Curve25519'     => array(
+                    'SecretStream'   => ['State.php' => "f"],
+                    'Curve25519'     => [
                         'Fe.php'    => "f",
                         'H.php'     => "f",
                         'README.md' => "f",
-                        'Ge'        => array(
+                        'Ge'        => [
                             'P3.php'      => "f",
                             'Cached.php'  => "f",
                             'P1p1.php'    => "f",
                             'Precomp.php' => "f",
                             'P2.php'      => "f",
-                        ),
-                    ),
+                        ],
+                    ],
                     'Int64.php'      => "f",
                     'SipHash.php'    => "f",
                     'Curve25519.php' => "f",
@@ -1101,46 +1098,46 @@ self::$corePathList = array(
                     'Ed25519.php'    => "f",
                     'HChaCha20.php'  => "f",
                     'Int32.php'      => "f",
-                    'Poly1305'       => array('State.php' => "f"),
+                    'Poly1305'       => ['State.php' => "f"],
                     'Util.php'       => "f",
-                    'ChaCha20'       => array(
+                    'ChaCha20'       => [
                         'IetfCtx.php' => "f",
                         'Ctx.php'     => "f",
-                    ),
-                ),
+                    ],
+                ],
                 'SodiumException.php' => "f",
                 'Crypto32.php'        => "f",
-                'Core'                => array(
+                'Core'                => [
                     'Poly1305.php'     => "f",
-                    'Base64'           => array(
+                    'Base64'           => [
                         'Common.php'   => "f",
                         'UrlSafe.php'  => "f",
                         'Original.php' => "f",
-                    ),
+                    ],
                     'Salsa20.php'      => "f",
                     'Ristretto255.php' => "f",
                     'XChaCha20.php'    => "f",
                     'BLAKE2b.php'      => "f",
                     'X25519.php'       => "f",
                     'AEGIS128L.php'    => "f",
-                    'SecretStream'     => array('State.php' => "f"),
-                    'AES'              => array(
+                    'SecretStream'     => ['State.php' => "f"],
+                    'AES'              => [
                         'KeySchedule.php' => "f",
                         'Block.php'       => "f",
                         'Expanded.php'    => "f",
-                    ),
-                    'Curve25519'       => array(
+                    ],
+                    'Curve25519'       => [
                         'Fe.php'    => "f",
                         'H.php'     => "f",
                         'README.md' => "f",
-                        'Ge'        => array(
+                        'Ge'        => [
                             'P3.php'      => "f",
                             'Cached.php'  => "f",
                             'P1p1.php'    => "f",
                             'Precomp.php' => "f",
                             'P2.php'      => "f",
-                        ),
-                    ),
+                        ],
+                    ],
                     'SipHash.php'      => "f",
                     'Curve25519.php'   => "f",
                     'AES.php'          => "f",
@@ -1149,60 +1146,60 @@ self::$corePathList = array(
                     'ChaCha20.php'     => "f",
                     'Ed25519.php'      => "f",
                     'HChaCha20.php'    => "f",
-                    'AEGIS'            => array(
+                    'AEGIS'            => [
                         'State128L.php' => "f",
                         'State256.php'  => "f",
-                    ),
+                    ],
                     'AEGIS256.php'     => "f",
-                    'Poly1305'         => array('State.php' => "f"),
+                    'Poly1305'         => ['State.php' => "f"],
                     'Util.php'         => "f",
-                    'ChaCha20'         => array(
+                    'ChaCha20'         => [
                         'IetfCtx.php' => "f",
                         'Ctx.php'     => "f",
-                    ),
-                ),
+                    ],
+                ],
                 'File.php'            => "f",
-            ),
-            'namespaced'        => array(
+            ],
+            'namespaced'        => [
                 'Crypto.php' => "f",
                 'Compat.php' => "f",
-                'Core'       => array(
+                'Core'       => [
                     'Poly1305.php'   => "f",
                     'Salsa20.php'    => "f",
                     'XChaCha20.php'  => "f",
                     'BLAKE2b.php'    => "f",
                     'X25519.php'     => "f",
-                    'Curve25519'     => array(
+                    'Curve25519'     => [
                         'Fe.php' => "f",
                         'H.php'  => "f",
-                        'Ge'     => array(
+                        'Ge'     => [
                             'P3.php'      => "f",
                             'Cached.php'  => "f",
                             'P1p1.php'    => "f",
                             'Precomp.php' => "f",
                             'P2.php'      => "f",
-                        ),
-                    ),
+                        ],
+                    ],
                     'SipHash.php'    => "f",
                     'Curve25519.php' => "f",
                     'HSalsa20.php'   => "f",
                     'ChaCha20.php'   => "f",
                     'Ed25519.php'    => "f",
                     'HChaCha20.php'  => "f",
-                    'Poly1305'       => array('State.php' => "f"),
+                    'Poly1305'       => ['State.php' => "f"],
                     'Xsalsa20.php'   => "f",
                     'Util.php'       => "f",
-                    'ChaCha20'       => array(
+                    'ChaCha20'       => [
                         'IetfCtx.php' => "f",
                         'Ctx.php'     => "f",
-                    ),
-                ),
+                    ],
+                ],
                 'File.php'   => "f",
-            ),
+            ],
             'composer.json'     => "f",
             'autoload-php7.php' => "f",
             'LICENSE'           => "f",
-            'lib'               => array(
+            'lib'               => [
                 'php84compat.php'       => "f",
                 'sodium_compat.php'     => "f",
                 'php72compat_const.php' => "f",
@@ -1212,9 +1209,9 @@ self::$corePathList = array(
                 'stream-xchacha20.php'  => "f",
                 'php72compat.php'       => "f",
                 'php84compat_const.php' => "f",
-            ),
-        ),
-        'fonts'                                          => array(
+            ],
+        ],
+        'fonts'                                          => [
             'class-wp-font-utils.php'         => "f",
             'dashicons.woff2'                 => "f",
             'dashicons.woff'                  => "f",
@@ -1225,7 +1222,7 @@ self::$corePathList = array(
             'dashicons.eot'                   => "f",
             'class-wp-font-face.php'          => "f",
             'dashicons.ttf'                   => "f",
-        ),
+        ],
         'embed.php'                                      => "f",
         'load.php'                                       => "f",
         'class-wp-comment-query.php'                     => "f",
@@ -1233,9 +1230,9 @@ self::$corePathList = array(
         'ms-site.php'                                    => "f",
         'class-oembed.php'                               => "f",
         'class-wp-block-list.php'                        => "f",
-        'js'                                             => array(
+        'js'                                             => [
             'customize-preview-nav-menus.min.js' => "f",
-            'jquery'                             => array(
+            'jquery'                             => [
                 'jquery.table-hotkeys.min.js' => "f",
                 'jquery.ui.touch-punch.js'    => "f",
                 'jquery.js'                   => "f",
@@ -1244,7 +1241,7 @@ self::$corePathList = array(
                 'jquery.masonry.min.js'       => "f",
                 'suggest.js'                  => "f",
                 'suggest.min.js'              => "f",
-                'ui'                          => array(
+                'ui'                          => [
                     'jquery.ui.effect-slide.min.js'     => "f",
                     'tooltip.min.js'                    => "f",
                     'effect-bounce.min.js'              => "f",
@@ -1355,7 +1352,7 @@ self::$corePathList = array(
                     'accordion.min.js'                  => "f",
                     'jquery.ui.effect-scale.min.js'     => "f",
                     'effect-bounce.js'                  => "f",
-                ),
+                ],
                 'jquery.min.js'               => "f",
                 'jquery.hotkeys.min.js'       => "f",
                 'jquery.form.min.js'          => "f",
@@ -1366,7 +1363,7 @@ self::$corePathList = array(
                 'jquery.hotkeys.js'           => "f",
                 'jquery.form.js'              => "f",
                 'jquery-migrate.min.js'       => "f",
-            ),
+            ],
             'admin-bar.js'                       => "f",
             'backbone.js'                        => "f",
             'media-views.min.js'                 => "f",
@@ -1388,124 +1385,124 @@ self::$corePathList = array(
             'wpdialog.min.js'                    => "f",
             'mce-view.js'                        => "f",
             'wp-lists.min.js'                    => "f",
-            'tinymce'                            => array(
-                'utils'             => array(
+            'tinymce'                            => [
+                'utils'             => [
                     'validate.js'         => "f",
                     'mctabs.js'           => "f",
                     'editable_selects.js' => "f",
                     'form_utils.js'       => "f",
-                ),
+                ],
                 'wp-mce-help.php'   => "f",
                 'wp-tinymce.js'     => "f",
                 'license.txt'       => "f",
-                'langs'             => array('wp-langs-en.js' => "f"),
+                'langs'             => ['wp-langs-en.js' => "f"],
                 'tinymce.min.js'    => "f",
-                'plugins'           => array(
-                    'wpembed'        => array(
+                'plugins'           => [
+                    'wpembed'        => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'wplink'         => array(
+                    ],
+                    'wplink'         => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'wpview'         => array(
+                    ],
+                    'wpview'         => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'wpfullscreen'   => array(
+                    ],
+                    'wpfullscreen'   => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'tabfocus'       => array(
+                    ],
+                    'tabfocus'       => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'wpeditimage'    => array(
+                    ],
+                    'wpeditimage'    => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'link'           => array(
+                    ],
+                    'link'           => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'wptextpattern'  => array(
+                    ],
+                    'wptextpattern'  => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'wordpress'      => array(
+                    ],
+                    'wordpress'      => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'media'          => array(
+                    ],
+                    'media'          => [
                         'plugin.js'       => "f",
                         'plugin.min.js'   => "f",
                         'moxieplayer.swf' => "f",
-                    ),
-                    'wpdialogs'      => array(
+                    ],
+                    'wpdialogs'      => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'wpautoresize'   => array(
+                    ],
+                    'wpautoresize'   => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'wpgallery'      => array(
+                    ],
+                    'wpgallery'      => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'lists'          => array(
+                    ],
+                    'lists'          => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'wpemoji'        => array(
+                    ],
+                    'wpemoji'        => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'charmap'        => array(
+                    ],
+                    'charmap'        => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'colorpicker'    => array(
+                    ],
+                    'colorpicker'    => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'fullscreen'     => array(
+                    ],
+                    'fullscreen'     => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'directionality' => array(
+                    ],
+                    'directionality' => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'paste'          => array(
+                    ],
+                    'paste'          => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'hr'             => array(
+                    ],
+                    'hr'             => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'compat3x'       => array(
+                    ],
+                    'compat3x'       => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                        'css'           => array('dialog.css' => "f"),
-                    ),
-                    'image'          => array(
+                        'css'           => ['dialog.css' => "f"],
+                    ],
+                    'image'          => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                    'textcolor'      => array(
+                    ],
+                    'textcolor'      => [
                         'plugin.js'     => "f",
                         'plugin.min.js' => "f",
-                    ),
-                ),
+                    ],
+                ],
                 'wp-tinymce.js.gz'  => "f",
                 'tiny_mce_popup.js' => "f",
                 'wp-tinymce.php'    => "f",
-                'skins'             => array(
-                    'lightgray' => array(
-                        'fonts'                  => array(
+                'skins'             => [
+                    'lightgray' => [
+                        'fonts'                  => [
                             'tinymce.woff'       => "f",
                             'tinymce.json'       => "f",
                             'tinymce-small.eot'  => "f",
@@ -1517,21 +1514,21 @@ self::$corePathList = array(
                             'readme.md'          => "f",
                             'tinymce.eot'        => "f",
                             'tinymce-small.ttf'  => "f",
-                        ),
+                        ],
                         'skin.ie7.min.css'       => "f",
                         'skin.min.css'           => "f",
                         'content.inline.min.css' => "f",
                         'content.min.css'        => "f",
-                        'img'                    => array(
+                        'img'                    => [
                             'trans.gif'  => "f",
                             'loader.gif' => "f",
                             'object.gif' => "f",
                             'anchor.gif' => "f",
-                        ),
-                    ),
-                    'wordpress' => array(
+                        ],
+                    ],
+                    'wordpress' => [
                         'wp-content.css' => "f",
-                        'images'         => array(
+                        'images'         => [
                             'dashicon-no.png'     => "f",
                             'pagebreak.png'       => "f",
                             'script.svg'          => "f",
@@ -1548,20 +1545,20 @@ self::$corePathList = array(
                             'audio.png'           => "f",
                             'playlist-audio.png'  => "f",
                             'style.svg'           => "f",
-                        ),
-                    ),
-                ),
-                'themes'            => array(
-                    'inlite' => array(
+                        ],
+                    ],
+                ],
+                'themes'            => [
+                    'inlite' => [
                         'theme.js'     => "f",
                         'theme.min.js' => "f",
-                    ),
-                    'modern' => array(
+                    ],
+                    'modern' => [
                         'theme.js'     => "f",
                         'theme.min.js' => "f",
-                    ),
-                ),
-            ),
+                    ],
+                ],
+            ],
             'wp-emoji.js'                        => "f",
             'wpdialog.js'                        => "f",
             'underscore.min.js'                  => "f",
@@ -1570,7 +1567,7 @@ self::$corePathList = array(
             'wp-sanitize.js'                     => "f",
             'wp-list-revisions.min.js'           => "f",
             'twemoji.min.js'                     => "f",
-            'codemirror'                         => array(
+            'codemirror'                         => [
                 'esprima.js'         => "f",
                 'htmlhint-kses.js'   => "f",
                 'codemirror.min.css' => "f",
@@ -1580,28 +1577,28 @@ self::$corePathList = array(
                 'codemirror.min.js'  => "f",
                 'jshint.js'          => "f",
                 'jsonlint.js'        => "f",
-            ),
+            ],
             'customize-preview.js'               => "f",
             'wplink.js'                          => "f",
             'heartbeat.js'                       => "f",
-            'swfupload'                          => array(
+            'swfupload'                          => [
                 'swfupload.swf'   => "f",
                 'handlers.js'     => "f",
                 'license.txt'     => "f",
-                'plugins'         => array(
+                'plugins'         => [
                     'swfupload.queue.js'     => "f",
                     'swfupload.speed.js'     => "f",
                     'swfupload.swfobject.js' => "f",
                     'swfupload.cookies.js'   => "f",
-                ),
+                ],
                 'handlers.min.js' => "f",
                 'swfupload.js'    => "f",
-            ),
+            ],
             'wp-auth-check.min.js'               => "f",
             'colorpicker.js'                     => "f",
             'comment-reply.min.js'               => "f",
             'wp-backbone.js'                     => "f",
-            'plupload'                           => array(
+            'plupload'                           => [
                 'handlers.js'              => "f",
                 'plupload.full.min.js'     => "f",
                 'license.txt'              => "f",
@@ -1614,7 +1611,7 @@ self::$corePathList = array(
                 'wp-plupload.min.js'       => "f",
                 'plupload.silverlight.xap' => "f",
                 'plupload.flash.swf'       => "f",
-            ),
+            ],
             'wp-a11y.js'                         => "f",
             'json2.min.js'                       => "f",
             'api-request.js'                     => "f",
@@ -1626,25 +1623,25 @@ self::$corePathList = array(
             'mce-view.min.js'                    => "f",
             'tw-sack.js'                         => "f",
             'wp-custom-header.js'                => "f",
-            'imgareaselect'                      => array(
+            'imgareaselect'                      => [
                 'border-anim-v.gif'           => "f",
                 'border-anim-h.gif'           => "f",
                 'jquery.imgareaselect.min.js' => "f",
                 'jquery.imgareaselect.js'     => "f",
                 'imgareaselect.css'           => "f",
-            ),
+            ],
             'wp-embed-template.min.js'           => "f",
             'heartbeat.min.js'                   => "f",
             'imagesloaded.min.js'                => "f",
             'customize-views.min.js'             => "f",
             'wp-a11y.min.js'                     => "f",
             'wp-sanitize.min.js'                 => "f",
-            'crop'                               => array(
+            'crop'                               => [
                 'marqueeHoriz.gif' => "f",
                 'marqueeVert.gif'  => "f",
                 'cropper.css'      => "f",
                 'cropper.js'       => "f",
-            ),
+            ],
             'customize-selective-refresh.js'     => "f",
             'media-models.js'                    => "f",
             'wp-ajax-response.js'                => "f",
@@ -1668,16 +1665,16 @@ self::$corePathList = array(
             'wp-util.js'                         => "f",
             'tw-sack.min.js'                     => "f",
             'media-models.min.js'                => "f",
-            'thickbox'                           => array(
+            'thickbox'                           => [
                 'loadingAnimation.gif' => "f",
                 'macFFBgHack.png'      => "f",
                 'thickbox.css'         => "f",
                 'thickbox.js'          => "f",
-            ),
+            ],
             'media-grid.min.js'                  => "f",
             'wplink.min.js'                      => "f",
             'wp-util.min.js'                     => "f",
-            'mediaelement'                       => array(
+            'mediaelement'                       => [
                 'skipback.png'                      => "f",
                 'mediaelement.min.js'               => "f",
                 'wp-mediaelement.min.css'           => "f",
@@ -1695,10 +1692,10 @@ self::$corePathList = array(
                 'mediaelement-migrate.js'           => "f",
                 'mediaelementplayer-legacy.min.css' => "f",
                 'mediaelement-migrate.min.js'       => "f",
-                'renderers'                         => array(
+                'renderers'                         => [
                     'vimeo.js'     => "f",
                     'vimeo.min.js' => "f",
-                ),
+                ],
                 'controls.svg'                      => "f",
                 'wp-mediaelement.css'               => "f",
                 'loading.gif'                       => "f",
@@ -1709,12 +1706,12 @@ self::$corePathList = array(
                 'bigplay.png'                       => "f",
                 'mediaelementplayer.css'            => "f",
                 'wp-playlist.min.js'                => "f",
-            ),
+            ],
             'customize-preview-widgets.js'       => "f",
             'quicktags.js'                       => "f",
             'hoverintent-js.min.js'              => "f",
             'wp-emoji-loader.js'                 => "f",
-            'dist'                               => array(
+            'dist'                               => [
                 'i18n.js'                                   => "f",
                 'list-reusable-blocks.min.js'               => "f",
                 'private-apis.min.js'                       => "f",
@@ -1802,48 +1799,48 @@ self::$corePathList = array(
                 'media-utils.js'                            => "f",
                 'edit-widgets.js'                           => "f",
                 'shortcode.min.js'                          => "f",
-                'script-modules'                            => array(
-                    'a11y'                 => array(
+                'script-modules'                            => [
+                    'a11y'                 => [
                         'index.js'     => "f",
                         'index.min.js' => "f",
-                    ),
-                    'interactivity-router' => array(
+                    ],
+                    'interactivity-router' => [
                         'index.js'     => "f",
                         'index.min.js' => "f",
-                    ),
-                    'block-library'        => array(
-                        'form'       => array(
+                    ],
+                    'block-library'        => [
+                        'form'       => [
                             'view.min.js' => "f",
                             'view.js'     => "f",
-                        ),
-                        'search'     => array(
+                        ],
+                        'search'     => [
                             'view.min.js' => "f",
                             'view.js'     => "f",
-                        ),
-                        'navigation' => array(
+                        ],
+                        'navigation' => [
                             'view.min.js' => "f",
                             'view.js'     => "f",
-                        ),
-                        'query'      => array(
+                        ],
+                        'query'      => [
                             'view.min.js' => "f",
                             'view.js'     => "f",
-                        ),
-                        'file'       => array(
+                        ],
+                        'file'       => [
                             'view.min.js' => "f",
                             'view.js'     => "f",
-                        ),
-                        'image'      => array(
+                        ],
+                        'image'      => [
                             'view.min.js' => "f",
                             'view.js'     => "f",
-                        ),
-                    ),
-                    'interactivity'        => array(
+                        ],
+                    ],
+                    'interactivity'        => [
                         'debug.js'     => "f",
                         'index.js'     => "f",
                         'index.min.js' => "f",
                         'debug.min.js' => "f",
-                    ),
-                ),
+                    ],
+                ],
                 'plugins.min.js'                            => "f",
                 'preferences-persistence.min.js'            => "f",
                 'primitives.min.js'                         => "f",
@@ -1864,7 +1861,7 @@ self::$corePathList = array(
                 'edit-site.js'                              => "f",
                 'token-list.min.js'                         => "f",
                 'block-editor.min.js'                       => "f",
-                'vendor'                                    => array(
+                'vendor'                                    => [
                     'lodash.js'                            => "f",
                     'wp-polyfill-fetch.js'                 => "f",
                     'wp-polyfill-node-contains.js'         => "f",
@@ -1900,19 +1897,19 @@ self::$corePathList = array(
                     'wp-polyfill-url.js'                   => "f",
                     'react-dom.min.js'                     => "f",
                     'wp-polyfill-dom-rect.js'              => "f",
-                ),
+                ],
                 'is-shallow-equal.js'                       => "f",
                 'block-library.min.js'                      => "f",
                 'blocks.js'                                 => "f",
                 'interactivity-router.js'                   => "f",
                 'interactivity-router.min.js'               => "f",
                 'interactivity.min.js'                      => "f",
-                'development'                               => array(
+                'development'                               => [
                     'react-refresh-runtime.min.js' => "f",
                     'react-refresh-entry.js'       => "f",
                     'react-refresh-runtime.js'     => "f",
                     'react-refresh-entry.min.js'   => "f",
-                ),
+                ],
                 'edit-site.min.js'                          => "f",
                 'hooks.js'                                  => "f",
                 'wordcount.min.js'                          => "f",
@@ -1928,13 +1925,13 @@ self::$corePathList = array(
                 'block-directory.min.js'                    => "f",
                 'fields.js'                                 => "f",
                 'patterns.min.js'                           => "f",
-            ),
+            ],
             'swfobject.js'                       => "f",
-            'jcrop'                              => array(
+            'jcrop'                              => [
                 'Jcrop.gif'            => "f",
                 'jquery.Jcrop.min.js'  => "f",
                 'jquery.Jcrop.min.css' => "f",
-            ),
+            ],
             'media-views.js'                     => "f",
             'wp-embed.min.js'                    => "f",
             'customize-preview-widgets.min.js'   => "f",
@@ -1952,8 +1949,8 @@ self::$corePathList = array(
             'media-editor.js'                    => "f",
             'admin-bar.min.js'                   => "f",
             'comment-reply.js'                   => "f",
-        ),
-        'customize'                                      => array(
+        ],
+        'customize'                                      => [
             'class-wp-customize-code-editor-control.php'         => "f",
             'class-wp-customize-background-position-control.php' => "f",
             'class-wp-customize-upload-control.php'              => "f",
@@ -1990,7 +1987,7 @@ self::$corePathList = array(
             'class-wp-customize-image-control.php'               => "f",
             'class-wp-customize-cropped-image-control.php'       => "f",
             'class-wp-customize-selective-refresh.php'           => "f",
-        ),
+        ],
         'class-wp-tax-query.php'                         => "f",
         'class-wp-navigation-fallback.php'               => "f",
         'class-wp-xmlrpc-server.php'                     => "f",
@@ -2017,8 +2014,8 @@ self::$corePathList = array(
         'class-wp-block-type-registry.php'               => "f",
         'general-template.php'                           => "f",
         'class-wp-recovery-mode.php'                     => "f",
-        'php-compat'                                     => array('readonly.php' => "f"),
-        'widgets'                                        => array(
+        'php-compat'                                     => ['readonly.php' => "f"],
+        'widgets'                                        => [
             'class-wp-widget-recent-posts.php'    => "f",
             'class-wp-widget-pages.php'           => "f",
             'class-wp-widget-media-video.php'     => "f",
@@ -2039,12 +2036,12 @@ self::$corePathList = array(
             'class-wp-widget-links.php'           => "f",
             'class-wp-widget-custom-html.php'     => "f",
             'class-wp-widget-media-audio.php'     => "f",
-        ),
+        ],
         'class-wp-text-diff-renderer-inline.php'         => "f",
         'cron.php'                                       => "f",
         'class-walker-category-dropdown.php'             => "f",
         'post.php'                                       => "f",
-        'IXR'                                            => array(
+        'IXR'                                            => [
             'class-IXR-client.php'              => "f",
             'class-IXR-introspectionserver.php' => "f",
             'class-IXR-base64.php'              => "f",
@@ -2055,7 +2052,7 @@ self::$corePathList = array(
             'class-IXR-message.php'             => "f",
             'class-IXR-error.php'               => "f",
             'class-IXR-clientmulticall.php'     => "f",
-        ),
+        ],
         'theme-previews.php'                             => "f",
         'class-walker-category.php'                      => "f",
         'class-wp-application-passwords.php'             => "f",
@@ -2069,7 +2066,7 @@ self::$corePathList = array(
         'query.php'                                      => "f",
         'class-wp-theme-json.php'                        => "f",
         'class-wp-duotone.php'                           => "f",
-        'images'                                         => array(
+        'images'                                         => [
             'icon-pointer-flag.png'     => "f",
             'admin-bar-sprite.png'      => "f",
             'spinner.gif'               => "f",
@@ -2079,12 +2076,12 @@ self::$corePathList = array(
             'arrow-pointer-blue-2x.png' => "f",
             'icon-pointer-flag-2x.png'  => "f",
             'toggle-arrow.png'          => "f",
-            'wlw'                       => array(
+            'wlw'                       => [
                 'wp-comments.png'  => "f",
                 'wp-watermark.png' => "f",
                 'wp-icon.png'      => "f",
-            ),
-            'media'                     => array(
+            ],
+            'media'                     => [
                 'interactive.png' => "f",
                 'video.svg'       => "f",
                 'document.png'    => "f",
@@ -2103,14 +2100,14 @@ self::$corePathList = array(
                 'archive.png'     => "f",
                 'code.png'        => "f",
                 'archive.svg'     => "f",
-            ),
+            ],
             'wpicons.png'               => "f",
             'rss-2x.png'                => "f",
             'arrow-pointer-blue.png'    => "f",
             'uploader-icons.png'        => "f",
             'w-logo-blue-white-bg.png'  => "f",
             'wpicons-2x.png'            => "f",
-            'crystal'                   => array(
+            'crystal'                   => [
                 'interactive.png' => "f",
                 'license.txt'     => "f",
                 'document.png'    => "f",
@@ -2121,14 +2118,14 @@ self::$corePathList = array(
                 'audio.png'       => "f",
                 'archive.png'     => "f",
                 'code.png'        => "f",
-            ),
+            ],
             'spinner-2x.gif'            => "f",
             'admin-bar-sprite-2x.png'   => "f",
             'w-logo-blue.png'           => "f",
             'xit-2x.gif'                => "f",
             'wpspin.gif'                => "f",
             'blank.gif'                 => "f",
-            'smilies'                   => array(
+            'smilies'                   => [
                 'icon_surprised.gif' => "f",
                 'frownie.png'        => "f",
                 'icon_cool.gif'      => "f",
@@ -2155,13 +2152,13 @@ self::$corePathList = array(
                 'icon_idea.gif'      => "f",
                 'icon_redface.gif'   => "f",
                 'icon_sad.gif'       => "f",
-            ),
+            ],
             'xit.gif'                   => "f",
             'down_arrow.gif'            => "f",
             'wpspin-2x.gif'             => "f",
             'down_arrow-2x.gif'         => "f",
-        ),
-        'css'                                            => array(
+        ],
+        'css'                                            => [
             'buttons-rtl.min.css'             => "f",
             'editor.css'                      => "f",
             'wp-empty-template-alert.min.css' => "f",
@@ -2197,26 +2194,26 @@ self::$corePathList = array(
             'editor-rtl.css'                  => "f",
             'jquery-ui-dialog.css'            => "f",
             'media-views-rtl.min.css'         => "f",
-            'dist'                            => array(
-                'edit-widgets'         => array(
+            'dist'                            => [
+                'edit-widgets'         => [
                     'style-rtl.min.css' => "f",
                     'style-rtl.css'     => "f",
                     'style.min.css'     => "f",
                     'style.css'         => "f",
-                ),
-                'block-directory'      => array(
+                ],
+                'block-directory'      => [
                     'style-rtl.min.css' => "f",
                     'style-rtl.css'     => "f",
                     'style.min.css'     => "f",
                     'style.css'         => "f",
-                ),
-                'list-reusable-blocks' => array(
+                ],
+                'list-reusable-blocks' => [
                     'style-rtl.min.css' => "f",
                     'style-rtl.css'     => "f",
                     'style.min.css'     => "f",
                     'style.css'         => "f",
-                ),
-                'edit-site'            => array(
+                ],
+                'edit-site'            => [
                     'style-rtl.min.css' => "f",
                     'style-rtl.css'     => "f",
                     'posts-rtl.min.css' => "f",
@@ -2225,8 +2222,8 @@ self::$corePathList = array(
                     'style.min.css'     => "f",
                     'posts-rtl.css'     => "f",
                     'style.css'         => "f",
-                ),
-                'edit-post'            => array(
+                ],
+                'edit-post'            => [
                     'style-rtl.min.css'   => "f",
                     'style-rtl.css'       => "f",
                     'classic.css'         => "f",
@@ -2235,20 +2232,20 @@ self::$corePathList = array(
                     'style.min.css'       => "f",
                     'classic-rtl.min.css' => "f",
                     'style.css'           => "f",
-                ),
-                'commands'             => array(
+                ],
+                'commands'             => [
                     'style-rtl.min.css' => "f",
                     'style-rtl.css'     => "f",
                     'style.min.css'     => "f",
                     'style.css'         => "f",
-                ),
-                'widgets'              => array(
+                ],
+                'widgets'              => [
                     'style-rtl.min.css' => "f",
                     'style-rtl.css'     => "f",
                     'style.min.css'     => "f",
                     'style.css'         => "f",
-                ),
-                'block-library'        => array(
+                ],
+                'block-library'        => [
                     'style-rtl.min.css'           => "f",
                     'editor.css'                  => "f",
                     'elements-rtl.css'            => "f",
@@ -2281,20 +2278,20 @@ self::$corePathList = array(
                     'elements-rtl.min.css'        => "f",
                     'editor-elements-rtl.min.css' => "f",
                     'common-rtl.css'              => "f",
-                ),
-                'reusable-blocks'      => array(
+                ],
+                'reusable-blocks'      => [
                     'style-rtl.min.css' => "f",
                     'style-rtl.css'     => "f",
                     'style.min.css'     => "f",
                     'style.css'         => "f",
-                ),
-                'customize-widgets'    => array(
+                ],
+                'customize-widgets'    => [
                     'style-rtl.min.css' => "f",
                     'style-rtl.css'     => "f",
                     'style.min.css'     => "f",
                     'style.css'         => "f",
-                ),
-                'block-editor'         => array(
+                ],
+                'block-editor'         => [
                     'style-rtl.min.css'                 => "f",
                     'default-editor-styles.css'         => "f",
                     'content-rtl.min.css'               => "f",
@@ -2307,32 +2304,32 @@ self::$corePathList = array(
                     'content.css'                       => "f",
                     'style.css'                         => "f",
                     'content.min.css'                   => "f",
-                ),
-                'format-library'       => array(
+                ],
+                'format-library'       => [
                     'style-rtl.min.css' => "f",
                     'style-rtl.css'     => "f",
                     'style.min.css'     => "f",
                     'style.css'         => "f",
-                ),
-                'nux'                  => array(
+                ],
+                'nux'                  => [
                     'style-rtl.min.css' => "f",
                     'style-rtl.css'     => "f",
                     'style.min.css'     => "f",
                     'style.css'         => "f",
-                ),
-                'components'           => array(
+                ],
+                'components'           => [
                     'style-rtl.min.css' => "f",
                     'style-rtl.css'     => "f",
                     'style.min.css'     => "f",
                     'style.css'         => "f",
-                ),
-                'preferences'          => array(
+                ],
+                'preferences'          => [
                     'style-rtl.min.css' => "f",
                     'style-rtl.css'     => "f",
                     'style.min.css'     => "f",
                     'style.css'         => "f",
-                ),
-                'editor'               => array(
+                ],
+                'editor'               => [
                     'style-rtl.min.css'         => "f",
                     'editor-styles-rtl.min.css' => "f",
                     'editor-styles.css'         => "f",
@@ -2341,14 +2338,14 @@ self::$corePathList = array(
                     'style.min.css'             => "f",
                     'editor-styles-rtl.css'     => "f",
                     'style.css'                 => "f",
-                ),
-                'patterns'             => array(
+                ],
+                'patterns'             => [
                     'style-rtl.min.css' => "f",
                     'style-rtl.css'     => "f",
                     'style.min.css'     => "f",
                     'style.css'         => "f",
-                ),
-            ),
+                ],
+            ],
             'wp-embed-template-ie.css'        => "f",
             'wp-pointer-rtl.css'              => "f",
             'customize-preview.css'           => "f",
@@ -2356,25 +2353,25 @@ self::$corePathList = array(
             'wp-auth-check-rtl.min.css'       => "f",
             'jquery-ui-dialog.min.css'        => "f",
             'wp-pointer.css'                  => "f",
-        ),
+        ],
         'block-bindings.php'                             => "f",
         'wp-db.php'                                      => "f",
-        'rest-api'                                       => array(
+        'rest-api'                                       => [
             'class-wp-rest-request.php'  => "f",
-            'search'                     => array(
+            'search'                     => [
                 'class-wp-rest-term-search-handler.php'        => "f",
                 'class-wp-rest-post-format-search-handler.php' => "f",
                 'class-wp-rest-search-handler.php'             => "f",
                 'class-wp-rest-post-search-handler.php'        => "f",
-            ),
-            'fields'                     => array(
+            ],
+            'fields'                     => [
                 'class-wp-rest-term-meta-fields.php'    => "f",
                 'class-wp-rest-user-meta-fields.php'    => "f",
                 'class-wp-rest-comment-meta-fields.php' => "f",
                 'class-wp-rest-post-meta-fields.php'    => "f",
                 'class-wp-rest-meta-fields.php'         => "f",
-            ),
-            'endpoints'                  => array(
+            ],
+            'endpoints'                  => [
                 'class-wp-rest-font-faces-controller.php'               => "f",
                 'class-wp-rest-block-patterns-controller.php'           => "f",
                 'class-wp-rest-terms-controller.php'                    => "f",
@@ -2416,10 +2413,10 @@ self::$corePathList = array(
                 'class-wp-rest-application-passwords-controller.php'    => "f",
                 'class-wp-rest-post-types-controller.php'               => "f",
                 'class-wp-rest-template-autosaves-controller.php'       => "f",
-            ),
+            ],
             'class-wp-rest-server.php'   => "f",
             'class-wp-rest-response.php' => "f",
-        ),
+        ],
         'media.php'                                      => "f",
         'functions.wp-styles.php'                        => "f",
         'class-wp-textdomain-registry.php'               => "f",
@@ -2434,19 +2431,19 @@ self::$corePathList = array(
         'class-wp-customize-setting.php'                 => "f",
         'class-wp-phpmailer.php'                         => "f",
         'class-avif-info.php'                            => "f",
-        'sitemaps'                                       => array(
+        'sitemaps'                                       => [
             'class-wp-sitemaps-provider.php'   => "f",
             'class-wp-sitemaps-renderer.php'   => "f",
             'class-wp-sitemaps-stylesheet.php' => "f",
             'class-wp-sitemaps-index.php'      => "f",
             'class-wp-sitemaps.php'            => "f",
             'class-wp-sitemaps-registry.php'   => "f",
-            'providers'                        => array(
+            'providers'                        => [
                 'class-wp-sitemaps-posts.php'      => "f",
                 'class-wp-sitemaps-taxonomies.php' => "f",
                 'class-wp-sitemaps-users.php'      => "f",
-            ),
-        ),
+            ],
+        ],
         'class-wp-plugin-dependencies.php'               => "f",
         'https-migration.php'                            => "f",
         'ms-settings.php'                                => "f",
@@ -2469,14 +2466,14 @@ self::$corePathList = array(
         'feed-atom.php'                                  => "f",
         'class-wp-post.php'                              => "f",
         'date.php'                                       => "f",
-        'pomo'                                           => array(
+        'pomo'                                           => [
             'translations.php' => "f",
             'mo.php'           => "f",
             'entry.php'        => "f",
             'po.php'           => "f",
             'plural-forms.php' => "f",
             'streams.php'      => "f",
-        ),
+        ],
         'class-wp-block-editor-context.php'              => "f",
         'widgets.php'                                    => "f",
         'wlwmanifest.xml'                                => "f",
@@ -2485,7 +2482,7 @@ self::$corePathList = array(
         'class-wp-taxonomy.php'                          => "f",
         'class-wp-simplepie-file.php'                    => "f",
         'class-wp-block-templates-registry.php'          => "f",
-        'block-patterns'                                 => array(
+        'block-patterns'                                 => [
             'query-grid-posts.php'                     => "f",
             'social-links-shared-background-color.php' => "f",
             'query-offset-posts.php'                   => "f",
@@ -2503,7 +2500,7 @@ self::$corePathList = array(
             'large-header.php'                         => "f",
             'query-medium-posts.php'                   => "f",
             'large-header-button.php'                  => "f",
-        ),
+        ],
         'class-wp-rewrite.php'                           => "f",
         'class-wp-recovery-mode-email-service.php'       => "f",
         'class-wp-meta-query.php'                        => "f",
@@ -2539,7 +2536,7 @@ self::$corePathList = array(
         'class-wp-simplepie-sanitize-kses.php'           => "f",
         'feed-rss2.php'                                  => "f",
         'script-modules.php'                             => "f",
-        'assets'                                         => array(
+        'assets'                                         => [
             'script-loader-react-refresh-runtime.min.php' => "f",
             'script-modules-packages.php'                 => "f",
             'script-modules-packages.min.php'             => "f",
@@ -2548,19 +2545,19 @@ self::$corePathList = array(
             'script-loader-react-refresh-entry.php'       => "f",
             'script-loader-react-refresh-entry.min.php'   => "f",
             'script-loader-react-refresh-runtime.php'     => "f",
-        ),
+        ],
         'locale.php'                                     => "f",
         'plugin.php'                                     => "f",
         'class-wp-admin-bar.php'                         => "f",
         'comment.php'                                    => "f",
         'class-wp-speculation-rules.php'                 => "f",
-        'style-engine'                                   => array(
+        'style-engine'                                   => [
             'class-wp-style-engine-css-declarations.php' => "f",
             'class-wp-style-engine-css-rule.php'         => "f",
             'class-wp-style-engine-css-rules-store.php'  => "f",
             'class-wp-style-engine-processor.php'        => "f",
             'class-wp-style-engine.php'                  => "f",
-        ),
+        ],
         'capabilities.php'                               => "f",
         'class-smtp.php'                                 => "f",
         'class-feed.php'                                 => "f",
@@ -2575,20 +2572,20 @@ self::$corePathList = array(
         'option.php'                                     => "f",
         'class-wp-embed.php'                             => "f",
         'nav-menu.php'                                   => "f",
-        'blocks'                                         => array(
+        'blocks'                                         => [
             'query-no-results.php'             => "f",
-            'missing'                          => array('block.json' => "f"),
-            'post-navigation-link'             => array(
+            'missing'                          => ['block.json' => "f"],
+            'post-navigation-link'             => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
+            ],
             'post-comments.php'                => "f",
-            'query-pagination-previous'        => array('block.json' => "f"),
+            'query-pagination-previous'        => ['block.json' => "f"],
             'post-date.php'                    => "f",
-            'post-comments-form'               => array(
+            'post-comments-form'               => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2598,38 +2595,38 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'cover.php'                        => "f",
-            'verse'                            => array(
+            'verse'                            => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
+            ],
             'social-link.php'                  => "f",
-            'query-total'                      => array(
+            'query-total'                      => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
+            ],
             'read-more.php'                    => "f",
             'block.php'                        => "f",
             'file.php'                         => "f",
             'comments-pagination.php'          => "f",
             'legacy-widget.php'                => "f",
             'blocks-json.php'                  => "f",
-            'comment-date'                     => array(
+            'comment-date'                     => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
+            ],
             'post-terms.php'                   => "f",
-            'code'                             => array(
+            'code'                             => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2643,8 +2640,8 @@ self::$corePathList = array(
                 'theme.min.css'      => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'media-text'                       => array(
+            ],
+            'media-text'                       => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2654,16 +2651,16 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'more'                             => array(
+            ],
+            'more'                             => [
                 'editor.css'         => "f",
                 'block.json'         => "f",
                 'editor.min.css'     => "f",
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
-            ),
+            ],
             'shortcode.php'                    => "f",
-            'query-title'                      => array(
+            'query-title'                      => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2673,16 +2670,16 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'post-content.php'                 => "f",
-            'post-terms'                       => array(
+            'post-terms'                       => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
-            'gallery'                          => array(
+            ],
+            'gallery'                          => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2696,9 +2693,9 @@ self::$corePathList = array(
                 'theme.min.css'      => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'loginout.php'                     => "f",
-            'group'                            => array(
+            'group'                            => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2712,8 +2709,8 @@ self::$corePathList = array(
                 'theme.min.css'      => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'search'                           => array(
+            ],
+            'search'                           => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2731,8 +2728,8 @@ self::$corePathList = array(
                 'theme.min.css'      => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'table'                            => array(
+            ],
+            'table'                            => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2746,9 +2743,9 @@ self::$corePathList = array(
                 'theme.min.css'      => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'home-link.php'                    => "f",
-            'video'                            => array(
+            'video'                            => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2762,36 +2759,36 @@ self::$corePathList = array(
                 'theme.min.css'      => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'template-part.php'                => "f",
             'avatar.php'                       => "f",
             'post-featured-image.php'          => "f",
-            'comments-pagination-numbers'      => array(
+            'comments-pagination-numbers'      => [
                 'editor.css'         => "f",
                 'block.json'         => "f",
                 'editor.min.css'     => "f",
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
-            ),
-            'comments-query-loop'              => array(
+            ],
+            'comments-query-loop'              => [
                 'editor.css'         => "f",
                 'block.json'         => "f",
                 'editor.min.css'     => "f",
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
-            ),
+            ],
             'post-title.php'                   => "f",
             'comment-content.php'              => "f",
             'post-excerpt.php'                 => "f",
             'require-dynamic-blocks.php'       => "f",
-            'nextpage'                         => array(
+            'nextpage'                         => [
                 'editor.css'         => "f",
                 'block.json'         => "f",
                 'editor.min.css'     => "f",
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
-            ),
-            'navigation-link'                  => array(
+            ],
+            'navigation-link'                  => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2801,9 +2798,9 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'latest-posts.php'                 => "f",
-            'page-list'                        => array(
+            'page-list'                        => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2813,9 +2810,9 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'tag-cloud.php'                    => "f",
-            'post-content'                     => array(
+            'post-content'                     => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2825,24 +2822,24 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'comment-author-name'              => array(
+            ],
+            'comment-author-name'              => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
-            'query-no-results'                 => array('block.json' => "f"),
+            ],
+            'query-no-results'                 => ['block.json' => "f"],
             'image.php'                        => "f",
-            'navigation-submenu'               => array(
+            'navigation-submenu'               => [
                 'editor.css'         => "f",
                 'block.json'         => "f",
                 'editor.min.css'     => "f",
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
-            ),
-            'pullquote'                        => array(
+            ],
+            'pullquote'                        => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2856,22 +2853,22 @@ self::$corePathList = array(
                 'theme.min.css'      => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'navigation.php'                   => "f",
-            'comments-pagination-next'         => array('block.json' => "f"),
+            'comments-pagination-next'         => ['block.json' => "f"],
             'comment-template.php'             => "f",
             'pattern.php'                      => "f",
             'comment-edit-link.php'            => "f",
             'require-static-blocks.php'        => "f",
-            'post-date'                        => array(
+            'post-date'                        => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
+            ],
             'query.php'                        => "f",
-            'columns'                          => array(
+            'columns'                          => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2881,15 +2878,15 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'html'                             => array(
+            ],
+            'html'                             => [
                 'editor.css'         => "f",
                 'block.json'         => "f",
                 'editor.min.css'     => "f",
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
-            ),
-            'buttons'                          => array(
+            ],
+            'buttons'                          => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2899,8 +2896,8 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'site-title'                       => array(
+            ],
+            'site-title'                       => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2910,8 +2907,8 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'latest-posts'                     => array(
+            ],
+            'latest-posts'                     => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2921,10 +2918,10 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'navigation-submenu.php'           => "f",
             'query-pagination-numbers.php'     => "f",
-            'navigation'                       => array(
+            'navigation'                       => [
                 'style-rtl.min.css'        => "f",
                 'editor.css'               => "f",
                 'block.json'               => "f",
@@ -2942,8 +2939,8 @@ self::$corePathList = array(
                 'style.css'                => "f",
                 'view-modal.min.asset.php' => "f",
                 'view-modal.min.js'        => "f",
-            ),
-            'button'                           => array(
+            ],
+            'button'                           => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2953,8 +2950,8 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'comments'                         => array(
+            ],
+            'comments'                         => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2964,10 +2961,10 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'post-navigation-link.php'         => "f",
-            'pattern'                          => array('block.json' => "f"),
-            'post-author'                      => array(
+            'pattern'                          => ['block.json' => "f"],
+            'post-author'                      => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2977,8 +2974,8 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'spacer'                           => array(
+            ],
+            'spacer'                           => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -2988,25 +2985,25 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'search.php'                       => "f",
-            'column'                           => array('block.json' => "f"),
-            'loginout'                         => array(
+            'column'                           => ['block.json' => "f"],
+            'loginout'                         => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
-            'block'                            => array(
+            ],
+            'block'                            => [
                 'editor.css'         => "f",
                 'block.json'         => "f",
                 'editor.min.css'     => "f",
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
-            ),
+            ],
             'rss.php'                          => "f",
-            'embed'                            => array(
+            'embed'                            => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3020,11 +3017,11 @@ self::$corePathList = array(
                 'theme.min.css'      => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'query-pagination-previous.php'    => "f",
             'post-author.php'                  => "f",
             'archives.php'                     => "f",
-            'categories'                       => array(
+            'categories'                       => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3034,17 +3031,17 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'preformatted'                     => array(
+            ],
+            'preformatted'                     => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
+            ],
             'post-comments-form.php'           => "f",
             'footnotes.php'                    => "f",
-            'audio'                            => array(
+            'audio'                            => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3058,9 +3055,9 @@ self::$corePathList = array(
                 'theme.min.css'      => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'page-list-item'                   => array('block.json' => "f"),
-            'post-comments'                    => array(
+            ],
+            'page-list-item'                   => ['block.json' => "f"],
+            'post-comments'                    => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3070,32 +3067,32 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'social-link'                      => array(
+            ],
+            'social-link'                      => [
                 'editor.css'         => "f",
                 'block.json'         => "f",
                 'editor.min.css'     => "f",
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
-            ),
+            ],
             'comments-pagination-previous.php' => "f",
             'query-title.php'                  => "f",
-            'latest-comments'                  => array(
+            'latest-comments'                  => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
-            'comment-reply-link'               => array(
+            ],
+            'comment-reply-link'               => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
+            ],
             'latest-comments.php'              => "f",
-            'rss'                              => array(
+            'rss'                              => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3105,9 +3102,9 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'site-tagline.php'                 => "f",
-            'cover'                            => array(
+            'cover'                            => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3117,8 +3114,8 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'comments-pagination'              => array(
+            ],
+            'comments-pagination'              => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3128,8 +3125,8 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'tag-cloud'                        => array(
+            ],
+            'tag-cloud'                        => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3139,10 +3136,10 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'media-text.php'                   => "f",
             'site-title.php'                   => "f",
-            'heading'                          => array(
+            'heading'                          => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3152,16 +3149,16 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'comment-reply-link.php'           => "f",
-            'comment-template'                 => array(
+            'comment-template'                 => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
-            'query-pagination'                 => array(
+            ],
+            'query-pagination'                 => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3171,29 +3168,29 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'comment-content'                  => array(
+            ],
+            'comment-content'                  => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
-            'comment-edit-link'                => array(
+            ],
+            'comment-edit-link'                => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
-            'term-description'                 => array(
+            ],
+            'term-description'                 => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
-            'site-logo'                        => array(
+            ],
+            'site-logo'                        => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3203,8 +3200,8 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'query'                            => array(
+            ],
+            'query'                            => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3218,12 +3215,12 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'comment-date.php'                 => "f",
             'comments-title.php'               => "f",
-            'classic'                          => array('block.json' => "f"),
+            'classic'                          => ['block.json' => "f"],
             'index.php'                        => "f",
-            'post-excerpt'                     => array(
+            'post-excerpt'                     => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3233,22 +3230,22 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'shortcode'                        => array(
+            ],
+            'shortcode'                        => [
                 'editor.css'         => "f",
                 'block.json'         => "f",
                 'editor.min.css'     => "f",
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
-            ),
-            'post-author-biography'            => array(
+            ],
+            'post-author-biography'            => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
-            'post-template'                    => array(
+            ],
+            'post-template'                    => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3258,34 +3255,34 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'query-total.php'                  => "f",
             'navigation-link.php'              => "f",
-            'subhead'                          => array('block.json' => "f"),
-            'read-more'                        => array(
+            'subhead'                          => ['block.json' => "f"],
+            'read-more'                        => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
-            'comments-pagination-previous'     => array('block.json' => "f"),
+            ],
+            'comments-pagination-previous'     => ['block.json' => "f"],
             'site-logo.php'                    => "f",
-            'query-pagination-numbers'         => array(
+            'query-pagination-numbers'         => [
                 'editor.css'         => "f",
                 'block.json'         => "f",
                 'editor.min.css'     => "f",
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
-            ),
+            ],
             'gallery.php'                      => "f",
             'button.php'                       => "f",
-            'list-item'                        => array('block.json' => "f"),
+            'list-item'                        => ['block.json' => "f"],
             'query-pagination-next.php'        => "f",
             'comments-pagination-next.php'     => "f",
             'categories.php'                   => "f",
             'term-description.php'             => "f",
-            'social-links'                     => array(
+            'social-links'                     => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3295,8 +3292,8 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'details'                          => array(
+            ],
+            'details'                          => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3306,9 +3303,9 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'widget-group'                     => array('block.json' => "f"),
-            'text-columns'                     => array(
+            ],
+            'widget-group'                     => ['block.json' => "f"],
+            'text-columns'                     => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3318,41 +3315,41 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'home-link'                        => array('block.json' => "f"),
+            ],
+            'home-link'                        => ['block.json' => "f"],
             'query-pagination.php'             => "f",
             'page-list.php'                    => "f",
-            'footnotes'                        => array(
+            'footnotes'                        => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
-            'post-author-name'                 => array(
+            ],
+            'post-author-name'                 => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
+            ],
             'post-author-name.php'             => "f",
-            'legacy-widget'                    => array('block.json' => "f"),
-            'comments-title'                   => array(
+            'legacy-widget'                    => ['block.json' => "f"],
+            'comments-title'                   => [
                 'editor.css'         => "f",
                 'block.json'         => "f",
                 'editor.min.css'     => "f",
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
-            ),
-            'freeform'                         => array(
+            ],
+            'freeform'                         => [
                 'editor.css'         => "f",
                 'block.json'         => "f",
                 'editor.min.css'     => "f",
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
-            ),
-            'separator'                        => array(
+            ],
+            'separator'                        => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3366,10 +3363,10 @@ self::$corePathList = array(
                 'theme.min.css'      => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'calendar.php'                     => "f",
             'page-list-item.php'               => "f",
-            'paragraph'                        => array(
+            'paragraph'                        => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3379,8 +3376,8 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'site-tagline'                     => array(
+            ],
+            'site-tagline'                     => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3390,8 +3387,8 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'file'                             => array(
+            ],
+            'file'                             => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3405,9 +3402,9 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'query-pagination-next'            => array('block.json' => "f"),
-            'post-featured-image'              => array(
+            ],
+            'query-pagination-next'            => ['block.json' => "f"],
+            'post-featured-image'              => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3417,8 +3414,8 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'quote'                            => array(
+            ],
+            'quote'                            => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
@@ -3428,9 +3425,9 @@ self::$corePathList = array(
                 'style.min.css'     => "f",
                 'theme.min.css'     => "f",
                 'style.css'         => "f",
-            ),
+            ],
             'comments.php'                     => "f",
-            'avatar'                           => array(
+            'avatar'                           => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3440,15 +3437,15 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
-            'list'                             => array(
+            ],
+            'list'                             => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
-            'image'                            => array(
+            ],
+            'image'                            => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3466,26 +3463,26 @@ self::$corePathList = array(
                 'theme.min.css'      => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'comments-pagination-numbers.php'  => "f",
-            'calendar'                         => array(
+            'calendar'                         => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
+            ],
             'comment-author-name.php'          => "f",
             'heading.php'                      => "f",
             'post-author-biography.php'        => "f",
-            'post-title'                       => array(
+            'post-title'                       => [
                 'style-rtl.min.css' => "f",
                 'block.json'        => "f",
                 'style-rtl.css'     => "f",
                 'style.min.css'     => "f",
                 'style.css'         => "f",
-            ),
-            'template-part'                    => array(
+            ],
+            'template-part'                    => [
                 'editor.css'         => "f",
                 'block.json'         => "f",
                 'theme-rtl.min.css'  => "f",
@@ -3495,8 +3492,8 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'theme.min.css'      => "f",
                 'editor-rtl.css'     => "f",
-            ),
-            'archives'                         => array(
+            ],
+            'archives'                         => [
                 'style-rtl.min.css'  => "f",
                 'editor.css'         => "f",
                 'block.json'         => "f",
@@ -3506,13 +3503,13 @@ self::$corePathList = array(
                 'editor-rtl.min.css' => "f",
                 'editor-rtl.css'     => "f",
                 'style.css'          => "f",
-            ),
+            ],
             'widget-group.php'                 => "f",
             'post-template.php'                => "f",
             'list.php'                         => "f",
-        ),
+        ],
         'ms-blogs.php'                                   => "f",
-        'block-supports'                                 => array(
+        'block-supports'                                 => [
             'settings.php'               => "f",
             'dimensions.php'             => "f",
             'layout.php'                 => "f",
@@ -3531,7 +3528,7 @@ self::$corePathList = array(
             'position.php'               => "f",
             'align.php'                  => "f",
             'shadow.php'                 => "f",
-        ),
+        ],
         'class-wp-http.php'                              => "f",
         'class-wp-recovery-mode-key-service.php'         => "f",
         'class-wpdb.php'                                 => "f",
@@ -3541,7 +3538,7 @@ self::$corePathList = array(
         'class-wp-user.php'                              => "f",
         'class-wp-http-ixr-client.php'                   => "f",
         'compat.php'                                     => "f",
-        'certificates'                                   => array('ca-bundle.crt' => "f"),
+        'certificates'                                   => ['ca-bundle.crt' => "f"],
         'class-http.php'                                 => "f",
         'class-wp-http-encoding.php'                     => "f",
         'class-wp-theme.php'                             => "f",
@@ -3560,7 +3557,7 @@ self::$corePathList = array(
         'block-patterns.php'                             => "f",
         'feed-atom-comments.php'                         => "f",
         'version.php'                                    => "f",
-        'theme-compat'                                   => array(
+        'theme-compat'                                   => [
             'embed.php'          => "f",
             'embed-404.php'      => "f",
             'footer-embed.php'   => "f",
@@ -3571,7 +3568,7 @@ self::$corePathList = array(
             'header-embed.php'   => "f",
             'comments-popup.php' => "f",
             'comments.php'       => "f",
-        ),
+        ],
         'class-wp-dependencies.php'                      => "f",
         'class-wp-recovery-mode-link-service.php'        => "f",
         'class-phpass.php'                               => "f",
@@ -3594,13 +3591,13 @@ self::$corePathList = array(
         'class-wp-customize-control.php'                 => "f",
         'class-wp-customize-panel.php'                   => "f",
         'pluggable.php'                                  => "f",
-        'interactivity-api'                              => array(
+        'interactivity-api'                              => [
             'class-wp-interactivity-api-directives-processor.php' => "f",
             'class-wp-interactivity-api.php'                      => "f",
             'interactivity-api.php'                               => "f",
-        ),
+        ],
         'class-wp-url-pattern-prefixer.php'              => "f",
-        'random_compat'                                  => array(
+        'random_compat'                                  => [
             'random_bytes_libsodium.php'        => "f",
             'random_bytes_com_dotnet.php'       => "f",
             'random_bytes_libsodium_legacy.php' => "f",
@@ -3612,23 +3609,23 @@ self::$corePathList = array(
             'byte_safe_strings.php'             => "f",
             'cast_to_int.php'                   => "f",
             'random_bytes_dev_urandom.php'      => "f",
-        ),
+        ],
         'class-wp-block-parser.php'                      => "f",
         'class-wp-locale.php'                            => "f",
         'shortcodes.php'                                 => "f",
         'class.wp-dependencies.php'                      => "f",
         'post-template.php'                              => "f",
         'template.php'                                   => "f",
-        'l10n'                                           => array(
+        'l10n'                                           => [
             'class-wp-translations.php'           => "f",
             'class-wp-translation-controller.php' => "f",
             'class-wp-translation-file-php.php'   => "f",
             'class-wp-translation-file-mo.php'    => "f",
             'class-wp-translation-file.php'       => "f",
-        ),
+        ],
         'http.php'                                       => "f",
         'rewrite.php'                                    => "f",
         'class-wp-http-cookie.php'                       => "f",
         'class-wp-user-query.php'                        => "f",
-    ),
-);
+    ],
+];

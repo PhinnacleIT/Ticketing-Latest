@@ -7,36 +7,31 @@
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
  *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 class DUPX_Validation_test_archive_check extends DUPX_Validation_abstract_item
 {
-    protected function runTest()
+    protected function runTest(): int
     {
-        if (DUPX_Conf_Utils::isConfArkPresent()) {
-            if (DUPX_Conf_Utils::archiveExists()) {
-                return self::LV_PASS;
-            } else {
-                return self::LV_SOFT_WARNING;
-            }
+        if (DUPX_Conf_Utils::archiveExists()) {
+            return self::LV_PASS;
         } else {
-            return self::LV_FAIL;
+            return self::LV_SOFT_WARNING;
         }
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'Archive Check';
     }
 
     protected function failContent()
     {
-        return dupxTplRender('parts/validation/tests/archive-check', array(
-            'testResult' => $this->testResult
-            ), false);
+        return dupxTplRender('parts/validation/tests/archive-check', [
+            'testResult' => $this->testResult,
+        ], false);
     }
 
     protected function swarnContent()

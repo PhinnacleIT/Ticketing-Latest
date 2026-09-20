@@ -2,14 +2,12 @@
 
 /**
  * Dup archive expander
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
  */
 
 namespace Duplicator\Installer\Core\Deploy\DupArchive;
 
 use DupArchiveStateBase;
+use Duplicator\Installer\Core\Security;
 use Duplicator\Installer\Utils\Log\Log;
 use Duplicator\Libs\DupArchive\DupArchiveEngine;
 use Duplicator\Libs\DupArchive\Processors\DupArchiveFileProcessor;
@@ -24,10 +22,12 @@ class Daws
 {
     const DEFAULT_WORKER_TIME = 18;
 
-    protected $lock_handle     = null;
-    protected $failureCallback = null;
-    protected $lockFile        = '';
-    protected $cancelFile      = '';
+    /** @var ?resource */
+    protected $lock_handle;
+    /** @var ?callable */
+    protected $failureCallback;
+    protected string $lockFile;
+    protected string $cancelFile;
 
     /**
      * Class contruct
@@ -36,7 +36,7 @@ class Daws
     {
         DawsLogger::init();
         date_default_timezone_set('UTC'); // Some machines don’t have this set so just do it here.
-        DupArchiveEngine::init(new DawsLogger(), null);
+        DupArchiveEngine::init(new DawsLogger(), '');
         $this->lockFile   = DUPX_INIT . '/dup-installer-dawslock__' . DUPX_Package::getPackageHash() . '.bin';
         $this->cancelFile = DUPX_INIT . '/dup-installer-dawscancel__' . DUPX_Package::getPackageHash() . '.bin';
     }
@@ -48,7 +48,7 @@ class Daws
      *
      * @return void
      */
-    public function setFailureCallBack($callback)
+    public function setFailureCallBack($callback): void
     {
         if (is_callable($callback)) {
             $this->failureCallback = $callback;
@@ -58,77 +58,74 @@ class Daws
     /**
      * Extract dup archvie
      *
-     * @param array $params dup archvie params
+     * @param array<string, mixed> $params dup archvie params
      *
      * @return stdClass
      */
-    public function processRequest($params)
+    public function processRequest($params): stdClass
     {
-        $retVal = new stdClass();
-
+        $retVal       = new stdClass();
         $retVal->pass = false;
-
-        $action = $params['action'];
-
-        $initializeState = false;
+        $action       = $params['action'];
 
         $archiveConfig = DUPX_ArchiveConfig::getInstance();
-        if (!DupArchiveFileProcessor::setNewFilePathCallback(array($archiveConfig, 'destFileFromArchiveName'))) {
+        if (!DupArchiveFileProcessor::setNewFilePathCallback([$archiveConfig, 'destFileFromArchiveName'])) {
             Log::info('ERROR: CAN\'T SET THE PATH SE CALLBACK FUNCTION');
         } else {
             Log::info('PATH SE CALLBACK FUNCTION OK ', Log::LV_DEBUG);
         }
 
         $throttleDelayInMs = SnapUtil::getArrayValue($params, 'throttle_delay', false, 0);
+        $expandState       = null;
 
         if ($action == 'start_expand') {
             Log::info('DAWN START EXPAND');
-
-            $initializeState = true;
 
             DawsExpandState::purgeStatefile();
             SnapIO::rm($this->cancelFile);
             $archiveFilepath          = SnapUtil::getArrayValue($params, 'archive_filepath');
             $restoreDirectory         = SnapUtil::getArrayValue($params, 'restore_directory');
             $workerTime               = SnapUtil::getArrayValue($params, 'worker_time', false, self::DEFAULT_WORKER_TIME);
-            $filteredDirectories      = SnapUtil::getArrayValue($params, 'filtered_directories', false, array());
-            $excludedDirWithoutChilds = SnapUtil::getArrayValue($params, 'excludedDirWithoutChilds', false, array());
-            $filteredFiles            = SnapUtil::getArrayValue($params, 'filtered_files', false, array());
-            $fileRenames              = SnapUtil::getArrayValue($params, 'fileRenames', false, array());
+            $filteredDirectories      = SnapUtil::getArrayValue($params, 'filtered_directories', false, []);
+            $excludedDirWithoutChilds = SnapUtil::getArrayValue($params, 'excludedDirWithoutChilds', false, []);
+            $filteredFiles            = SnapUtil::getArrayValue($params, 'filtered_files', false, []);
+            $fileRenames              = SnapUtil::getArrayValue($params, 'fileRenames', false, []);
             $fileModeOverride         = SnapUtil::getArrayValue($params, 'file_mode_override', false, 0644);
-            $includedFiles            = SnapUtil::getArrayValue($params, 'includedFiles', false, array());
+            $includedFiles            = SnapUtil::getArrayValue($params, 'includedFiles', false, []);
             $directoryModeOverride    = SnapUtil::getArrayValue($params, 'dir_mode_override', false, 0755);
             $keepFileTime             = SnapUtil::getArrayValue($params, 'keep_file_time', false, false);
+
+            $archveHeader                          = DupArchiveEngine::getArchiveHeader(
+                $archiveFilepath,
+                Security::getInstance()->getArchivePassword()
+            );
+            $expandState                           = new DawsExpandState($archveHeader);
+            $expandState->archivePath              = $archiveFilepath;
+            $expandState->working                  = true;
+            $expandState->timeSliceInSecs          = $workerTime;
+            $expandState->basePath                 = $restoreDirectory;
+            $expandState->filteredDirectories      = $filteredDirectories;
+            $expandState->excludedDirWithoutChilds = $excludedDirWithoutChilds;
+            $expandState->includedFiles            = $includedFiles;
+            $expandState->filteredFiles            = $filteredFiles;
+            $expandState->fileRenames              = $fileRenames;
+            $expandState->fileModeOverride         = $fileModeOverride;
+            $expandState->directoryModeOverride    = $directoryModeOverride;
+            $expandState->throttleDelayInUs        = 1000 * $throttleDelayInMs;
+            $expandState->keepFileTime             = $keepFileTime;
+            $expandState->save();
 
             $action = 'expand';
         } else {
             Log::info('DAWN CONTINUE EXPAND');
+            $expandState = DawsExpandState::getFromFile();
         }
 
         if ($action == 'expand') {
-            $expandState = DawsExpandState::getInstance($initializeState);
-
             $this->lock_handle = SnapIO::fopen($this->lockFile, 'c+');
             SnapIO::flock($this->lock_handle, LOCK_EX);
 
-            if ($initializeState || $expandState->working) {
-                if ($initializeState) {
-                    $expandState->archivePath              = $archiveFilepath;
-                    $expandState->working                  = true;
-                    $expandState->timeSliceInSecs          = $workerTime;
-                    $expandState->basePath                 = $restoreDirectory;
-                    $expandState->filteredDirectories      = $filteredDirectories;
-                    $expandState->excludedDirWithoutChilds = $excludedDirWithoutChilds;
-                    $expandState->includedFiles            = $includedFiles;
-                    $expandState->filteredFiles            = $filteredFiles;
-                    $expandState->fileRenames              = $fileRenames;
-                    $expandState->fileModeOverride         = $fileModeOverride;
-                    $expandState->directoryModeOverride    = $directoryModeOverride;
-                    $expandState->keepFileTime             = $keepFileTime;
-
-                    $expandState->save();
-                }
-                $expandState->throttleDelayInUs = 1000 * $throttleDelayInMs;
+            if ($expandState->working) {
                 DupArchiveEngine::expandArchive($expandState);
             }
 
@@ -150,15 +147,11 @@ class Daws
                 Log::info("DAWN EXPAND CONTINUE", Log::LV_DETAILED);
             }
 
-
             SnapIO::flock($this->lock_handle, LOCK_UN);
 
             $retVal->pass   = true;
             $retVal->status = $this->getStatus($expandState);
         } elseif ($action == 'get_status') {
-            /* @var $expandState DawsExpandState */
-            $expandState = DawsExpandState::getInstance($initializeState);
-
             $retVal->pass   = true;
             $retVal->status = $this->getStatus($expandState);
         } elseif ($action == 'cancel') {
@@ -177,11 +170,11 @@ class Daws
     /**
      * Get dup archive status
      *
-     * @param DupArchiveStateBase $state dup archive state
+     * @param DawsExpandState $state dup archive state
      *
      * @return stdClass
      */
-    private function getStatus(DawsExpandState $state)
+    private function getStatus(DawsExpandState $state): stdClass
     {
         $ret_val                 = new stdClass();
         $ret_val->archive_offset = $state->archiveOffset;

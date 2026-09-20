@@ -1,16 +1,13 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 use Duplicator\Installer\Core\Params\PrmMng;
 
 $importSiteInfo = PrmMng::getInstance()->getValue(PrmMng::PARAM_FROM_SITE_IMPORT_INFO);
-$importPage     = isset($importSiteInfo['import_page']) ? $importSiteInfo['import_page'] : false;
+$importPage     = $importSiteInfo['import_page'] ?? false;
 
 ?>
 <div id="next_action" class="bottom-step-action no-display" >           

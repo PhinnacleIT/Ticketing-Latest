@@ -4,13 +4,12 @@ namespace Duplicator\Installer\Core\Deploy\Database;
 
 use Duplicator\Installer\Core\Params\PrmMng;
 use Duplicator\Installer\Utils\Log\Log;
-use Duplicator\Libs\Snap\JsonSerialize\AbstractJsonSerializable;
+use VendorDuplicator\Amk\JsonSerialize\AbstractJsonSerializable;
 use DUPX_ArchiveConfig;
 use DUPX_DB_Functions;
 use DUPX_DB_Tables;
 use DUPX_DBInstall;
-use DUPX_InstallerState;
-use Exception;
+use Duplicator\Installer\Core\InstState;
 
 class QueryFixes extends AbstractJsonSerializable
 {
@@ -21,13 +20,13 @@ class QueryFixes extends AbstractJsonSerializable
     const SQL_SECURITY_INVOKER_PATTERN = "/^(\s*CREATE.+(?:PROCEDURE|FUNCTION)[\s\S]*)(BEGIN)([\s\S]*)$/";
     const SQL_SECURITY_INVOKER_REPLACE = "$1SQL SECURITY INVOKER\n$2$3";
 
-    /** @var array */
-    protected $globalRules = array(
-        'search'  => array(),
-        'replace' => array()
-    );
-    /** @var array */
-    protected $tablesPrefixRules = array();
+    /** @var array{search: mixed[], replace: mixed[]} */
+    protected $globalRules = [
+        'search'  => [],
+        'replace' => [],
+    ];
+    /** @var mixed[] */
+    protected $tablesPrefixRules = [];
     /** @var string */
     protected $generatorLog = '';
 
@@ -50,7 +49,7 @@ class QueryFixes extends AbstractJsonSerializable
     public function __sleep()
     {
         $props = array_keys(get_object_vars($this));
-        return array_diff($props, array('generatorLog'));
+        return array_diff($props, ['generatorLog']);
     }
 
     /**
@@ -58,7 +57,7 @@ class QueryFixes extends AbstractJsonSerializable
      *
      * @return void
      */
-    public function logRules()
+    public function logRules(): void
     {
         if (strlen($this->generatorLog) == 0) {
             Log::info('NO GENERAL QUERY FIXES');
@@ -115,7 +114,7 @@ class QueryFixes extends AbstractJsonSerializable
      */
     protected function rulesProcAndViews()
     {
-        if (DUPX_InstallerState::isRestoreBackup()) {
+        if (InstState::isRestoreBackup()) {
             return;
         }
 
@@ -145,9 +144,7 @@ class QueryFixes extends AbstractJsonSerializable
      */
     protected function rulesMySQLEngine()
     {
-        $invalidEngines = array_map(function ($engine) {
-            return preg_quote($engine, '/');
-        }, DUPX_ArchiveConfig::getInstance()->invalidEngines());
+        $invalidEngines = array_map(fn($engine): string => preg_quote($engine, '/'), DUPX_ArchiveConfig::getInstance()->invalidEngines());
 
         if (empty($invalidEngines)) {
             return;
@@ -161,7 +158,7 @@ class QueryFixes extends AbstractJsonSerializable
     /**
      * Set legacy charset adn collation rules
      *
-     * regex managed examples
+     * Regex managed examples
      *  - `meta_value` longtext CHARACTER SET utf16 COLLATE utf16_slovak_ci DEFAULT NULL,
      *  - `comment_author` tinytext COLLATE utf8mb4_unicode_ci NOT NULL,
      *  - ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci_test;
@@ -171,7 +168,7 @@ class QueryFixes extends AbstractJsonSerializable
      *
      * @return void
      */
-    public function legacyCharsetAndCollation()
+    public function legacyCharsetAndCollation(): void
     {
         $invalidCharsets   = DUPX_ArchiveConfig::getInstance()->invalidCharsets();
         $invalidCollations = DUPX_ArchiveConfig::getInstance()->invalidCollations();
@@ -179,9 +176,7 @@ class QueryFixes extends AbstractJsonSerializable
         $defCollateRegex   = addcslashes(DUPX_DB_Functions::getInstance()->getRealCollateByParam(), '\\$');
 
         if (count($invalidCharsets) > 0) {
-            $invalidChrRegex = '(?:' . implode('|', array_map(function ($val) {
-                        return preg_quote($val, '/');
-            }, $invalidCharsets)) . ')';
+            $invalidChrRegex = '(?:' . implode('|', array_map(fn($val): string => preg_quote($val, '/'), $invalidCharsets)) . ')';
 
             $this->globalRules['search'][]  = '/(^.*(?:CHARSET|CHARACTER SET)\s*[\s=]\s*[`\'"]?)(' .
                 $invalidChrRegex . ')([`\'"]?\s.*COLLATE\s*[\s=]\s*[`\'"]?)([^`\'"\s;,]+)([`\'"]?.*$)/m';
@@ -196,9 +191,7 @@ class QueryFixes extends AbstractJsonSerializable
         }
 
         if (count($invalidCollations) > 0) {
-            $invalidColRegex = '(?:' . implode('|', array_map(function ($val) {
-                        return preg_quote($val, '/');
-            }, $invalidCollations)) . ')';
+            $invalidColRegex = '(?:' . implode('|', array_map(fn($val): string => preg_quote($val, '/'), $invalidCollations)) . ')';
 
             $this->globalRules['search'][]  = '/(^.*(?:CHARSET|CHARACTER SET)\s*[\s=]\s*[`\'"]?)([^`\'"\s;,]+)([`\'"]?\s.*COLLATE\s*[\s=]\s*[`\'"]?)(' .
                 $invalidColRegex . ')([`\'"]?[\s;,].*$)/m';
@@ -223,7 +216,7 @@ class QueryFixes extends AbstractJsonSerializable
         $mapping = DUPX_DB_Tables::getInstance()->getRenameTablesMapping();
 
         $oldPrefixes = array_keys($mapping);
-        $newPrefixes = array();
+        $newPrefixes = [];
         foreach ($mapping as $oldPrefix => $newMapping) {
             $newPrefixes = array_merge($newPrefixes, array_keys($newMapping));
         }
@@ -236,10 +229,10 @@ class QueryFixes extends AbstractJsonSerializable
         }
 
         foreach ($mapping as $oldPrefix => $newMapping) {
-            $rulesSet = array(
-                'search'  => array(),
-                'replace' => array()
-            );
+            $rulesSet = [
+                'search'  => [],
+                'replace' => [],
+            ];
 
             $quoteOldPrefix = preg_quote($oldPrefix, '/');
 
@@ -247,7 +240,7 @@ class QueryFixes extends AbstractJsonSerializable
                 $this->generatorLog .= "TABLES RULES ADDED: CHANGE TABLES PREFIX " . $oldPrefix . " TO " . $newPrefix ;
                 if (in_array($newPrefix, $doublePrefixes)) {
                     $this->generatorLog .= " [USE TMP PREFIX]\n";
-                    $newPrefix           = $newPrefix . self::TEMP_POSTFIX;
+                    $newPrefix          .= self::TEMP_POSTFIX;
                 } else {
                     $this->generatorLog .= "\n";
                 }
@@ -255,9 +248,7 @@ class QueryFixes extends AbstractJsonSerializable
 
                 $quoteNewPrefix = addcslashes($newPrefix, '\\$');
                 $quoteCommons   = array_map(
-                    function ($val) {
-                        return preg_quote($val, '/');
-                    },
+                    fn($val): string => preg_quote($val, '/'),
                     $commons
                 );
 
@@ -283,10 +274,10 @@ class QueryFixes extends AbstractJsonSerializable
 
         if (count($doublePrefixes)) {
             // REMOVE TEMP PREFIXES
-            $rulesSet = array(
-                'search'  => array(),
-                'replace' => array()
-            );
+            $rulesSet = [
+                'search'  => [],
+                'replace' => [],
+            ];
 
             foreach ($doublePrefixes as $prefix) {
                 $quoteTempPrefix = preg_quote($prefix . self::TEMP_POSTFIX, '/');

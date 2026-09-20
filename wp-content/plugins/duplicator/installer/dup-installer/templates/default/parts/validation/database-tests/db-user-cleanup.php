@@ -1,16 +1,16 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $isOk bool */
-/* @var $dbuser string */
-/* @var $errorMessage string */
+/**
+ * Variables
+ *
+ * @var bool $isOk
+ * @var string $dbuser
+ * @var string $errorMessage
+ */
 
 $statusClass = $isOk ? 'green' : 'red';
 ?>

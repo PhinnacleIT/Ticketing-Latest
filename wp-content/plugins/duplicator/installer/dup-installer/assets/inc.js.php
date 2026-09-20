@@ -1,9 +1,11 @@
 <?php
 defined("DUPXABSPATH") or die("");
 
+use Duplicator\Installer\Core\Security;
 use Duplicator\Installer\Core\Params\PrmMng;
-use Duplicator\Installer\Utils\InstallerLinkManager;
-use Duplicator\Libs\Snap\SnapJson;
+use Duplicator\Installer\Utils\SecureCsrf;
+use Duplicator\Libs\Snap\SnapURL;
+use VendorDuplicator\Amk\JsonSerialize\JsonSerialize;
 
 $paramsManager = PrmMng::getInstance();
 ?>
@@ -14,7 +16,8 @@ $paramsManager = PrmMng::getInstance();
     DUPX.UI         = new Object();
     DUPX.Const      = new Object();
     DUPX.GLB_DEBUG = <?php echo $paramsManager->getValue(PrmMng::PARAM_DEBUG) ? 'true' : 'false'; ?>;
-    DUPX.dupInstallerUrl = <?php echo SnapJson::jsonEncode(DUPX_INIT_URL . '/main.installer.php'); ?>;
+    DUPX.dupInstallerUrl = <?php echo JsonSerialize::serialize(SnapURL::getCurrentUrl(false, true)); ?>;
+    DUPX.dupSourceUrlData = <?php echo JsonSerialize::serialize($_REQUEST); ?>;
 
     DUPX.beforeUnloadListener = (event) => {
         event.preventDefault();
@@ -45,6 +48,11 @@ $paramsManager = PrmMng::getInstance();
         $("body").append(form);
         DUPX.beforeUnloadCheck(false);
         form.submit();
+    };
+
+    DUPX.redirectMainInstaller = function(method, params) {
+        fullParams = $.extend(true, {}, DUPX.dupSourceUrlData, params);
+        DUPX.redirect(DUPX.dupInstallerUrl, method, fullParams);
     };
 
     DUPX.parseJSON = function (mixData) {
@@ -95,11 +103,11 @@ $paramsManager = PrmMng::getInstance();
         return false;
     }
 
-    DUPX.StandardJsonAjaxWrapper = function (action, token, ajaxData, callbackSuccess, callbackFail, options) {
+    DUPX.StandarJsonAjaxWrapper = function (action, token, ajaxData, callbackSuccess, callbackFail, options) {
         var ajax_url = document.location.href;
         var currentOptions = jQuery.extend({}, DUPX.standarJsonAjaxOptions, options);
 
-        var ajaxData = $.extend({
+        var ajaxData = $.extend(true, {}, DUPX.dupSourceUrlData, {
             "ctrl_action": 'ajax',
             "ajax_action": action,
             "ajax_csrf_token": token
@@ -115,10 +123,10 @@ $paramsManager = PrmMng::getInstance();
 
             if (currentOptions.delayRetryOnFailure > 0) {
                 setTimeout(function () {
-                    DUPX.StandardJsonAjaxWrapper(action, token, ajaxData, callbackSuccess, callbackFail, retryOptions);
+                    DUPX.StandarJsonAjaxWrapper(action, token, ajaxData, callbackSuccess, callbackFail, retryOptions);
                 }, currentOptions.delayRetryOnFailure);
             } else {
-                DUPX.StandardJsonAjaxWrapper(action, token, ajaxData, callbackSuccess, callbackFail, retryOptions);
+                DUPX.StandarJsonAjaxWrapper(action, token, ajaxData, callbackSuccess, callbackFail, retryOptions);
             }
         }
 
@@ -150,28 +158,38 @@ $paramsManager = PrmMng::getInstance();
                 }
             },
             error: function (jqXHR, textStatus, errorThrown) {
+                var statusText = Boolean(jqXHR.statusText) ? jqXHR.statusText : "Server error";
+                
                 const result = {
                     'success': false,
-                    'message': 'AJAX ERROR! STATUS:' + jqXHR.status + ' ' + jqXHR.statusText,
+                    'message': 'AJAX ERROR! STATUS: ' + jqXHR.status + ' ' + statusText,
                     'errorContent': {
                         'pre': '',
-                        'html': ''
+                        'html': '',
+                        'iframe': ''
                     },
                     'actionData': null
                 };
 
                 if (currentOptions.retryOnFailure && currentOptions.numberOfAttempts > 0) {
-                    retryOnFailure(result, textStatus, jqXHR);
+                    retryOnFailure(result, statusText, jqXHR);
                     return;
                 }
-
-                if (jqXHR.status === 200) {
-                    result.message = 'AJAX ERROR! STATUS: ' + textStatus;
-                    result.errorContent.html = jqXHR.responseText;
+                
+                switch(jqXHR.status) {
+                    case 200:
+                        result.message = 'AJAX ERROR! STATUS: ' + statusText;
+                        result.errorContent.html = jqXHR.responseText;
+                        break;                    
+                    default:
+                        break;
+                }
+                if (jqXHR.status >= 500 && jqXHR.status < 600) {
+                    result.errorContent.iframe = jqXHR.responseText;
                 }
 
                 if (typeof callbackFail === "function") {
-                    callbackFail(result, textStatus, jqXHR);
+                    callbackFail(result, statusText, jqXHR);
                 } else {
                     alert(result.message);
                 }
@@ -260,40 +278,6 @@ $paramsManager = PrmMng::getInstance();
         DUPX.getNewURL(inputId);
     };
 
-    DUPX.submitEmail = function (button) {
-        var button  = $(button);
-        var wrapper = $('.subscribe-form');
-        var input   = $('.subscribe-form input');
-        var inputDAta = input.serializeForm();
-
-        button.html('Subscribing...');
-        input.attr('disabled', 'disabled');
-
-        DUPX.StandardJsonAjaxWrapper(
-            <?php echo SnapJson::jsonEncode(DUPX_Ctrl_ajax::ACTION_EMAIL_SUBSCRIPTION); ?>,
-            <?php echo SnapJson::jsonEncode(DUPX_Ctrl_ajax::generateToken(DUPX_Ctrl_ajax::ACTION_EMAIL_SUBSCRIPTION)); ?>,
-            inputDAta,
-            function (data) {
-                wrapper.fadeOut(300);
-                button.html('Subscribed &#10003');
-                wrapper.fadeIn(300);
-
-                setTimeout(function () {
-                    wrapper.fadeOut(300);
-                }, 3000);
-            },
-            function (data) {
-                console.log("Email subscription failed with message: " + data.message);
-                button.html('Failed &#10007');
-
-                setTimeout(function () {
-                    button.html('Subscribe');
-                    input.removeAttr('disabled');
-                }, 3000);
-            },
-        );
-    };
-
     DUPX.editActivate = function (button, msg)
     {
         var buttonObj = $(button);
@@ -330,6 +314,70 @@ $paramsManager = PrmMng::getInstance();
          buttonObj.hide();
          }*/
     };
+
+    /*
+     * DUPX.requestAPI({
+     *          operation : '/cpnl/create_token/',
+     *          data : params,
+     *          callback :  function(){});
+     */
+    DUPX.requestAPI = function (obj)
+    {
+        var timeout = obj.timeout || 120000;  //default to 120 seconds
+        var apiPath = (obj.operation.substr(-1) !== '/') ? apiPath += '/' : obj.operation;
+        var urlPath = window.location.pathname;
+        var pathName = urlPath.substring(0, urlPath.lastIndexOf("/") + 1);
+        var requestURI = window.location.origin + pathName + 'api/router.php' + apiPath + window.location.search
+
+        for (var key in obj.params)
+        {
+            if (obj.params.hasOwnProperty(key) && typeof (obj.params[key]) != 'undefined')
+            {
+                obj.params[key] = encodeURIComponent(obj.params[key].replace(/&amp;/g, "&"));
+            }
+        }
+
+        var tokenData = <?php
+        $paramManager = PrmMng::getInstance();
+        echo JsonSerialize::serialize([
+            PrmMng::PARAM_ROUTER_ACTION => $paramManager->getValue(PrmMng::PARAM_ROUTER_ACTION),
+            Security::ROUTER_TOKEN      => SecureCsrf::generate($paramManager->getValue(PrmMng::PARAM_ROUTER_ACTION)),
+        ]);
+        ?>;
+        var ajaxData = $.extend({}, tokenData, obj.params);
+
+        if (DUPX.GLB_DEBUG) {
+            console.log('==============================================================');
+            console.log('API REQUEST: ' + obj.operation);
+            console.log(obj.params);
+        }
+
+        //Requests to API are capped at 2 minutes
+        $.ajax({
+            type: "POST",
+            cache: false,
+            timeout: timeout,
+            url: requestURI,
+            data: ajaxData,
+            success: function (respData) {
+                if (DUPX.GLB_DEBUG)
+                    console.log(respData);
+                try {
+                    var data = DUPX.parseJSON(respData);
+                } catch (err) {
+                    console.error(err);
+                    console.error('JSON parse failed for response data: ' + respData);
+                    var data = respData;
+                }
+                obj.callback(data);
+            },
+            error: function (data) {
+                if (DUPX.GLB_DEBUG)
+                    console.log(data);
+                obj.callback(data);
+            }
+        });
+    }
 
     DUPX.toggleAll = function (id) {
         $(id + " *[data-type='toggle']").each(function () {
@@ -443,18 +491,6 @@ $paramsManager = PrmMng::getInstance();
             }, 2000);
         });
 
-<?php if ($GLOBALS['DUPX_DEBUG']) : ?>
-            $("div.dupx-debug input[type=hidden], div.dupx-debug textarea").each(function () {
-                var label = '<label>' + $(this).attr('name') + ':</label>';
-                $(this).before(label);
-                $(this).after('<br/>');
-            });
-            $("div.dupx-debug input[type=hidden]").each(function () {
-                $(this).attr('type', 'text');
-            });
-
-            $("div.dupx-debug").prepend('<div class="dupx-debug-hdr">Debug View</div>');
-<?php endif; ?>
         DUPX.WpItemSwitchInit();
     });
 </script>
@@ -490,10 +526,6 @@ $paramsManager = PrmMng::getInstance();
             });
 
             moreCheck(moreCont, moreWrap);
-        });
-        
-        $('sup.hlp-pro-lbl, sup.small-pro-lbl').click(function() {
-            window.open('<?php echo InstallerLinkManager::getCampaignUrl('installer', 'Help Section Pro Flag');?>');
         });
     });
 </script>

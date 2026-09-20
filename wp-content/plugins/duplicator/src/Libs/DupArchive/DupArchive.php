@@ -2,16 +2,28 @@
 
 namespace Duplicator\Libs\DupArchive;
 
-use Duplicator\Libs\DupArchive\Headers\DupArchiveReaderDirectoryHeader;
-use Duplicator\Libs\DupArchive\Headers\DupArchiveReaderFileHeader;
-use Duplicator\Libs\DupArchive\Headers\DupArchiveReaderGlobHeader;
-use Duplicator\Libs\DupArchive\Headers\DupArchiveReaderHeader;
-use Error;
+use Duplicator\Libs\DupArchive\Headers\DupArchiveDirectoryHeader;
+use Duplicator\Libs\DupArchive\Headers\DupArchiveFileHeader;
+use Duplicator\Libs\DupArchive\Headers\DupArchiveGlobHeader;
+use Duplicator\Libs\DupArchive\Headers\DupArchiveHeader;
 use Exception;
+use Throwable;
 
+/**
+ * Dup archive
+ */
 class DupArchive
 {
-    const DUPARCHIVE_VERSION  = '1.0.0';
+    const EXCEPTION_CODE_FILE_DONT_EXISTS = 10;
+    const EXCEPTION_CODE_OPEN_ERROR       = 11;
+    const EXCEPTION_CODE_INVALID_PASSWORD = 12;
+    const EXCEPTION_CODE_INVALID_MARKER   = 13;
+    const EXCEPTION_CODE_INVALID_PARAM    = 14;
+    const EXCEPTION_CODE_ADD_ERROR        = 15;
+    const EXCEPTION_CODE_EXTRACT_ERROR    = 16;
+    const EXCEPTION_CODE_VALIDATION_ERROR = 17;
+
+    const DUPARCHIVE_VERSION  = '5.0.1';
     const INDEX_FILE_NAME     = '__dup__archive__index.json';
     const INDEX_FILE_SIZE     = 2000; // reserver 2K
     const EXTRA_FILES_POS_KEY = 'extraPos';
@@ -21,6 +33,14 @@ class DupArchive
     const HEADER_TYPE_DIR  = 2;
     const HEADER_TYPE_GLOB = 3;
 
+    const FLAG_COMPRESS = 1; //bitmask
+    const FLAG_CRYPT    = 2; //bitmask
+
+    const HASH_ALGO      = 'crc32b';
+    const PWD_ALGO       = '$6$rounds=50000$'; // SHA-512 50000 times with salt
+    const PWD_SALT_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#%^-_%^&*()[]{}<>~`+=,.;:/?|';
+    const CRYPT_ALGO     = 'AES-256-CBC';
+
     /**
      * Get header type enum
      *
@@ -28,7 +48,7 @@ class DupArchive
      *
      * @return int
      */
-    protected static function getNextHeaderType($archiveHandle)
+    protected static function getNextHeaderType($archiveHandle): int
     {
         $retVal = self::HEADER_TYPE_NONE;
         $marker = fgets($archiveHandle, 4);
@@ -45,7 +65,7 @@ class DupArchive
                     $retVal = self::HEADER_TYPE_GLOB;
                     break;
                 default:
-                    throw new Exception("Invalid header marker {$marker}. Location:" . ftell($archiveHandle));
+                    throw new Exception("Invalid header marker {$marker}. Location:" . ftell($archiveHandle), self::EXCEPTION_CODE_INVALID_MARKER);
             }
         }
 
@@ -53,16 +73,97 @@ class DupArchive
     }
 
     /**
+     * Check if archvie is encrypted
+     *
+     * @param string $path archvie path
+     *
+     * @return bool
+     */
+    public static function isEncrypted($path): bool
+    {
+        return !self::checkPassword($path, '');
+    }
+
+    /**
+     * Get archive header from file path
+     *
+     * @param string $path     archive path
+     * @param string $password password archive, empty no password
+     *
+     * @return bool
+     */
+    public static function checkPassword($path, $password): bool
+    {
+        try {
+            $header = self::getArchiveHeader($path, $password);
+        } catch (Exception $e) {
+            if ($e->getCode() == self::EXCEPTION_CODE_INVALID_PASSWORD) {
+                return false;
+            } else {
+                throw $e;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Get archive header from file path
+     *
+     * @param string $path     archive path
+     * @param string $password password archive, empty no password
+     *
+     * @return DupArchiveHeader
+     */
+    public static function getArchiveHeader($path, $password)
+    {
+        try {
+            $archiveHandle = null;
+            if (!file_exists($path)) {
+                throw new Exception('Archive file don\'t exists', self::EXCEPTION_CODE_FILE_DONT_EXISTS);
+            }
+
+            if (($archiveHandle = fopen($path, 'r')) == false) {
+                throw new Exception('Can\'t open archive file', self::EXCEPTION_CODE_OPEN_ERROR);
+            }
+            $result = (new DupArchiveHeader())->readFromArchive($archiveHandle, $password);
+        } finally {
+            if (is_resource($archiveHandle)) {
+                fclose($archiveHandle);
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Return true if DupArchive encryption is available
+     *
+     * @return bool
+     */
+    public static function isEncryptionAvaliable()
+    {
+        static $isAvaliable = null;
+        if ($isAvaliable === null) {
+            $isAvaliable = (
+                function_exists('openssl_cipher_iv_length') &&
+                function_exists('openssl_encrypt') &&
+                function_exists('openssl_decrypt')
+            );
+        }
+        return $isAvaliable;
+    }
+
+    /**
      * Get archive index data
      *
      * @param string $archivePath archive path
+     * @param string $password    password archive, empty no password
      *
-     * @return bool|array return index data, false if don't exists
+     * @return false|mixed[] return index data, false if don't exists
      */
-    public static function getIndexData($archivePath)
+    public static function getIndexData($archivePath, $password)
     {
         try {
-            $indexContent = self::getSrcFile($archivePath, self::INDEX_FILE_NAME, 0, 3000, false);
+            $indexContent = self::getSrcFile($archivePath, self::INDEX_FILE_NAME, $password, 0, 3000);
             if ($indexContent === false) {
                 return false;
             }
@@ -71,9 +172,7 @@ class DupArchive
             if (!is_array($indexData)) {
                 return false;
             }
-        } catch (Exception $e) {
-            return false;
-        } catch (Error $e) {
+        } catch (Throwable $e) {
             return false;
         }
 
@@ -84,15 +183,16 @@ class DupArchive
      * Get extra files offset if set or 0
      *
      * @param string $archivePath archive path
+     * @param string $password    password archive, empty no password
      *
      * @return int
      */
-    public static function getExtraOffset($archivePath)
+    public static function getExtraOffset($archivePath, $password)
     {
-        if (($indexData = self::getIndexData($archivePath)) === false) {
+        if (($indexData = self::getIndexData($archivePath, $password)) === false) {
             return 0;
         }
-        return (isset($indexData[self::EXTRA_FILES_POS_KEY]) ? $indexData[self::EXTRA_FILES_POS_KEY] : 0);
+        return ($indexData[self::EXTRA_FILES_POS_KEY] ?? 0);
     }
 
     /**
@@ -100,35 +200,45 @@ class DupArchive
      *
      * @param string $archivePath  archive path
      * @param string $relativePath relative path
+     * @param string $password     password archive
      * @param int    $offset       start search location
      * @param int    $sizeToSearch max size where search
      *
      * @return bool|int false if file not found of path position
      */
-    public static function seachPathInArchive($archivePath, $relativePath, $offset = 0, $sizeToSearch = 0)
+    public static function seachPathInArchive($archivePath, $relativePath, $password, $offset = 0, $sizeToSearch = 0)
     {
-        if (($archiveHandle = fopen($archivePath, 'rb')) === false) {
-            throw new Exception("Can’t open archive at $archivePath!");
+        try {
+            $archiveHandle = null;
+            if (($archiveHandle = fopen($archivePath, 'rb')) === false) {
+                throw new Exception("Can’t open archive at $archivePath!", self::EXCEPTION_CODE_OPEN_ERROR);
+            }
+            $archiveHeader = (new DupArchiveHeader())->readFromArchive($archiveHandle, $password);
+
+            $result = self::searchPath($archiveHandle, $archiveHeader, $relativePath, $offset, $sizeToSearch);
+        } finally {
+            if (is_resource($archiveHandle)) {
+                fclose($archiveHandle);
+            }
         }
-        $result = self::searchPath($archivePath, $relativePath, $offset, $sizeToSearch);
-        @fclose($archiveHandle);
         return $result;
     }
 
     /**
      * Search path, if found set and return position
      *
-     * @param resource $archiveHandle dup archive resource
-     * @param string   $relativePath  relative path to extract
-     * @param int      $offset        start search location
-     * @param int      $sizeToSearch  max size where search
+     * @param resource         $archiveHandle dup archive resource
+     * @param DupArchiveHeader $archiveHeader archive header
+     * @param string           $relativePath  relative path to extract
+     * @param int              $offset        start search location
+     * @param int              $sizeToSearch  max size where search
      *
      * @return bool|int false if file not found of path position
      */
-    public static function searchPath($archiveHandle, $relativePath, $offset = 0, $sizeToSearch = 0)
+    public static function searchPath($archiveHandle, DupArchiveHeader $archiveHeader, $relativePath, $offset = 0, $sizeToSearch = 0)
     {
         if (!is_resource($archiveHandle)) {
-            throw new Exception('Archive handle must be a resource');
+            throw new Exception('Archive handle must be a resource', self::EXCEPTION_CODE_INVALID_PARAM);
         }
 
         if (fseek($archiveHandle, $offset, SEEK_SET) < 0) {
@@ -136,7 +246,7 @@ class DupArchive
         }
 
         if ($offset == 0) {
-            DupArchiveReaderHeader::readFromArchive($archiveHandle);
+            $hd = (new DupArchiveHeader())->readFromArchive($archiveHandle, $archiveHeader->getPassword());
         }
 
         $result   = false;
@@ -146,14 +256,14 @@ class DupArchive
         do {
             switch (($type = self::getNextHeaderType($archiveHandle))) {
                 case self::HEADER_TYPE_FILE:
-                    $currentFileHeader = DupArchiveReaderFileHeader::readFromArchive($archiveHandle, true, true);
+                    $currentFileHeader = (new DupArchiveFileHeader($archiveHeader))->readFromArchive($archiveHandle, true, true);
                     if ($currentFileHeader->relativePath == $relativePath) {
                         $continue = false;
                         $result   = $position;
                     }
                     break;
                 case self::HEADER_TYPE_DIR:
-                    $directoryHeader = DupArchiveReaderDirectoryHeader::readFromArchive($archiveHandle, true);
+                    $directoryHeader = (new DupArchiveDirectoryHeader($archiveHeader))->readFromArchive($archiveHandle, true);
                     if ($directoryHeader->relativePath == $relativePath) {
                         $continue = false;
                         $result   = $position;
@@ -163,7 +273,7 @@ class DupArchive
                     $continue = false;
                     break;
                 default:
-                    throw new Exception('Invali header type "' . $type . '"');
+                    throw new Exception('Invali header type "' . $type . '"', self::EXCEPTION_CODE_INVALID_MARKER);
             }
             $position = ftell($archiveHandle);
             if ($sizeToSearch > 0 && ($position - $offset) >= $sizeToSearch) {
@@ -180,50 +290,161 @@ class DupArchive
     }
 
     /**
+     * Add file in archive from src
+     *
+     * @param string $archivePath  archive path
+     * @param string $pattern      relative path
+     * @param string $password     password archive
+     * @param int    $offset       start search location
+     * @param int    $sizeToSearch max size where search
+     *
+     * @return false|array{name: string, position: int} false if file not found or path info
+     */
+    public static function seachRegexInArchive(
+        $archivePath,
+        $pattern,
+        $password,
+        $offset = 0,
+        $sizeToSearch = 0
+    ) {
+        try {
+            $archiveHandle = null;
+            if (($archiveHandle = fopen($archivePath, 'rb')) === false) {
+                throw new Exception("Can’t open archive at $archivePath!", self::EXCEPTION_CODE_OPEN_ERROR);
+            }
+            $archiveHeader = (new DupArchiveHeader())->readFromArchive($archiveHandle, $password);
+
+            $result = self::searchRegex($archiveHandle, $archiveHeader, $pattern, $offset, $sizeToSearch);
+        } finally {
+            if (is_resource($archiveHandle)) {
+                fclose($archiveHandle);
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Search path, if found set and return position
+     *
+     * @param resource         $archiveHandle dup archive resource
+     * @param DupArchiveHeader $archiveHeader archive header
+     * @param string           $pattern       regex pattern
+     * @param int              $offset        start search location
+     * @param int              $sizeToSearch  max size where search
+     *
+     * @return false|array{name: string, position: int} false if file not found or path info
+     */
+    public static function searchRegex(
+        $archiveHandle,
+        DupArchiveHeader $archiveHeader,
+        $pattern,
+        $offset = 0,
+        $sizeToSearch = 0
+    ) {
+        if (!is_resource($archiveHandle)) {
+            throw new Exception('Archive handle must be a resource', self::EXCEPTION_CODE_INVALID_PARAM);
+        }
+
+        if (fseek($archiveHandle, $offset, SEEK_SET) < 0) {
+            return false;
+        }
+
+        if ($offset == 0) {
+            $hd = (new DupArchiveHeader())->readFromArchive($archiveHandle, $archiveHeader->getPassword());
+        }
+
+        $result   = false;
+        $position = ftell($archiveHandle);
+        $continue = true;
+
+        do {
+            switch (($type = self::getNextHeaderType($archiveHandle))) {
+                case self::HEADER_TYPE_FILE:
+                    $currentFileHeader = (new DupArchiveFileHeader($archiveHeader))->readFromArchive($archiveHandle, true, true);
+                    if (preg_match($pattern, $currentFileHeader->relativePath)) {
+                        $continue = false;
+                        $result   = [
+                            'name'     => $currentFileHeader->relativePath,
+                            'position' => $position,
+                        ];
+                    }
+                    break;
+                case self::HEADER_TYPE_DIR:
+                    $directoryHeader = (new DupArchiveDirectoryHeader($archiveHeader))->readFromArchive($archiveHandle, true);
+                    if (preg_match($pattern, $directoryHeader->relativePath)) {
+                        $continue = false;
+                        $result   = [
+                            'name'     => $directoryHeader->relativePath,
+                            'position' => $position,
+                        ];
+                    }
+                    break;
+                case self::HEADER_TYPE_NONE:
+                    $continue = false;
+                    break;
+                default:
+                    throw new Exception('Invali header type "' . $type . '"', self::EXCEPTION_CODE_INVALID_MARKER);
+            }
+            $position = ftell($archiveHandle);
+            if ($sizeToSearch > 0 && ($position - $offset) >= $sizeToSearch) {
+                break;
+            }
+        } while ($continue);
+
+        if ($result !== false) {
+            if (fseek($archiveHandle, $result['position'], SEEK_SET) < 0) {
+                return false;
+            }
+        }
+        return $result;
+    }
+
+    /**
      * Get file content
      *
      * @param string $archivePath  archvie path
      * @param string $relativePath relative path to extract
+     * @param string $password     password archive
      * @param int    $offset       start search location
      * @param int    $sizeToSearch max size where search
-     * @param bool   $isCompressed true if is compressed
      *
      * @return bool|string false if file not found
      */
-    public static function getSrcFile($archivePath, $relativePath, $offset = 0, $sizeToSearch = 0, $isCompressed = null)
+    public static function getSrcFile($archivePath, $relativePath, $password, $offset = 0, $sizeToSearch = 0)
     {
-        if (($archiveHandle = fopen($archivePath, 'rb')) === false) {
-            throw new Exception("Can’t open archive at $archivePath!");
-        }
-        $archiveHeader = DupArchiveReaderHeader::readFromArchive($archiveHandle);
-        if (is_null($isCompressed)) {
-            $isCompressed = $archiveHeader->isCompressed;
-        }
+        try {
+            $archiveHandle = null;
+            if (($archiveHandle = fopen($archivePath, 'rb')) === false) {
+                throw new Exception("Can’t open archive at $archivePath!", self::EXCEPTION_CODE_OPEN_ERROR);
+            }
+            $archiveHeader = (new DupArchiveHeader())->readFromArchive($archiveHandle, $password);
+            if (self::searchPath($archiveHandle, $archiveHeader, $relativePath, $offset, $sizeToSearch) === false) {
+                return false;
+            }
 
-        if (self::searchPath($archiveHandle, $relativePath, $offset, $sizeToSearch) === false) {
-            return false;
-        }
+            if (self::getNextHeaderType($archiveHandle) != self::HEADER_TYPE_FILE) {
+                return false;
+            }
 
-        if (self::getNextHeaderType($archiveHandle) != self::HEADER_TYPE_FILE) {
-            return false;
+            $header = (new DupArchiveFileHeader($archiveHeader))->readFromArchive($archiveHandle, false, true);
+            $result = self::getSrcFromHeader($archiveHandle, $header);
+        } finally {
+            if (is_resource($archiveHandle)) {
+                fclose($archiveHandle);
+            }
         }
-
-        $header = DupArchiveReaderFileHeader::readFromArchive($archiveHandle, false, true);
-        $result = self::getSrcFromHeader($archiveHandle, $header, $isCompressed);
-        @fclose($archiveHandle);
         return $result;
     }
 
     /**
      * Get src file form header
      *
-     * @param resource                   $archiveHandle archive handle
-     * @param DupArchiveReaderFileHeader $fileHeader    file header
-     * @param bool                       $isCompressed  true if is compressed
+     * @param resource             $archiveHandle archive handle
+     * @param DupArchiveFileHeader $fileHeader    file header
      *
      * @return string
      */
-    protected static function getSrcFromHeader($archiveHandle, DupArchiveReaderFileHeader $fileHeader, $isCompressed)
+    protected static function getSrcFromHeader($archiveHandle, DupArchiveFileHeader $fileHeader): string
     {
         if ($fileHeader->fileSize == 0) {
             return '';
@@ -231,10 +452,11 @@ class DupArchive
         $dataSize = 0;
         $result   = '';
 
+        $globHeader = new DupArchiveGlobHeader($fileHeader);
         do {
-            $globHeader = DupArchiveReaderGlobHeader::readFromArchive($archiveHandle);
-            $result    .= DupArchiveReaderGlobHeader::readContent($archiveHandle, $globHeader, $isCompressed);
-            $dataSize  += $globHeader->originalSize;
+            $globHeader->readFromArchive($archiveHandle);
+            $result   .= $globHeader->readContent($archiveHandle);
+            $dataSize += $globHeader->originalSize;
         } while ($dataSize < $fileHeader->fileSize);
 
         return $result;
@@ -248,39 +470,123 @@ class DupArchive
      *
      * @return void
      */
-    protected static function skipFileInArchive($archiveHandle, DupArchiveReaderFileHeader $fileHeader)
+    protected static function skipFileInArchive($archiveHandle, DupArchiveFileHeader $fileHeader)
     {
         if ($fileHeader->fileSize == 0) {
             return;
         }
-        $dataSize = 0;
-
+        $dataSize   = 0;
+        $globHeader = new DupArchiveGlobHeader($fileHeader);
         do {
-            $globHeader = DupArchiveReaderGlobHeader::readFromArchive($archiveHandle, true);
-            $dataSize  += $globHeader->originalSize;
+            $globHeader->readFromArchive($archiveHandle, true);
+            $dataSize += $globHeader->originalSize;
         } while ($dataSize < $fileHeader->fileSize);
     }
 
     /**
      * Assumes we are on one header and just need to get to the next
      *
-     * @param resource $archiveHandle dup archive resource
+     * @param resource         $archiveHandle dup archive resource
+     * @param DupArchiveHeader $archiveHeader archive header
      *
      * @return void
      */
-    protected static function skipToNextHeader($archiveHandle)
+    protected static function skipToNextHeader($archiveHandle, DupArchiveHeader $archiveHeader)
     {
         $headerType = self::getNextHeaderType($archiveHandle);
         switch ($headerType) {
             case self::HEADER_TYPE_FILE:
-                $fileHeader = DupArchiveReaderFileHeader::readFromArchive($archiveHandle, false, true);
+                $fileHeader = (new DupArchiveFileHeader($archiveHeader))->readFromArchive($archiveHandle, false, true);
                 self::skipFileInArchive($archiveHandle, $fileHeader);
                 break;
             case self::HEADER_TYPE_DIR:
-                DupArchiveReaderDirectoryHeader::readFromArchive($archiveHandle, true);
+                $directoryHeader = (new DupArchiveDirectoryHeader($archiveHeader))->readFromArchive($archiveHandle, true);
                 break;
             case self::HEADER_TYPE_NONE:
-                false;
+            default:
+                break;
         }
+    }
+
+    /**
+     * Generates a random salt
+     *
+     * @param int $length salt len
+     *
+     * @return string The random salt.
+     */
+    public static function generateSalt($length): string
+    {
+        $maxRand = (strlen(self::PWD_SALT_CHARS) - 1);
+
+        $password = '';
+        for ($i = 0; $i < $length; $i++) {
+            if (function_exists('random_int')) {
+                // phpcs:ignore PHPCompatibility.FunctionUse.NewFunctions.random_intFound
+                $cIndex = random_int(0, $maxRand);
+            } else {
+                mt_srand(time());
+                $cIndex = mt_rand(0, $maxRand);
+            }
+            $password .= substr(self::PWD_SALT_CHARS, $cIndex, 1);
+        }
+
+        return $password;
+    }
+
+    /**
+     * Encrypt content
+     *
+     * @param string $content content
+     * @param string $key     encrypt key
+     * @param bool   $hashKey apply additional hash at key
+     *
+     * @return false|string The encrypted string on success or false on failure.
+     */
+    public static function encrypt($content, $key, $hashKey = false)
+    {
+        static $ivLen = null;
+        if ($ivLen === null) {
+            if (!self::isEncryptionAvaliable()) {
+                throw new Exception('Encryption is unavailable', self::EXCEPTION_CODE_OPEN_ERROR);
+            }
+            $ivLen = openssl_cipher_iv_length(DupArchive::CRYPT_ALGO);
+        }
+        $iv = openssl_random_pseudo_bytes($ivLen);
+
+        if ($hashKey) {
+            $key = hash('sha256', $key);
+        }
+
+        if (($result = openssl_encrypt($content, DupArchive::CRYPT_ALGO, $key, OPENSSL_RAW_DATA, $iv)) === false) {
+            return false;
+        }
+
+        return $iv . $result;
+    }
+
+    /**
+     * Decrypt content
+     *
+     * @param string $content content
+     * @param string $key     encrypt key
+     * @param bool   $hashKey apply additional hash at key
+     *
+     * @return string|bool The decrypted string on success or false on failure.
+     */
+    public static function decrypt($content, $key, $hashKey = false)
+    {
+        static $ivLen = null;
+        if ($ivLen === null) {
+            if (!self::isEncryptionAvaliable()) {
+                throw new Exception('Encryption is unavailable', self::EXCEPTION_CODE_OPEN_ERROR);
+            }
+            $ivLen = openssl_cipher_iv_length(DupArchive::CRYPT_ALGO);
+        }
+        $iv = substr($content, 0, $ivLen);
+        if ($hashKey) {
+            $key = hash('sha256', $key);
+        }
+        return openssl_decrypt(substr($content, $ivLen), DupArchive::CRYPT_ALGO, $key, OPENSSL_RAW_DATA, $iv);
     }
 }

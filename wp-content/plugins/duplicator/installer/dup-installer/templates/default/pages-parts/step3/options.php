@@ -1,9 +1,6 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
@@ -26,7 +23,7 @@ OPTIONS -->
             <li><a href="#tabs-admin-account">Admin Account</a></li>
             <li><a href="#tabs-plugins">Plugins</a></li>
             <?php if (!$skipWpConfig) { ?>
-                <li><a href="#tabs-wp-config-file">WP-Config</a></li>
+                <li><a href="#tabs-wp-config-file">WP-Config File</a></li>
             <?php } ?>
         </ul>
 

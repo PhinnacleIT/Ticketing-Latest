@@ -6,22 +6,26 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 class DUPX_Validation_test_db_supported_charset extends DUPX_Validation_abstract_item
 {
-    protected $errorMessage      = '';
-    protected $charsetsList      = array();
-    protected $collationsList    = array();
-    protected $invalidCharsets   = array();
-    protected $invalidCollations = array();
-    protected $extraData         = array();
+    /** @var string */
+    protected $errorMessage = '';
+    /** @var string[] */
+    protected $charsetsList = [];
+    /** @var string[] */
+    protected $collationsList = [];
+    /** @var string[] */
+    protected $invalidCharsets = [];
+    /** @var string[] */
+    protected $invalidCollations = [];
+    /** @var mixed[] */
+    protected $extraData = [];
 
-    protected function runTest()
+    protected function runTest(): int
     {
         if (DUPX_Validation_database_service::getInstance()->skipDatabaseTests()) {
             return self::LV_SKIP;
@@ -46,7 +50,7 @@ class DUPX_Validation_test_db_supported_charset extends DUPX_Validation_abstract
         }
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'Character Set and  Collation Capability';
     }
@@ -55,7 +59,7 @@ class DUPX_Validation_test_db_supported_charset extends DUPX_Validation_abstract
     {
         $dbFuncs = DUPX_DB_Functions::getInstance();
 
-        return dupxTplRender('parts/validation/database-tests/db-supported-charset', array(
+        return dupxTplRender('parts/validation/database-tests/db-supported-charset', [
             'testResult'        => $this->testResult,
             'extraData'         => $this->extraData,
             'charsetsList'      => $this->charsetsList,
@@ -64,8 +68,8 @@ class DUPX_Validation_test_db_supported_charset extends DUPX_Validation_abstract
             'invalidCollations' => $this->invalidCollations,
             'usedCharset'       => $dbFuncs->getRealCharsetByParam(),
             'usedCollate'       => $dbFuncs->getRealCollateByParam(),
-            'errorMessage'      => $this->errorMessage
-            ), false);
+            'errorMessage'      => $this->errorMessage,
+        ], false);
     }
 
     protected function hwarnContent()

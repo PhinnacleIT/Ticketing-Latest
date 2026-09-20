@@ -6,8 +6,6 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -74,10 +72,7 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
         padding: 10px;
         line-height: 18px;
         font-size: 12px;
-    }
-
-    #validation-result .dupx-validation-test-package-size.warn .test-content {
-        background-color: #fcf9e8;
+        cursor: default;
     }
 
     #validation-result .test-content pre {

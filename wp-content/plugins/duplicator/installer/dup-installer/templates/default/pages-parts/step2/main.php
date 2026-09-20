@@ -1,12 +1,10 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
 
 $paramsManager = PrmMng::getInstance();
@@ -22,11 +20,12 @@ $paramsManager = PrmMng::getInstance();
 >
     <div class="main-form-content" >
         <!-- START TABS -->
+        <?php if (!InstState::dbDoNothing()) { ?>
         <div class="hdr-sub1-area tabs-area">
             <div id="tabs" class="no-display">
                 <ul>
                     <li><a href="#tabs-database-tables">Tables</a></li>
-                    <li><a href="#tabs-database-general">Advanced</a></li>
+                    <li><a href="#tabs-database-general">Charset & Collation</a></li>
                 </ul>
                 <div id="tabs-database-tables">
                     <?php dupxTplRender('pages-parts/step2/options-tabs/tables'); ?>
@@ -36,6 +35,9 @@ $paramsManager = PrmMng::getInstance();
                 </div>
             </div>
         </div>
+        <?php } else {
+            dupxTplRender('pages-parts/step2/options-disabled');
+        } ?>
     </div>
     <div class="footer-buttons margin-top-2">
         <div class="content-left">

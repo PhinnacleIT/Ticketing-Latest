@@ -1,11 +1,5 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
- */
-
 namespace Duplicator\Libs\WpConfig;
 
 use Exception;
@@ -23,7 +17,7 @@ class WPConfigTransformerSrc extends WPConfigTransformer
     public function __construct($wp_config_src)
     {
         // Normalize the newline to prevent an issue coming from OSX
-        $this->wp_config_src = str_replace(array("\n\r", "\r"), array("\n", "\n"), $wp_config_src);
+        $this->wp_config_src = str_replace(["\n\r", "\r"], ["\n", "\n"], $wp_config_src);
     }
 
     /**
@@ -47,7 +41,7 @@ class WPConfigTransformerSrc extends WPConfigTransformer
      *
      * @return bool
      */
-    public function exists($type, $name)
+    public function exists($type, $name): bool
     {
         $this->wp_configs = $this->parseWpConfig($this->wp_config_src);
 
@@ -65,7 +59,7 @@ class WPConfigTransformerSrc extends WPConfigTransformer
      * @param string $name           Config name.
      * @param bool   $get_real_value if true return typed value
      *
-     * @return array
+     * @return mixed
      */
     public function getValue($type, $name, $get_real_value = true)
     {
@@ -91,7 +85,7 @@ class WPConfigTransformerSrc extends WPConfigTransformer
      *
      * @return boolean
      */
-    protected function save($contents)
+    protected function save($contents): bool
     {
         $this->wp_config_src = $contents;
         return true;

@@ -2,9 +2,6 @@
 
 /**
  * Auloader calsses
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
  */
 
 namespace Duplicator\Utils;
@@ -12,21 +9,19 @@ namespace Duplicator\Utils;
 /**
  * Autoloader calss, dont user Duplicator library here
  */
-final class Autoloader
+final class Autoloader extends AbstractAutoloader
 {
-    const ROOT_NAMESPACE           = 'Duplicator\\';
-    const ROOT_INSTALLER_NAMESPACE = 'Duplicator\\Installer\\';
-
-    protected static $nameSpacesMapping = null;
+    const VENDOR_PATH = DUPLICATOR____PATH . '/vendor-prefixed/';
 
     /**
      * Register autoloader function
      *
      * @return void
      */
-    public static function register()
+    public static function register(): void
     {
-        spl_autoload_register(array(__CLASS__, 'load'));
+        spl_autoload_register([self::class, 'load']);
+        self::loadFiles();
     }
 
     /**
@@ -34,64 +29,62 @@ final class Autoloader
      *
      * @param string $className class name
      *
-     * @return bool return true if class is loaded
+     * @return void
      */
-    public static function load($className)
+    public static function load($className): void
     {
-        // @todo remove legacy logic in autoloading when duplicator is fully converted.
-        if (strpos($className, self::ROOT_NAMESPACE) !== 0) {
-            $legacyMappging = self::customLegacyMapping();
-            $legacyClass    = strtolower(ltrim($className, '\\'));
-            if (array_key_exists($legacyClass, $legacyMappging)) {
-                if (file_exists($legacyMappging[$legacyClass])) {
-                    include_once($legacyMappging[$legacyClass]);
-                    return true;
+        if (strpos($className, self::ROOT_NAMESPACE) === 0) {
+            if (($filepath = self::getAddonFile($className)) === false) {
+                foreach (self::getNamespacesMapping() as $namespace => $mappedPath) {
+                    if (strpos($className, (string) $namespace) !== 0) {
+                        continue;
+                    }
+
+                    $filepath = self::getFilenameFromClass($className, $namespace, $mappedPath);
+                    if (file_exists($filepath)) {
+                        include $filepath;
+                        return;
+                    }
+                }
+            } else {
+                if (file_exists($filepath)) {
+                    include $filepath;
+                    return;
                 }
             }
-
-            if (self::externalLibs($className)) {
-                return true;
-            }
-        } else {
-            foreach (self::getNamespacesMapping() as $namespace => $mappedPath) {
-                if (strpos($className, $namespace) !== 0) {
+        } elseif (strpos($className, self::ROOT_VENDOR) === 0) {
+            foreach (self::getNamespacesVendorMapping() as $namespace => $mappedPath) {
+                if (strpos($className, (string) $namespace) !== 0) {
                     continue;
                 }
 
-                $filepath = $mappedPath . str_replace('\\', '/', substr($className, strlen($namespace))) . '.php';
+                $filepath = self::getFilenameFromClass($className, $namespace, $mappedPath);
                 if (file_exists($filepath)) {
-                    include_once($filepath);
-                    return true;
+                    include $filepath;
+                    return;
                 }
             }
         }
-
-        return false;
     }
 
     /**
-     * Load external libs
+     * Load necessary files
      *
-     * @param string $className class name
-     *
-     * @return bool return true if class is loaded
+     * @return void
      */
-    protected static function externalLibs($className)
+    private static function loadFiles(): void
     {
-        switch (strtolower(ltrim($className, '\\'))) {
-            default:
-                return false;
+        foreach (
+            [
+                '/ralouphie/getallheaders/src/getallheaders.php',
+                '/symfony/polyfill-mbstring/bootstrap.php',
+                '/symfony/polyfill-iconv/bootstrap.php',
+                '/symfony/polyfill-php80/bootstrap.php',
+                '/guzzlehttp/guzzle/src/functions_include.php',
+            ] as $file
+        ) {
+            require_once self::VENDOR_PATH . $file;
         }
-    }
-
-    /**
-     * mappgin of some legacy classes
-     *
-     * @return array
-     */
-    protected static function customLegacyMapping()
-    {
-        return array();
     }
 
     /**
@@ -99,30 +92,39 @@ final class Autoloader
      *
      * @return string[]
      */
-    protected static function getNamespacesMapping()
+    protected static function getNamespacesMapping(): array
     {
         // the order is important, it is necessary to insert the longest namespaces first
-        return array(
-            self::ROOT_INSTALLER_NAMESPACE => DUPLICATOR_LITE_PATH . '/installer/dup-installer/src/',
-            self::ROOT_NAMESPACE           => DUPLICATOR_LITE_PATH . '/src/'
-        );
+        return [
+            self::ROOT_INSTALLER_NAMESPACE => DUPLICATOR____PATH . '/installer/dup-installer/src/',
+            self::ROOT_NAMESPACE           => DUPLICATOR____PATH . '/src/',
+        ];
     }
 
     /**
-     * Returns true if the $haystack string end with the $needle, only for internal use
+     * Return namespace mapping
      *
-     * @param string $haystack The full string to search in
-     * @param string $needle   The string to for
-     *
-     * @return bool Returns true if the $haystack string starts with the $needle
+     * @return string[]
      */
-    protected static function endsWith($haystack, $needle)
+    protected static function getNamespacesVendorMapping(): array
     {
-        $length = strlen($needle);
-        if ($length == 0) {
-            return true;
-        }
-
-        return (substr($haystack, -$length) === $needle);
+        return [
+            self::ROOT_VENDOR . 'Cron'                        => self::VENDOR_PATH . 'dragonmantank/cron-expression/src/Cron',
+            self::ROOT_VENDOR . 'WpOrg\\Requests'             => self::VENDOR_PATH . 'rmccue/requests/src',
+            self::ROOT_VENDOR . 'Amk\\JsonSerialize'          => self::VENDOR_PATH . 'andreamk/jsonserialize/src/',
+            self::ROOT_VENDOR . 'ParagonIE\\ConstantTime'     => self::VENDOR_PATH . 'paragonie/constant_time_encoding/src/',
+            self::ROOT_VENDOR . 'phpseclib3'                  => self::VENDOR_PATH . 'phpseclib/phpseclib/phpseclib/',
+            self::ROOT_VENDOR . 'ForceUTF8'                   => self::VENDOR_PATH . 'neitanod/forceutf8/src/ForceUTF8/',
+            self::ROOT_VENDOR . 'Symfony\\Polyfill\\Iconv'    => self::VENDOR_PATH . 'symfony/polyfill-iconv',
+            self::ROOT_VENDOR . 'Symfony\\Polyfill\\Mbstring' => self::VENDOR_PATH . 'symfony/polyfill-mbstring',
+            self::ROOT_VENDOR . 'Symfony\\Polyfill\\Php80'    => self::VENDOR_PATH . 'symfony/polyfill-php80',
+            self::ROOT_VENDOR . 'Psr\\Http\\Message'          => self::VENDOR_PATH . 'psr/http-message/src',
+            self::ROOT_VENDOR . 'Psr\\Http\\Client'           => self::VENDOR_PATH . 'psr/http-client/src',
+            self::ROOT_VENDOR . 'Psr\\Log'                    => self::VENDOR_PATH . 'psr/log/Psr/Log',
+            self::ROOT_VENDOR . 'Psr\\Cache'                  => self::VENDOR_PATH . 'psr/cache/src',
+            self::ROOT_VENDOR . 'GuzzleHttp\\Promise'         => self::VENDOR_PATH . 'guzzlehttp/promises/src',
+            self::ROOT_VENDOR . 'GuzzleHttp\\Psr7'            => self::VENDOR_PATH . 'guzzlehttp/psr7/src',
+            self::ROOT_VENDOR . 'GuzzleHttp'                  => self::VENDOR_PATH . 'guzzlehttp/guzzle/src',
+        ];
     }
 }

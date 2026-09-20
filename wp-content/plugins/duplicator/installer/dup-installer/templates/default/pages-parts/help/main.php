@@ -1,33 +1,25 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
-
-use Duplicator\Installer\Utils\InstallerLinkManager;
 use Duplicator\Libs\Snap\SnapUtil;
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 $archiveConfig = DUPX_ArchiveConfig::getInstance();
-$open_section  = SnapUtil::filterInputDefaultSanitizeString(INPUT_GET, 'open_section');
+$open_section  = SnapUtil::sanitizeDefaultInput(INPUT_GET, 'open_section');
 ?>
 <!-- =========================================
 HELP FORM -->
 <div id="main-help">
-    <div class="help-online"><br/>
-        <i class="far fa-file-alt fa-sm"></i> For complete help visit <br/>
-        <a href="<?php echo InstallerLinkManager::getDocUrl('', 'install', 'help header'); ?>" target="_blank">
-            Duplicator Migration and Backup Online Help
-        </a> <br/>
-        <small>The <sup class="hlp-pro-lbl">Pro</sup> tag indicates the feature is only available in Duplicator Pro</small>
-    </div>
+
+    <?php if ($archiveConfig->header['isDefault']) : ?>
+        <div class="help-online"><br/>
+            <i class="far fa-file-alt fa-sm"></i> For complete help visit <br/>
+            <a href="<?php echo DUPX_Constants::FAQ_URL; ?>" target="_blank">Duplicator Migration and Backup Online Help</a>
+        </div>
+    <?php endif; ?>
 
     <?php
-    $step_pass_data = array(
-        'open_section' => $open_section,
-    );
+    $step_pass_data = ['open_section' => $open_section];
     dupxTplRender('pages-parts/help/steps/security', $step_pass_data);
     dupxTplRender('pages-parts/help/steps/step-1', $step_pass_data);
     dupxTplRender('pages-parts/help/steps/step-2', $step_pass_data);
@@ -51,7 +43,7 @@ HELP FORM -->
         });
 
 <?php if (!empty($open_section)) { ?>
-            $("html, body").animate({scrollTop: $('#<?php echo $open_section; ?>').offset().top}, 1000);
+            $("html, body").animate({scrollTop: $('#<?php echo esc_js($open_section); ?>').offset().top}, 1000);
 <?php } ?>
 
     });

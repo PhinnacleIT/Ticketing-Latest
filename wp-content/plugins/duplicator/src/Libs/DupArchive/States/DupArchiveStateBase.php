@@ -1,13 +1,8 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
- */
-
 namespace Duplicator\Libs\DupArchive\States;
 
+use Duplicator\Libs\DupArchive\Headers\DupArchiveHeader;
 use Duplicator\Libs\DupArchive\Processors\DupArchiveProcessingFailure;
 
 /**
@@ -17,26 +12,51 @@ abstract class DupArchiveStateBase
 {
     const MAX_FAILURE = 1000;
 
-    public $basePath          = '';
-    public $archivePath       = '';
-    public $isCompressed      = false;
-    public $currentFileOffset = -1;
-    public $archiveOffset     = -1;
-    public $timeSliceInSecs   = -1;
-    public $working           = false;
+    /** @var DupArchiveHeader */
+    public $archiveHeader;
+    /** @var string */
+    public $basePath = '';
+    /** @var string */
+    public $archivePath = '';
+    /** @var int<0,max> */
+    public $currentFileOffset = 0;
+    /** @var int<0,max> */
+    public $archiveOffset = 0;
+    /** @var int<-1,max> */
+    public $timeSliceInSecs = -1;
+    /** @var bool */
+    public $working = false;
     /** @var DupArchiveProcessingFailure[] */
-    public $failures          = array();
-    public $failureCount      = 0;
-    public $startTimestamp    = -1;
+    public $failures = [];
+    /** @var int<0,max> */
+    public $failureCount = 0;
+    /** @var int<-1,max> */
+    public $startTimestamp = -1;
+    /** @var int<0,max> */
     public $throttleDelayInUs = 0;
-    public $timeoutTimestamp  = -1;
-    public $timerEnabled      = true;
-    public $isRobust          = false;
+    /** @var int<-1,max> */
+    public $timeoutTimestamp = -1;
+    /** @var bool */
+    public $timerEnabled = true;
+    /** @var bool */
+    public $isRobust = false;
 
     /**
      * Class constructor
+     *
+     * @param DupArchiveHeader $archiveHeader archive header
      */
-    public function __construct()
+    public function __construct(DupArchiveHeader $archiveHeader)
+    {
+        $this->archiveHeader = $archiveHeader;
+    }
+
+    /**
+     * Save state functon
+     *
+     * @return void
+     */
+    public function save()
     {
     }
 
@@ -47,15 +67,34 @@ abstract class DupArchiveStateBase
      */
     public function isCriticalFailurePresent()
     {
-        if (count($this->failures) > 0) {
-            foreach ($this->failures as $failure) {
-                if ($failure->isCritical) {
-                    return true;
-                }
+        foreach ($this->failures as $failure) {
+            if ($failure->isCritical) {
+                return true;
             }
         }
-
         return false;
+    }
+
+    /**
+     * Reset values
+     *
+     * @return void
+     */
+    public function reset(): void
+    {
+        $this->basePath          = '';
+        $this->archivePath       = '';
+        $this->currentFileOffset = 0;
+        $this->archiveOffset     = 0;
+        $this->timeSliceInSecs   = -1;
+        $this->working           = false;
+        $this->failures          = [];
+        $this->failureCount      = 0;
+        $this->startTimestamp    = -1;
+        $this->throttleDelayInUs = 0;
+        $this->timeoutTimestamp  = -1;
+        $this->timerEnabled      = true;
+        $this->isRobust          = false;
     }
 
     /**
@@ -117,7 +156,7 @@ abstract class DupArchiveStateBase
      * @param string  $description failure description
      * @param boolean $isCritical  true if is critical
      *
-     * @return DupArchiveProcessingFailure
+     * @return DupArchiveProcessingFailure|false false if max filures is reachd
      */
     public function addFailure($type, $subject, $description, $isCritical = true)
     {
@@ -143,7 +182,7 @@ abstract class DupArchiveStateBase
      *
      * @return void
      */
-    public function startTimer()
+    public function startTimer(): void
     {
         if ($this->timerEnabled) {
             $this->timeoutTimestamp = time() + $this->timeSliceInSecs;

@@ -1,16 +1,14 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
-
 use Duplicator\Installer\Core\Params\PrmMng;
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $test DUPX_Validation_abstract_item */
+/**
+ * Variables
+ *
+ * @var DUPX_Validation_abstract_item $test
+ */
 
 if (!$test->display()) {
     return;

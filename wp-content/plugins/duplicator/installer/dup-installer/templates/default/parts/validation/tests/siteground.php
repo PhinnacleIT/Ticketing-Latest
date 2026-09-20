@@ -1,16 +1,14 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
-
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $fromPhp string */
-/* @var $toPhp string */
-/* @var $isOk bool */
+/**
+ * Variables
+ *
+ * @var string $fromPhp
+ * @var string $toPhp
+ * @var bool $isOk
+ */
 ?>
     <div class="sub-title">STATUS</div>
     <p class="red" >

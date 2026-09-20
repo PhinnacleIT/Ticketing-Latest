@@ -6,26 +6,41 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\Security;
 use Duplicator\Installer\Utils\Log\Log;
 use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Installer\Utils\SecureCsrf;
+use Duplicator\Libs\Snap\SnapURL;
 
 /**
  * View functions
  */
 class DUPX_View_Funcs
 {
+    /**
+     * Installer log link
+     *
+     * @param bool $echo Echo or return
+     *
+     * @return string
+     */
     public static function installerLogLink($echo = true)
     {
         return DUPX_U_Html::getLightBoxIframe('installer-log.txt', 'installer-log.txt', Log::getLogFileUrl(), true, true, $echo);
     }
 
-    public static function getHelpLink($section = '')
+    /**
+     * Get help link
+     *
+     * @param string $section Help section
+     *
+     * @return string
+     */
+    public static function getHelpLink($section = ''): string
     {
         switch ($section) {
             case "secure":
@@ -48,14 +63,24 @@ class DUPX_View_Funcs
                 $helpOpenSection = '';
         }
 
-        return '?' . http_build_query(array(
-                PrmMng::PARAM_CTRL_ACTION => 'help',
-                DUPX_Security::CTRL_TOKEN => DUPX_CSRF::generate('help'),
-                'basic'                   => '',
-                'open_section'            => $helpOpenSection
-        ));
+        $data = array_merge($_REQUEST, [
+            PrmMng::PARAM_CTRL_ACTION => 'help',
+            Security::CTRL_TOKEN      => SecureCsrf::generate('help'),
+            'basic'                   => '',
+            'open_section'            => $helpOpenSection,
+        ]);
+        return SnapURL::getCurrentUrl(false, true) . '?' . http_build_query($data);
     }
 
+    /**
+     * Help link
+     *
+     * @param string $section   Help section
+     * @param string $linkLabel Link label
+     * @param bool   $echo      Echo or return
+     *
+     * @return string
+     */
     public static function helpLink($section, $linkLabel = 'Help', $echo = true)
     {
         ob_start();
@@ -63,12 +88,18 @@ class DUPX_View_Funcs
         DUPX_U_Html::getLightBoxIframe($linkLabel, 'HELP', $help_url);
         if ($echo) {
             ob_end_flush();
+            return '';
         } else {
             return ob_get_clean();
         }
     }
 
-    public static function helpLockLink()
+    /**
+     * Help lock link
+     *
+     * @return void
+     */
+    public static function helpLockLink(): void
     {
         if (DUPX_ArchiveConfig::getInstance()->secure_on) {
             self::helpLink('secure', '<i class="fa fa-lock fa-xs"></i>');
@@ -77,7 +108,14 @@ class DUPX_View_Funcs
         }
     }
 
-    public static function helpIconLink($section)
+    /**
+     * Help icon link
+     *
+     * @param string $section Help section
+     *
+     * @return void
+     */
+    public static function helpIconLink($section): void
     {
         self::helpLink($section, '<i class="fas fa-question-circle fa-sm"></i>');
     }
@@ -85,11 +123,11 @@ class DUPX_View_Funcs
     /**
      * Get badge class attr val from status
      *
-     * @param string $status
+     * @param string $status Status
      *
      * @return string html class attribute
      */
-    public static function getBadgeClassFromCheckStatus($status)
+    public static function getBadgeClassFromCheckStatus($status): string
     {
         switch ($status) {
             case 'Pass':
@@ -100,6 +138,7 @@ class DUPX_View_Funcs
                 return 'status-badge.warn';
             default:
                 Log::error(sprintf("The arcCheck var has the illegal value %s in switch case", Log::v2str($status)));
+                return '';
         }
     }
 }

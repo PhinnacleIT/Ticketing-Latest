@@ -1,15 +1,5 @@
 <?php
 
-/**
- * param descriptor
- *
- * Standard: PSR-2
- *
- * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
- */
-
 namespace Duplicator\Installer\Core\Params\Items;
 
 use Duplicator\Installer\Utils\Log\Log;
@@ -49,20 +39,25 @@ class ParamItem
     const VALIDATE_REGEX_DIR_PATH            = '/^([a-zA-Z]:[\\\\\/]|\/|\\\\\\\\|\/\/)[^<>\0]+$/';
     const VALIDATE_REGEX_FILE_PATH           = '/^([a-zA-Z]:[\\\\\/]|\/|\\\\\\\\|\/\/)[^<>\0]+$/';
 
-    protected $name   = null;
-    protected $type   = null;
-    protected $attr   = array();
-    protected $value  = null;
+    /** @var string */
+    protected $name = '';
+    /** @var string */
+    protected $type = '';
+    /** @var array<string, mixed> */
+    protected array $attr;
+    /** @var mixed */
+    protected $value;
+    /** @var string */
     protected $status = self::STATUS_INIT;
 
     /**
      * Class constructor
      *
-     * @param string $name param identifier
-     * @param string $type TYPE_STRING | TYPE_ARRAY_STRING | ...
-     * @param array  $attr list of attributes
+     * @param string               $name param identifier
+     * @param string               $type TYPE_STRING | TYPE_ARRAY_STRING | ...
+     * @param array<string, mixed> $attr list of attributes
      */
-    public function __construct($name, $type, $attr = null)
+    public function __construct($name, $type, array $attr = [])
     {
         if (empty($name) || strlen($name) < 4) {
             throw new \Exception('the name can\'t be empty or len can\'t be minor of 4');
@@ -128,7 +123,7 @@ class ParamItem
      *
      * @return void
      */
-    public function setOveriteStatus()
+    public function setOveriteStatus(): void
     {
         $this->status = self::STATUS_OVERWRITE;
     }
@@ -161,11 +156,11 @@ class ParamItem
     /**
      * Set the invalid param message
      *
-     * @param $message invalid message
+     * @param string $message invalid message
      *
-     * @return string
+     * @return void
      */
-    public function setInvalidMessage($message)
+    public function setInvalidMessage($message): void
     {
         $this->attr['invalidMessage'] = (string) $message;
     }
@@ -178,7 +173,7 @@ class ParamItem
      *
      * @return void
      */
-    public function setAttr($key, $value)
+    public function setAttr($key, $value): void
     {
         $this->attr[$key] = $value;
     }
@@ -190,7 +185,7 @@ class ParamItem
      *
      * @return boolean false if value isn't validated
      */
-    public function setValue($value)
+    public function setValue($value): bool
     {
         $validateValue = null;
         if (!$this->isValid($value, $validateValue)) {
@@ -206,11 +201,11 @@ class ParamItem
      *
      * @param string $method query string method
      *
-     * @return array return the reference
+     * @return array<string, mixed> return the reference
      */
-    protected static function getSuperObjectByMethod($method)
+    protected static function getSuperObjectByMethod($method): array
     {
-        $superObject = array();
+        $superObject = [];
         switch ($method) {
             case self::INPUT_GET:
                 $superObject = &$_GET;
@@ -239,11 +234,11 @@ class ParamItem
     /**
      * Return true if value is in input method
      *
-     * @param array $superObject query string super object
+     * @param mixed[] $superObject query string super object
      *
      * @return bool
      */
-    protected function isValueInInput($superObject)
+    protected function isValueInInput($superObject): bool
     {
         return isset($superObject[$this->name]);
     }
@@ -262,7 +257,7 @@ class ParamItem
 
         Log::info(
             'SET VALUE FROM INPUT KEY [' . $this->name . '] VALUE[' .
-            Log::v2str(isset($superObject[$this->name]) ? $superObject[$this->name] : '') .
+            Log::v2str($superObject[$this->name] ?? '') .
             ']',
             Log::LV_DEBUG
         );
@@ -347,13 +342,13 @@ class ParamItem
                 break;
             case self::TYPE_INT:
             case self::TYPE_ARRAY_INT:
-                $validateValue = filter_var($value, FILTER_VALIDATE_INT, array(
-                    'options' => array(
+                $validateValue = filter_var($value, FILTER_VALIDATE_INT, [
+                    'options' => [
                         'default'   => false, // value to return if the filter fails
                         'min_range' => $this->attr['min_range'],
                         'max_range' => $this->attr['max_range'],
-                    )
-                ));
+                    ],
+                ]);
 
                 if ($validateValue === false) {
                     $this->setInvalidMessage('Isn\'t a valid number');
@@ -402,7 +397,7 @@ class ParamItem
     protected function isValidArray($value, &$validateValue = null)
     {
         $newValues     = (array) $value;
-        $validateValue = array();
+        $validateValue = [];
         $validValue    = null;
 
         if ($this->type == self::TYPE_ARRAY_MIXED) {
@@ -441,7 +436,7 @@ class ParamItem
      * this function is calle before sanitization.
      * Is use in extendend classs and transform value before the sanitization and validation process
      *
-     * @param array $superObject query string super object
+     * @param mixed[] $superObject query string super object
      *
      * @return mixed
      */
@@ -502,12 +497,12 @@ class ParamItem
      *
      * @param mixed $value input value
      *
-     * @return array
+     * @return mixed[]
      */
-    protected function getSanitizeValueArray($value)
+    protected function getSanitizeValueArray($value): array
     {
         $newValues      = (array) $value;
-        $sanitizeValues = array();
+        $sanitizeValues = [];
 
         foreach ($newValues as $key => $newValue) {
             $sanitizeValues[$key] = $this->getSanitizeValueScalar($newValue);
@@ -517,9 +512,9 @@ class ParamItem
     }
 
     /**
-     * get accept values
+     * Get accept values
      *
-     * @return array
+     * @return array<int, mixed>
      */
     public function getAcceptValues()
     {
@@ -533,7 +528,7 @@ class ParamItem
     /**
      * Set value from array. This function is used to set data from json array
      *
-     * @param array $data param data
+     * @param array{value: mixed, status?: string} $data param data
      *
      * @return boolean
      */
@@ -554,42 +549,48 @@ class ParamItem
     }
 
     /**
-     * return array dato to store in json array data
+     * Return array dato to store in json array data
      *
-     * @return array
+     * @return array{value: mixed, status: string}
      */
-    public function toArrayData()
+    public function toArrayData(): array
     {
-        return array(
+        return [
             'value'  => $this->value,
-            'status' => $this->status
-        );
+            'status' => $this->status,
+        ];
     }
 
     /**
      * Return a copy of this object with a new name ad overwrite attr
      *
-     * @param string $newName new name
-     * @param array  $attr    overwrite attributes
+     * @param string               $newName new name
+     * @param array<string, mixed> $attr    overwrite attributes
      *
-     * @return self
+     * @return static
      */
-    public function getCopyWithNewName($newName, $attr = array())
+    public function getCopyWithNewName($newName, $attr = [])
     {
         $copy    = clone $this;
         $reflect = new \ReflectionObject($copy);
 
         $nameProp = $reflect->getProperty('name');
-        $nameProp->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $nameProp->setAccessible(true);
+        }
         $nameProp->setValue($copy, $newName);
 
         $attrProp = $reflect->getProperty('attr');
-        $attrProp->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $attrProp->setAccessible(true);
+        }
         $newAttr = array_merge($attrProp->getValue($copy), $attr);
         $attrProp->setValue($copy, $newAttr);
 
         $valueProp = $reflect->getProperty('value');
-        $valueProp->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $valueProp->setAccessible(true);
+        }
         $valueProp->setValue($copy, $newAttr['default']);
 
         return $copy;
@@ -602,20 +603,20 @@ class ParamItem
      *
      * @param string $type param value type
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    protected static function getDefaultAttrForType($type)
+    protected static function getDefaultAttrForType($type): array
     {
-        $attrs = array(
+        $attrs = [
             'default'          => null, // the default value on init
             'defaultFromInput' => null, // if value isn't set in query form when setValueFromInput is called set this valus.
                                         // (normally defaultFromInput is equal to default)
-            'acceptValues'     => array(), // if not empty accept only values in list | callback
+            'acceptValues'     => [], // if not empty accept only values in list | callback
             'sanitizeCallback' => null, // function (ParamItem $obj, $inputValue)
             'validateCallback' => null, // function (ParamItem $obj, $validateValue, $originalValue)
             'persistence'      => true, // if false don't store value in persistence file
-            'invalidMessage'   => '' //this message is added at next step validation error message if not empty
-        );
+            'invalidMessage'   => '',//this message is added at next step validation error message if not empty
+        ];
 
         switch ($type) {
             case self::TYPE_STRING:     // value type is a string
@@ -628,7 +629,7 @@ class ParamItem
             case self::TYPE_ARRAY_STRING: // value type is array of string
                 $attrs['min_len']       = 0; // min string len. used in validation
                 $attrs['max_len']       = 0; // max string len. used in validation
-                $attrs['default']       = array();  // set default at empty array
+                $attrs['default']       = [];  // set default at empty array
                 $attrs['validateRegex'] = null; // if isn;t null this regex is called to pass for validation.
                                                    // Can be combined with validateCallback. If both are active, the validation must pass both.
                 break;
@@ -640,7 +641,7 @@ class ParamItem
             case self::TYPE_ARRAY_INT:  // value type is an array of int
                 $attrs['min_range'] = PHP_INT_MAX * -1;
                 $attrs['max_range'] = PHP_INT_MAX;
-                $attrs['default']   = array(); // set default at empty array
+                $attrs['default']   = []; // set default at empty array
                 break;
             case self::TYPE_BOOL:
                 $attrs['default']          = false; // set default fals

@@ -2,10 +2,11 @@
 Contributors: seedprod, smub, andreamk
 Tags: backup, database backup, wordpress backup, cloud backup, migration, staging site
 Requires at least: 5.3
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.5.16.1
-License: GPLv2
+Stable tag: 5.0.4
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 The best WordPress backup and migration plugin. Quickly and easily backup ,migrate, copy, move, or clone your site from one location to another. Simplify backups & migrations without limits.
 
@@ -15,10 +16,10 @@ The best WordPress backup and migration plugin. Quickly and easily backup ,migra
 
 [Duplicator](https://duplicator.com/?utm_source=wprepo&utm_medium=link&utm_content=top_link&utm_campaign=duplicator_lite) provides a simple way to move WordPress sites, create reliable backups, or clone a site for staging. With Duplicator, you can easily migrate, transfer, or clone your WordPress site between domains or hosts with no downtime. Create full backups of your website, or package your entire site to download and install elsewhere with only a few steps.
 
-At Duplicator, reliabilty, security, and ease of use are our top priorities. Our variety of cloud backup integrations and easy migration wizard make Duplicator the most beginner-friendly backup and migration plugin on the market. You don't have to hire a developer. Create a backup and migrate sites in just a few minutes.
+At Duplicator, reliability, security, and ease of use are our top priorities. Duplicator is built on the same engine as Duplicator Pro: backups of any size, encrypted archives, 1-click restore and cloud storage are all part of the free plugin. Our easy migration wizard makes Duplicator the most beginner-friendly backup and migration plugin on the market. You don't have to hire a developer. Create a backup and migrate sites in just a few minutes.
 
 > <strong>Duplicator Pro</strong><br />
-> This plugin is the Lite version of Duplicator Pro, which comes with scheduled backups, cloud storage integrations, multisite support, and more. [Get Duplicator Pro for the complete migration and backup solution](https://duplicator.com/?utm_source=wprepo&utm_medium=link&utm_campaign=duplicator_lite&utm_content=get_duplicator_pro).
+> This plugin is the Lite version of Duplicator Pro, which comes with scheduled backups, cloud storage integrations, multisite support, staging sites and more. [Get Duplicator Pro for the complete migration and backup solution](https://duplicator.com/?utm_source=wprepo&utm_medium=link&utm_campaign=duplicator_lite&utm_content=get_duplicator_pro).
 
 https://www.youtube.com/watch?v=MSa83NkLDmU
 
@@ -34,13 +35,25 @@ See why experts love Duplicator:
 > Richard McAdams - Expert Web Developer
 
 
-= Secure WordPress Backups = 
+= Backups Without Size Limits =
 
-Duplicator offers cloud [WordPress backups](https://duplicator.com/secure-wordpress-backups/?utm_source=wprepo&utm_medium=link&utm_content=secure_wordpress_backups&utm_campaign=duplicator_lite) with military-grade encryption. Automatically backup your entire WordPress site to secure cloud storage.  
+Duplicator's chunked backup engine splits the work into small steps, so backups of any size complete even on shared hosting with strict server timeouts. Pick the archive engine that fits your server (DupArchive, ZipArchive or shell zip) and the database engine you prefer (mysqldump or chunked PHP). Backups build in the background while you keep working, and Duplicator runs on managed hosts such as WordPress.com, WP Engine and GoDaddy Managed.
 
-= Recovery Points (1-click Restore) =
+= AutoTune: Backup Settings That Configure Themselves =
 
-Duplicator makes [1-click restores](https://duplicator.com/disaster-recovery-1-click-restore/?utm_source=wprepo&utm_medium=link&utm_content=1_click_restores&utm_campaign=duplicator_lite) for WordPress backups easy and stress-free. Quickly restore your entire website in minutes just like a time machine.
+Not sure which settings your server needs? AutoTune runs real test backups and finds the configuration that works on your host, automatically. Before every backup Duplicator checks your server configuration, and when something goes wrong it explains the problem in plain language and offers a one-click fix.
+
+= Secure WordPress Backups =
+
+Duplicator offers [WordPress backups](https://duplicator.com/secure-wordpress-backups/?utm_source=wprepo&utm_medium=link&utm_content=secure_wordpress_backups&utm_campaign=duplicator_lite) with military-grade encryption. Protect any backup with a password and AES-256 archive encryption, and see the security status of every backup at a glance. Automatically backup your entire WordPress site to secure cloud storage.
+
+= 1-Click Restore =
+
+Restore any backup with a single click from your WordPress dashboard: no FTP, no manual installer upload. Duplicator makes [1-click restores](https://duplicator.com/disaster-recovery-1-click-restore/?utm_source=wprepo&utm_medium=link&utm_content=1_click_restores&utm_campaign=duplicator_lite) easy and stress-free. Quickly restore your entire website in minutes just like a time machine.
+
+= Duplicator Cloud Storage =
+
+Keep your backups off-site with [Duplicator Cloud](https://cloud.duplicator.com/?utm_source=wprepo&utm_medium=link&utm_content=duplicator_cloud&utm_campaign=duplicator_lite), our own secure cloud storage built for WordPress backups. Connect your account, send backups to the cloud and restore them from the cloud when you need them. You can also keep backups in several local folders with automatic retention of the most recent ones. Duplicator Pro adds Dropbox, Google Drive, OneDrive, Amazon S3, FTP/SFTP and any S3-compatible provider.
 
 = Fast WordPress Migrations =
 
@@ -74,7 +87,7 @@ Duplicator makes [server-to-server WordPress migrations](https://duplicator.com/
 
 = Smart WordPress Migration Wizard =
 
-Duplicator’s smart [WordPress migration wizard](https://duplicator.com/wordpress-migration-wizard/?utm_source=wprepo&utm_medium=link&utm_content=wordpress_migration_wizard&utm_campaign=duplicator_lite) makes transferring your website to a new host or server effortless. No downtime, no data loss, and no code required.
+Duplicator’s smart [WordPress migration wizard](https://duplicator.com/wordpress-migration-wizard/?utm_source=wprepo&utm_medium=link&utm_content=wordpress_migration_wizard&utm_campaign=duplicator_lite) makes transferring your website to a new host or server effortless. Advanced installer options, custom search and replace rules and security key regeneration are all included. No downtime, no data loss, and no code required.
 
 
 = Drag & Drop Import WordPress Website Tool =
@@ -92,30 +105,41 @@ Duplicator [clones your entire WordPress website](https://duplicator.com/clone-w
 Duplicator Pro lets you [create a WordPress staging site](https://duplicator.com/wordpress-staging-site/?utm_source=wprepo&utm_medium=link&utm_content=wordpress_staging_site&utm_campaign=duplicator_lite) directly from your WordPress dashboard. Safely test plugin updates, theme changes, and new features on a staging environment before pushing changes to your live site. No manual setup, no separate hosting, and no risk to your production site.
 
 
+= AI Ready Backups =
+
+Duplicator exposes its backup abilities through the WordPress Abilities API, so AI assistants can list your backups, create a new one and check its status on your behalf. Every action respects your WordPress permissions.
+
+
 = Duplicator Pro Features =
 Duplicator Pro takes Duplicator to the next level with features you'll love, such as:
 
 * WordPress staging sites - create a staging copy of your site to safely test changes before going live
 * Drag and Drop installs - just drag the backup file to the destination site!
-* Scheduled backups
+* Server to server import - import a backup directly from a URL or from cloud storage, no download needed
+* Scheduled backups - daily, weekly, monthly or hourly, each with its own template and storage destinations
+* Backup templates to save and reuse your backup configurations
 * Cloud Storage to Dropbox Backups, Google Drive Backups, Microsoft OneDrive Backups, Amazon S3 Backups and FTP/SFTP Backups
-* Custom Backups and Cloning: want just plugins, or just themes, just the database? No problem!
-* A special 2-step streamlined installer mode for mega-fast installs
+* Any S3-compatible provider: Backblaze B2, Wasabi, Cloudflare R2, DigitalOcean Spaces, Google Cloud Storage, Vultr, DreamObjects and more
+* Unlimited storage destinations - send every backup to several locations at once
+* Quick Connect to Duplicator Cloud with your license key
+* Custom Backups and Cloning: want just plugins, or just themes, just the media? No problem!
 * Recovery Points added for very fast emergency site restores
+* Multisite support - back up and migrate an entire WordPress network, install a subsite as a standalone site or import a site into a network
+* Subsite filtering - back up only the subsites you need
+* Installer branding - white-label the installer with your own look and feel
+* Multi-threaded, chunked engine to support larger websites & databases
 * Support for managed and shared hosts such as WordPress.com, WPEngine, GoDaddy Managed, and more
-* Multi-threaded to support larger websites &amp; databases
-* Migrate an entire multisite WordPress network or a sub site as a standalone site
-* Database and user creation *in the installer* with cPanel API
-* Connect to cPanel directly from the installer
+* WP-CLI commands for backups and automation
 * Custom plugin hooks for developers
-* Advanced permissions
-* Email notifications
-* Professional support
+* Advanced permissions - control which roles and users can create, restore, transfer or configure backups
+* Email notifications when a scheduled backup fails
+* Automatic updates and professional support
 * ... and much more!
 
 = Supported Backup Cloud Storage Integrations =
-We support any Amazon S3 compatible storage providers plus these first-party integrations.
+The free plugin stores backups locally and on Duplicator Cloud. Duplicator Pro adds any Amazon S3 compatible storage provider plus these first-party integrations.
 
+* [Duplicator Cloud Backups](https://cloud.duplicator.com/?utm_source=wprepo&utm_medium=link&utm_content=duplicator_cloud_backups&utm_campaign=duplicator_lite)
 * [Localhost Backups](https://duplicator.com/secure-wordpress-backups/?utm_source=wprepo&utm_medium=link&utm_content=localhost_backups&utm_campaign=duplicator_lite)
 * [FTP/ SFTP Backups](https://duplicator.com/ftp-wordpress-backup-plugin/?utm_source=wprepo&utm_medium=link&utm_content=ftp_sftp_backups&utm_campaign=duplicator_lite)
 * [Dropbox Backups](https://duplicator.com/dropbox-wordpress-backup-plugin/?utm_source=wprepo&utm_medium=link&utm_content=dropbox_backups&utm_campaign=duplicator_lite)
@@ -142,13 +166,14 @@ Duplicator&reg; is a registered trademark of Snap Creek LLC. When writing about 
 * duplicator (incorrect)
 
 
-== Screenshots ==
+== Installation ==
 
-1. Main Interface for all Backups
-2. Create Backup Step 1
-3. Create Backup Step 2
-4. Build Process
-5. Installer Screen
+1. Upload the `duplicator` folder to the `/wp-content/plugins/` directory, or install the plugin through the WordPress plugins screen directly
+2. Activate the plugin through the 'Plugins' menu in WordPress
+3. Click on the Duplicator link in the admin menu
+4. Create your first backup from Duplicator > Backups, or open the help page for a guided start
+
+Duplicator requires PHP 7.4 or higher and WordPress 5.3 or higher.
 
 == Frequently Asked Questions ==
 
@@ -160,7 +185,7 @@ Duplicator is perfect for business owners, bloggers, designers, developers, phot
 
 Duplicator is a WordPress Plugin. In order to use Duplicator, you must have a self-hosted WordPress site. That's all.
 
-= Do I need coding skills to use Duplicator? = 
+= Do I need coding skills to use Duplicator? =
 
 Absolutely not. You can create backups and migrations without any coding knowledge. Duplicator is the most beginner-friendly backup solution in the market.
 
@@ -174,21 +199,24 @@ Yes. Duplicator makes [backing up WooCommerce sites](https://duplicator.com/wooc
 
 
 = Is this plugin compatible with WordPress multisite (MU)? =
-Yes, however you will need [Duplicator Pro](https://duplicator.com/wordpress-multisite-backups/?utm_source=wprepo&utm_medium=link&utm_content=faq_dpro_multisiteinfo&utm_campaign=duplicator_lite) for full multisite network migrations &backups and the ability to install a multisite subsite as a standalone site.
+
+The free plugin does not support multisite networks. [Duplicator Pro](https://duplicator.com/wordpress-multisite-backups/?utm_source=wprepo&utm_medium=link&utm_content=faq_dpro_multisiteinfo&utm_campaign=duplicator_lite) adds full multisite network backups and migrations, the ability to install a subsite as a standalone site and to import a site into a network.
 
 = Where can I get more help and support for this plugin? =
-Purchase a Pro License for quick support [Duplicator Pro](https://duplicator.com/pricing/?utm_source=wprepo&utm_medium=link&utm_content=faq_support&utm_campaign=duplicator_lite)
+
+Free users can ask questions in the [WordPress.org support forum](https://wordpress.org/support/plugin/duplicator/). For priority support from the Duplicator team, purchase a [Duplicator Pro](https://duplicator.com/pricing/?utm_source=wprepo&utm_medium=link&utm_content=faq_support&utm_campaign=duplicator_lite) license.
 
 = Does Duplicator have a knowledge base or FAQ? =
+
 Yes. Please see [all documents](https://duplicator.com/knowledge-base/?utm_source=wprepo&utm_medium=link&utm_content=faq_docs&utm_campaign=duplicator_lite) at duplicator.com
 
-= Installation Instructions =
-1. Upload `duplicator` folder to the `/wp-content/plugins/` directory
-2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Click on the Duplicator link from the main menu
-4. Check out the help by clicking the help icon and create your first backup.
+== Screenshots ==
 
-The Duplicator requires php 5.3 or higher.
+1. Main Interface for all Backups
+2. Create Backup Step 1
+3. Create Backup Step 2
+4. Build Process
+5. Installer Screen
 
 == Changelog ==
 

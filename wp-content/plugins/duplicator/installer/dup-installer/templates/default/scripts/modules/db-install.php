@@ -1,9 +1,6 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
@@ -31,7 +28,7 @@ $paramsManager = PrmMng::getInstance();
 
         let retryAttemp = 0;
 
-        DUPX.StandardJsonAjaxWrapper(
+        DUPX.StandarJsonAjaxWrapper(
                 dbInstallAction,
                 dbInstallToken,
                 {},
@@ -48,7 +45,8 @@ $paramsManager = PrmMng::getInstance();
                             'message': 'DB INSTALL ERROR: ' + data.actionData.error_msg,
                             'errorContent': {
                                 'pre': '',
-                                'html': ''
+                                'html': '',
+                                'iframe': ''
                             },
                             'actionData': null
                         };
@@ -67,7 +65,8 @@ $paramsManager = PrmMng::getInstance();
                             'message': 'DB INSTALL ERROR: not passed',
                             'errorContent': {
                                 'pre': '',
-                                'html': ''
+                                'html': '',
+                                'iframe': ''
                             },
                             'actionData': null
                         };
@@ -87,12 +86,14 @@ $paramsManager = PrmMng::getInstance();
                     } else if ((jqXHR.status == 403) || (jqXHR.status == 500)) {
                         status += "<b>Recommendation</b><br/>";
                         status += "See <a target='_blank' href='https://duplicator.com/knowledge-base/how-to-resolve-403-500-timeout-issues-on-step-3'>" +
-                            "this section</a> of the Technical FAQ for possible resolutions.<br/><br/>"
+                        "this section</a> " + 
+                            "of the Technical FAQ for possible resolutions.<br/><br/>"
                     } else if (jqXHR.status == 0) {
                         status += "<b>Recommendation</b><br/>";
-                        status += "This may be a server timeout and performing a 'Manual Extract' install can avoid timeouts. " +
-                            "See <a target='_blank' href='https://duplicator.com/knowledge-base/how-to-fix-installer-archive-extraction-issues/'>" +
-                            "this section</a> of the FAQ for a description of how to do that.<br/><br/>"
+                        status += "This may be a server timeout and performing a 'Manual Extract' install can avoid timeouts. " + 
+                            "See <a target='_blank' href='https://duplicator.com/knowledge-base/how-to-fix-installer-archive-extraction-issues'>" +
+                            "this section</a> " + 
+                            "of the FAQ for a description of how to do that.<br/><br/>"
                     }
 
                     result.errorContent.html += status;

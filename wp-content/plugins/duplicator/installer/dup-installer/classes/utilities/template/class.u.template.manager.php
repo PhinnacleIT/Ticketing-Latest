@@ -7,28 +7,30 @@
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
  *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
-
 require_once(DUPX_INIT . '/classes/utilities/template/class.u.template.item.php');
-
+/**
+ * DUPX_Template
+ */
 final class DUPX_Template
 {
     const TEMPLATE_ADVANCED        = 'default';
     const TEMPLATE_BASE            = 'base';
     const TEMPLATE_IMPORT_BASE     = 'import-base';
     const TEMPLATE_IMPORT_ADVANCED = 'import-advanced';
+    const TEMPLATE_RECOVERY        = 'recovery';
 
-    /** @var DUPX_Template */
-    private static $instance = null;
+    /** @var ?self */
+    private static $instance;
     /** @var DUPX_TemplateItem[] */
-    private $templates = array();
+    private $templates = [];
     /** @var string */
-    private $currentTemplate = null;
+    private $currentTemplate;
 
     /**
+     * Get instance
      *
      * @return DUPX_Template
      */
@@ -41,6 +43,9 @@ final class DUPX_Template
         return self::$instance;
     }
 
+    /**
+     * Class constructor
+     */
     private function __construct()
     {
         // ADD DEFAULT TEMPLATE
@@ -49,12 +54,13 @@ final class DUPX_Template
     }
 
     /**
+     * Set template
      *
-     * @param string $name
+     * @param string $name Template name
      *
      * @return boolean
      */
-    public function setTemplate($name)
+    public function setTemplate($name): bool
     {
         if (!isset($this->templates[$name])) {
             throw new Exception('The template ' . $name . ' doesn\'t exist');
@@ -65,14 +71,15 @@ final class DUPX_Template
     }
 
     /**
+     * Add template
      *
-     * @param string $name
-     * @param string $mainFolder
-     * @param string $parentName
+     * @param string  $name       Template name
+     * @param string  $mainFolder Main folder
+     * @param ?string $parentName Parent template name
      *
      * @return boolean
      */
-    public function addTemplate($name, $mainFolder, $parentName = null)
+    public function addTemplate($name, $mainFolder, $parentName = null): bool
     {
         if (isset($this->templates[$name])) {
             throw new Exception('The template "' . $name . '" already exists');
@@ -91,32 +98,30 @@ final class DUPX_Template
     }
 
     /**
+     * Render template
      *
-     * @param string $fileTpl   // template file is a relative path from root template folder
-     * @param array $args    // array key / val where key is the var name in template
-     * @param bool $echo    // if false return template in string
+     * @param string               $fileTpl Template file is a relative path from root template folder
+     * @param array<string, mixed> $args    Array key / val where key is the var name in template
+     * @param bool                 $echo    If false return template in string
      *
      * @return string
      */
-    public function render($fileTpl, $args = array(), $echo = true)
+    public function render($fileTpl, $args = [], $echo = true)
     {
         return $this->templates[$this->currentTemplate]->render($fileTpl, $args, $echo);
-    }
-
-    private function __clone()
-    {
     }
 }
 
 /**
+ * Render template
  *
- * @param string $fileTpl   // template file is a relative path from root template folder
- * @param array $args    // array key / val where key is the var name in template
- * @param bool $echo    // if false return template in string
+ * @param string               $fileTpl Template file is a relative path from root template folder
+ * @param array<string, mixed> $args    Array key / val where key is the var name in template
+ * @param bool                 $echo    If false return template in string
  *
  * @return string
  */
-function dupxTplRender($fileTpl, $args = array(), $echo = true)
+function dupxTplRender($fileTpl, $args = [], $echo = true)
 {
     static $tplMng = null;
     if (is_null($tplMng)) {

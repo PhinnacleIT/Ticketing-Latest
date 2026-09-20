@@ -6,8 +6,6 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -28,7 +26,7 @@ class DUPX_Validation_test_db_create extends DUPX_Validation_abstract_item
      */
     protected $errorMessage = '';
 
-    protected function runTest()
+    protected function runTest(): int
     {
         if (
             DUPX_Validation_database_service::getInstance()->skipDatabaseTests() ||
@@ -51,30 +49,30 @@ class DUPX_Validation_test_db_create extends DUPX_Validation_abstract_item
         return self::LV_PASS;
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'Create New Database';
     }
 
     protected function failContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-create', array(
+        return dupxTplRender('parts/validation/database-tests/db-create', [
             'isOk'          => false,
             'alreadyExists' => $this->alreadyExists,
             'errorMessage'  => $this->errorMessage,
-            'isCpanel'      => false,
-            'dbname'        => PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_NAME)
-            ), false);
+            'isCpanel'      => (PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_VIEW_MODE) === 'cpnl'),
+            'dbname'        => PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_NAME),
+        ], false);
     }
 
     protected function passContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-create', array(
+        return dupxTplRender('parts/validation/database-tests/db-create', [
             'isOk'          => true,
             'alreadyExists' => $this->alreadyExists,
             'errorMessage'  => $this->errorMessage,
-            'isCpanel'      => false,
-            'dbname'        => PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_NAME)
-            ), false);
+            'isCpanel'      => (PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_VIEW_MODE) === 'cpnl'),
+            'dbname'        => PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_NAME),
+        ], false);
     }
 }

@@ -4,10 +4,14 @@ namespace Duplicator\Installer\Utils\Tests;
 
 class MessageCustomizerItem
 {
+    /** @var callable|bool */
     private $checkCallback;
+    /** @var callable */
     private $applyCallback;
 
     /**
+     * Class contructor
+     *
      * @param callable|bool $checkCallback callback or bool whether to apply customization
      * @param callable      $applyCallback the customizations to be applied
      */
@@ -29,7 +33,7 @@ class MessageCustomizerItem
      *
      * @return bool
      */
-    public function conditionSatisfied($input)
+    public function conditionSatisfied($input): bool
     {
         return (is_bool($this->checkCallback) && $this->checkCallback) || call_user_func($this->checkCallback, $input);
     }

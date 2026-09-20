@@ -1,11 +1,5 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
- */
-
 namespace Duplicator\Libs\Snap;
 
 use Exception;
@@ -22,7 +16,7 @@ class SnapDB
     const DB_ENGINE_PERCONA               = 'Percona';
 
     /** @var array<string, mixed> */
-    private static $cache = array();
+    private static $cache = [];
 
     /**
      * Return array if primary key is composite key
@@ -64,7 +58,7 @@ class SnapDB
                                 $primary = $row['Field'];
                             } else {
                                 if (is_scalar($primary)) {
-                                    $primary = array($primary);
+                                    $primary = [$primary];
                                 }
                                 $primary[] = $row['Field'];
                             }
@@ -105,13 +99,13 @@ class SnapDB
      *
      * @return string Escaped regex
      */
-    public static function quoteRegex($regex)
+    public static function quoteRegex($regex): string
     {
         // preg_quote takes a string and escapes special characters with a backslash.
         // It is meant for PHP regexes, not MySQL regexes, and it does not escape &,
         // which is needed for MySQL. So we only need to modify it like so:
         // https://stackoverflow.com/questions/3782379/whats-the-best-way-to-escape-user-input-for-regular-expressions-in-mysql
-        return preg_replace('/&/', '\\&', preg_quote($regex, null /* no delimiter */));
+        return (string) preg_replace('/&/', '\\&', preg_quote($regex, null /* no delimiter */));
     }
 
     /**
@@ -126,13 +120,13 @@ class SnapDB
     public static function getOffsetFromRowAssoc($row, $indexColumns, $lastOffset)
     {
         if (is_array($indexColumns)) {
-            $result = array();
+            $result = [];
             foreach ($indexColumns as $col) {
-                $result[$col] = isset($row[$col]) ? $row[$col] : 0;
+                $result[$col] = $row[$col] ?? 0;
             }
             return $result;
         } elseif (strlen($indexColumns) > 0) {
-            return isset($row[$indexColumns]) ? $row[$indexColumns] : 0;
+            return $row[$indexColumns] ?? 0;
         } else {
             if (is_scalar($lastOffset)) {
                 return $lastOffset + 1;
@@ -170,7 +164,7 @@ class SnapDB
         } else {
             if (is_array($primaryColumn)) {
                 // COMPOSITE KEY
-                $orderByCols = array();
+                $orderByCols = [];
                 foreach ($primaryColumn as $colIndex => $col) {
                     $orderByCols[] = '`' . $col . '` ASC';
                 }
@@ -186,7 +180,7 @@ class SnapDB
             if (is_callable($logCallback)) {
                 call_user_func($logCallback, $dbh, $result, $query);
             }
-            throw new \Exception('SELECT ERROR: ' . self::error($dbh) . ' QUERY: ' . $query);
+            throw new \Exception('SELECT ERROR: ' . self::error($dbh) . "\n QUERY: " . $query);
         }
 
         if (is_callable($logCallback)) {
@@ -203,7 +197,7 @@ class SnapDB
                     $result->data_seek(($result->num_rows - 1));
                     $row = $result->fetch_assoc();
                     if (is_array($primaryColumn)) {
-                        $lastRowOffset = array();
+                        $lastRowOffset = [];
                         foreach ($primaryColumn as $col) {
                             $lastRowOffset[$col] = $row[$col];
                         }
@@ -223,7 +217,7 @@ class SnapDB
                     mysql_data_seek($result, (mysql_num_rows($result) - 1));  // @phpstan-ignore-line
                     $row = mysql_fetch_assoc($result);  // @phpstan-ignore-line
                     if (is_array($primaryColumn)) {
-                        $lastRowOffset = array();
+                        $lastRowOffset = [];
                         foreach ($primaryColumn as $col) {
                             $lastRowOffset[$col] = $row[$col];
                         }
@@ -247,7 +241,7 @@ class SnapDB
      *
      * @return string
      */
-    protected static function getOffsetKeyCondition($dbh, $primaryColumn, $offset)
+    protected static function getOffsetKeyCondition($dbh, $primaryColumn, $offset): string
     {
         $condition = '';
 
@@ -289,21 +283,21 @@ class SnapDB
      *
      * @return string
      */
-    public static function getDBEngine($dbh)
+    public static function getDBEngine($dbh): string
     {
         if (($result = self::query($dbh, "SHOW VARIABLES LIKE 'version%'")) === false) {
             // on query error assume is mysql.
             return self::DB_ENGINE_MYSQL;
         }
 
-        $rows = array();
+        $rows = [];
         while ($row  = self::fetchRow($result)) {
             $rows[] = $row;
         }
         self::freeResult($result);
 
-        $version        = isset($rows[0][1]) ? $rows[0][1] : false;
-        $versionComment = isset($rows[1][1]) ? $rows[1][1] : false;
+        $version        = $rows[0][1] ?? false;
+        $versionComment = $rows[1][1] ?? false;
 
         //Default is mysql
         if ($version === false && $versionComment === false) {
@@ -436,7 +430,7 @@ class SnapDB
      *
      * @return string
      */
-    public static function error($dbh)
+    public static function error($dbh): string
     {
         if (self::dbConnType($dbh) === self::CONN_MYSQLI) {
             if ($dbh instanceof mysqli) {
@@ -459,7 +453,7 @@ class SnapDB
      *
      * @return string // self::CONN_MYSQLI|self::CONN_MYSQL
      */
-    public static function dbConnType($dbh)
+    public static function dbConnType($dbh): string
     {
         return (is_object($dbh) && get_class($dbh) == 'mysqli') ? self::CONN_MYSQLI : self::CONN_MYSQL;
     }
@@ -470,7 +464,7 @@ class SnapDB
      *
      * @return string Enum self::CONN_MYSQLI|self::CONN_MYSQL
      */
-    public static function dbConnTypeByResult($result)
+    public static function dbConnTypeByResult($result): string
     {
         return (is_object($result) && get_class($result) == 'mysqli_result') ? self::CONN_MYSQLI : self::CONN_MYSQL;
     }
@@ -491,15 +485,15 @@ class SnapDB
      *
      * @return array<array<scalar>>
      */
-    public static function getValuesFromQueryInsert($query)
+    public static function getValuesFromQueryInsert($query): array
     {
-        $result       = array();
+        $result       = [];
         $isItemOpen   = false;
         $isStringOpen = false;
         $char         = '';
         $pChar        = '';
 
-        $currentItem  = array();
+        $currentItem  = [];
         $currentValue = '';
 
         for ($i = 0; $i < strlen($query); $i++) {
@@ -519,7 +513,7 @@ class SnapDB
                         $currentItem[] = trim($currentValue);
                         $currentValue  = '';
                         $result[]      = $currentItem;
-                        $currentItem   = array();
+                        $currentItem   = [];
                         continue 2;
                     }
                     break;
@@ -560,15 +554,13 @@ class SnapDB
      *
      * @return string
      */
-    public static function getQueryInsertValuesFromArray(array $values)
+    public static function getQueryInsertValuesFromArray(array $values): string
     {
 
         return implode(
             ',',
             array_map(
-                function ($rowVals) {
-                    return '(' . implode(',', $rowVals) . ')';
-                },
+                fn($rowVals): string => '(' . implode(',', $rowVals) . ')',
                 $values
             )
         );
@@ -583,7 +575,7 @@ class SnapDB
      *
      * @return string
      */
-    public static function parsedQueryValueToString($value)
+    public static function parsedQueryValueToString($value): string
     {
         $result = preg_replace('/^[\'"]?(.*?)[\'"]?$/s', '$1', $value);
         return stripslashes($result);
@@ -598,7 +590,7 @@ class SnapDB
      *
      * @return int
      */
-    public static function parsedQueryValueToInt($value)
+    public static function parsedQueryValueToInt($value): int
     {
         return (int) preg_replace('/^[\'"]?(.*?)[\'"]?$/s', '$1', $value);
     }
@@ -613,12 +605,12 @@ class SnapDB
      *
      * @return int[]|string[]
      */
-    public static function getMysqlConnectFlagsList($returnStr = true, $filter = null)
+    public static function getMysqlConnectFlagsList($returnStr = true, $filter = null): array
     {
         static $flagsList = null;
 
         if (is_null($flagsList)) {
-            $flagsList = array();
+            $flagsList = [];
 
             if (defined('MYSQLI_CLIENT_COMPRESS')) {
                 $flagsList[MYSQLI_CLIENT_COMPRESS] = 'MYSQLI_CLIENT_COMPRESS';
@@ -644,7 +636,7 @@ class SnapDB
         if (is_null($filter)) {
             $result = $flagsList;
         } else {
-            $result = array();
+            $result = [];
             foreach ($flagsList as $flagVal => $flag) {
                 if (!in_array($flagVal, $filter)) {
                     continue;
@@ -669,7 +661,7 @@ class SnapDB
      *
      * @return int[]
      */
-    public static function getMysqlConnectFlagsFromMaskVal($value)
+    public static function getMysqlConnectFlagsFromMaskVal($value): array
     {
         /*
         MYSQLI_CLIENT_COMPRESS 32
@@ -680,7 +672,7 @@ class SnapDB
         MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT 64
         */
 
-        $result = array();
+        $result = [];
 
         foreach (self::getMysqlConnectFlagsList(false) as $flagVal) {
             if (($value & $flagVal) > 0) {
@@ -699,7 +691,7 @@ class SnapDB
      *
      * @return string[]
      */
-    public static function getRedundantDuplicateTables($prefix, $duplicates)
+    public static function getRedundantDuplicateTables($prefix, $duplicates): array
     {
         //core tables are not redundant, check with priority
         foreach (SnapWP::getSiteCoreTables() as $coreTable) {

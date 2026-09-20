@@ -6,25 +6,24 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
-
-use Duplicator\Installer\Utils\InstallerLinkManager;
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 /**
- * HTML Utils
+ * HTIMO UTILE
  */
 class DUPX_U_Html
 {
+    /** @var int */
     protected static $uniqueId = 0;
 
     /**
-     * initialize css for html elements
+     * Initialize css for html elements
+     *
+     * @return void
      */
-    public static function css()
+    public static function css(): void
     {
         self::lightBoxCss();
         self::inputPasswordToggleCss();
@@ -32,44 +31,55 @@ class DUPX_U_Html
     }
 
     /**
-     * initialize js for html elements
+     * Initialize js for html elements
+     *
+     * @return void
      */
-    public static function js()
+    public static function js(): void
     {
         self::lightBoxJs();
         self::inputPasswordToggleJs();
     }
 
-    private static function getUniqueId()
-    {
-        self::$uniqueId++;
-        return 'dup-html-id-' . self::$uniqueId . '-' . str_replace('.', '-', microtime(true));
-    }
-
     /**
-     * this function returns a string with all the html attributes with this format key = "value" key2 = "value2"
-     * an esc_attr is executed automatically
-     *
-     * @param array $attrs
+     * Get unique id
      *
      * @return string
      */
-    public static function arrayAttrToHtml($attrs)
+    private static function getUniqueId()
     {
-        $sttrsStr = array();
+        self::$uniqueId++;
+        return 'dup-html-id-' . self::$uniqueId . '-' . str_replace('.', '-', (string) microtime(true));
+    }
+
+    /**
+     * This function returns a string with all the html attributes with this format key = "value" key2 = "value2"
+     * an esc_attr is executed automatically
+     *
+     * @param array<string, mixed> $attrs attributes
+     *
+     * @return string
+     */
+    public static function arrayAttrToHtml($attrs): string
+    {
+        $sttrsStr = [];
         foreach ($attrs as $key => $val) {
             $sttrsStr[] = $key . '="' . DUPX_U::esc_attr($val) . '"';
         }
         return implode(' ', $sttrsStr);
     }
 
-    public static function getHeaderMain($htmlTitle)
+    /**
+     * Get header main
+     *
+     * @param string $htmlTitle Title
+     *
+     * @return void
+     */
+    public static function getHeaderMain($htmlTitle): void
     {
         ?>
         <div id="header-main-wrapper" >
-            <div class="dupx-modes">
-                <?php echo DUPX_InstallerState::getInstance()->getHtmlModeHeader(); ?>
-            </div>
             <div class="dupx-logfile-link">
                 <?php DUPX_View_Funcs::installerLogLink(); ?>
             </div>
@@ -80,6 +90,17 @@ class DUPX_U_Html
         <?php
     }
 
+    /**
+     * Get light box
+     *
+     * @param string $linkLabelHtml    the link label
+     * @param string $titleContent     the title of the light box
+     * @param string $htmlContent      the content of the light box
+     * @param bool   $echo             if true the light box is echoed
+     * @param string $htmlAfterContent html after content
+     *
+     * @return string
+     */
     public static function getLigthBox($linkLabelHtml, $titleContent, $htmlContent, $echo = true, $htmlAfterContent = '')
     {
         ob_start();
@@ -96,14 +117,58 @@ class DUPX_U_Html
         <?php
         if ($echo) {
             ob_end_flush();
+            return '';
         } else {
             return ob_get_clean();
         }
     }
 
-    public static function getLightBoxIframe($linkLabelHtml, $titleContent, $url, $autoUpdate = false, $enableTargetDownload = false, $echo = true)
+    /**
+     * Light box from file content
+     *
+     * @param string $linkLabelHtml the link label
+     * @param string $titleContent  the title of the light box
+     * @param string $path          the path of the file
+     * @param bool   $echo          if true the light box is echoed
+     *
+     * @return string
+     */
+    public static function getLightBoxFileContent($linkLabelHtml, $titleContent, $path, $echo = true)
     {
-        $classes      = array('dup-lightbox-iframe');
+        if (file_exists($path) && (($fileContent = file_get_contents($path)) !== false)) {
+            $lightBoxContent =
+                '<div class="row-cols-1">' .
+                    '<div class="col col-1">' .
+                        '<pre>' . DUPX_U::esc_html($fileContent) . '</pre>' .
+                    '</div>' .
+                '</div>';
+        } else {
+            $lightBoxContent = '<p>File not found.</b>';
+        }
+        return DUPX_U_Html::getLigthBox($linkLabelHtml, $titleContent, $lightBoxContent, $echo);
+    }
+
+    /**
+     * getLightBoxIframe
+     *
+     * @param string $linkLabelHtml        the link label
+     * @param string $titleContent         the title of the light box
+     * @param string $url                  the url of the iframe
+     * @param bool   $autoUpdate           if true the iframe is auto updated
+     * @param bool   $enableTargetDownload Download button enabled
+     * @param bool   $echo                 if true the light box is echoed
+     *
+     * @return string
+     */
+    public static function getLightBoxIframe(
+        $linkLabelHtml,
+        $titleContent,
+        $url,
+        $autoUpdate = false,
+        $enableTargetDownload = false,
+        $echo = true
+    ) {
+        $classes      = ['dup-lightbox-iframe'];
         $afterContent = '<div class="tool-box">';
         if ($autoUpdate) {
             //$classes[]    = 'auto-update';
@@ -125,6 +190,11 @@ class DUPX_U_Html
         return DUPX_U_Html::getLigthBox($linkLabelHtml, $titleContent, $lightBoxContent, $echo, $afterContent);
     }
 
+    /**
+     * Light box CSS
+     *
+     * @return void
+     */
     protected static function lightBoxCss()
     {
         ?>
@@ -137,24 +207,25 @@ class DUPX_U_Html
                 position: fixed;
                 top: 0;
                 left: 0;
-                width: 100vw;
+                width: calc(100vw - 120px);
                 height: 100vh;
                 background-color: #FFFFFF;
                 background-color: rgba(255,255,255,0.95);
                 z-index: 999999;
                 overflow: hidden;
+                margin: 0 60px;
             }
             .dub-ligthbox-content.close {
                 width: 0;
                 height: 0;
             }
             .dub-ligthbox-content.open {
-                width: 100vw;
+                width: calc(100vw - 120px);
                 height: 100vh;
             }
 
             .dub-ligthbox-content > .wrapper {
-                width: 100vw;
+                width: calc(100vw - 120px);
                 height: 100vh;
             }
 
@@ -211,8 +282,18 @@ class DUPX_U_Html
                 cursor: pointer;
             }
 
-            .dub-ligthbox-content .row-cols-2 {
+
+            .dub-ligthbox-content .row-cols-2,
+            .dub-ligthbox-content .row-cols-1 {
                 height: 100%;
+            }
+
+            .dub-ligthbox-content .row-cols-1 .col {
+                width: 100%;
+                box-sizing: border-box;
+                float: left;
+                height: 100%;
+                overflow: auto;
             }
 
             .dub-ligthbox-content .row-cols-2 .col {
@@ -240,6 +321,11 @@ class DUPX_U_Html
         <?php
     }
 
+    /**
+     * Lightbox js
+     *
+     * @return void
+     */
     protected static function lightBoxJs()
     {
         ?>
@@ -250,21 +336,11 @@ class DUPX_U_Html
 
                 var toggleLightbox = function (target) {
                     if (target.hasClass('close')) {
-                        target.animate({
-                            height: "100vh",
-                            width: "100vw"
-                        }, 500, 'linear', function () {
-                            $(this).removeClass('close').addClass('open').trigger('dup-lightbox-open');
-                            currentLightboxOpen = target;
-                        });
+                        target.removeClass('close').addClass('open').trigger('dup-lightbox-open');
+                        currentLightboxOpen = target;
                     } else {
-                        target.animate({
-                            height: "0",
-                            width: "0"
-                        }, 500, 'linear', function () {
-                            $(this).removeClass('open').addClass('close').trigger('dup-lightbox-close');
-                            currentLightboxOpen = null;
-                        });
+                        target.removeClass('open').addClass('close').trigger('dup-lightbox-close');
+                        currentLightboxOpen = null;
                     }
                 };
 
@@ -311,13 +387,13 @@ class DUPX_U_Html
                     }
                 });
 
-                $('[data-dup-ligthbox]').click(function (event) {
+                $('[data-dup-ligthbox]').off().click(function (event) {
                     event.stopPropagation();
                     var target = $('#' + $(this).data('dup-ligthbox'));
                     toggleLightbox(target);
                 });
 
-                $('.dub-ligthbox-content .toggle-auto-update').click(function (event) {
+                $('.dub-ligthbox-content .toggle-auto-update').off().click(function (event) {
                     event.stopPropagation();
                     var elem = $(this);
                     var content = elem.closest('.dub-ligthbox-content');
@@ -332,7 +408,7 @@ class DUPX_U_Html
                     }
                 });
 
-                $('.dub-ligthbox-content .close-button').click(function (event) {
+                $('.dub-ligthbox-content .close-button').off().click(function (event) {
                     event.stopPropagation();
                     toggleLightbox($(this).closest('.dub-ligthbox-content'));
                 });
@@ -349,29 +425,28 @@ class DUPX_U_Html
 
     /**
      *
-     * @param string          $htmlContent
+     * @param string          $htmlContent html content
      * @param string|string[] $classes     additional classes on main div
      * @param int             $step        pixel foreach more step
      * @param string          $id          id on main div
-     * @param bool            $echo
+     * @param bool            $echo        echo or return
      *
      * @return string|void
      */
-    public static function getMoreContent($htmlContent, $classes = array(), $step = 200, $id = '', $echo = true)
+    public static function getMoreContent($htmlContent, $classes = [], $step = 200, $id = '', $echo = true)
     {
         $inputCls    = filter_var($classes, FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FORCE_ARRAY);
-        $mainClasses = array_merge(array('more-content'), $inputCls);
+        $mainClasses = array_merge(['more-content'], $inputCls);
         $atStep      = max(100, $step);
         $idAttr      = empty($id) ? '' : 'id="' . $id . '" ';
         ob_start();
         ?>
         <div <?php echo $idAttr; ?>class="<?php echo implode(' ', $mainClasses); ?>" data-more-step="<?php echo $atStep; ?>" style="max-height: <?php echo $atStep; ?>px">
             <div class="more-wrapper" ><?php echo $htmlContent; ?></div>
-            <div class="more-faq-link">
-            <?php $url = InstallerLinkManager::getCategoryUrl(InstallerLinkManager::TROUBLESHOOTING_CAT, 'install', 'Technical FAQs'); ?>
-                Please search the <a href="<?php echo DUPX_U::esc_attr($url); ?>" target="_blank">Online Technical FAQs</a>
+            <p class="more-faq-link align-">
+                Please search the <a href="https://duplicator.com/knowledge-base-article-categories/troubleshooting" target="_blank">Online Technical FAQs</a>
                 for solutions to these issues.
-            </div>
+            </p>
             <button class="more-button" type="button">[show more]</button>
             <button class="all-button" type="button" >[show all]</button>
         </div>
@@ -383,17 +458,24 @@ class DUPX_U_Html
         }
     }
 
-    public static function inputPasswordToggle($name, $id = '', $classes = array(), $attrs = array(), $pwdSimulation = false)
+    /**
+     * Input password with toggle button
+     *
+     * @param string                    $name          name of input
+     * @param string                    $id            id of input
+     * @param string[]                  $classes       classes of input
+     * @param array<string, string|int> $attrs         attributes of input
+     * @param bool                      $pwdSimulation if true emulate password type
+     *
+     * @return void
+     */
+    public static function inputPasswordToggle($name, $id = '', $classes = [], $attrs = [], $pwdSimulation = false): void
     {
         if (!is_array($attrs)) {
-            $attrs = array();
+            $attrs = [];
         }
         if (!is_array($classes)) {
-            if (empty($classes)) {
-                $classes = array();
-            } else {
-                $classes = array($classes);
-            }
+            $classes = empty($classes) ? [] : [$classes];
         }
         $idAttr    = empty($id) ? '_id_' . $name : $id;
         $classes[] = 'input-password-group input-postfix-btn-group';
@@ -406,7 +488,7 @@ class DUPX_U_Html
         }
         $attrs['name'] = $name;
         $attrs['id']   = $idAttr;
-        $attrsHtml     = array();
+        $attrsHtml     = [];
 
         foreach ($attrs as $atName => $atValue) {
             $attrsHtml[] = $atName . '="' . DUPX_U::esc_attr($atValue) . '"';
@@ -419,6 +501,11 @@ class DUPX_U_Html
         <?php
     }
 
+    /**
+     * Input password toggle css
+     *
+     * @return void
+     */
     protected static function inputPasswordToggleCss()
     {
         ?>
@@ -444,6 +531,11 @@ class DUPX_U_Html
         <?php
     }
 
+    /**
+     * Input password toggle js
+     *
+     * @return void
+     */
     protected static function inputPasswordToggleJs()
     {
         ?>
@@ -485,13 +577,21 @@ class DUPX_U_Html
         <?php
     }
 
-    public static function checkboxSwitch($inputAttrs = array(), $switchAttrs = array())
+    /**
+     * CheckboxSwitch
+     *
+     * @param array<string, string|int> $inputAttrs  input attributes
+     * @param array<string, string|int> $switchAttrs switch attributes
+     *
+     * @return void
+     */
+    public static function checkboxSwitch($inputAttrs = [], $switchAttrs = []): void
     {
         $inputAttrs['type'] = 'checkbox';
         if (!isset($switchAttrs['class'])) {
-            $switchAttrs['class'] = array();
+            $switchAttrs['class'] = [];
         }
-        $switchAttrs['class'] = implode(' ', array_merge(array('checkbox-switch'), (array) $switchAttrs['class']));
+        $switchAttrs['class'] = implode(' ', array_merge(['checkbox-switch'], (array) $switchAttrs['class']));
         ?>
         <span  <?php echo self::arrayAttrToHtml($switchAttrs); ?> >
             <input <?php echo self::arrayAttrToHtml($inputAttrs); ?> >
@@ -500,6 +600,11 @@ class DUPX_U_Html
         <?php
     }
 
+     /**
+     * Checkbox Switch Css
+     *
+     * @return void
+     */
     protected static function checkboxSwitchCss()
     {
         ?>

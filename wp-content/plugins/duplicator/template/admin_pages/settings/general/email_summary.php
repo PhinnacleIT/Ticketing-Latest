@@ -1,57 +1,90 @@
 <?php
 
-/**
- * Admin Notifications content.
- *
- * Variables
- *
- * @var \Duplicator\Core\Views\TplMng  $tplMng
- * @var array<string, mixed> $tplData
- */
 
-use Duplicator\Utils\LinkManager;
+
+defined("ABSPATH") or die("");
+
+use Duplicator\Models\GlobalEntity;
 use Duplicator\Utils\Email\EmailSummary;
 
-defined('ABSPATH') || exit;
+/**
+ * Variables
+ *
+ * @var Duplicator\Core\Controllers\ControllersManager $ctrlMng
+ * @var Duplicator\Core\Views\TplMng $tplMng
+ */
 
-$frequency = DUP_Settings::Get('email_summary_frequency');
+$global = GlobalEntity::getInstance();
 ?>
 
-<h3 class="title"><?php _e('Email Summary', 'duplicator') ?></h3>
+<h3 class="title">
+    <?php esc_html_e('Email Summary', 'duplicator') ?>
+</h3>
 <hr size="1" />
-<table class="dup-capabilities-selector-wrapper form-table">
-    <tr valign="top">
-        <th scope="row"><label><?php _e('Frequency', 'duplicator'); ?></label></th>
-        <td>
-            <select id="email-summary-frequency" name="email_summary_frequency">
-                <?php foreach (EmailSummary::getAllFrequencyOptions() as $key => $label) : ?>
-                    <option value="<?php echo esc_attr((string) $key); ?>" <?php selected($frequency, $key); ?>>
-                        <?php echo esc_html($label); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-            <p class="description">
-                <?php
-                $faqUrl = LinkManager::getDocUrl('how-to-disable-email-summaries', 'email_summary', 'how to disable');
-                echo sprintf(
-                    esc_html_x(
-                        'You can view the email summary example %1shere%2s.',
-                        '%1s and %2s are the opening and close <a> tags to the summary preview link',
-                        'duplicator'
-                    ),
-                    '<a href="' . EmailSummary::getPreviewLink() . '" target="_blank">',
-                    '</a>'
-                ) . ' ' . sprintf(
-                    esc_html_x(
-                        'Learn %1show to disable%2s.',
-                        '%1s and %2s are opening and closing link tags to the documentation.',
-                        'duplicator'
-                    ),
-                    '<a href="' . $faqUrl . '" target="_blank" >',
-                    '</a>'
-                );
-                ?>
-            </p>
-        </td>
-    </tr>
-</table>
+
+<label class="lbl-larger">
+    <?php esc_html_e('Frequency', 'duplicator'); ?>
+</label>
+<div class="margin-bottom-1">
+    <select
+        id="email-summary-frequency"
+        name="_email_summary_frequency"
+        class="margin-0 width-xlarge">
+        <?php foreach (EmailSummary::getAllFrequencyOptions() as $key => $label) : ?>
+            <option value="<?php echo esc_attr((string) $key); ?>" <?php selected($global->getEmailSummaryFrequency(), $key); ?>>
+                <?php echo esc_html($label); ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+    <p class="description">
+        <?php
+        printf(
+            esc_html_x(
+                'You can view the email summary example %1$shere%2$s.',
+                '%1$s and %2$s are the opening and close <a> tags to the summary preview link',
+                'duplicator'
+            ),
+            '<a href="' . esc_url(EmailSummary::getPreviewLink()) . '" target="_blank">',
+            '</a>'
+        );
+        ?>
+    </p>
+</div>
+
+<label class="lbl-larger">
+    <?php esc_html_e('Recipients', 'duplicator'); ?>
+</label>
+<div class="margin-bottom-1">
+    <select
+        id="email-summary-recipients"
+        name="_email_summary_recipients[]" m
+        multiple
+        class="margin-0 width-xlarge">
+        <?php foreach ($global->getEmailSummaryRecipients() as $email) : ?>
+            <option value="<?php echo esc_attr($email); ?>" selected><?php echo esc_html($email); ?></option>
+        <?php endforeach; ?>
+        <?php foreach (EmailSummary::getRecipientSuggestions() as $email) : ?>
+            <option value="<?php echo esc_attr($email); ?>"><?php echo esc_html($email); ?></option>
+        <?php endforeach; ?>
+    </select>
+    <?php if (count($global->getEmailSummaryRecipients()) === 0) : ?>
+        <p class="descriptionred">
+            <em>
+                <span class="maroon">
+                    <?php esc_html_e('No recipients entered. Email summary won\'t be sent.', 'duplicator') ?>
+                </span>
+            </em>
+        </p>
+    <?php endif; ?>
+</div>
+
+<script type="text/javascript">
+    jQuery(document).ready(function($) {
+        $('#email-summary-recipients').select2({
+            tags: true,
+            tokenSeparators: [',', ' '],
+            placeholder: '<?php esc_attr_e('Enter email addresses', 'duplicator'); ?>',
+            minimumInputLength: 3,
+        });
+    });
+</script>

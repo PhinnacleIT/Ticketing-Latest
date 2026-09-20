@@ -1,21 +1,20 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\Security;
 use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Installer\Utils\SecureCsrf;
 use Duplicator\Libs\Snap\SnapJson;
 
 $paramsManager = PrmMng::getInstance();
 
-$nextStepPrams = array(
+$nextStepPrams = [
     PrmMng::PARAM_CTRL_ACTION => 'ctrl-step4',
-    DUPX_Security::CTRL_TOKEN               => DUPX_CSRF::generate('ctrl-step4')
-);
+    Security::CTRL_TOKEN      => SecureCsrf::generate('ctrl-step4'),
+];
 
 dupxTplRender('scripts/modules/new-admin-user');
 ?>
@@ -25,7 +24,7 @@ dupxTplRender('scripts/modules/new-admin-user');
         DUPX.sendParamsStep3($('#s3-input-form'), function () {
             DUPX.siteProcessingReplaceData(true, function () {
                 DUPX.finalTests.test(function () {
-                    DUPX.redirect(DUPX.dupInstallerUrl, 'post', <?php echo SnapJson::jsonEncode($nextStepPrams); ?>);
+                    DUPX.redirectMainInstaller('post', <?php echo SnapJson::jsonEncode($nextStepPrams); ?>);
                 });
             });
         });

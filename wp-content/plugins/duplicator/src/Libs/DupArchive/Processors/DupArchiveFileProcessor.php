@@ -1,17 +1,13 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
- */
-
 namespace Duplicator\Libs\DupArchive\Processors;
 
+use Duplicator\Libs\DupArchive\DupArchive;
 use Duplicator\Libs\DupArchive\DupArchiveEngine;
 use Duplicator\Libs\DupArchive\Headers\DupArchiveDirectoryHeader;
 use Duplicator\Libs\DupArchive\Headers\DupArchiveFileHeader;
 use Duplicator\Libs\DupArchive\Headers\DupArchiveGlobHeader;
+use Duplicator\Libs\DupArchive\Headers\DupArchiveHeader;
 use Duplicator\Libs\DupArchive\Processors\DupArchiveProcessingFailure;
 use Duplicator\Libs\DupArchive\States\DupArchiveCreateState;
 use Duplicator\Libs\DupArchive\States\DupArchiveExpandState;
@@ -24,7 +20,8 @@ use Exception;
  */
 class DupArchiveFileProcessor
 {
-    protected static $newFilePathCallback = null;
+    /** @var ?callable */
+    protected static $newFilePathCallback;
 
     /**
      * Set new file callback
@@ -33,7 +30,7 @@ class DupArchiveFileProcessor
      *
      * @return bool
      */
-    public static function setNewFilePathCallback($callback)
+    public static function setNewFilePathCallback($callback): bool
     {
         if (!is_callable($callback)) {
             self::$newFilePathCallback = null;
@@ -57,7 +54,7 @@ class DupArchiveFileProcessor
         if (is_null(self::$newFilePathCallback)) {
             return $basePath . '/' . $relativePath;
         } else {
-            return call_user_func_array(self::$newFilePathCallback, array($relativePath));
+            return call_user_func_array(self::$newFilePathCallback, [$relativePath]);
         }
     }
 
@@ -65,6 +62,7 @@ class DupArchiveFileProcessor
      * Write file to archive
      *
      * @param DupArchiveCreateState $createState      dup archive create state
+     * @param DupArchiveHeader      $archiveHeader    archvie header
      * @param resource              $archiveHandle    archive resource
      * @param string                $sourceFilepath   source file path
      * @param string                $relativeFilePath relative file path
@@ -73,48 +71,64 @@ class DupArchiveFileProcessor
      */
     public static function writeFilePortionToArchive(
         DupArchiveCreateState $createState,
+        DupArchiveHeader $archiveHeader,
         $archiveHandle,
         $sourceFilepath,
         $relativeFilePath
-    ) {
+    ): void {
         DupArchiveUtil::tlog("writeFileToArchive for {$sourceFilepath}");
 
-        // switching to straight call for speed
-        $sourceHandle = @fopen($sourceFilepath, 'rb');
+        // Preserve the source-open warning so skipped-file diagnostics retain the filesystem reason.
+        $sourceHandle = SnapIO::callWithPhpErrorCapture(static fn() => fopen($sourceFilepath, 'rb'));
 
         if (!is_resource($sourceHandle)) {
-            $createState->archiveOffset = SnapIO::ftell($archiveHandle);
-            $createState->currentFileIndex++;
+            $openError                      = error_get_last();
+            $openReason                     = is_array($openError)
+                ? $openError['message']
+                : 'reason unavailable';
+            $createState->archiveOffset     = SnapIO::ftell($archiveHandle);
             $createState->currentFileOffset = 0;
+            $createState->currentFileIndex++;
+            $createState->currentFileHeaderWritten = false;
             $createState->skippedFileCount++;
-            $createState->addFailure(DupArchiveProcessingFailure::TYPE_FILE, $sourceFilepath, "Couldn't open $sourceFilepath", false);
+            $createState->addFailure(
+                DupArchiveProcessingFailure::TYPE_FILE,
+                $sourceFilepath,
+                "Couldn't open source file: {$openReason}",
+                false
+            );
             return;
         }
 
-        if ($createState->currentFileOffset > 0) {
-            SnapIO::fseek($sourceHandle, $createState->currentFileOffset);
-        } else {
-            $fileHeader = DupArchiveFileHeader::createFromFile($sourceFilepath, $relativeFilePath);
-            $fileHeader->writeToArchive($archiveHandle);
-        }
+        $fileHeader = (new DupArchiveFileHeader($archiveHeader))->createFromFile($sourceFilepath, $relativeFilePath);
 
-        $sourceFileSize = filesize($sourceFilepath);
+        if ($createState->currentFileOffset > 0) {
+            // Resuming mid-file, seek to saved offset in source file
+            SnapIO::fseek($sourceHandle, $createState->currentFileOffset);
+        } elseif (!$createState->currentFileHeaderWritten) {
+            // Fresh file, header not yet written - write it now
+            $fileHeader->writeToArchive($archiveHandle);
+            $createState->currentFileHeaderWritten = true;
+            $createState->archiveOffset            = SnapIO::ftell($archiveHandle);
+        }
+        // else: Header already written on previous run before timeout, skip header write
 
         $moreFileDataToProcess = true;
-
         while ((!$createState->timedOut()) && $moreFileDataToProcess) {
             if ($createState->throttleDelayInUs !== 0) {
                 usleep($createState->throttleDelayInUs);
             }
 
-            $moreFileDataToProcess      = self::appendGlobToArchive($createState, $archiveHandle, $sourceHandle, $sourceFilepath, $sourceFileSize);
+            $moreFileDataToProcess      = self::appendGlobToArchive($createState, $fileHeader, $archiveHandle, $sourceHandle, $sourceFilepath);
             $createState->archiveOffset = SnapIO::ftell($archiveHandle);
 
             if ($moreFileDataToProcess) {
                 $createState->currentFileOffset += $createState->globSize;
             } else {
                 $createState->currentFileIndex++;
-                $createState->currentFileOffset = 0;
+                $createState->currentFileOffset        = 0;
+                $createState->currentFileHeaderWritten = false;
+                $createState->addProcessedSize($fileHeader->fileSize);
             }
 
             // Only writing state after full group of files have been written - less reliable but more efficient
@@ -128,42 +142,51 @@ class DupArchiveFileProcessor
      * Write file to archive from source
      *
      * @param DupArchiveCreateState $createState      dup archive create state
+     * @param DupArchiveHeader      $archiveHeader    archvie header
      * @param resource              $archiveHandle    archive resource
      * @param string                $src              source string
      * @param string                $relativeFilePath relative file path
+     * @param int                   $flags            if -1 get global archive flags else overwrite
      * @param int                   $forceSize        if 0 size is auto of content is filled of \0 char to size
      *
-     * @return void
+     * @return int bytes written
      */
     public static function writeFileSrcToArchive(
         DupArchiveCreateState $createState,
+        DupArchiveHeader $archiveHeader,
         $archiveHandle,
         $src,
         $relativeFilePath,
+        $flags = -1,
         $forceSize = 0
     ) {
         DupArchiveUtil::tlog("writeFileSrcToArchive");
 
-        $fileHeader = DupArchiveFileHeader::createFromSrc($src, $relativeFilePath, $forceSize);
-        $fileHeader->writeToArchive($archiveHandle);
+        $fileHeader = (new DupArchiveFileHeader($archiveHeader))->createFromSrc($src, $relativeFilePath, $forceSize);
+        if ($flags > -1) {
+            $fileHeader->setFlags($flags);
+        }
+        $result = $fileHeader->writeToArchive($archiveHandle);
 
-        self::appendFileSrcToArchive($createState, $archiveHandle, $src, $forceSize);
+        self::appendFileSrcToArchive($fileHeader, $archiveHandle, $src, $forceSize);
         $createState->currentFileIndex++;
         $createState->currentFileOffset = 0;
         $createState->archiveOffset     = SnapIO::ftell($archiveHandle);
+        $createState->addProcessedSize($fileHeader->fileSize);
+        return $result;
     }
 
     /**
-     * Expand du archive
+     * Expand the archive
      *
-     * Assumption is that this is called at the beginning of a glob header since file header already writtern
+     * Assumption is that this is called at the beginning of a glob header since file header already written
      *
      * @param DupArchiveExpandState $expandState   expand state
      * @param resource              $archiveHandle archive resource
      *
      * @return bool true on success
      */
-    public static function writeToFile(DupArchiveExpandState $expandState, $archiveHandle)
+    public static function writeToFile(DupArchiveExpandState $expandState, $archiveHandle): bool
     {
         if (isset($expandState->fileRenames[$expandState->currentFileHeader->relativePath])) {
             $destFilepath = $expandState->fileRenames[$expandState->currentFileHeader->relativePath];
@@ -207,7 +230,7 @@ class DupArchiveFileProcessor
                     @fclose($destFileHandle);
                     $destFileHandle = null;
 
-                    if ($expandState->validationType == DupArchiveExpandState::VALIDATION_FULL) {
+                    if ($expandState->validatiOnType == DupArchiveExpandState::VALIDATION_FULL) {
                         self::validateExpandedFile($expandState);
                     }
                     break;
@@ -222,7 +245,7 @@ class DupArchiveFileProcessor
                 $destFileHandle = null;
             }
 
-            if (!$moreGlobstoProcess && $expandState->validateOnly && ($expandState->validationType == DupArchiveExpandState::VALIDATION_FULL)) {
+            if (!$moreGlobstoProcess && $expandState->validateOnly && ($expandState->validatiOnType == DupArchiveExpandState::VALIDATION_FULL)) {
                 if (!is_writable($destFilepath)) {
                     SnapIO::chmod($destFilepath, 'u+rw');
                 }
@@ -241,7 +264,7 @@ class DupArchiveFileProcessor
             }
 
             if (touch($destFilepath) === false) {
-                throw new Exception("Couldn't create {$destFilepath}");
+                throw new Exception("Couldn't create {$destFilepath}", DupArchive::EXCEPTION_CODE_EXTRACT_ERROR);
             }
         }
 
@@ -265,7 +288,7 @@ class DupArchiveFileProcessor
      *
      * @return boolean
      */
-    public static function createDirectory(DupArchiveExpandState $expandState, DupArchiveDirectoryHeader $directoryHeader)
+    public static function createDirectory(DupArchiveExpandState $expandState, DupArchiveDirectoryHeader $directoryHeader): bool
     {
         /* @var $expandState DupArchiveExpandState */
         $destDirPath = self::getNewFilePath($expandState->basePath, $directoryHeader->relativePath);
@@ -294,10 +317,10 @@ class DupArchiveFileProcessor
      *
      * @return bool
      */
-    public static function setFileMode(DupArchiveExpandState $expandState, $filePath)
+    protected static function setFileMode(DupArchiveExpandState $expandState, $filePath)
     {
         if ($expandState->fileModeOverride === -1) {
-            return;
+            return true;
         }
         return SnapIO::chmod($filePath, $expandState->fileModeOverride);
     }
@@ -331,33 +354,37 @@ class DupArchiveFileProcessor
      */
     public static function standardValidateFileEntry(DupArchiveExpandState $expandState, $archiveHandle)
     {
+        //Handle empty file case
+        if ($expandState->currentFileHeader->fileSize == 0) {
+            $expandState->archiveOffset = SnapIO::ftell($archiveHandle);
+            $moreGlobstoProcess         = false;
+            $expandState->fileWriteCount++;
+            $expandState->resetForFile();
+            return true;
+        }
+
         $moreGlobstoProcess = $expandState->currentFileOffset < $expandState->currentFileHeader->fileSize;
 
         if (!$moreGlobstoProcess) {
             // Not a 'real' write but indicates that we actually did fully process a file in the archive
             $expandState->fileWriteCount++;
+            $expandState->resetForFile();
         } else {
+            $globHeader = new DupArchiveGlobHeader($expandState->currentFileHeader);
+
             while ((!$expandState->timedOut()) && $moreGlobstoProcess) {
                 // Read in the glob header but leave the pointer at the payload
-                $globHeader   = DupArchiveGlobHeader::readFromArchive($archiveHandle, false);
-                $globContents = fread($archiveHandle, $globHeader->storedSize);
-
-                if ($globContents === false) {
-                    throw new Exception("Error reading glob from archive");
-                }
-
-                $hash = hash('crc32b', $globContents);
-
-                if ($hash != $globHeader->hash) {
+                $globHeader = $globHeader->readFromArchive($archiveHandle, false);
+                try {
+                    $globHeader->readContent($archiveHandle, true);
+                } catch (Exception $e) {
                     $expandState->addFailure(
                         DupArchiveProcessingFailure::TYPE_FILE,
                         $expandState->currentFileHeader->relativePath,
-                        'Hash mismatch on DupArchive file entry',
+                        'Hash mismatch on DupArchive file entry , msg: ' . $e->getMessage(),
                         true
                     );
                     DupArchiveUtil::tlog("Glob hash mismatch during standard check of {$expandState->currentFileHeader->relativePath}");
-                } else {
-                    //    DupArchiveUtil::tlog("Glob MD5 passes");
                 }
 
                 $expandState->currentFileOffset += $globHeader->originalSize;
@@ -381,7 +408,7 @@ class DupArchiveFileProcessor
      *
      * @return void
      */
-    private static function validateExpandedFile(DupArchiveExpandState $expandState)
+    private static function validateExpandedFile(DupArchiveExpandState $expandState): void
     {
         /* @var $expandState DupArchiveExpandState */
         $destFilepath = self::getNewFilePath($expandState->basePath, $expandState->currentFileHeader->relativePath);
@@ -403,22 +430,23 @@ class DupArchiveFileProcessor
      * Append file to archive
      *
      * @param DupArchiveCreateState $createState      create state
+     * @param DupArchiveFileHeader  $fileHeader       file header
      * @param resource              $archiveHandle    archive resource
      * @param resource              $sourceFilehandle file resource
      * @param string                $sourceFilepath   file path
-     * @param int                   $fileSize         file size
      *
      * @return bool true if more file remaning
      */
     private static function appendGlobToArchive(
         DupArchiveCreateState $createState,
+        DupArchiveFileHeader $fileHeader,
         $archiveHandle,
         $sourceFilehandle,
-        $sourceFilepath,
-        $fileSize
+        $sourceFilepath
     ) {
         DupArchiveUtil::tlog("Appending file glob to archive for file {$sourceFilepath} at file offset {$createState->currentFileOffset}");
 
+        $fileSize = $fileHeader->fileSize;
         if ($fileSize == 0) {
             return false;
         }
@@ -430,84 +458,71 @@ class DupArchiveFileProcessor
             throw new Exception("Error reading $sourceFilepath");
         }
 
-        $originalSize = strlen($globContents);
-
-        if ($createState->isCompressed) {
-            $globContents = gzdeflate($globContents, 2);    // 2 chosen as best compromise between speed and size
-            $storeSize    = strlen($globContents);
-        } else {
-            $storeSize = $originalSize;
-        }
-
-        $globHeader               = new DupArchiveGlobHeader();
-        $globHeader->originalSize = $originalSize;
-        $globHeader->storedSize   = $storeSize;
-        $globHeader->hash         = hash('crc32b', $globContents);
+        $globHeader               = new DupArchiveGlobHeader($fileHeader);
+        $globHeader->originalSize = strlen($globContents);
+        $writeContent             = $globHeader->getContentToWrite($globContents);
+        $globHeader->storedSize   = strlen($writeContent);
+        $globHeader->setHash($globContents);
         $globHeader->writeToArchive($archiveHandle);
 
-        if (@fwrite($archiveHandle, $globContents) === false) {
-            // Considered fatal since we should always be able to write to the archive -
-            // plus the header has already been written (could back this out later though)
-            throw new Exception(
-                "Error writing $sourceFilepath to archive. Ensure site still hasn't run out of space.",
-                DupArchiveEngine::EXCEPTION_FATAL
-            );
-        }
+        // Considered fatal since we should always be able to write to the archive -
+        // plus the header has already been written (could back this out later though)
+        SnapIO::fwrite(
+            $archiveHandle,
+            $writeContent,
+            "Error writing $sourceFilepath to archive. Ensure site still hasn't run out of space.",
+            DupArchiveEngine::EXCEPTION_FATAL
+        );
 
         $fileSizeRemaining = $fileSize - $createState->globSize;
-        $moreFileRemaining = $fileSizeRemaining > 0;
 
-        return $moreFileRemaining;
+        return $fileSizeRemaining > 0;
     }
 
     /**
      * Append file in dup archvie from source string
      *
-     * @param DupArchiveCreateState $createState   create state
-     * @param resource              $archiveHandle archive handle
-     * @param string                $src           source to add
-     * @param int                   $forceSize     if 0 size is auto of content is filled of \0 char to size
+     * @param DupArchiveFileHeader $fileHeader    file header
+     * @param resource             $archiveHandle archive handle
+     * @param string               $src           source to add
+     * @param int                  $forceSize     if 0 size is auto of content is filled of \0 char to size
      *
      * @return bool
      */
     private static function appendFileSrcToArchive(
-        DupArchiveCreateState $createState,
+        DupArchiveFileHeader $fileHeader,
         $archiveHandle,
         $src,
         $forceSize = 0
-    ) {
+    ): bool {
         DupArchiveUtil::tlog("Appending file glob to archive from src");
 
         if (($originalSize = strlen($src)) == 0 && $forceSize == 0) {
             return false;
         }
 
-        if ($forceSize == 0 && $createState->isCompressed) {
-            $src       = gzdeflate($src, 2); // 2 chosen as best compromise between speed and size
-            $storeSize = strlen($src);
-        } else {
-            $storeSize = $originalSize;
-        }
+        $globHeader               = new DupArchiveGlobHeader($fileHeader);
+        $globHeader->originalSize = $originalSize;
+        $globHeader->setHash($src);
+        $srcToWrite = $globHeader->getContentToWrite($src);
+        $storeSize  = strlen($srcToWrite);
 
         if ($forceSize > 0 && $storeSize < $forceSize) {
-            $charsToAdd = $forceSize - $storeSize;
-            $src       .= str_repeat("\0", $charsToAdd);
-            $storeSize  = $forceSize;
+            $charsToAdd  = $forceSize - $storeSize;
+            $srcToWrite .= str_repeat("\0", $charsToAdd);
+            $storeSize   = $forceSize;
         }
 
-        $globHeader               = new DupArchiveGlobHeader();
-        $globHeader->originalSize = $originalSize;
-        $globHeader->storedSize   = $storeSize;
-        $globHeader->hash         = hash('crc32b', $src);
+        $globHeader->storedSize = $storeSize;
         $globHeader->writeToArchive($archiveHandle);
 
-
-        if (SnapIO::fwriteChunked($archiveHandle, $src) === false) {
-            // Considered fatal since we should always be able to write to the archive -
-            // plus the header has already been written (could back this out later though)
+        try {
+            SnapIO::fwriteChunked($archiveHandle, $src);
+        } catch (Exception $e) {
             throw new Exception(
-                "Error writing SRC to archive. Ensure site still hasn't run out of space.",
-                DupArchiveEngine::EXCEPTION_FATAL
+                "Error writing SRC to archive msg: " . $e->getMessage() . ". Ensure site still hasn't run out of space.",
+                DupArchiveEngine::EXCEPTION_FATAL,
+                $e
             );
         }
 
@@ -530,14 +545,12 @@ class DupArchiveFileProcessor
         $archiveHandle,
         $destFileHandle,
         $destFilePath
-    ) {
+    ): void {
         DupArchiveUtil::tlog('Appending file glob to file ' . $destFilePath . ' at file offset ' . $expandState->currentFileOffset);
 
         // Read in the glob header but leave the pointer at the payload
-        $globHeader = DupArchiveGlobHeader::readFromArchive($archiveHandle, false);
-        if (($globContents = DupArchiveGlobHeader::readContent($archiveHandle, $globHeader, $expandState->archiveHeader->isCompressed)) === false) {
-            throw new Exception("Error reading glob from $destFilePath");
-        }
+        $globHeader   = (new DupArchiveGlobHeader($expandState->currentFileHeader))->readFromArchive($archiveHandle, false);
+        $globContents = $globHeader->readContent($archiveHandle);
 
         if (@fwrite($destFileHandle, $globContents) === false) {
             throw new Exception("Error writing glob to $destFilePath");

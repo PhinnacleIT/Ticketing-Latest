@@ -6,8 +6,6 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -17,9 +15,10 @@ use Duplicator\Libs\Snap\SnapIO;
 
 class DUPX_Validation_test_db_host_name extends DUPX_Validation_abstract_item
 {
+    /** @var string */
     protected $fixedHost = '';
 
-    protected function runTest()
+    protected function runTest(): int
     {
         if (DUPX_Validation_database_service::getInstance()->skipDatabaseTests()) {
             return self::LV_SKIP;
@@ -41,26 +40,26 @@ class DUPX_Validation_test_db_host_name extends DUPX_Validation_abstract_item
         }
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'Host Name';
     }
 
     protected function failContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-host-name', array(
+        return dupxTplRender('parts/validation/database-tests/db-host-name', [
             'isOk'      => false,
             'host'      => PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_HOST),
-            'fixedHost' => $this->fixedHost
-            ), false);
+            'fixedHost' => $this->fixedHost,
+        ], false);
     }
 
     protected function passContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-host-name', array(
+        return dupxTplRender('parts/validation/database-tests/db-host-name', [
             'isOk'      => true,
             'host'      => PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_HOST),
-            'fixedHost' => ''
-            ), false);
+            'fixedHost' => '',
+        ], false);
     }
 }

@@ -4,14 +4,12 @@ namespace Duplicator\Installer\Models;
 
 class ImportUser
 {
-    /** @var int */
-    protected $id = 0;
+    protected int $id;
     /** @var string */
     protected $login = '';
     /** @var string */
     protected $mail = '';
-    /** @var int */
-    protected $oldId = 0;
+    protected int $oldId;
     /** @var string */
     protected $oldLogin = '';
     /** @var bool */
@@ -49,25 +47,25 @@ class ImportUser
      *
      * @return string[]
      */
-    public static function getArrayReportTitles()
+    public static function getArrayReportTitles(): array
     {
-        return array(
+        return [
             'e-mail',
             'original login',
             'new login',
             'original id',
-            'new id'
-        );
+            'new id',
+        ];
     }
 
     /**
      * Return array for CSV report
      *
-     * @return array
+     * @return array<int, mixed>
      */
-    public function getArrayReport()
+    public function getArrayReport(): array
     {
-        $result = array($this->mail);
+        $result = [$this->mail];
         if (strlen($this->oldLogin) == 0) {
             $result[] = $this->login;
             $result[] = '';
@@ -92,7 +90,7 @@ class ImportUser
      *
      * @return int
      */
-    public function getId()
+    public function getId(): int
     {
         return $this->id;
     }
@@ -122,7 +120,7 @@ class ImportUser
      *
      * @return int
      */
-    public function getOldId()
+    public function getOldId(): int
     {
         return ($this->oldId == 0 ? $this->id : $this->oldId);
     }
@@ -134,7 +132,7 @@ class ImportUser
      *
      * @return void
      */
-    public function setOldId($oldId)
+    public function setOldId($oldId): void
     {
         $this->oldId = (int) ($this->id == $oldId ? 0 : $oldId);
     }
@@ -156,7 +154,7 @@ class ImportUser
      *
      * @return void
      */
-    public function setOldLogin($oldLogin)
+    public function setOldLogin($oldLogin): void
     {
         $this->oldLogin = ($this->login == $oldLogin ? '' : $oldLogin);
     }
@@ -166,7 +164,7 @@ class ImportUser
      *
      * @return boolean
      */
-    public function isChanged()
+    public function isChanged(): bool
     {
         return ($this->oldId > 0 || strlen($this->oldLogin) > 0);
     }
