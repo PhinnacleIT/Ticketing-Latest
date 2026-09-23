@@ -507,6 +507,7 @@ class Js_Combinator extends Abstract_Combinator {
 		'wc-square',
 		'wp-dom-ready',
 		'siteground-optimizer-lazy-sizes-js',
+		'wp-private-apis',
 	);
 
 	/**

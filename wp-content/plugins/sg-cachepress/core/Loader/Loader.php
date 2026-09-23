@@ -429,12 +429,12 @@ class Loader {
 			}
 		}
 
-		// Remove the 'srcset' from lazy-loaded images.
+		// Prepare responsive attributes for lazy-loaded images.
 		add_filter(
-			'wp_img_tag_add_srcset_and_sizes_attr',
-			array( $this->lazy_load->lazyload_images, 'disable_srcset_for_lazyload_image' ),
-			10,
-			4
+			'wp_content_img_tag',
+			array( $this->lazy_load->lazyload_images, 'prepare_lazyload_image_attributes' ),
+			PHP_INT_MAX,
+			1
 		);
 
 		// Enqueue scripts and styles.
@@ -635,6 +635,8 @@ class Loader {
 		if ( ! Options::is_enabled( 'siteground_optimizer_file_caching' ) ) {
 			return;
 		}
+
+		add_filter( 'wp_headers', array( $this->file_cacher, 'mark_wordpress_nocache_header' ), -PHP_INT_MAX );
 
 		add_action( 'cron_schedules', array( $this->file_cacher, 'sg_add_cron_interval' ) );
 		add_action( 'siteground_optimizer_cache_preheat', array( $this->file_cacher, 'preheat_cache' ) );

@@ -60,6 +60,7 @@ class Front_End_Optimization {
 		'houzez-google-map-api',
 		'wpascript',
 		'wc-square',
+		'wp-private-apis',
 	);
 
 	/**

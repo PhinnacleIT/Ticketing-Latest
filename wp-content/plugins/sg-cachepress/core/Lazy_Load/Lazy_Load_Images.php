@@ -179,22 +179,39 @@ class Lazy_Load_Images extends Abstract_Lazy_Load {
 	}
 
 	/**
-	 * Disable the 'srcset' for processed lazy-load images.
+	 * Prepare responsive attributes for lazy-loaded images.
 	 *
-	 * @param bool   $add           Whether to add the srcset and sizes attributes.
 	 * @param string $image         Image HTML.
-	 * @param string $context       Context in which the image is rendered.
-	 * @param int    $attachment_id Image attachment ID.
 	 *
-	 * @return bool Whether to add the srcset and sizes attributes.
+	 * @return string Modified image HTML.
 	 */
-	public function disable_srcset_for_lazyload_image( $add, $image, $context, $attachment_id ) {
-		// Do not add 'srcset' for images with class 'lazyload'.
-		if ( preg_match( '/class=["\'][^"\']*\blazyload\b/', $image ) ) {
-			return false;
+	public function prepare_lazyload_image_attributes( $image ) {
+		if ( ! class_exists( '\WP_HTML_Tag_Processor' ) ) {
+			return $image;
 		}
 
-		return $add;
+		$processor = new \WP_HTML_Tag_Processor( $image );
+
+		if ( ! $processor->next_tag( 'IMG' ) ) {
+			return $image;
+		}
+
+		if ( ! $processor->has_class( 'lazyload' ) ) {
+			return $image;
+		}
+
+		$processor->remove_attribute( 'width' );
+		$processor->remove_attribute( 'height' );
+
+		// Preserve responsive sources for the lazy-load script.
+		$srcset = $processor->get_attribute( 'srcset' );
+
+		if ( ! empty( $srcset ) ) {
+			$processor->set_attribute( 'data-srcset', $srcset );
+			$processor->remove_attribute( 'srcset' );
+		}
+
+		return $processor->get_updated_html();
 	}
 
 	/**
