@@ -1588,7 +1588,7 @@ var import_module = /* @__PURE__ */ __toESM(require_module());
 //#endregion
 //#region modules/web-cli/assets/js/modules/component-base.js
 	init_defineProperty();
-	function ownKeys$4(e, r) {
+	function ownKeys$5(e, r) {
 		var t = Object.keys(e);
 		if (Object.getOwnPropertySymbols) {
 			var o = Object.getOwnPropertySymbols(e);
@@ -1598,19 +1598,19 @@ var import_module = /* @__PURE__ */ __toESM(require_module());
 		}
 		return t;
 	}
-	__name(ownKeys$4, "ownKeys");
-	function _objectSpread$4(e) {
+	__name(ownKeys$5, "ownKeys");
+	function _objectSpread$5(e) {
 		for (var r = 1; r < arguments.length; r++) {
 			var t = null != arguments[r] ? arguments[r] : {};
-			r % 2 ? ownKeys$4(Object(t), !0).forEach(function(r) {
+			r % 2 ? ownKeys$5(Object(t), !0).forEach(function(r) {
 				_defineProperty(e, r, t[r]);
-			}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys$4(Object(t)).forEach(function(r) {
+			}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys$5(Object(t)).forEach(function(r) {
 				Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
 			});
 		}
 		return e;
 	}
-	__name(_objectSpread$4, "_objectSpread");
+	__name(_objectSpread$5, "_objectSpread");
 	function _callSuper$27(t, o, e) {
 		return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct$27() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e));
 	}
@@ -1900,7 +1900,7 @@ var import_module = /* @__PURE__ */ __toESM(require_module());
 				key: "registerState",
 				value: function registerState(id, stateConfig) {
 					id = this.getNamespace() + (id ? "/".concat(id) : "");
-					var slice = (0, _reduxjs_toolkit.createSlice)(_objectSpread$4(_objectSpread$4({}, stateConfig), {}, { name: id }));
+					var slice = (0, _reduxjs_toolkit.createSlice)(_objectSpread$5(_objectSpread$5({}, stateConfig), {}, { name: id }));
 					$e.store.register(id, slice);
 				}
 			},
@@ -2322,7 +2322,7 @@ var import_module = /* @__PURE__ */ __toESM(require_module());
 //#endregion
 //#region assets/dev/js/editor/utils/editor-one-events.js
 	init_defineProperty();
-	function ownKeys$3(e, r) {
+	function ownKeys$4(e, r) {
 		var t = Object.keys(e);
 		if (Object.getOwnPropertySymbols) {
 			var o = Object.getOwnPropertySymbols(e);
@@ -2332,19 +2332,19 @@ var import_module = /* @__PURE__ */ __toESM(require_module());
 		}
 		return t;
 	}
-	__name(ownKeys$3, "ownKeys");
-	function _objectSpread$3(e) {
+	__name(ownKeys$4, "ownKeys");
+	function _objectSpread$4(e) {
 		for (var r = 1; r < arguments.length; r++) {
 			var t = null != arguments[r] ? arguments[r] : {};
-			r % 2 ? ownKeys$3(Object(t), !0).forEach(function(r) {
+			r % 2 ? ownKeys$4(Object(t), !0).forEach(function(r) {
 				_defineProperty(e, r, t[r]);
-			}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys$3(Object(t)).forEach(function(r) {
+			}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys$4(Object(t)).forEach(function(r) {
 				Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
 			});
 		}
 		return e;
 	}
-	__name(_objectSpread$3, "_objectSpread");
+	__name(_objectSpread$4, "_objectSpread");
 	var EditorOneEventManager = /*#__PURE__*/ function() {
 		function EditorOneEventManager() {
 			_classCallCheck(this, EditorOneEventManager);
@@ -2433,7 +2433,7 @@ var import_module = /* @__PURE__ */ __toESM(require_module());
 					var _config$appTypes3;
 					var overrides = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
 					var config = this.getConfig();
-					return _objectSpread$3({ window_name: (_config$appTypes$edit = config === null || config === void 0 || (_config$appTypes3 = config.appTypes) === null || _config$appTypes3 === void 0 ? void 0 : _config$appTypes3.editor) !== null && _config$appTypes$edit !== void 0 ? _config$appTypes$edit : "editor" }, overrides);
+					return _objectSpread$4({ window_name: (_config$appTypes$edit = config === null || config === void 0 || (_config$appTypes3 = config.appTypes) === null || _config$appTypes3 === void 0 ? void 0 : _config$appTypes3.editor) !== null && _config$appTypes$edit !== void 0 ? _config$appTypes$edit : "editor" }, overrides);
 				}
 			},
 			{
@@ -2754,7 +2754,7 @@ var import_module = /* @__PURE__ */ __toESM(require_module());
 					var _config$locations11;
 					var overrides = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
 					var config = this.getConfig();
-					return this.createBasePayload(_objectSpread$3({
+					return this.createBasePayload(_objectSpread$4({
 						window_name: (_config$appTypes$wpDa = config === null || config === void 0 || (_config$appTypes4 = config.appTypes) === null || _config$appTypes4 === void 0 ? void 0 : _config$appTypes4.wpDash) !== null && _config$appTypes$wpDa !== void 0 ? _config$appTypes$wpDa : "wpdash",
 						target_location: this.toLowerSnake(config === null || config === void 0 || (_config$locations11 = config.locations) === null || _config$locations11 === void 0 ? void 0 : _config$locations11.wpDashAdmin),
 						location_l2: ""
@@ -3584,7 +3584,7 @@ var import_module = /* @__PURE__ */ __toESM(require_module());
 //#endregion
 //#region core/common/modules/finder/assets/js/component.js
 	init_defineProperty();
-	function ownKeys$2(e, r) {
+	function ownKeys$3(e, r) {
 		var t = Object.keys(e);
 		if (Object.getOwnPropertySymbols) {
 			var o = Object.getOwnPropertySymbols(e);
@@ -3594,19 +3594,19 @@ var import_module = /* @__PURE__ */ __toESM(require_module());
 		}
 		return t;
 	}
-	__name(ownKeys$2, "ownKeys");
-	function _objectSpread$2(e) {
+	__name(ownKeys$3, "ownKeys");
+	function _objectSpread$3(e) {
 		for (var r = 1; r < arguments.length; r++) {
 			var t = null != arguments[r] ? arguments[r] : {};
-			r % 2 ? ownKeys$2(Object(t), !0).forEach(function(r) {
+			r % 2 ? ownKeys$3(Object(t), !0).forEach(function(r) {
 				_defineProperty(e, r, t[r]);
-			}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys$2(Object(t)).forEach(function(r) {
+			}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys$3(Object(t)).forEach(function(r) {
 				Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
 			});
 		}
 		return e;
 	}
-	__name(_objectSpread$2, "_objectSpread");
+	__name(_objectSpread$3, "_objectSpread");
 	function _callSuper$12(t, o, e) {
 		return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct$12() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e));
 	}
@@ -3673,7 +3673,7 @@ var import_module = /* @__PURE__ */ __toESM(require_module());
 			{
 				key: "defaultCommands",
 				value: function defaultCommands() {
-					return _objectSpread$2(_objectSpread$2({
+					return _objectSpread$3(_objectSpread$3({
 						"navigate/down": function navigate_down() {
 							elementorDevTools.deprecation.deprecated("$e.run( 'finder/navigate/down' )", "3.0.0", "$e.run( 'finder/navigate-down' )");
 							$e.run("finder/navigate-down");
@@ -4208,7 +4208,7 @@ var import_module = /* @__PURE__ */ __toESM(require_module());
 //#region modules/web-cli/assets/js/core/data/errors/base-error.js
 var import_regenerator = /* @__PURE__ */ __toESM(require_regenerator());
 	init_defineProperty();
-	function ownKeys$1(e, r) {
+	function ownKeys$2(e, r) {
 		var t = Object.keys(e);
 		if (Object.getOwnPropertySymbols) {
 			var o = Object.getOwnPropertySymbols(e);
@@ -4218,19 +4218,19 @@ var import_regenerator = /* @__PURE__ */ __toESM(require_regenerator());
 		}
 		return t;
 	}
-	__name(ownKeys$1, "ownKeys");
-	function _objectSpread$1(e) {
+	__name(ownKeys$2, "ownKeys");
+	function _objectSpread$2(e) {
 		for (var r = 1; r < arguments.length; r++) {
 			var t = null != arguments[r] ? arguments[r] : {};
-			r % 2 ? ownKeys$1(Object(t), !0).forEach(function(r) {
+			r % 2 ? ownKeys$2(Object(t), !0).forEach(function(r) {
 				_defineProperty(e, r, t[r]);
-			}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys$1(Object(t)).forEach(function(r) {
+			}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys$2(Object(t)).forEach(function(r) {
 				Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
 			});
 		}
 		return e;
 	}
-	__name(_objectSpread$1, "_objectSpread");
+	__name(_objectSpread$2, "_objectSpread");
 	function _callSuper$9(t, o, e) {
 		return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct$9() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e));
 	}
@@ -4282,7 +4282,7 @@ var import_regenerator = /* @__PURE__ */ __toESM(require_regenerator());
 		return _createClass(BaseError, [{
 			key: "notify",
 			value: function notify() {
-				Console.error(_objectSpread$1({ message: this.message }, this));
+				Console.error(_objectSpread$2({ message: this.message }, this));
 			}
 		}], [{
 			key: "create",
@@ -5232,6 +5232,104 @@ var import_regenerator = /* @__PURE__ */ __toESM(require_regenerator());
 			}
 		}
 	};
+
+//#endregion
+//#region core/common/modules/events-manager/assets/js/install-events-proxy-fetch.js
+	init_defineProperty();
+	function ownKeys$1(e, r) {
+		var t = Object.keys(e);
+		if (Object.getOwnPropertySymbols) {
+			var o = Object.getOwnPropertySymbols(e);
+			r && (o = o.filter(function(r) {
+				return Object.getOwnPropertyDescriptor(e, r).enumerable;
+			})), t.push.apply(t, o);
+		}
+		return t;
+	}
+	__name(ownKeys$1, "ownKeys");
+	function _objectSpread$1(e) {
+		for (var r = 1; r < arguments.length; r++) {
+			var t = null != arguments[r] ? arguments[r] : {};
+			r % 2 ? ownKeys$1(Object(t), !0).forEach(function(r) {
+				_defineProperty(e, r, t[r]);
+			}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys$1(Object(t)).forEach(function(r) {
+				Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
+			});
+		}
+		return e;
+	}
+	__name(_objectSpread$1, "_objectSpread");
+	var INSTALLED_FLAG = "__elementorEventsProxyFetchInstalled";
+	function buildMixpanelAuthorization(token) {
+		return "Basic ".concat(btoa("".concat(token, ":")));
+	}
+	function isProxyRequestUrl(url, proxyPrefixes) {
+		return proxyPrefixes.some(function(prefix) {
+			return url.startsWith(prefix);
+		});
+	}
+	function isFetchRequest(input) {
+		return "function" === typeof Request && input instanceof Request;
+	}
+	function mergeFetchHeaders(input, init) {
+		var headers = new Headers();
+		if (isFetchRequest(input)) input.headers.forEach(function(value, key) {
+			headers.set(key, value);
+		});
+		if (init !== null && init !== void 0 && init.headers) new Headers(init.headers).forEach(function(value, key) {
+			headers.set(key, value);
+		});
+		return headers;
+	}
+	function stripMixpanelAuthorization(input, init, token) {
+		var _init$credentials;
+		if (!token) return {
+			input,
+			init,
+			stripped: false
+		};
+		var headers = mergeFetchHeaders(input, init);
+		var mixpanelAuthorization = buildMixpanelAuthorization(token);
+		if (headers.get("Authorization") !== mixpanelAuthorization) return {
+			input,
+			init,
+			stripped: false
+		};
+		headers.delete("Authorization");
+		var credentials = (_init$credentials = init.credentials) !== null && _init$credentials !== void 0 ? _init$credentials : "include";
+		if (isFetchRequest(input)) return {
+			input: new Request(input, {
+				headers,
+				credentials
+			}),
+			init: void 0,
+			stripped: true
+		};
+		return {
+			input,
+			init: _objectSpread$1(_objectSpread$1({}, init), {}, {
+				credentials,
+				headers
+			}),
+			stripped: true
+		};
+	}
+	function installEventsProxyFetch(proxyApiHost, proxyLibBasePath, token) {
+		if (!proxyApiHost || !token || window[INSTALLED_FLAG] || "function" !== typeof window.fetch) return;
+		var proxyPrefixes = [proxyApiHost, proxyLibBasePath].filter(Boolean);
+		var nativeFetch = window.fetch.bind(window);
+		window.fetch = function(input) {
+			var init = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
+			var url = "string" === typeof input ? input : input === null || input === void 0 ? void 0 : input.url;
+			if (!url || !isProxyRequestUrl(url, proxyPrefixes)) return nativeFetch(input, init);
+			var _stripMixpanelAuthori = stripMixpanelAuthorization(input, init, token);
+			var nextInput = _stripMixpanelAuthori.input;
+			var nextInit = _stripMixpanelAuthori.init;
+			if (void 0 === nextInit) return nativeFetch(nextInput);
+			return nativeFetch(nextInput, nextInit);
+		};
+		window[INSTALLED_FLAG] = true;
+	}
 
 //#endregion
 //#region node_modules/mixpanel-browser/dist/mixpanel.module.js
@@ -23758,6 +23856,8 @@ var import_regenerator = /* @__PURE__ */ __toESM(require_regenerator());
 			{
 				key: "initializeMixpanel",
 				value: function initializeMixpanel(onLoaded) {
+					var editorEventsConfig = elementorCommon.config.editor_events;
+					installEventsProxyFetch(editorEventsConfig === null || editorEventsConfig === void 0 ? void 0 : editorEventsConfig.proxy_api_host, editorEventsConfig === null || editorEventsConfig === void 0 ? void 0 : editorEventsConfig.proxy_lib_base_path, editorEventsConfig === null || editorEventsConfig === void 0 ? void 0 : editorEventsConfig.token);
 					if (mixpanelInstance && mixpanelInstance.isInitialized) onLoaded(mixpanelInstance);
 					else {
 						var _elementorCommon$conf;
