@@ -251,9 +251,9 @@ class Git_Wrapper {
 		$git_config = realpath( $realpath . '/config' );
 		$git_index  = realpath( $realpath . '/index' );
 		if ( ! empty( $realpath ) && is_dir( $realpath ) && file_exists( $git_config ) && file_exists( $git_index ) ) {
-			return True;
+			return true;
 		}
-		return False;
+		return false;
 	}
 
 	function cleanup() {
@@ -262,12 +262,12 @@ class Git_Wrapper {
 			if ( WP_DEBUG ) {
 				error_log( "Gitium cleanup successfull. Removed '$dot_git_dir'." );
 			}
-			return True;
+			return true;
 		}
 		if ( WP_DEBUG ) {
 			error_log( "Gitium cleanup failed. '$dot_git_dir' is not a .git dir." );
 		}
-		return False;
+		return false;
 	}
 
 	function add_remote_url( $url ) {
@@ -650,6 +650,11 @@ class Git_Wrapper {
 	function rm_cached( $path ) {
 		list( $return, ) = $this->_call( 'rm', '--cached', $path );
 		return ( $return == 0 );
+	}
+
+	function revert_commit( $commit_hash ) {
+		list( $return, ) = $this->_call( 'revert', '--no-edit', $commit_hash );
+		return ( $return === 0 );
 	}
 
 	function remove_wp_content_from_version_control() {

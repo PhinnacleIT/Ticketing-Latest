@@ -26,13 +26,40 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 	public function __construct() {
 		parent::__construct( $this->gitium_menu_slug, $this->commits_menu_slug );
 		add_action( GITIUM_ADMIN_MENU_ACTION, array( $this, 'admin_menu' ) );
+		if ( current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) ) {
+			add_action( 'admin_init', array( $this, 'revert_last_commit' ) );
+		}
+	}
+
+	public function revert_last_commit() {
+		if ( ! filter_input( INPUT_POST, 'GitiumSubmitRevertLastCommit', FILTER_SANITIZE_FULL_SPECIAL_CHARS ) ) {
+			return;
+		}
+		check_admin_referer( 'gitium-admin' );
+
+		$commits = $this->git->get_last_commits( 1 );
+		if ( empty( $commits ) ) {
+			$this->redirect( 'No commits to revert.', false, $this->commits_menu_slug );
+		}
+
+		$commit_hash = key( $commits );
+
+		if ( ! $this->git->revert_commit( $commit_hash ) ) {
+			$this->redirect( 'Could not revert commit: ' . $this->git->get_last_error(), false, $this->commits_menu_slug );
+		}
+
+		if ( ! $this->git->push() ) {
+			$this->redirect( 'Revert commit created locally but push failed: ' . $this->git->get_last_error(), false, $this->commits_menu_slug );
+		}
+
+		$this->success_redirect( 'Commit `' . $commit_hash . '` reverted and pushed successfully.', $this->commits_menu_slug );
 	}
 
 	public function admin_menu() {
 		$submenu_hook = add_submenu_page(
 			$this->menu_slug,
-			__( 'Git Commits', 'gitium' ),
-			__( 'Commits', 'gitium' ),
+			'Git Commits',
+			'Commits',
 			GITIUM_MANAGE_OPTIONS_CAPABILITY,
 			$this->submenu_slug,
 			array( $this, 'page' )
@@ -44,7 +71,7 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 		?>
 		<thead>
 		<tr>
-			<th scope="col"><?php _e( 'Commits', 'gitium' ); ?></th>
+			<th scope="col"><?php echo 'Commits'; ?></th>
 			<th scope="col"></th>
 		</tr>
 		</thead>
@@ -64,37 +91,78 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 	public function page() {
 		?>
 		<div class="wrap">
-		<h2><?php printf( __( 'Last %s commits', 'gitium' ), GITIUM_LAST_COMMITS ); ?></h2>
-		<table class="wp-list-table widefat plugins">
-		<?php $this->table_head(); ?>
-		<tbody>
-		<?php
-		foreach ( $this->git->get_last_commits( GITIUM_LAST_COMMITS ) as $commit_id => $data ) {
-			unset( $committer_name );
-			extract( $data );
-			if ( isset( $committer_name ) ) {
-				$committer         = "<span title='$committer_email'> -> $committer_name " . sprintf( __( 'committed %s ago', 'gitium' ), human_time_diff( strtotime( $committer_date ) ) ) . '</span>';
-				$committers_avatar = '<div style="position:absolute; left:30px; border: 1px solid white; background:white; height:17px; top:30px; border-radius:2px">' . get_avatar( $committer_email, 16 ) . '</div>';
-			} else {
-				$committer = '';
-				$committers_avatar = '';
-			}
-			$this->table_start_row();
-			?>
-			<td style="position:relative">
-				<div style="float:left; width:auto; height:auto; padding-left:2px; padding-right:5px; padding-top:2px; margin-right:5px; border-radius:2px"><?php echo get_avatar( $author_email, 32 ); ?></div>
-				<?php echo $committers_avatar; ?>
-				<div style="float:left; width:auto; height:auto;"><strong><?php echo esc_html( $subject ); ?></strong><br />
-				<span title="<?php echo esc_attr( $author_email ); ?>"><?php echo esc_html( $author_name ) . ' ' . sprintf( __( 'authored %s ago', 'gitium' ), human_time_diff( strtotime( $author_date ) ) ); ?></span><?php echo $committer; ?></div>
-			</td>
-			<td><p style="padding-top:8px"><?php echo $commit_id; ?></p></td>
-		<?php
-			$this->table_end_row();
-		}
-		?>
-		</tbody>
-		</table>
+			<h2><?php printf( 'Last %s commits', esc_html( GITIUM_LAST_COMMITS ) ); ?></h2>
+			<table class="wp-list-table widefat plugins">
+				<?php $this->table_head(); ?>
+				<tbody>
+					<?php
+					$first = true;
+					foreach ( $this->git->get_last_commits( GITIUM_LAST_COMMITS ) as $commit_id => $data ) {
+						unset( $committer_name );
+						extract( $data );
+	
+						// Prepare committer HTML
+						if ( isset( $committer_name ) ) {
+							$committer = sprintf(
+								'<span title="%s"> -> %s %s</span>',
+								esc_attr( $committer_email ),
+								esc_html( $committer_name ),
+								sprintf( esc_html( 'committed %s ago'), human_time_diff( strtotime( $committer_date ) ) )
+							);
+	
+							$committers_avatar = sprintf(
+								'<div style="position:absolute; left:30px; top:30px; border:1px solid white; background:white; height:17px; border-radius:2px;">%s</div>',
+								get_avatar( $committer_email, 16 )
+							);
+						} else {
+							$committer = '';
+							$committers_avatar = '';
+						}
+	
+						$this->table_start_row();
+						?>
+						<td style="position:relative;">
+							<div style="float:left; width:auto; height:auto; padding:2px 5px 0 2px; margin-right:5px; border-radius:2px;">
+								<?php echo get_avatar( $author_email, 32 ); ?>
+							</div>
+							<?php echo wp_kses_post( $committers_avatar ); ?>
+							<div style="float:left; width:auto; height:auto;">
+								<strong><?php echo esc_html( $subject ); ?></strong><br />
+								<span title="<?php echo esc_attr( $author_email ); ?>">
+									<?php
+									echo esc_html( $author_name ) . ' ';
+									printf(
+										esc_html( 'authored %s ago'),
+										esc_html( human_time_diff( strtotime( $author_date ) ) )
+									);
+									?>
+								</span>
+								<?php echo wp_kses_post( $committer ); ?>
+							</div>
+						</td>
+						<td>
+							<p style="padding-top:8px;"><?php echo esc_html( $commit_id ); ?></p>
+							<?php if ( $first ) : ?>
+							<form method="POST" style="display:inline;">
+								<?php wp_nonce_field( 'gitium-admin' ); ?>
+								<input type="submit"
+									name="GitiumSubmitRevertLastCommit"
+									class="button button-secondary"
+									value="Revert"
+									onclick="return confirm('Revert commit <?php echo esc_js( $commit_id ); ?>?');"
+								/>
+							</form>
+							<?php endif; ?>
+						</td>
+						<?php
+						$this->table_end_row();
+						$first = false;
+					}
+					?>
+				</tbody>
+			</table>
 		</div>
 		<?php
 	}
+	
 }
