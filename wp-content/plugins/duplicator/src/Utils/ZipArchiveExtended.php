@@ -3,6 +3,7 @@
 namespace Duplicator\Utils;
 
 use Duplicator\Core\Exceptions\DupliException;
+use Duplicator\Libs\Snap\SnapException;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapLog;
 use Duplicator\Libs\Snap\SnapUtil;
@@ -56,7 +57,12 @@ class ZipArchiveExtended
      */
     public function __destruct()
     {
-        $this->close();
+        // An exception thrown during stack unwinding would replace the original in-flight exception
+        try {
+            $this->close();
+        } catch (Throwable $e) {
+            DupLog::infoTrace('ZipArchive close on destruct failed: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -202,6 +208,8 @@ class ZipArchiveExtended
      * Close zip archive
      *
      * @return bool True on success or false on failure.
+     *
+     * @throws SnapException With the disk-full code when the close fails for lack of disk space or quota
      */
     public function close()
     {
@@ -209,21 +217,31 @@ class ZipArchiveExtended
             return true;
         }
 
-        $result = false;
+        $result     = false;
+        $closeError = '';
         try {
             if (($result = $this->zipArchive->close()) !== true) {
+                $closeError = $this->getLastStatusString();
                 DupLog::infoTrace("ZipArchive close failed on {$this->archivePath} [{$this->getLastErrorDetails()}]");
             }
         } catch (Throwable $e) {
-            DupLog::infoTrace('ZipArchive close error: ' . $e->getMessage());
+            // E.g. the close warning converted by an error handler: the libzip status is still readable
+            $closeError = $e->getMessage() . ' ' . $this->getLastStatusString();
+            DupLog::infoTrace('ZipArchive close error: ' . $e->getMessage() . " [{$this->getLastErrorDetails()}]");
             $result = false;
         }
 
         // Closing is one-shot: after a failed close PHP invalidates the internal
-        // object, so no further operation may be attempted on it. Never throws:
-        // it is also called from the destructor, where an exception during stack
-        // unwinding would replace the original in-flight exception.
+        // object, so no further operation may be attempted on it.
         $this->isOpened = false;
+
+        // Retrying cannot free space: fail instead of reporting a close failure the caller would retry
+        if (SnapIO::isDiskFullError($closeError)) {
+            throw new SnapException(
+                'ZipArchive close failed: ' . $closeError . "\n" . SnapLog::v2str($this->archivePath),
+                SnapException::CODE_DISK_FULL
+            );
+        }
 
         return $result;
     }
@@ -236,11 +254,26 @@ class ZipArchiveExtended
     protected function getLastErrorDetails(): string
     {
         try {
-            $statusString = $this->zipArchive->getStatusString();
+            $statusString = $this->getLastStatusString();
             return 'status ' . $this->zipArchive->status . '/' . $this->zipArchive->statusSys .
-                ': ' . ($statusString === false ? 'unknown' : $statusString);
+                ': ' . ($statusString === '' ? 'unknown' : $statusString);
         } catch (Throwable $e) {
             return 'status unavailable: ' . $e->getMessage();
+        }
+    }
+
+    /**
+     * Libzip description of the last ZipArchive error, the text close() classifies as disk full
+     *
+     * @return string Empty when unavailable
+     */
+    protected function getLastStatusString(): string
+    {
+        try {
+            $statusString = $this->zipArchive->getStatusString();
+            return is_string($statusString) ? $statusString : '';
+        } catch (Throwable $e) {
+            return '';
         }
     }
 

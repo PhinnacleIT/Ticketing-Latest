@@ -11,6 +11,7 @@ use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Utils\Logging\DupLog;
 use Exception;
 use Generator;
+use Throwable;
 
 /**
  * The index manager is a class to create, write, read the index file of duplicator.
@@ -367,12 +368,14 @@ abstract class AbstractIndexManager
             }
 
             $this->header->close($this->indexLists);
+            // Leave write mode only after a successful merge, so a failed close can be retried
+            $this->isOnWriteMode = false;
             $this->setSharedLock();
             $this->removeBackup();
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
+            DupLog::traceError('Error closing index file: ' . $e->getMessage());
             throw new Exception("Error closing index file: " . $e->getMessage(), 0, $e);
         } finally {
-            $this->isOnWriteMode = false;
             $this->flush();
         }
     }
@@ -469,7 +472,13 @@ abstract class AbstractIndexManager
     public function __destruct()
     {
         if (is_resource($this->handle)) {
-            $this->save();
+            try {
+                $this->save();
+            } catch (Throwable $e) {
+                // A write already failed by an explicit save() is retried here: its exception must not
+                // replace the one in flight nor become a fatal error at the end of the request
+                DupLog::traceError('Index file not saved on destruct: ' . $e->getMessage());
+            }
 
             if (flock($this->handle, LOCK_UN) === false) {
                 throw new Exception("Couldn't unlock index file before close.");

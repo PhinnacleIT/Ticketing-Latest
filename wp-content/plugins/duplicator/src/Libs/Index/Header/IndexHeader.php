@@ -5,6 +5,7 @@ namespace Duplicator\Libs\Index\Header;
 use Duplicator\Libs\Index\IndexList;
 use Duplicator\Libs\Snap\SnapIO;
 use Exception;
+use Throwable;
 
 /**
  * IndexHeader class.
@@ -372,7 +373,13 @@ class IndexHeader implements IndexHeaderInterface
         $this->writeFooter();
 
         $this->closure = 1;
-        $this->writeHeader();
+        try {
+            $this->writeHeader();
+        } catch (Throwable $e) {
+            // Back to the open state, otherwise a retried close would be refused as already closed
+            $this->closure = 0;
+            throw $e;
+        }
     }
 
     /**

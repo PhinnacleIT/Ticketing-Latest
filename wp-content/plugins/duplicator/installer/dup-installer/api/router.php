@@ -6,7 +6,7 @@ if (!defined('DUPXABSPATH')) {
 
 use Duplicator\Installer\Core\Bootstrap;
 
-define('DUPX_VERSION', '5.0.4');
+define('DUPX_VERSION', '5.0.5');
 define('DUPX_INIT', str_replace('\\', '/', dirname(__DIR__)));
 define('DUPX_ROOT', preg_match('/^[\\\\\/]?$/', dirname(DUPX_INIT)) ? '/' : dirname(DUPX_INIT));
 

@@ -19,77 +19,135 @@ class SnapDB
     private static $cache = [];
 
     /**
-     * Return array if primary key is composite key
+     * Return the columns of the unique index the rows are paged on
+     *
+     * Only full column not nullable indexes on primary-key or numeric columns qualify, so the
+     * same key works for dumps and installer replacement. Prefer visible indexes, then the
+     * fewest columns and the primary key on a tie.
      *
      * @param mysqli|resource $dbh         database connection
      * @param string          $tableName   table name
      * @param null|callable   $logCallback log callback
      *
-     * @return false|string|string[] return unique index column ky or false if don't exists
+     * @return false|string|string[] index column, the columns in index order if composite, false if none
      */
     public static function getUniqueIndexColumn($dbh, $tableName, $logCallback = null)
     {
         $cacheKey = self::CACHE_PREFIX_PRIMARY_KEY_COLUMN . $tableName;
 
         if (!isset(self::$cache[$cacheKey])) {
-            $query = 'SHOW COLUMNS FROM `' . self::realEscapeString($dbh, $tableName) . '` WHERE `Key` IN ("PRI","UNI")';
-            if (($result = self::query($dbh, $query)) === false) {
-                if (is_callable($logCallback)) {
-                    call_user_func($logCallback, $dbh, $result, $query);
+            $escapedTable = self::realEscapeString($dbh, $tableName);
+
+            $tableColumns = [];
+            foreach (self::getShowQueryRows($dbh, 'SHOW COLUMNS FROM `' . $escapedTable . '`', $logCallback) as $row) {
+                $tableColumns[$row['Field']] = $row;
+            }
+
+            $indexes = [];
+            foreach (self::getShowQueryRows($dbh, 'SHOW INDEX FROM `' . $escapedTable . '`', $logCallback) as $row) {
+                $indexes[$row['Key_name']][(int) $row['Seq_in_index']] = $row;
+            }
+
+            $best     = null;
+            $bestRank = null;
+            foreach ($indexes as $keyName => $parts) {
+                if (($candidate = self::getPageableIndex($parts, $tableColumns)) === null) {
+                    continue;
                 }
-                throw new \Exception('SHOW KEYS QUERY ERROR: ' . self::error($dbh));
+                $rank = [
+                    $candidate['tier'],
+                    count($candidate['columns']),
+                    $keyName === 'PRIMARY' ? 0 : 1,
+                ];
+                if ($bestRank === null || $rank < $bestRank) {
+                    $best     = $candidate['columns'];
+                    $bestRank = $rank;
+                }
             }
 
-            if (is_callable($logCallback)) {
-                call_user_func($logCallback, $dbh, $result, $query);
-            }
-
-            if (self::numRows($result) == 0) {
+            if ($best === null) {
                 self::$cache[$cacheKey] = false;
             } else {
-                $primary        = false;
-                $excludePrimary = false;
-                $unique         = false;
-
-                while ($row = self::fetchAssoc($result)) {
-                    switch ($row['Key']) {
-                        case 'PRI':
-                            if ($primary === false) {
-                                $primary = $row['Field'];
-                            } else {
-                                if (is_scalar($primary)) {
-                                    $primary = [$primary];
-                                }
-                                $primary[] = $row['Field'];
-                            }
-
-                            if (preg_match('/^(?:var)?binary/i', $row['Type'])) {
-                                // exclude binary or varbynary columns
-                                $excludePrimary = true;
-                            }
-                            break;
-                        case 'UNI':
-                            if (!preg_match('/^(?:var)?binary/i', $row['Type'])) {
-                                // exclude binary or varbynary columns
-                                $unique = $row['Field'];
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                if ($primary !== false && $excludePrimary === false) {
-                    self::$cache[$cacheKey] = $primary;
-                } elseif ($unique !== false) {
-                    self::$cache[$cacheKey] = $unique;
-                } else {
-                    self::$cache[$cacheKey] = false;
-                }
+                self::$cache[$cacheKey] = count($best) === 1 ? $best[0] : $best;
             }
-            self::freeResult($result);
         }
 
         return self::$cache[$cacheKey];
+    }
+
+    /**
+     * Return the columns of an index in index order and its preference tier, null if the rows can't be paged on it
+     *
+     * Invisible (MySQL) and ignored (MariaDB) indexes rank after indexes the optimizer can use.
+     *
+     * @param array<int, array<string, mixed>>      $parts        SHOW INDEX rows of the index by Seq_in_index
+     * @param array<string, array<string, ?string>> $tableColumns SHOW COLUMNS rows by column name
+     *
+     * @return ?array{columns: string[], tier: int}
+     */
+    private static function getPageableIndex(array $parts, array $tableColumns): ?array
+    {
+        ksort($parts);
+        $columns  = [];
+        $unusable = false;
+        foreach ($parts as $part) {
+            $column = $part['Column_name'];
+            if (
+                (int) $part['Non_unique'] !== 0 ||
+                $column === null ||
+                !isset($tableColumns[$column]) ||
+                $part['Null'] === 'YES' ||
+                $part['Sub_part'] !== null ||
+                preg_match('/^(?:var)?binary/i', (string) $tableColumns[$column]['Type']) ||
+                stripos((string) $tableColumns[$column]['Extra'], 'INVISIBLE') !== false
+            ) {
+                return null;
+            }
+            // Installer replacement leaves primary-key columns and numeric values unchanged.
+            if (
+                $tableColumns[$column]['Key'] !== 'PRI' &&
+                !preg_match('/^(?:tinyint|smallint|mediumint|int|bigint|decimal|float|double)\b/i', (string) $tableColumns[$column]['Type'])
+            ) {
+                return null;
+            }
+            $unusable  = $unusable ||
+                ($part['Visible'] ?? 'YES') === 'NO' ||
+                ($part['Ignored'] ?? 'NO') === 'YES';
+            $columns[] = $column;
+        }
+
+        return [
+            'columns' => $columns,
+            'tier'    => $unusable ? 1 : 0,
+        ];
+    }
+
+    /**
+     * Run a SHOW query and return all its rows
+     *
+     * @param mysqli|resource $dbh         database connection
+     * @param string          $query       query
+     * @param null|callable   $logCallback log callback
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private static function getShowQueryRows($dbh, string $query, $logCallback): array
+    {
+        $result = self::query($dbh, $query);
+        if (is_callable($logCallback)) {
+            call_user_func($logCallback, $dbh, $result, $query);
+        }
+        if ($result === false) {
+            throw new \Exception('SHOW KEYS QUERY ERROR: ' . self::error($dbh));
+        }
+
+        $rows = [];
+        while ($row = self::fetchAssoc($result)) {
+            $rows[] = $row;
+        }
+        self::freeResult($result);
+
+        return $rows;
     }
 
     /**
@@ -134,6 +192,93 @@ class SnapDB
                 return $lastOffset;
             }
         }
+    }
+
+    /**
+     * Encode an index offset for JSON storage without losing bytes or types
+     *
+     * Strings, which may hold bytes that are not valid UTF-8, are stored in base64. A composite
+     * offset becomes an ordered list of column/value pairs, encoded the same way.
+     *
+     * @param mixed $offset Index offset: a scalar, or column => value for a composite key
+     *
+     * @return mixed JSON-safe value
+     */
+    public static function encodeIndexOffset($offset)
+    {
+        if (!is_array($offset)) {
+            return self::encodeOffsetValue($offset);
+        }
+
+        $pairs = [];
+        foreach ($offset as $column => $value) {
+            $pairs[] = [
+                self::encodeOffsetValue((string) $column),
+                self::encodeOffsetValue($value),
+            ];
+        }
+        return ['columns' => $pairs];
+    }
+
+    /**
+     * Restore an index offset encoded by encodeIndexOffset()
+     *
+     * @param mixed $encoded Decoded JSON value
+     *
+     * @return mixed
+     *
+     * @throws Exception When the value is not a valid encoded offset
+     */
+    public static function decodeIndexOffset($encoded)
+    {
+        if (!is_array($encoded) || !array_key_exists('columns', $encoded)) {
+            return self::decodeOffsetValue($encoded);
+        }
+        if (!is_array($encoded['columns'])) {
+            throw new Exception('invalid composite offset');
+        }
+
+        $offset = [];
+        foreach ($encoded['columns'] as $pair) {
+            if (!is_array($pair) || count($pair) !== 2) {
+                throw new Exception('invalid composite offset pair');
+            }
+            $offset[self::decodeOffsetValue($pair[0])] = self::decodeOffsetValue($pair[1]);
+        }
+        return $offset;
+    }
+
+    /**
+     * Encode one offset value: strings in base64, other scalars as they are
+     *
+     * @param mixed $value Offset value
+     *
+     * @return mixed
+     */
+    private static function encodeOffsetValue($value)
+    {
+        return is_string($value) ? ['base64' => base64_encode($value)] : $value;
+    }
+
+    /**
+     * Restore one offset value encoded by encodeOffsetValue()
+     *
+     * @param mixed $value Decoded JSON value
+     *
+     * @return mixed
+     *
+     * @throws Exception When the value is not a valid encoded value
+     */
+    private static function decodeOffsetValue($value)
+    {
+        if (!is_array($value)) {
+            return $value;
+        }
+        $decoded = isset($value['base64']) && is_string($value['base64']) ? base64_decode($value['base64'], true) : false;
+        if ($decoded === false) {
+            throw new Exception('invalid offset value');
+        }
+        return $decoded;
     }
 
     /**

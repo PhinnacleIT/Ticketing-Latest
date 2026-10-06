@@ -93,6 +93,7 @@ class DupliException extends Exception
     const CODE_INSTALLER_ADD_FAILED         = 173;
     const CODE_INSTALLER_CONSISTENCY_FAILED = 174;
     const CODE_DISK_FULL                    = 180;
+    const CODE_FILE_TOO_LARGE               = 181;
 
     const CODE_OPTIONS_INVALID_CONFIGURATION = 190;
     const CODE_OPTIONS_INVALID_FILTER_RESULT = 191;
@@ -107,6 +108,7 @@ class DupliException extends Exception
     private const HANDLED_CODES = [
         self::CODE_LOCK_ACQUIRE_FAILED,
         self::CODE_DISK_FULL,
+        self::CODE_FILE_TOO_LARGE,
         self::CODE_ZIP_NOT_AVAILABLE,
         self::CODE_SCAN_SOURCE_UNREADABLE,
         self::CODE_STORAGE_INVALID,
@@ -126,6 +128,29 @@ class DupliException extends Exception
                 'Your hosting account ran out of disk space or reached its storage quota.
                 Free up space by removing unneeded files or old backups, or contact your
                 hosting provider to increase the available space, then run the Backup again.',
+                'duplicator'
+            ),
+            $previous
+        );
+        $exception->useFactoryCallerOrigin(__FILE__);
+
+        return $exception;
+    }
+
+    /**
+     * @param Throwable|null $previous The originating I/O failure, for chaining
+     *
+     * @return self
+     */
+    public static function fileTooLarge(?Throwable $previous = null): self
+    {
+        $exception = new self(
+            'File write failed: the file reached the maximum file size allowed by the server.',
+            self::CODE_FILE_TOO_LARGE,
+            __(
+                'A Backup file reached the maximum file size allowed by your hosting server.
+                This limit is part of the hosting configuration: contact your hosting provider to raise it,
+                or reduce the Backup size with filters.',
                 'duplicator'
             ),
             $previous

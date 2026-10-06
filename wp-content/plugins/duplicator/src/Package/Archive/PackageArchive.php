@@ -265,9 +265,9 @@ class PackageArchive
 
         if (strlen($rootPath) > 0) {
             clearstatcache(true, $rootPath);
-            $pathAllowed = $this->isTargetRootPathAllowed($rootPath);
-            if (!$pathAllowed || !is_dir($rootPath)) {
-                throw $this->invalidTargetRootException($rootPath, $pathAllowed);
+            $isDirectory = $this->checkTargetRootDirectory($rootPath);
+            if ($isDirectory !== true) {
+                throw $this->invalidTargetRootException($rootPath, $isDirectory !== null);
             }
         }
 
@@ -314,15 +314,15 @@ class PackageArchive
     }
 
     /**
-     * Check whether open_basedir permits access to the target root.
+     * Check whether the target root is a directory, with open_basedir applied by PHP itself.
      *
      * @param string $rootPath Target root path
      *
-     * @return bool
+     * @return ?bool Whether it is a directory, null when open_basedir blocks it
      */
-    protected function isTargetRootPathAllowed(string $rootPath): bool
+    protected function checkTargetRootDirectory(string $rootPath): ?bool
     {
-        return SnapOpenBasedir::isPathValid($rootPath);
+        return SnapOpenBasedir::checkDirectory($rootPath);
     }
 
     /**

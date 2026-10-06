@@ -102,10 +102,15 @@ final class SnapGzip
                 if ($data === '') {
                     break;
                 }
-                if (gzwrite($target, $data) === false) {
+                // A failed write (for example a full disk) returns fewer bytes, not false
+                if (gzwrite($target, $data) !== strlen($data)) {
                     throw new Exception("Write error while compressing to {$targetPath} at offset " . ($offset + $processed));
                 }
                 $processed += strlen($data);
+            }
+            // gzclose() reports success even when writing the buffered data fails
+            if (!fflush($target)) {
+                throw new Exception("Write error while compressing to {$targetPath} at offset " . ($offset + $processed));
             }
         } finally {
             fclose($source);

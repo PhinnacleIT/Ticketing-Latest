@@ -22,6 +22,10 @@ class DupArchive
     const EXCEPTION_CODE_ADD_ERROR        = 15;
     const EXCEPTION_CODE_EXTRACT_ERROR    = 16;
     const EXCEPTION_CODE_VALIDATION_ERROR = 17;
+    /**
+     * The server can't produce a valid password hash: encrypted archives can't be created
+     */
+    const EXCEPTION_CODE_ENCRYPTION_UNAVAILABLE = 18;
 
     const DUPARCHIVE_VERSION  = '5.0.1';
     const INDEX_FILE_NAME     = '__dup__archive__index.json';
@@ -38,7 +42,7 @@ class DupArchive
 
     const HASH_ALGO      = 'crc32b';
     const PWD_ALGO       = '$6$rounds=50000$'; // SHA-512 50000 times with salt
-    const PWD_SALT_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#%^-_%^&*()[]{}<>~`+=,.;:/?|';
+    const PWD_SALT_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./'; // crypt() salt alphabet, system libcrypt rejects others
     const CRYPT_ALGO     = 'AES-256-CBC';
 
     /**

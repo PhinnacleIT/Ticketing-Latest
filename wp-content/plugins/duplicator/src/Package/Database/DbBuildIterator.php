@@ -4,9 +4,11 @@ namespace Duplicator\Package\Database;
 
 use Duplicator\Core\Exceptions\DupliException;
 use Duplicator\Utils\Logging\DupLog;
+use Duplicator\Libs\Snap\SnapDB;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapLog;
 use Duplicator\Libs\WpUtils\WpDbUtils;
+use Exception;
 use Iterator;
 
 /**
@@ -118,7 +120,7 @@ class DbBuildIterator implements Iterator
 
         $this->tableIndex           = $data[0];
         $this->tableOffset          = $data[1];
-        $this->lastIndexOffset      = is_scalar($data[2]) ? $data[2] : (array) $data[2];
+        $this->lastIndexOffset      = $data[2];
         $this->totalRowsOffset      = $data[3];
         $this->lastIsCompleteInsert = $data[4];
         $this->tableRows            = $data[5];
@@ -139,8 +141,8 @@ class DbBuildIterator implements Iterator
      *
      * @param string $file path to the progress file to read
      *
-     * @return ?array<int, mixed> decoded checkpoint data, or null if the file is missing,
-     *                            unreadable, empty or not valid JSON
+     * @return ?array<int, mixed> decoded checkpoint data with the last index offset restored, or null
+     *                            if the file is missing, unreadable, empty or not a valid checkpoint
      */
     private function loadProgressData(string $file): ?array
     {
@@ -151,6 +153,13 @@ class DbBuildIterator implements Iterator
         $data = json_decode($content, true);
         if (!is_array($data) || count($data) < 8) {
             DupLog::traceError('Can\'t decode json progress data content: ' . SnapLog::v2str($content));
+            return null;
+        }
+
+        try {
+            $data[2] = SnapDB::decodeIndexOffset($data[2]);
+        } catch (Exception $e) {
+            DupLog::traceError('Can\'t decode progress data last index offset: ' . $e->getMessage());
             return null;
         }
 
@@ -173,7 +182,7 @@ class DbBuildIterator implements Iterator
         $data = [
             $this->tableIndex,
             $this->tableOffset,
-            $this->lastIndexOffset,
+            SnapDB::encodeIndexOffset($this->lastIndexOffset),
             $this->totalRowsOffset,
             $this->lastIsCompleteInsert,
             $this->tableRows,

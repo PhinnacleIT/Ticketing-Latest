@@ -244,7 +244,7 @@ class PackageArchiveShellZip
         }
 
         throw new DupliException(
-            sprintf('Shell zip command failed with exit code %d.', $exitCode),
+            sprintf('Shell zip command failed with exit code %d (%s).', $exitCode, SnapString::spellDigits($exitCode)),
             DupliException::CODE_SHELL_ZIP_FAILED,
             __('The shell zip command failed while creating the archive.', 'duplicator')
         );

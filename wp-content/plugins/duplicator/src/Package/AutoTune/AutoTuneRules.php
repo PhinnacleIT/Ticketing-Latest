@@ -120,6 +120,7 @@ final class AutoTuneRules
         DupliException::CODE_STORAGE_INVALID,
         DupliException::CODE_INSTALLER_BUILD_FAILED,
         DupliException::CODE_DISK_FULL,
+        DupliException::CODE_FILE_TOO_LARGE,
         DupliException::CODE_OPTIONS_INVALID_CONFIGURATION,
         DupliException::CODE_OPTIONS_INVALID_FILTER_RESULT,
     ];
@@ -503,6 +504,14 @@ final class AutoTuneRules
             return __(
                 'The server ran out of disk space or exceeded its disk quota while creating the archive.
                 Free up disk space or raise the quota, then start a new AutoTune session.',
+                'duplicator'
+            );
+        }
+        if ($code === DupliException::CODE_FILE_TOO_LARGE) {
+            return __(
+                'A Backup file reached the maximum file size allowed by the hosting server.
+                Build setting changes cannot raise this limit. Ask the hosting provider to raise it
+                or reduce the Backup size with filters, then start a new AutoTune session.',
                 'duplicator'
             );
         }

@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Duplicator\Package\AutoTune;
 
 use Duplicator\Core\Exceptions\DupliException;
+use Duplicator\Core\MigrationMng;
 use Duplicator\Core\Options\OptionsManager;
 use Duplicator\Core\Options\Rules\ArchiveEngineRule;
 use Duplicator\Core\Options\Rules\EncryptionRule;
 use Duplicator\Core\UniqueId;
+use Duplicator\Installer\Models\MigrateData;
 use Duplicator\Installer\Package\ArchiveDescriptor;
 use Duplicator\Models\DynamicGlobalEntity;
 use Duplicator\Models\GlobalEntity;
@@ -24,6 +26,7 @@ use Duplicator\Utils\Lock\SqlLock;
 use Duplicator\Utils\Logging\DupLog;
 use Duplicator\Utils\UsageStatistics\Telemetry\AutoTuneTelemetry;
 use Duplicator\Utils\UsageStatistics\Telemetry\TelemetryEvents;
+use Duplicator\Views\AdminNotices;
 use Exception;
 use Throwable;
 
@@ -99,6 +102,11 @@ final class AutoTuneManager
             1
         );
         add_action('duplicator_runner_pre_process', [self::class, 'checkAndAdvance']);
+        // AutoTune results depend on the host: after a migration or a restore AutoTune starts from the never-run state
+        add_action(MigrationMng::HOOK_FIRST_LOGIN_AFTER_INSTALL, function (MigrateData $migrationData): void {
+            AutoTuneSessionEntity::getInstance()->reset();
+            delete_option(AdminNotices::AUTOTUNE_SUGGEST_DISMISSED);
+        });
     }
 
     /**

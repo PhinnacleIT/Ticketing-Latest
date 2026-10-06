@@ -193,6 +193,10 @@ class TemporaryPackageUtils
         }
         $idProperty->setValue($package, -1);
 
+        // The clone inherits the scan-time timer: restart it so the time spent
+        // reviewing the scan results is not counted by the stuck watchdog
+        $package->restartStateTimer($package->getStatus());
+
         self::removeTemporaryFlag($package);
         if (!$package->save()) {
             throw new RuntimeException('Failed to save new package from temporary package');

@@ -629,9 +629,9 @@ trait TraitPackageBuild
     }
 
     /**
-     * Normalize the failure cause: a disk-full I/O failure anywhere in the
-     * exception chain is reported as the canonical disk-full domain exception,
-     * so it gets handled severity and the matching recommended fix.
+     * Normalize the failure cause: a disk-full or file size limit I/O failure
+     * anywhere in the exception chain is reported as its canonical domain
+     * exception, so it gets handled severity and the matching recommended fix.
      *
      * @param Throwable $exception The failure cause
      *
@@ -639,15 +639,21 @@ trait TraitPackageBuild
      */
     private static function classifyFailureException(Throwable $exception): Throwable
     {
-        if ($exception instanceof DupliException && $exception->getCode() === DupliException::CODE_DISK_FULL) {
+        if (
+            $exception instanceof DupliException &&
+            in_array($exception->getCode(), [DupliException::CODE_DISK_FULL, DupliException::CODE_FILE_TOO_LARGE], true)
+        ) {
             return $exception;
         }
 
-        if (SnapException::isDiskFullInChain($exception)) {
-            return DupliException::diskFull($exception);
+        switch (SnapException::conditionInChain($exception)) {
+            case SnapException::CODE_DISK_FULL:
+                return DupliException::diskFull($exception);
+            case SnapException::CODE_FILE_TOO_LARGE:
+                return DupliException::fileTooLarge($exception);
+            default:
+                return $exception;
         }
-
-        return $exception;
     }
 
     /**

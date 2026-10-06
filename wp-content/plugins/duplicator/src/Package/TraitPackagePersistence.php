@@ -391,7 +391,7 @@ CREATE TABLE `{$tableName}` (
     PRIMARY KEY  (`id`),
     KEY `type_idx` (`type`),
     KEY `hash` (`hash`),
-    KEY `flags` (`flags`),
+    KEY `flags` (`flags`(191)),
     KEY `version` (`version`),
     KEY `created` (`created`),
     KEY `updated_at` (`updated_at`),

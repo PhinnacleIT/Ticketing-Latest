@@ -406,6 +406,22 @@ class BuildFailureRemedies
                     DUPLICATOR_DUPLICATOR_DOCS_URL . 'how-to-manage-server-resources-cpu-memory-disk/#disk-quota-limitations',
                     __('Disk Quota Limitations', 'duplicator')
                 );
+            case DupliException::CODE_FILE_TOO_LARGE:
+                return Fix::notice(
+                    $key,
+                    $message,
+                    [
+                        __(
+                            'Ask your hosting provider for the maximum file size allowed on your account and whether it can be raised.',
+                            'duplicator'
+                        ),
+                        __(
+                            'Reduce the Backup size by excluding large folders, files or database tables with the Backup filters,
+                            then run the Backup again.',
+                            'duplicator'
+                        ),
+                    ]
+                );
             case DupliException::CODE_SHELL_ZIP_FILE_NOT_FOUND:
                 return Fix::notice($key, $message)
                     ->setDocReference(

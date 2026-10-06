@@ -313,6 +313,49 @@ class WpDbUtils
         bool $prefixFilter = false,
         bool $prefixSubFilter = false
     ): array {
+        $results = self::queryTables($prefixFilter, $prefixSubFilter);
+
+        /**
+         * Filter the list of database tables
+         *
+         * Allows addons to exclude specific tables from the list (e.g., staging tables).
+         * Tables removed by this filter are hidden from the table filters and excluded from backups.
+         *
+         * @param array<array{name: string, rows: int, size: int}> $results List of tables with metadata
+         *
+         * @return array<array{name: string, rows: int, size: int}> Filtered list of tables
+         */
+        $results = apply_filters('duplicator_database_tables_list', $results);
+
+        if ($nameOnly) {
+            return array_column($results, 'name');
+        }
+
+        return $results;
+    }
+
+    /**
+     * Get the names of every base table in the database, without the duplicator_database_tables_list filter
+     *
+     * @return string[]
+     * @throws DupliException When the table-list query fails
+     */
+    public static function getAllTableNames(): array
+    {
+        return array_column(self::queryTables(false, false), 'name');
+    }
+
+    /**
+     * Query the base tables in the database
+     *
+     * @param bool $prefixFilter    If true only include tables matching the WordPress prefix
+     * @param bool $prefixSubFilter If true apply multisite sub-site prefix filtering
+     *
+     * @return array<array{name:string,rows:int,size:int}>
+     * @throws DupliException When the table-list query fails
+     */
+    private static function queryTables(bool $prefixFilter, bool $prefixSubFilter): array
+    {
         /** @var wpdb $wpdb */
         global $wpdb;
 
@@ -353,22 +396,6 @@ class WpDbUtils
         for ($i = 0, $count = count($results); $i < $count; $i++) {
             $results[$i]['size'] = (int) $results[$i]['size'];
             $results[$i]['rows'] = (int) $results[$i]['rows'];
-        }
-
-        /**
-         * Filter the list of database tables
-         *
-         * Allows addons to exclude specific tables from the list (e.g., staging tables).
-         * Tables removed by this filter are completely invisible to the system.
-         *
-         * @param array<array{name: string, rows: int, size: int}> $results List of tables with metadata
-         *
-         * @return array<array{name: string, rows: int, size: int}> Filtered list of tables
-         */
-        $results = apply_filters('duplicator_database_tables_list', $results);
-
-        if ($nameOnly) {
-            return array_column($results, 'name');
         }
 
         return $results;

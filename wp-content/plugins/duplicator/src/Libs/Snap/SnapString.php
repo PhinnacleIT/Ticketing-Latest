@@ -193,6 +193,37 @@ class SnapString
     }
 
     /**
+     * Spell an integer digit by digit (e.g. `one-two-seven`, `minus-one`)
+     *
+     * Keeps a number distinguishable in text whose digits are later normalized away.
+     *
+     * @param int $number Number to spell
+     *
+     * @return string Words joined by hyphens, with no digits
+     */
+    public static function spellDigits(int $number): string
+    {
+        $digitWords = [
+            'zero',
+            'one',
+            'two',
+            'three',
+            'four',
+            'five',
+            'six',
+            'seven',
+            'eight',
+            'nine',
+        ];
+        $words      = [];
+        foreach (str_split(ltrim((string) $number, '-')) as $digit) {
+            $words[] = $digitWords[(int) $digit];
+        }
+
+        return ($number < 0 ? 'minus-' : '') . implode('-', $words);
+    }
+
+    /**
      * If input value is string, try to get typed value from it or return input value, if input value is array, return array with typed values
      *
      * @param mixed $value Generic value to get typed value from

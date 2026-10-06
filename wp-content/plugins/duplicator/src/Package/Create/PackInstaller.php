@@ -20,6 +20,7 @@ use Duplicator\Libs\Snap\SnapCode;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapLog;
 use Duplicator\Libs\Snap\SnapOrigFileManager;
+use Duplicator\Libs\Snap\SnapString;
 use Duplicator\Libs\Snap\SnapWP;
 use Duplicator\Libs\WpConfig\WPConfigTransformer;
 use Duplicator\Models\Storages\StoragesUtil;
@@ -1279,7 +1280,11 @@ HEADER;
             }
 
             throw new DupliException(
-                sprintf('Shell zip command failed adding installer files, exit code %d.', $exitCode),
+                sprintf(
+                    'Shell zip command failed adding installer files, exit code %d (%s).',
+                    $exitCode,
+                    SnapString::spellDigits($exitCode)
+                ),
                 DupliException::CODE_INSTALLER_ADD_FAILED,
                 __('The shell zip command failed while adding the installer files to the archive.', 'duplicator')
             );

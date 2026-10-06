@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-18T19:02:20+00:00\n"
+"POT-Creation-Date: 2026-09-29T17:05:18+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: duplicator\n"
@@ -2629,15 +2629,22 @@ msgstr ""
 msgid "The capability to change settings."
 msgstr ""
 
-#: src/Core/Controllers/AbstractSinglePageController.php:384
+#: src/Core/Controllers/AbstractSinglePageController.php:390
 msgid "You do not have sufficient permissions to access this page."
 msgstr ""
 
-#: src/Core/Exceptions/DupliException.php:125
+#: src/Core/Exceptions/DupliException.php:127
 msgid ""
 "Your hosting account ran out of disk space or reached its storage quota.\n"
 "                Free up space by removing unneeded files or old backups, or contact your\n"
 "                hosting provider to increase the available space, then run the Backup again."
+msgstr ""
+
+#: src/Core/Exceptions/DupliException.php:150
+msgid ""
+"A Backup file reached the maximum file size allowed by your hosting server.\n"
+"                This limit is part of the hosting configuration: contact your hosting provider to raise it,\n"
+"                or reduce the Backup size with filters."
 msgstr ""
 
 #: src/Core/MigrationMng.php:364
@@ -2934,38 +2941,38 @@ msgstr ""
 msgid "Content is empty!"
 msgstr ""
 
-#: src/Libs/Snap/SnapString.php:237
+#: src/Libs/Snap/SnapString.php:268
 #, php-format
 msgctxt "sec. stands for seconds"
 msgid "%.3f sec."
 msgstr ""
 
-#: src/Libs/Snap/SnapString.php:259
+#: src/Libs/Snap/SnapString.php:290
 msgid "0 sec"
 msgstr ""
 
-#: src/Libs/Snap/SnapString.php:270
+#: src/Libs/Snap/SnapString.php:301
 #, php-format
 msgid "%d hr"
 msgid_plural "%d hrs"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/Libs/Snap/SnapString.php:277
+#: src/Libs/Snap/SnapString.php:308
 #, php-format
 msgid "%d min"
 msgid_plural "%d mins"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/Libs/Snap/SnapString.php:284
+#: src/Libs/Snap/SnapString.php:315
 #, php-format
 msgid "%d sec"
 msgid_plural "%d secs"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/Libs/WpUtils/WpDbUtils.php:349
+#: src/Libs/WpUtils/WpDbUtils.php:392
 msgid "Duplicator could not read the database table list. Check the database error in the Backup log."
 msgstr ""
 
@@ -4195,7 +4202,7 @@ msgstr ""
 #: src/Package/AbstractPackageDeployer.php:214
 #: src/Package/AbstractPackageDeployer.php:296
 #: src/Package/AbstractPackageDeployer.php:1204
-#: src/Utils/ZipArchiveExtended.php:382
+#: src/Utils/ZipArchiveExtended.php:415
 msgid "ZipArchive PHP module is not installed/enabled. The current Backup cannot be opened."
 msgstr ""
 
@@ -4598,127 +4605,127 @@ msgstr ""
 msgid "Raise memory_limit to at least %s in the PHP configuration, or ask the host to do it."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:119
+#: src/Package/AutoTune/AutoTuneManager.php:127
 msgid "AutoTune is being updated by another process."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:125
+#: src/Package/AutoTune/AutoTuneManager.php:133
 msgid "An AutoTune session is already running."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:153
+#: src/Package/AutoTune/AutoTuneManager.php:161
 msgid "No usable build configuration is available on this server. Review the backup settings."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:179
-#: src/Package/AutoTune/AutoTuneManager.php:652
+#: src/Package/AutoTune/AutoTuneManager.php:187
+#: src/Package/AutoTune/AutoTuneManager.php:660
 msgid "The default backup template is missing."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:206
+#: src/Package/AutoTune/AutoTuneManager.php:214
 msgid "No AutoTune session is running."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:214
+#: src/Package/AutoTune/AutoTuneManager.php:222
 msgid "Session aborted by the user."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:231
+#: src/Package/AutoTune/AutoTuneManager.php:239
 msgid "Cannot restore the settings while the AutoTune session is running."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:520
+#: src/Package/AutoTune/AutoTuneManager.php:528
 msgid "This backup belongs to the running AutoTune session. Abort the session from the AutoTune page to stop it."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:546
-#: src/Package/AutoTune/AutoTuneManager.php:606
-#: src/Package/AutoTune/AutoTuneManager.php:695
+#: src/Package/AutoTune/AutoTuneManager.php:554
+#: src/Package/AutoTune/AutoTuneManager.php:614
+#: src/Package/AutoTune/AutoTuneManager.php:703
 msgid "The test Backup no longer exists."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:569
+#: src/Package/AutoTune/AutoTuneManager.php:577
 msgid "The maximum AutoTune session time was exceeded."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:587
+#: src/Package/AutoTune/AutoTuneManager.php:595
 msgid "The AutoTune session has no attempts."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:641
+#: src/Package/AutoTune/AutoTuneManager.php:649
 msgid "Another backup started during the AutoTune session."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:665
+#: src/Package/AutoTune/AutoTuneManager.php:673
 msgid "The next AutoTune attempt could not be started."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:723
+#: src/Package/AutoTune/AutoTuneManager.php:731
 #: src/Views/AutoTunePageData.php:560
 msgid "The test Backup failed without reporting the cause."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:971
+#: src/Package/AutoTune/AutoTuneManager.php:979
 msgid "AutoTune stopped because an internal transition failed."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:1022
+#: src/Package/AutoTune/AutoTuneManager.php:1030
 msgid "One of the AutoTune exclusions is not refusable."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:1057
+#: src/Package/AutoTune/AutoTuneManager.php:1065
 msgid "The default template encrypts the archive:"
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:385
+#: src/Package/AutoTune/AutoTuneRules.php:386
 #, php-format
 msgid "%d MB chunk"
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:388
+#: src/Package/AutoTune/AutoTuneRules.php:389
 msgid "reduced query limit"
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:391
+#: src/Package/AutoTune/AutoTuneRules.php:392
 msgid "no compression"
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:394
+#: src/Package/AutoTune/AutoTuneRules.php:395
 msgid "server throttle"
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:442
+#: src/Package/AutoTune/AutoTuneRules.php:443
 msgid ""
 "The build stalled: the server did not run the background build workers.\n"
 "                Open Settings > Backups > Server Detection to verify the loopback requests and the client-side kickoff status;\n"
 "                if client-side kickoff is enabled, keep the browser page open while the session runs."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:450
+#: src/Package/AutoTune/AutoTuneRules.php:451
 msgid ""
 "The build could not acquire the process lock, another Duplicator process may be holding it.\n"
 "                Wait a few minutes and start a new AutoTune session."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:459
+#: src/Package/AutoTune/AutoTuneRules.php:460
 msgid "The file scan index could not be completed."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:463
+#: src/Package/AutoTune/AutoTuneRules.php:464
 msgid ""
 "The file scan report is invalid or incomplete, so the build could not read the scanned file list.\n"
 "                Changing the build settings cannot fix this condition. Check the Backup log for the scan outcome,\n"
 "                then start a new AutoTune session."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:471
+#: src/Package/AutoTune/AutoTuneRules.php:472
 msgid ""
 "The folder to back up is not a valid directory. Changing the archive engine cannot fix this condition.\n"
 "                Check the Backup log for the resolved folder path, verify that the WordPress core and content paths still\n"
 "                exist and ask the hosting provider to check filesystem access, then start a new AutoTune session."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:479
+#: src/Package/AutoTune/AutoTuneRules.php:480
 msgid ""
 "PHP cannot list one of the source folders. Duplicator does not need write access, but PHP needs read and list\n"
 "                access to that folder and traverse access to its parent folders. Ask the hosting provider to correct those\n"
@@ -4726,58 +4733,65 @@ msgid ""
 "                scheduled and manual Backups, then start a new AutoTune session."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:488
+#: src/Package/AutoTune/AutoTuneRules.php:489
 msgid ""
 "The internal database export checkpoint could not be serialized. Build setting changes cannot fix this error.\n"
 "                Start a new AutoTune session; if the problem continues, contact support and include the backup log."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:495
+#: src/Package/AutoTune/AutoTuneRules.php:496
 msgid ""
 "The site file scan failed or produced unreadable scan files.\n"
 "                Check the permissions of the Duplicator backup directory inside wp-content and review the backup file filters,\n"
 "                then start a new AutoTune session."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:503
+#: src/Package/AutoTune/AutoTuneRules.php:504
 msgid ""
 "The server ran out of disk space or exceeded its disk quota while creating the archive.\n"
 "                Free up disk space or raise the quota, then start a new AutoTune session."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:510
+#: src/Package/AutoTune/AutoTuneRules.php:511
+msgid ""
+"A Backup file reached the maximum file size allowed by the hosting server.\n"
+"                Build setting changes cannot raise this limit. Ask the hosting provider to raise it\n"
+"                or reduce the Backup size with filters, then start a new AutoTune session."
+msgstr ""
+
+#: src/Package/AutoTune/AutoTuneRules.php:519
 msgid ""
 "The build could not create or write its work files.\n"
 "                Check the free disk space and the permissions of the Duplicator backup directory inside wp-content,\n"
 "                then start a new AutoTune session."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:518
+#: src/Package/AutoTune/AutoTuneRules.php:527
 msgid ""
 "The default template requires archive encryption but the selected engine cannot encrypt on this server.\n"
 "                Disable the encryption in the default template or ask the host to enable the required libraries,\n"
 "                then start a new AutoTune session."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:526
+#: src/Package/AutoTune/AutoTuneRules.php:535
 msgid ""
 "The default storage is not usable.\n"
 "                Review the default storage configuration in the Storage page, then start a new AutoTune session."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:533
+#: src/Package/AutoTune/AutoTuneRules.php:542
 msgid ""
 "The build settings combination is not valid on this server.\n"
 "                Review the backup settings or contact the support team, then start a new AutoTune session."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:540
+#: src/Package/AutoTune/AutoTuneRules.php:549
 msgid ""
 "The last failure cannot be fixed by adjusting the build settings. Review the error details\n"
 "            and the server configuration, then start a new AutoTune session."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneRules.php:552
+#: src/Package/AutoTune/AutoTuneRules.php:561
 msgid ""
 "Every build configuration available on this server has been tried without success.\n"
 "            Please contact the support team."
@@ -5165,122 +5179,133 @@ msgstr ""
 msgid "The table %s was not found in the database during the export."
 msgstr ""
 
-#: src/Package/Create/DupArchive/PackageDupArchive.php:50
+#: src/Package/Create/DupArchive/PackageDupArchive.php:51
 msgid "The server stopped the Backup build process before it could complete."
 msgstr ""
 
-#: src/Package/Create/DupArchive/PackageDupArchive.php:140
-#: src/Package/Create/DupArchive/PackageDupArchive.php:179
+#: src/Package/Create/DupArchive/PackageDupArchive.php:141
+#: src/Package/Create/DupArchive/PackageDupArchive.php:321
 msgid "The backup failed while adding files to the archive. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Create/DupArchive/PackageDupArchive.php:254
-#: src/Package/Create/DupArchive/PackageDupArchive.php:264
+#: src/Package/Create/DupArchive/PackageDupArchive.php:250
+#: src/Package/Create/DupArchive/PackageDupArchive.php:260
 msgid "The backup was built but failed validation. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Create/DupArchive/PackageDupArchive.php:331
-#: src/Package/Create/DupArchive/PackageDupArchive.php:341
+#: src/Package/Create/DupArchive/PackageDupArchive.php:308
+msgid ""
+"Archive encryption with the DupArchive engine is not supported on this server:\n"
+"                    PHP could not generate a valid password hash. Disable archive encryption\n"
+"                    or switch to another archive engine, then run the Backup again."
+msgstr ""
+
+#: src/Package/Create/DupArchive/PackageDupArchive.php:358
+#: src/Package/Create/DupArchive/PackageDupArchive.php:368
 msgid "Could not realign the backup archive during chunk recovery."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:727
+#: src/Package/Create/PackInstaller.php:728
 msgid "An installer file to add to the archive is missing or not readable. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:960
+#: src/Package/Create/PackInstaller.php:961
 msgid "The backup failed while adding the installer files to the archive. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1062
+#: src/Package/Create/PackInstaller.php:1063
 msgid "The backup archive is missing or empty, the installer files cannot be added. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1120
+#: src/Package/Create/PackInstaller.php:1121
 msgid "Could not open the archive file to add the installer files."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1139
+#: src/Package/Create/PackInstaller.php:1140
 msgid "Could not finalize the archive file after adding the installer files."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1167
+#: src/Package/Create/PackInstaller.php:1168
 msgid "ARCHIVE CONSISTENCY TEST: PASS"
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1173
+#: src/Package/Create/PackInstaller.php:1174
 msgid ""
 "It was not possible to double-check that the installer files are inside the archive.\n"
 "                        No action is needed; to be extra safe, you can test the Backup with a restore."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1181
+#: src/Package/Create/PackInstaller.php:1182
 msgid "ARCHIVE CONSISTENCY TEST: FAIL"
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1188
+#: src/Package/Create/PackInstaller.php:1189
 msgid "One or more installer files were not found in the archive. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1194
+#: src/Package/Create/PackInstaller.php:1195
 msgid "Archive doesn't pass consistency check."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1213
+#: src/Package/Create/PackInstaller.php:1214
 msgid "Could not clean the temporary folder for the installer files."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1221
-#: src/Package/Create/PackInstaller.php:1233
+#: src/Package/Create/PackInstaller.php:1222
+#: src/Package/Create/PackInstaller.php:1234
 msgid "Could not create the temporary folder for the installer files."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1242
+#: src/Package/Create/PackInstaller.php:1243
 msgid "Could not copy an installer file to the temporary folder."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1284
+#: src/Package/Create/PackInstaller.php:1289
 msgid "The shell zip command failed while adding the installer files to the archive."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1457
+#: src/Package/Create/PackInstaller.php:1462
 msgid "The backup failed while writing an installer file. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:427
-#: src/Package/Database/DatabasePkg.php:1016
+#: src/Package/Database/DatabasePkg.php:426
+#: src/Package/Database/DatabasePkg.php:1134
 msgid ""
 "Your hosting provider stopped the database export process before it could finish,\n"
 "                    usually due to server resource limits.\n"
 "                    Switching to a different SQL engine is recommended for better stability."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:770
+#: src/Package/Database/DatabasePkg.php:671
+msgid "Could not restrict the permissions of a temporary database export file. Check file and directory permissions."
+msgstr ""
+
+#: src/Package/Database/DatabasePkg.php:832
 msgid "mysqldump is not available on this server. Switch the SQL engine to PHP."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:781
+#: src/Package/Database/DatabasePkg.php:843
 msgid "Shell mysql dump failed. Last lines of dump file below."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:786
+#: src/Package/Database/DatabasePkg.php:848
 msgid "The mysqldump database export failed. Try switching the SQL engine to PHP."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1044
-#: src/Package/Database/DatabasePkg.php:1404
-#: src/Package/Database/DatabasePkg.php:1577
-#: src/Package/Database/DatabasePkg.php:1712
+#: src/Package/Database/DatabasePkg.php:1162
+#: src/Package/Database/DatabasePkg.php:1522
+#: src/Package/Database/DatabasePkg.php:1695
+#: src/Package/Database/DatabasePkg.php:1830
 msgid "Could not open the database export file."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1158
+#: src/Package/Database/DatabasePkg.php:1276
 msgid ""
 "Your hosting provider repeatedly stopped the database export process,\n"
 "                    usually due to server resource limits."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1253
+#: src/Package/Database/DatabasePkg.php:1371
 msgid ""
 "The content of one or more database tables kept changing while the Backup was\n"
 "                        running, which is normal on an active site. The database was exported completely;\n"
@@ -5288,19 +5313,19 @@ msgid ""
 "                        is less active."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1516
+#: src/Package/Database/DatabasePkg.php:1634
 #, php-format
 msgid "Could not read the structure of the database table \"%1$s\" during export."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1527
+#: src/Package/Database/DatabasePkg.php:1645
 #, php-format
 msgid ""
 "The WordPress core table \"%1$s\" was removed while the Backup was running,\n"
 "                        so the Backup cannot continue."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1541
+#: src/Package/Database/DatabasePkg.php:1659
 #, php-format
 msgid ""
 "The database table \"%1$s\" was removed by another process while the Backup was running.\n"
@@ -5308,27 +5333,27 @@ msgid ""
 "                    when the site is less active."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1723
+#: src/Package/Database/DatabasePkg.php:1841
 msgid "Could not realign the database export file during chunk recovery."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1763
+#: src/Package/Database/DatabasePkg.php:1881
 msgid "No data was written to the database export file. Check file and directory permissions."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1794
+#: src/Package/Database/DatabasePkg.php:1912
 msgid "Could not write to the database export file. Check file and directory permissions."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1833
+#: src/Package/Database/DatabasePkg.php:1951
 msgid "The backup failed while compressing the database export. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1848
+#: src/Package/Database/DatabasePkg.php:1966
 msgid "The compressed database export file is empty. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1856
+#: src/Package/Database/DatabasePkg.php:1974
 msgid "Could not remove the database export file after compression. Check file and directory permissions."
 msgstr ""
 
@@ -5358,21 +5383,21 @@ msgstr ""
 msgid "The SQL file size differs from the byte count tracked during export: expected %1$s, actual %2$s, delta %3$s."
 msgstr ""
 
-#: src/Package/Database/DbBuildIterator.php:75
+#: src/Package/Database/DbBuildIterator.php:77
 msgid "Could not create the database export progress file. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Database/DbBuildIterator.php:113
+#: src/Package/Database/DbBuildIterator.php:115
 msgid "Could not read the database export progress file. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Database/DbBuildIterator.php:188
+#: src/Package/Database/DbBuildIterator.php:197
 msgid ""
 "Duplicator could not serialize its internal database export checkpoint.\n"
 "                    Run the Backup again. If the problem continues, contact support and include the backup log."
 msgstr ""
 
-#: src/Package/Database/DbBuildIterator.php:226
+#: src/Package/Database/DbBuildIterator.php:235
 msgid "Could not write the database export progress file. Check the backup log for details."
 msgstr ""
 
@@ -5444,7 +5469,7 @@ msgid ""
 msgstr ""
 
 #: src/Package/Failure/BuildFailureRemedies.php:301
-#: src/Package/Failure/BuildFailureRemedies.php:530
+#: src/Package/Failure/BuildFailureRemedies.php:546
 #: src/Package/Failure/ScanIndexFailureGuidance.php:56
 msgid "How to resolve scanner warnings, errors and timeout issues"
 msgstr ""
@@ -5475,9 +5500,9 @@ msgstr ""
 
 #: src/Package/Failure/BuildFailureRemedies.php:338
 #: src/Package/Failure/BuildFailureRemedies.php:355
-#: src/Package/Failure/BuildFailureRemedies.php:426
-#: src/Package/Failure/BuildFailureRemedies.php:439
-#: src/Package/Failure/BuildFailureRemedies.php:553
+#: src/Package/Failure/BuildFailureRemedies.php:442
+#: src/Package/Failure/BuildFailureRemedies.php:455
+#: src/Package/Failure/BuildFailureRemedies.php:569
 msgid "Click to switch the archive engine to DupArchive."
 msgstr ""
 
@@ -5486,7 +5511,7 @@ msgid "The archive could not be created with the current archive engine."
 msgstr ""
 
 #: src/Package/Failure/BuildFailureRemedies.php:365
-#: src/Package/Failure/BuildFailureRemedies.php:464
+#: src/Package/Failure/BuildFailureRemedies.php:480
 msgid "Click to switch the database engine to PHP."
 msgstr ""
 
@@ -5514,67 +5539,77 @@ msgstr ""
 msgid "Disk Quota Limitations"
 msgstr ""
 
-#: src/Package/Failure/BuildFailureRemedies.php:413
+#: src/Package/Failure/BuildFailureRemedies.php:414
+msgid "Ask your hosting provider for the maximum file size allowed on your account and whether it can be raised."
+msgstr ""
+
+#: src/Package/Failure/BuildFailureRemedies.php:418
+msgid ""
+"Reduce the Backup size by excluding large folders, files or database tables with the Backup filters,\n"
+"                            then run the Backup again."
+msgstr ""
+
+#: src/Package/Failure/BuildFailureRemedies.php:429
 msgid "How to resolve \"zip warning: No such file or directory\"?"
 msgstr ""
 
-#: src/Package/Failure/BuildFailureRemedies.php:476
+#: src/Package/Failure/BuildFailureRemedies.php:492
 msgid "Click to switch the database engine to MySQLDump."
 msgstr ""
 
-#: src/Package/Failure/BuildFailureRemedies.php:502
+#: src/Package/Failure/BuildFailureRemedies.php:518
 msgid ""
 "The Backup ran out of time: on this site backups can only progress while\n"
 "                a Duplicator admin page is open in the browser, so scheduled backups may\n"
 "                never be picked up."
 msgstr ""
 
-#: src/Package/Failure/BuildFailureRemedies.php:512
-#: src/Package/Failure/BuildFailureRemedies.php:584
+#: src/Package/Failure/BuildFailureRemedies.php:528
+#: src/Package/Failure/BuildFailureRemedies.php:600
 msgid "Automatically set basic auth username and password"
 msgstr ""
 
-#: src/Package/Failure/BuildFailureRemedies.php:519
+#: src/Package/Failure/BuildFailureRemedies.php:535
 msgid "How to make my scheduled Backup run on time"
 msgstr ""
 
-#: src/Package/Failure/BuildFailureRemedies.php:526
+#: src/Package/Failure/BuildFailureRemedies.php:542
 msgid "The Backup ran out of time during the site scan phase."
 msgstr ""
 
-#: src/Package/Failure/BuildFailureRemedies.php:527
+#: src/Package/Failure/BuildFailureRemedies.php:543
 msgid "Reduce the number of files to scan by excluding large folders."
 msgstr ""
 
-#: src/Package/Failure/BuildFailureRemedies.php:535
+#: src/Package/Failure/BuildFailureRemedies.php:551
 msgid "The Backup ran out of time while exporting the database."
 msgstr ""
 
-#: src/Package/Failure/BuildFailureRemedies.php:542
+#: src/Package/Failure/BuildFailureRemedies.php:558
 msgid "If the Backup build is slow, how can I speed it up?"
 msgstr ""
 
-#: src/Package/Failure/BuildFailureRemedies.php:547
+#: src/Package/Failure/BuildFailureRemedies.php:563
 msgid "The Backup ran out of time while compressing the site files."
 msgstr ""
 
-#: src/Package/Failure/BuildFailureRemedies.php:564
+#: src/Package/Failure/BuildFailureRemedies.php:580
 msgid "Exclude large files or folders from the Backup to shorten the build."
 msgstr ""
 
-#: src/Package/Failure/BuildFailureRemedies.php:583
+#: src/Package/Failure/BuildFailureRemedies.php:599
 msgid "Set authentication username and password"
 msgstr ""
 
-#: src/Package/Failure/BuildFailureRemedies.php:591
+#: src/Package/Failure/BuildFailureRemedies.php:607
 msgid "Communication to AJAX is blocked."
 msgstr ""
 
-#: src/Package/Failure/BuildFailureRemedies.php:594
+#: src/Package/Failure/BuildFailureRemedies.php:610
 msgid "Why is the Backup build stuck at 5%?"
 msgstr ""
 
-#: src/Package/Failure/BuildFailureRemedies.php:611
+#: src/Package/Failure/BuildFailureRemedies.php:627
 #, php-format
 msgid "Click to increase the Max Build Time to %d minutes."
 msgstr ""
@@ -6489,7 +6524,7 @@ msgstr ""
 msgid "A Duplicator backup is in progress. WordPress updates are temporarily blocked to prevent backup corruption. Try again in a few minutes."
 msgstr ""
 
-#: src/Utils/ZipArchiveExtended.php:391
+#: src/Utils/ZipArchiveExtended.php:424
 msgid "Cannot open the Backup archive file."
 msgstr ""
 

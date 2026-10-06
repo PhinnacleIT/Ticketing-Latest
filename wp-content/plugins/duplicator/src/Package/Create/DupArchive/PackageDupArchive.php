@@ -5,6 +5,7 @@ namespace Duplicator\Package\Create\DupArchive;
 use Duplicator\Core\Exceptions\DupliException;
 use Duplicator\Utils\Logging\DupLog;
 use Duplicator\Core\Constants;
+use Duplicator\Libs\DupArchive\DupArchive;
 use Duplicator\Libs\DupArchive\DupArchiveEngine;
 use Duplicator\Libs\DupArchive\States\DupArchiveExpandState;
 use Duplicator\Libs\Snap\SnapIO;
@@ -173,12 +174,7 @@ class PackageDupArchive
         } catch (DupliException $ex) {
             throw $ex;
         } catch (Exception $ex) {
-            throw new DupliException(
-                'Problem adding items to archive. ' . $ex->getMessage(),
-                DupliException::CODE_DUP_ARCHIVE_ADD_FAILED,
-                __('The backup failed while adding files to the archive. Check the backup log for details.', 'duplicator'),
-                $ex
-            );
+            throw self::buildFailure($ex);
         }
 
         //-- Final Wrapup of the Archive
@@ -294,6 +290,37 @@ class PackageDupArchive
 
         $buildProgress->retries = 0;
         return $done;
+    }
+
+    /**
+     * Convert a DupArchive library failure of the build phase into the package failure
+     *
+     * @param Exception $exception Library failure
+     *
+     * @return DupliException
+     */
+    private static function buildFailure(Exception $exception): DupliException
+    {
+        if ($exception->getCode() === DupArchive::EXCEPTION_CODE_ENCRYPTION_UNAVAILABLE) {
+            return new DupliException(
+                'DupArchive encryption is not supported on this server: ' . $exception->getMessage(),
+                DupliException::CODE_ENCRYPTION_UNAVAILABLE,
+                __(
+                    'Archive encryption with the DupArchive engine is not supported on this server:
+                    PHP could not generate a valid password hash. Disable archive encryption
+                    or switch to another archive engine, then run the Backup again.',
+                    'duplicator'
+                ),
+                $exception
+            );
+        }
+
+        return new DupliException(
+            'Problem adding items to archive. ' . $exception->getMessage(),
+            DupliException::CODE_DUP_ARCHIVE_ADD_FAILED,
+            __('The backup failed while adding files to the archive. Check the backup log for details.', 'duplicator'),
+            $exception
+        );
     }
 
     /**

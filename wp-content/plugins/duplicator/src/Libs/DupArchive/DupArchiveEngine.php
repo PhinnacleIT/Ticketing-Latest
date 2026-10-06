@@ -442,8 +442,8 @@ class DupArchiveEngine extends DupArchive
                     $createState->currentDirectoryIndex++;
                 }
             } catch (Exception $ex) {
-                if (SnapException::isDiskFullInChain($ex)) {
-                    // Disk full is not a per-directory failure: skipping would just fail every next write.
+                if (SnapException::conditionInChain($ex) !== null) {
+                    // Disk full or file size limit: not a per-directory failure, skipping would fail every next write.
                     throw $ex;
                 }
                 DupArchiveUtil::log("Failed to add {$directory} to archive. Error: " . $ex->getMessage(), true);
@@ -491,8 +491,8 @@ class DupArchiveEngine extends DupArchive
             } catch (Snap32BitSizeLimitException $ex) {
                 throw $ex;
             } catch (Exception $ex) {
-                if (SnapException::isDiskFullInChain($ex)) {
-                    // Disk full is not a per-file failure: skipping would just fail every next write.
+                if (SnapException::conditionInChain($ex) !== null) {
+                    // Disk full or file size limit: not a per-file failure, skipping would fail every next write.
                     throw $ex;
                 }
                 DupArchiveUtil::log("Failed to add {$filepath} to archive. Error: " . $ex->getMessage() . $ex->getTraceAsString(), true);

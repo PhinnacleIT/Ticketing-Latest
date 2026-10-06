@@ -223,9 +223,15 @@ final class DUPX_S3_Funcs
      */
     public function saveData(): bool
     {
+        $tableParams = $this->cTableParams;
+        if (is_array($tableParams) && array_key_exists('lastOffset', $tableParams)) {
+            // The offset is a raw key value that may hold bytes that are not valid UTF-8
+            $tableParams['lastOffset'] = SnapDB::encodeIndexOffset($tableParams['lastOffset']);
+        }
+
         $data = [
             'report'       => $this->report,
-            'cTableParams' => $this->cTableParams,
+            'cTableParams' => $tableParams,
             'replaceData'  => ReplaceMng::getInstance()->getArrayData(),
         ];
 
@@ -267,6 +273,14 @@ final class DUPX_S3_Funcs
 
         if (array_key_exists('cTableParams', $data)) {
             $this->cTableParams = $data['cTableParams'];
+            if (is_array($this->cTableParams) && array_key_exists('lastOffset', $this->cTableParams)) {
+                try {
+                    $this->cTableParams['lastOffset'] = SnapDB::decodeIndexOffset($this->cTableParams['lastOffset']);
+                } catch (Exception $e) {
+                    Log::info('S3 data not well formed: can\'t decode table last offset: ' . $e->getMessage());
+                    return false;
+                }
+            }
         } else {
             Log::info('S3 data not well formed: cTableParams not found.');
             return false;

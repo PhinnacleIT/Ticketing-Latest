@@ -111,7 +111,7 @@ abstract class DupArchiveStateBase
             $message = '';
 
             foreach ($this->failures as $failure) {
-                if ($includeCritical || !$failure->isCritical) {
+                if ($failure->isCritical ? $includeCritical : $includeWarnings) {
                     $message .= "\n" . $this->getFailureString($failure);
                 }
             }

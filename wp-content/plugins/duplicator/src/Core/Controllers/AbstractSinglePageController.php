@@ -311,6 +311,12 @@ abstract class AbstractSinglePageController implements ControllerInterface
         add_action('admin_init', [$this, 'run']);
 
         $this->menuHookSuffix = add_submenu_page('', $pageTitle, '', $this->capatibility, $this->pageSlug, [$this, 'render']);
+        // get_admin_page_title() does not find pages without a parent, so admin-header.php would get a null title.
+        // WordPress reads a preset $title as the page title; see https://core.trac.wordpress.org/ticket/64283.
+        add_action('load-' . $this->menuHookSuffix, function () use ($pageTitle): void {
+            global $title;
+            $title = $pageTitle; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+        });
         add_action('admin_print_styles-' . $this->menuHookSuffix, [$this, 'pageStyles'], 20);
         add_action('admin_print_scripts-' . $this->menuHookSuffix, [$this, 'pageScripts'], 20);
         return $this->menuHookSuffix;

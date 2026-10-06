@@ -13,6 +13,11 @@ use Exception;
  */
 class DupArchiveHeader extends AbstractDupArchiveHeader
 {
+    /**
+     * Format of the stored password hash: algorithm, rounds, salt and hash
+     */
+    private const HASH_PASSWORD_REGEX = '/^\$(\d)\$rounds=(\d+)\$(.+)\$(.+)$/';
+
     /** @var string */
     protected $version = '';
     /** @var int<0,max> */
@@ -80,10 +85,30 @@ class DupArchiveHeader extends AbstractDupArchiveHeader
             $this->password     = '';
             $this->hashPassword = '';
         } else {
+            $hashPassword = self::pwdToHash($pwd, DupArchive::generateSalt(16));
+            if (!self::isValidHashPassword($hashPassword)) {
+                // Every read rejects this hash: fail before writing an archive nobody can open
+                throw new Exception(
+                    'The server crypt() output is not a valid archive password hash.',
+                    DupArchive::EXCEPTION_CODE_ENCRYPTION_UNAVAILABLE
+                );
+            }
             $this->flags       |= DupArchive::FLAG_CRYPT;
             $this->password     = $pwd;
-            $this->hashPassword = self::pwdToHash($pwd, DupArchive::generateSalt(16));
+            $this->hashPassword = $hashPassword;
         }
+    }
+
+    /**
+     * Check whether a stored password hash has the format readFromArchive() accepts
+     *
+     * @param string $hashPassword Stored password hash
+     *
+     * @return bool
+     */
+    private static function isValidHashPassword(string $hashPassword): bool
+    {
+        return preg_match(self::HASH_PASSWORD_REGEX, $hashPassword) === 1;
     }
 
     /**
@@ -164,7 +189,7 @@ class DupArchiveHeader extends AbstractDupArchiveHeader
         }
 
         if (strlen($hashPassword)) {
-            if (preg_match('/^\$(\d)\$rounds=(\d+)\$(.+)\$(.+)$/', $hashPassword, $matches) !== 1) {
+            if (preg_match(self::HASH_PASSWORD_REGEX, $hashPassword, $matches) !== 1) {
                 throw new Exception("Invalid archive stored password", DupArchive::EXCEPTION_CODE_EXTRACT_ERROR);
             }
             $algo   = $matches[1];

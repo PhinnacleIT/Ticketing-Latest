@@ -12,7 +12,6 @@ use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapLog;
 use Duplicator\Libs\Snap\SnapUtil;
 use Duplicator\Libs\Snap\SnapDB;
-use Duplicator\Libs\Snap\SnapURL;
 use Duplicator\Libs\Shell\Shell;
 use Duplicator\Libs\Snap\SnapServer;
 use Duplicator\Libs\Snap\SnapString;
@@ -395,7 +394,7 @@ class DatabasePkg
         $this->info->dbEngine             = WpDbUtils::getDbEngine();
         $this->info->version              = WpDbUtils::getVersion();
         $this->info->versionComment       = WpDbUtils::getVariable('version_comment');
-        $tables                           = $this->getFilteredTables();
+        $tables                           = $this->getIncludedTables();
         $this->info->charSetList          = WpDbUtils::getTableCharSetList($tables);
         $this->info->collationList        = WpDbUtils::getTableCollationList($tables);
         $this->info->engineList           = WpDbUtils::getTableEngineList($tables);
@@ -444,9 +443,14 @@ class DatabasePkg
 
         if (!BuildComponents::isDBExcluded($this->Package->components)) {
             $this->mysqlDumpWriteCreates($exePath);
+            $this->mysqlDumpWriteInserts($exePath);
         }
 
-        $this->mysqlDumpWriteInserts($exePath);
+        $sql_footer  = "\n\n/* Duplicator WordPress Timestamp: " . date("Y-m-d H:i:s") . "*/\n";
+        $sql_footer .= "/* " . DUPLICATOR_DB_EOF_MARKER . " */\n";
+        if (file_put_contents($storePath, $sql_footer, FILE_APPEND) === false) {
+            throw self::buildWriteException("SQL footer", $storePath);
+        }
 
         $this->Package->db_build_progress->wasInterrupted = false;
         $this->Package->update();
@@ -472,25 +476,27 @@ class DatabasePkg
         ];
         $optionFlagsToIgnore = ['routines'];
 
-        // Create user and usermeta tables before other tables
-        $filtered      = $this->getFilteredTables(true);
-        $userTable     = $wpdb->prefix . 'users';
-        $userMetaTable = $wpdb->prefix . 'usermeta';
+        // Create user and usermeta tables before other tables, only when the backup includes them:
+        // mysqldump fails on a table that does not exist
+        $excluded            = $this->getExcludedTables();
+        $userTable           = $wpdb->prefix . 'users';
+        $userMetaTable       = $wpdb->prefix . 'usermeta';
+        $usersTablesIncluded = $this->isUsersTablesIncluded();
+        DupLog::infoTrace("MYSQLDUMP SKIPPED TABLES (" . count($excluded) . "): \n\t" . implode("\n\t", $excluded));
 
-        if (!in_array($userTable, $filtered)) {
-            $cmd         = $this->getMysqlDumpCmd($exePath, $extraFlags, $userTable, [], $optionFlagsToIgnore);
-            $mysqlResult = $this->mysqlDumpWriteCmd($cmd, $exePath);
-            $filtered[]  = $userTable;
+        if ($usersTablesIncluded['user']) {
+            $mysqlResult = $this->mysqlDumpWriteCmd($exePath, $extraFlags, $userTable, [], $optionFlagsToIgnore);
+            $this->mysqlDumpEvaluateResult($mysqlResult);
+            $excluded[] = $userTable;
         }
-        if (!in_array($userMetaTable, $filtered)) {
-            $cmd         = $this->getMysqlDumpCmd($exePath, $extraFlags, $userMetaTable, [], $optionFlagsToIgnore);
-            $mysqlResult = $this->mysqlDumpWriteCmd($cmd, $exePath);
-            $filtered[]  = $userMetaTable;
+        if ($usersTablesIncluded['usermeta']) {
+            $mysqlResult = $this->mysqlDumpWriteCmd($exePath, $extraFlags, $userMetaTable, [], $optionFlagsToIgnore);
+            $this->mysqlDumpEvaluateResult($mysqlResult);
+            $excluded[] = $userMetaTable;
         }
 
         $extraFlags[] = '--routines'; //include procs and funcs
-        $cmd          = $this->getMysqlDumpCmd($exePath, $extraFlags, '', $filtered);
-        $mysqlResult  = $this->mysqlDumpWriteCmd($cmd, $exePath);
+        $mysqlResult  = $this->mysqlDumpWriteCmd($exePath, $extraFlags, '', $excluded);
 
         $storePath = $this->getStorePath();
         if (file_put_contents($storePath, self::TABLE_CREATION_END_MARKER . "\n", FILE_APPEND) === false) {
@@ -519,30 +525,24 @@ class DatabasePkg
             '--insert-ignore',
         ];
         $optionFlagsToIgnore = ['routines'];
-        // Inserts user and usermeta tables before other tables
-        $filtered      = $this->getFilteredTables(true);
-        $userTable     = $wpdb->prefix . 'users';
-        $userMetaTable = $wpdb->prefix . 'usermeta';
+        // Inserts user and usermeta tables before other tables, only when the backup includes them
+        $excluded            = $this->getExcludedTables();
+        $userTable           = $wpdb->prefix . 'users';
+        $userMetaTable       = $wpdb->prefix . 'usermeta';
+        $usersTablesIncluded = $this->isUsersTablesIncluded();
 
-        if (!in_array($userTable, $filtered)) {
-            $cmd         = $this->getMysqlDumpCmd($exePath, $extraFlags, $userTable, [], $optionFlagsToIgnore);
-            $mysqlResult = $this->mysqlDumpWriteCmd($cmd, $exePath);
-            $filtered[]  = $userTable;
+        if ($usersTablesIncluded['user']) {
+            $mysqlResult = $this->mysqlDumpWriteCmd($exePath, $extraFlags, $userTable, [], $optionFlagsToIgnore);
+            $this->mysqlDumpEvaluateResult($mysqlResult);
+            $excluded[] = $userTable;
         }
-        if (!in_array($userMetaTable, $filtered)) {
-            $cmd         = $this->getMysqlDumpCmd($exePath, $extraFlags, $userMetaTable, [], $optionFlagsToIgnore);
-            $mysqlResult = $this->mysqlDumpWriteCmd($cmd, $exePath);
-            $filtered[]  = $userMetaTable;
+        if ($usersTablesIncluded['usermeta']) {
+            $mysqlResult = $this->mysqlDumpWriteCmd($exePath, $extraFlags, $userMetaTable, [], $optionFlagsToIgnore);
+            $this->mysqlDumpEvaluateResult($mysqlResult);
+            $excluded[] = $userMetaTable;
         }
 
-        $cmd         = $this->getMysqlDumpCmd($exePath, $extraFlags, '', $filtered, $optionFlagsToIgnore);
-        $mysqlResult = $this->mysqlDumpWriteCmd($cmd, $exePath);
-        $sql_footer  = "\n\n/* Duplicator WordPress Timestamp: " . date("Y-m-d H:i:s") . "*/\n";
-        $sql_footer .= "/* " . DUPLICATOR_DB_EOF_MARKER . " */\n";
-        $storePath   = $this->getStorePath();
-        if (file_put_contents($storePath, $sql_footer, FILE_APPEND) === false) {
-            throw self::buildWriteException("SQL footer", $storePath);
-        }
+        $mysqlResult = $this->mysqlDumpWriteCmd($exePath, $extraFlags, '', $excluded, $optionFlagsToIgnore);
         $this->mysqlDumpEvaluateResult($mysqlResult);
     }
 
@@ -566,51 +566,113 @@ class DatabasePkg
     }
 
     /**
-     * @param string $command        The mysqldump command to be run
-     * @param string $executablePath The path to the mysqldump executable
+     * Run a mysqldump command and append its output to the SQL file
+     *
+     * @param string   $exePath           The path to the mysqldump executable
+     * @param string[] $extraFlags        extra mysqldump flags
+     * @param string   $onlyTable         if set dump only this table
+     * @param string[] $ignoreTables      tables to skip
+     * @param string[] $ignoreOptionFlags command option flags not to be added
      *
      * @return int The result of the mysql dump
+     *
+     * @throws DupliException When the option file cannot be written
      */
-    private function mysqlDumpWriteCmd(string $command, string $executablePath): int
-    {
+    protected function mysqlDumpWriteCmd(
+        string $exePath,
+        array $extraFlags,
+        string $onlyTable = '',
+        array $ignoreTables = [],
+        array $ignoreOptionFlags = []
+    ): int {
         DupLog::trace('WRITING CREATES/INSERTS VIA STREAM');
 
         $tableRenameMap      = $this->buildTableRenameMap();
         $shouldRewriteTables = ! empty($tableRenameMap);
         $queryFixPatterns    = $this->getMysqlDumpFixes();
 
-        $fileHandle = $this->openSqlFile();
-        if (! $fileHandle) {
-            return 1;
-        }
+        $optionFile = count($ignoreTables) > 0 ? $this->writeIgnoreTablesOptionFile($ignoreTables) : '';
+        try {
+            $fileHandle = $this->openSqlFile();
+            if (! $fileHandle) {
+                return 1;
+            }
 
-        $hadWriteError    = false;
-        $hasSeenFirstLine = false;
+            $hadWriteError    = false;
+            $hasSeenFirstLine = false;
 
-        $exitCode = Shell::runCommandStream(
-            $command,
-            function (string $line) use (
-                $fileHandle,
-                &$hasSeenFirstLine,
-                &$hadWriteError,
-                $shouldRewriteTables,
-                $tableRenameMap,
-                $queryFixPatterns
-            ): void {
-                $this->processLine(
-                    $line,
+            $exitCode = Shell::runCommandStream(
+                $this->getMysqlDumpCmd($exePath, $extraFlags, $onlyTable, $optionFile, $ignoreOptionFlags),
+                function (string $line) use (
                     $fileHandle,
-                    $hasSeenFirstLine,
-                    $hadWriteError,
+                    &$hasSeenFirstLine,
+                    &$hadWriteError,
                     $shouldRewriteTables,
                     $tableRenameMap,
                     $queryFixPatterns
-                );
-            }
-        );
+                ): void {
+                    $this->processLine(
+                        $line,
+                        $fileHandle,
+                        $hasSeenFirstLine,
+                        $hadWriteError,
+                        $shouldRewriteTables,
+                        $tableRenameMap,
+                        $queryFixPatterns
+                    );
+                }
+            );
 
-        fclose($fileHandle);
-        return $hadWriteError ? 1 : (int) $exitCode;
+            fclose($fileHandle);
+            return $hadWriteError ? 1 : (int) $exitCode;
+        } finally {
+            if ($optionFile !== '') {
+                SnapIO::unlink($optionFile);
+            }
+        }
+    }
+
+    /**
+     * Write a mysqldump option file listing the tables to skip
+     *
+     * @param string[] $tables Table names
+     *
+     * @return string The option file path
+     *
+     * @throws DupliException When the file cannot be written or stays world-writable
+     */
+    private function writeIgnoreTablesOptionFile(array $tables): string
+    {
+        $path    = SnapIO::safePath("{$this->Package->StorePath}/{$this->Package->getNameHash()}_mysqldump.cnf");
+        $escapes = [
+            '\\' => '\\\\',
+            "'"  => "\\'",
+            "\n" => '\\n',
+            "\r" => '\\r',
+            "\t" => '\\t',
+        ];
+        $content = "[mysqldump]\n";
+        foreach ($tables as $table) {
+            $content .= "ignore-table='" . strtr(DB_NAME . '.' . $table, $escapes) . "'\n";
+        }
+
+        if (file_put_contents($path, $content) === false) {
+            throw self::buildWriteException("mysqldump option file", $path);
+        }
+
+        // mysqldump silently ignores a world-writable option file
+        SnapIO::chmod($path, 0600);
+        clearstatcache(true, $path);
+        if (!SnapServer::isWindows() && (fileperms($path) & 0002) !== 0) {
+            SnapIO::unlink($path);
+            throw new DupliException(
+                "mysqldump option file {$path} is world-writable after chmod.",
+                DupliException::CODE_MYSQLDUMP_FILE_WRITE_FAILED,
+                __('Could not restrict the permissions of a temporary database export file. Check file and directory permissions.', 'duplicator')
+            );
+        }
+
+        return $path;
     }
 
     /**
@@ -620,7 +682,7 @@ class DatabasePkg
      */
     private function buildTableRenameMap(): array
     {
-        $tables              = $this->getFilteredTables(true);
+        $tables              = $this->getExcludedTables();
         $caseSensitiveTables = array_map(
             [
                 WpDbUtils::class,
@@ -781,7 +843,7 @@ class DatabasePkg
                 DupLog::error(__('Shell mysql dump failed. Last lines of dump file below.', 'duplicator'), $lastLines);
 
                 throw new DupliException(
-                    "Shell mysqldump failed with exit code {$mysqlResult}.",
+                    "Shell mysqldump failed with exit code {$mysqlResult} (" . SnapString::spellDigits($mysqlResult) . ").",
                     DupliException::CODE_MYSQLDUMP_FAILED,
                     __('The mysqldump database export failed. Try switching the SQL engine to PHP.', 'duplicator')
                 );
@@ -826,7 +888,7 @@ class DatabasePkg
      * @param string   $exePath           mysqldump exec path
      * @param string[] $extraFlags        extra mysqldump flags
      * @param string   $onlyTalbe         if set dump only selected table
-     * @param string[] $filtered          filtered tables
+     * @param string   $optionFile        if set option file passed with --defaults-extra-file
      * @param string[] $ignoreOptionFlags command option flag not to be added
      *
      * @return string
@@ -835,14 +897,11 @@ class DatabasePkg
         string $exePath,
         array $extraFlags = [],
         string $onlyTalbe = '',
-        array $filtered = [],
+        string $optionFile = '',
         array $ignoreOptionFlags = []
     ): string {
         global $wpdb;
-        $global     = GlobalEntity::getInstance();
-        $parsedHost = SnapURL::parseUrl(DB_HOST);
-        $port       = $parsedHost['port'];
-        $host       = $parsedHost['host'];
+        $global = GlobalEntity::getInstance();
 
         $extraFlags = array_map(fn($val): ?string => preg_replace('/(--)(.+)/', '$2', $val), $extraFlags);
 
@@ -851,7 +910,11 @@ class DatabasePkg
         $mysqlcompat_on = (strlen($this->Compatible) > 0);
         //Build command
 
-        $cmd  = escapeshellarg($exePath);
+        $cmd = escapeshellarg($exePath);
+        // mysqldump only accepts --defaults-extra-file as the first option
+        if (strlen($optionFile) > 0) {
+            $cmd .= ' --defaults-extra-file=' . escapeshellarg($optionFile);
+        }
         $cmd .= ' --no-create-db';
         $cmd .= ' --single-transaction';
         $cmd .= ' --hex-blob';
@@ -909,16 +972,9 @@ class DatabasePkg
             }
         }
 
-        // get excluded table list
-        // Entries come from the manual table filter and are never checked against real table names
-        foreach ($filtered as $table) {
-            $cmd .= " --ignore-table=" . escapeshellarg(DB_NAME . "." . $table) . " ";
-        }
-
         $cmd .= ' -u ' . escapeshellarg(DB_USER);
         $cmd .= (DB_PASSWORD) ? ' -p' . Shell::escapeshellargWindowsSupport(DB_PASSWORD) : ''; // @phpstan-ignore-line
-        $cmd .= ' -h ' . escapeshellarg($host);
-        $cmd .= (!empty($port) && is_numeric($port)) ? ' -P ' . $port : '';
+        $cmd .= $this->getMysqlDumpHostArgs(DB_HOST);
         $cmd .= ' ' . escapeshellarg(DB_NAME);
         if (strlen($onlyTalbe) > 0) {
             $cmd .= ' ' . escapeshellarg($onlyTalbe);
@@ -928,17 +984,56 @@ class DatabasePkg
     }
 
     /**
-     * return a tables list.
-     * If $getExcludedTables is false return the included tables list else return the filtered table list
+     * Get the mysqldump host, port and socket arguments, parsing the DB host like WordPress
      *
-     * @param bool $getExcludedTables if true return the excluded tables list
+     * @param string $dbHost DB host value, in any form accepted by WordPress
+     *
+     * @return string
+     */
+    private function getMysqlDumpHostArgs(string $dbHost): string
+    {
+        /** @var wpdb $wpdb */
+        global $wpdb;
+
+        $hostData = $wpdb->parse_db_host($dbHost);
+        if ($hostData === false) {
+            // Same fallback as wpdb::db_connect(): use the raw value as host
+            $hostData = [
+                $dbHost,
+                null,
+                null,
+                false,
+            ];
+        }
+        [
+            $host,
+            $port,
+            $socket,
+            $isIpv6,
+        ] = $hostData;
+
+        if ($isIpv6) {
+            // parse_db_host() strips the brackets: pass IPv6 hosts bracketed, as bracketed DB_HOST values always were
+            $host = '[' . $host . ']';
+        } elseif ($host === '') {
+            $host = 'localhost';
+        }
+
+        $args  = ' -h ' . escapeshellarg($host);
+        $args .= !empty($port) ? ' -P ' . (int) $port : '';
+        $args .= $socket !== null ? ' --socket=' . escapeshellarg($socket) : '';
+
+        return $args;
+    }
+
+    /**
+     * Return the tables included in the backup after applying all filters.
      *
      * @return string[]
      */
-    private function getFilteredTables(bool $getExcludedTables = false): array
+    private function getIncludedTables(): array
     {
-        $result = [];
-        // ALL TABLES
+        // TABLES AFTER THE PREFIX FILTERS AND THE TABLES-LIST HOOK
         $allTables = WpDbUtils::getTablesList(true, $this->isPrefixFilterEnabled(), (bool) $this->prefixSubFilter);
         // MANUAL FILTER TABLE
         $filterTables = ($this->FilterOn ? explode(',', $this->FilterTables) : []);
@@ -960,21 +1055,44 @@ class DatabasePkg
         if (!empty($muFilterTables)) {
             DupLog::infoTrace("MU SITE FILTER TABLES: \n\t" . implode("\n\t", $muFilterTables));
         }
-        if ($getExcludedTables) {
-            $result = $allFilterTables;
-        } else {
-            if (empty($allFilterTables)) {
-                $result = $allTables;
-            } else {
-                foreach ($allTables as $val) {
-                    if (!in_array($val, $allFilterTables)) {
-                        $result[] = $val;
-                    }
-                }
+        $includedTables = [];
+        foreach ($allTables as $val) {
+            if (!in_array($val, $allFilterTables)) {
+                $includedTables[] = $val;
             }
         }
 
-        return $result;
+        return $includedTables;
+    }
+
+    /**
+     * Return every base table in the database that is not included in the backup.
+     *
+     * @return string[]
+     */
+    private function getExcludedTables(): array
+    {
+        $includedTables = $this->getIncludedTables();
+
+        return array_values(array_diff(WpDbUtils::getAllTableNames(), $includedTables));
+    }
+
+    /**
+     * Return whether the WordPress users and usermeta tables are included in the backup.
+     *
+     * @return array{user:bool,usermeta:bool}
+     */
+    private function isUsersTablesIncluded(): array
+    {
+        /** @var wpdb $wpdb */
+        global $wpdb;
+
+        $included = array_map([WpDbUtils::class, 'updateCaseSensitivePrefix'], $this->getIncludedTables());
+
+        return [
+            'user'     => in_array($wpdb->prefix . 'users', $included, true),
+            'usermeta' => in_array($wpdb->prefix . 'usermeta', $included, true),
+        ];
     }
 
     /**
@@ -1362,7 +1480,7 @@ class DatabasePkg
         $query = $wpdb->prepare("SET session wait_timeout = %d", DUPLICATOR_DB_MAX_TIME);
         $wpdb->query($query);
 
-        $tables          = $this->getFilteredTables();
+        $tables          = $this->getIncludedTables();
         $tablesToProcess = array_map([WpDbUtils::class, 'updateCaseSensitivePrefix'], $tables);
 
         // PUT TABLES ON TOP, the ored is important

@@ -8,6 +8,11 @@ namespace Duplicator\Libs\Snap;
 class SnapOpenBasedir
 {
     /**
+     * Text of the warning PHP raises when open_basedir blocks a filesystem call
+     */
+    private const RESTRICTION_WARNING = 'open_basedir restriction in effect';
+
+    /**
      * Check if php.ini open_basedir is enabled
      *
      * @return bool true if open_basedir is set
@@ -65,25 +70,7 @@ class SnapOpenBasedir
         }
 
         $hadOpenBasedirError = false;
-
-        // Use a custom error handler to catch warnings caused by open_basedir restrictions.
-        // This allows us to detect when is_link fails due to these restrictions.
-        set_error_handler(function ($errno, $errstr) use (&$hadOpenBasedirError): bool {
-            if (strpos($errstr, 'open_basedir restriction in effect') !== false) {
-                $hadOpenBasedirError = true;
-                return true;
-            }
-
-            // For other errors.
-            return false;
-        });
-
-        try {
-            $isLink = is_link($path);
-        } finally {
-            restore_error_handler();
-        }
-
+        $isLink              = self::callDetectingRestriction(fn(): bool => is_link($path), $hadOpenBasedirError);
         if ($hadOpenBasedirError) {
             return false;
         }
@@ -97,5 +84,55 @@ class SnapOpenBasedir
         }
 
         return self::getRootOfPath($path) !== false;
+    }
+
+    /**
+     * Check whether the path is a directory, with the open_basedir restriction applied by PHP itself
+     *
+     * The restriction is detected from the warning PHP raises, so trailing slashes, symlinks, symlinked
+     * open_basedir entries and path case are resolved exactly as PHP does.
+     *
+     * @param string $path The path to check
+     *
+     * @return ?bool The is_dir() result, null when open_basedir blocks the path
+     */
+    public static function checkDirectory(string $path): ?bool
+    {
+        if (!self::isEnabled()) {
+            return is_dir($path);
+        }
+
+        $hadOpenBasedirError = false;
+        $isDir               = self::callDetectingRestriction(fn(): bool => is_dir($path), $hadOpenBasedirError);
+
+        return $hadOpenBasedirError ? null : $isDir;
+    }
+
+    /**
+     * Run a filesystem check, catching the warning PHP raises when open_basedir blocks it
+     *
+     * Other warnings reach the previous error handler.
+     *
+     * @param callable(): bool $check      Filesystem check
+     * @param bool             $restricted Set to true when open_basedir blocked the check
+     *
+     * @return bool The check result
+     */
+    private static function callDetectingRestriction(callable $check, bool &$restricted): bool
+    {
+        set_error_handler(function ($errno, $errstr) use (&$restricted): bool {
+            if (strpos($errstr, self::RESTRICTION_WARNING) !== false) {
+                $restricted = true;
+                return true;
+            }
+
+            return false;
+        });
+
+        try {
+            return $check();
+        } finally {
+            restore_error_handler();
+        }
     }
 }
