@@ -1,10 +1,11 @@
 <?php
+
 /**
  * Import Functions
  *
  * @package    Widget_Importer_Exporter
  * @subpackage Functions
- * @copyright  Copyright (c) 2013 - 2020, ChurchThemes.com, LLC
+ * @copyright  Copyright (c) 2013 - 2026, Sunday Pixels, LLC
  * @link       https://churchthemes.com/plugins/widget-importer-exporter/
  * @license    https://www.gnu.org/licenses/gpl-2.0.html GPL-2.0-or-later
  * @since      0.3
@@ -115,7 +116,7 @@ function wie_upload_import_file()
 		// Check file type.
 		// This will also fire if no file uploaded.
 		$wp_filetype = wp_check_filetype_and_ext($uploaded_file_tmp_name, $uploaded_file_name, false);
-		if ('wie' !== $wp_filetype['ext'] && ! wp_match_mime_types( 'wie', $wp_filetype['type'] )) {
+		if ('wie' !== $wp_filetype['ext'] && ! wp_match_mime_types('wie', $wp_filetype['type'])) {
 			wp_die(
 				wp_kses(
 					sprintf(
@@ -188,7 +189,7 @@ function wie_process_import_file($file)
 	$data = json_decode($data);
 
 	// Delete import file.
-	unlink($file);
+	wp_delete_file($file);
 
 	// Import the widget data
 	// Make results available for display on import/export page.
@@ -294,6 +295,24 @@ function wie_import_data($data)
 			// This is preferred over the older wie_widget_settings filter above
 			// Do before identical check because changes may make it identical to end result (such as URL replacements).
 			$widget = apply_filters('wie_widget_settings_array', $widget);
+
+			// Sanitize imported settings through the widget's own update() method.
+			// WordPress normally runs widget settings through WP_Widget::update() when a
+			// widget is saved, which sanitizes the data according to the current user's
+			// capabilities (for example WP_Widget_Custom_HTML::update() strips <script>
+			// for users who lack unfiltered_html).
+			if (! $fail) {
+				$sanitized_widget = wie_sanitize_widget_instance($widget, $id_base);
+
+				// Widget's update() can return false to signal the data should not be saved.
+				if (false === $sanitized_widget) {
+					$fail                = true;
+					$widget_message_type = 'error';
+					$widget_message      = esc_html__('Widget could not be imported.', 'widget-importer-exporter');
+				} else {
+					$widget = $sanitized_widget;
+				}
+			}
 
 			// Does widget with identical settings already exist in same sidebar?
 			if (! $fail && isset($widget_instances[$id_base])) {
@@ -404,4 +423,63 @@ function wie_import_data($data)
 
 	// Return results.
 	return apply_filters('wie_import_results', $results);
+}
+
+/**
+ * Sanitize an imported widget instance
+ *
+ * Runs an imported widget's settings through the same update/sanitization path
+ * WordPress uses when a widget is saved normally. This honors the importing
+ * user's capabilities: for example, WP_Widget_Custom_HTML::update() strips
+ * <script> and other disallowed markup for users who lack the unfiltered_html
+ * capability (which, on Multisite, excludes regular site administrators).
+ *
+ * @since 1.6.2
+ * @global WP_Widget_Factory $wp_widget_factory
+ * @param array  $instance Imported widget instance settings (associative array).
+ * @param string $id_base  Widget ID base (e.g. "custom_html", "text").
+ * @return array|false Sanitized instance, or false if the widget declined to save it.
+ */
+function wie_sanitize_widget_instance($instance, $id_base)
+{
+	global $wp_widget_factory;
+
+	// Only arrays are expected; bail safely otherwise.
+	if (! is_array($instance)) {
+		return $instance;
+	}
+
+	// Find the registered WP_Widget object for this ID base.
+	$widget_object = null;
+	if (isset($wp_widget_factory->widgets) && is_array($wp_widget_factory->widgets)) {
+		foreach ($wp_widget_factory->widgets as $widget) {
+			if (isset($widget->id_base) && $id_base === $widget->id_base) {
+				$widget_object = $widget;
+				break;
+			}
+		}
+	}
+
+	// Widget provides its own update() method: use WordPress's normal save path.
+	if ($widget_object instanceof WP_Widget) {
+		$new_instance = $instance;
+		$old_instance = array();
+
+		// Sanitize via the widget's own update() method.
+		$instance = $widget_object->update($new_instance, $old_instance);
+
+		// Apply the same filter core applies when saving a widget.
+		$instance = apply_filters('widget_update_callback', $instance, $new_instance, $old_instance, $widget_object);
+
+		return $instance; // May be false if the widget declined to save.
+	}
+
+	// Fallback for legacy widgets with no WP_Widget object (no update() method).
+	// If the importing user cannot post unfiltered HTML, strip disallowed markup
+	// from string values so imports cannot smuggle in scripts.
+	if (! current_user_can('unfiltered_html')) {
+		$instance = map_deep($instance, 'wp_kses_post');
+	}
+
+	return $instance;
 }
