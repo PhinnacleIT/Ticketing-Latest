@@ -76,6 +76,73 @@ class Sg_2fa {
 	}
 
 	/**
+	 * Check whether a user is required to use 2FA.
+	 *
+	 * @since  1.6.8
+	 *
+	 * @param  \WP_User $user WordPress user object.
+	 *
+	 * @return bool Whether the user is in 2FA scope.
+	 */
+	private function user_requires_2fa( $user ) {
+		if ( ! ( $user instanceof \WP_User ) ) {
+			return false;
+		}
+
+		if ( is_multisite() && is_super_admin( $user->ID ) ) {
+			return true;
+		}
+
+		return ! empty( array_intersect( $this->get_admin_user_roles(), $user->roles ) );
+	}
+
+	/**
+	 * Get the users who are required to use 2FA.
+	 *
+	 * @since  1.6.8
+	 *
+	 * @param  array $args Additional arguments for the final user query.
+	 *
+	 * @return array Users who are in 2FA scope.
+	 */
+	private function get_users_requiring_2fa( $args = array() ) {
+		$users = get_users(
+			array(
+				'role__in' => $this->get_admin_user_roles(),
+			)
+		);
+
+		// Super Administrators are not required to have a role on the current site.
+		if ( is_multisite() ) {
+			foreach ( get_super_admins() as $user_login ) {
+				$super_admin = get_user_by( 'login', $user_login );
+
+				if ( $super_admin instanceof \WP_User ) {
+					$users[] = $super_admin;
+				}
+			}
+		}
+
+		$user_ids = array();
+		foreach ( $users as $user ) {
+			if ( $this->user_requires_2fa( $user ) ) {
+				$user_ids[] = (int) $user->ID;
+			}
+		}
+
+		$user_ids = array_values( array_unique( $user_ids ) );
+		if ( empty( $user_ids ) ) {
+			return array();
+		}
+
+		// Query without a site-membership restriction so roleless Super Administrators are included.
+		$args['blog_id'] = 0;
+		$args['include'] = $user_ids;
+
+		return get_users( $args );
+	}
+
+	/**
 	 * Generate QR code for specific user.
 	 *
 	 * @since  1.0.0
@@ -128,11 +195,7 @@ class Sg_2fa {
 		delete_option( 'sg_security_2fa_encryption_file_notice' );
 
 		// Get all users which needs to have 2FA enabled.
-		$users = get_users(
-			array(
-				'role__in' => $this->get_admin_user_roles(),
-			)
-		);
+		$users = $this->get_users_requiring_2fa();
 
 		// Bail if there are no such users found.
 		if ( empty( $users ) ) {
@@ -140,13 +203,6 @@ class Sg_2fa {
 		}
 
 		foreach ( $users as $user ) {
-			// Get the user by the user id.
-			$user = get_userdata( $user->data->ID );
-
-			if ( empty( array_intersect( $this->get_admin_user_roles(), $user->roles ) ) ) {
-				continue;
-			}
-
 			$session_tokens = WP_Session_Tokens::get_instance( $user->data->ID );
 			$session_tokens->destroy_all();
 		}
@@ -567,7 +623,7 @@ class Sg_2fa {
 		}
 
 		// Allow users who are not in 2FA scope (e.g. subscribers) to keep using XML-RPC.
-		if ( empty( array_intersect( $this->get_admin_user_roles(), $user->roles ) ) ) {
+		if ( ! $this->user_requires_2fa( $user ) ) {
 			return $user;
 		}
 
@@ -598,8 +654,8 @@ class Sg_2fa {
 			return;
 		}
 
-		// Bail if the user role does not allow 2FA setup.
-		if ( empty( array_intersect( $this->get_admin_user_roles(), $user->roles ) ) ) {
+		// Bail if the user is not required to use 2FA.
+		if ( ! $this->user_requires_2fa( $user ) ) {
 			return;
 		}
 
@@ -613,6 +669,9 @@ class Sg_2fa {
 			// Disable the 2FA and show admin notice.
 			return $this->disable_2fa_show_notice();
 		}
+
+		// Destroy all server-side sessions before starting the 2FA challenge.
+		WP_Session_Tokens::get_instance( $user->ID )->destroy_all();
 
 		// Remove the auth cookie.
 		wp_clear_auth_cookie();
@@ -687,10 +746,14 @@ class Sg_2fa {
 			return;
 		}
 
+		// Enforce an active login restriction before validating the backup code.
+		do_action( 'sg_security_before_2fa_login' );
+
 		$result = false;
+		$is_login_attempt = isset( $_POST['sgc2fabackupcode'] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
 		// Check if the 2fa backup code is set, if not, don't try to apply it's value.
-		if ( isset( $_POST['sgc2fabackupcode'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		if ( $is_login_attempt ) {
 			// Validate the backup code.
 			$result = $this->validate_backup_login(
 				wp_unslash( $_POST['sgc2fabackupcode'] ), // phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -700,6 +763,10 @@ class Sg_2fa {
 
 		// Check the result of the authtication.
 		if ( false === $result ) {
+			if ( $is_login_attempt ) {
+				do_action( 'sg_security_2fa_login_failed' );
+			}
+
 			$this->load_form(
 				array(
 					'template' => '2fa-login-backup-code.php',
@@ -708,6 +775,9 @@ class Sg_2fa {
 				)
 			);
 		}
+
+		// The 2FA flow does not fire wp_login, so reset attempts explicitly.
+		do_action( 'sg_security_2fa_login_success' );
 
 		// Login the user.
 		$this->login_user( $cookie_data[0] );
@@ -741,6 +811,9 @@ class Sg_2fa {
 			return;
 		}
 
+		// Enforce an active login restriction before validating the authentication code.
+		do_action( 'sg_security_before_2fa_login' );
+
 		// Validate the encryption key.
 		if ( false === $this->encryption->get_encryption_key() ) {
 			// Disable the 2FA and show admin notice.
@@ -748,14 +821,19 @@ class Sg_2fa {
 		}
 
 		$result = false;
+		$is_login_attempt = isset( $_POST['sgc2facode'] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
 		// Check if the 2fa code is set, if not, don't try to apply it's value.
-		if ( isset( $_POST['sgc2facode'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		if ( $is_login_attempt ) {
 			$result = $this->check_authentication_code( wp_unslash( $_POST['sgc2facode'] ), wp_unslash( $cookie_data[0] ) ); // phpcs:ignore
 		}
 
 		// Check the result of the authtication.
 		if ( false === $result ) {
+			if ( $is_login_attempt ) {
+				do_action( 'sg_security_2fa_login_failed' );
+			}
+
 			// Arguments for 2fa login.
 			$args = array(
 				'template' => '2fa-login.php',
@@ -777,6 +855,9 @@ class Sg_2fa {
 
 			$this->load_form( $args ); // phpcs:ignore
 		}
+
+		// The 2FA flow does not fire wp_login, so reset attempts explicitly.
+		do_action( 'sg_security_2fa_login_success' );
 
 		// Login the user.
 		$this->login_user( $cookie_data[0] );
@@ -887,9 +968,8 @@ class Sg_2fa {
 	 */
 	public function check_for_users_using_2fa() {
 		// Get all users with 2FA configured.
-		$users = get_users(
+		$users = $this->get_users_requiring_2fa(
 			array(
-				'role__in'   => $this->get_admin_user_roles(),
 				'orderby'    => 'user_login',
 				'order'      => 'ASC',
 				'fields'     => array(
@@ -1059,7 +1139,7 @@ class Sg_2fa {
 		// If we have only WP_User object and no username, recover the username and continue the login.
 		if ( empty( $user_login ) && $user instanceof \WP_User ) {
 			// If its admin user trying to log in with broken parameters, bail.
-			if ( ! empty( array_intersect( $this->get_admin_user_roles(), $user->roles ) ) ) {
+			if ( $this->user_requires_2fa( $user ) ) {
 				wp_clear_auth_cookie();
 				wp_set_current_user( 0 );
 				return false;
@@ -1082,7 +1162,7 @@ class Sg_2fa {
 
 			// If its admin user trying to log in with broken parameters, bail.
 			if ( $maybe_user instanceof \WP_User ) {
-				if ( ! empty( array_intersect( $this->get_admin_user_roles(), $maybe_user->roles ) ) ) {
+				if ( $this->user_requires_2fa( $maybe_user ) ) {
 					wp_clear_auth_cookie();
 					wp_set_current_user( 0 );
 					return false;

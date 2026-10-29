@@ -235,6 +235,9 @@ class Loader {
 		add_action( 'login_init', array( $this->custom_login_url, 'add_sgs_token_to_language_switcher' ) );
 		add_filter( 'um_custom_authenticate_error_codes', array( $this->custom_login_url, 'add_um_form_error_code' ) );
 		add_filter( 'um_submit_form_error', array( $this->custom_login_url, 'set_um_form_flag' ), 100, 2 );
+		add_action( 'admin_print_footer_scripts', array( $this->custom_login_url, 'add_flag_auth_check_modal_rendering' ), 4 );
+		add_action( 'admin_print_footer_scripts', array( $this->custom_login_url, 'remove_flag_auth_check_modal_rendering' ), 6 );
+		add_filter( 'login_url', array( $this->custom_login_url, 'custom_interim_login_url' ), 10, 3 );
 	}
 
 	/**
@@ -371,10 +374,14 @@ class Loader {
 
 		// Check the login attempts for an IP and block the access to the login page.
 		add_action( 'login_head', array( $this->login_service, 'maybe_block_login_access' ), PHP_INT_MAX );
+		// Enforce the same restriction before validating a 2FA code.
+		add_action( 'sg_security_before_2fa_login', array( $this->login_service, 'maybe_block_login_access' ) );
 		// Add login attempts for ip.
 		add_filter( 'login_errors', array( $this->login_service, 'log_login_attempt' ) );
+		add_action( 'sg_security_2fa_login_failed', array( $this->login_service, 'log_failed_login_attempt' ) );
 		// Reset login attempts for an ip on successful login.
 		add_filter( 'wp_login', array( $this->login_service, 'reset_login_attempts' ) );
+		add_action( 'sg_security_2fa_login_success', array( $this->login_service, 'reset_login_attempts' ) );
 	}
 
 	/**

@@ -151,6 +151,22 @@ class Login_Service {
 			return $error;
 		}
 
+		$this->log_failed_login_attempt();
+
+		return $error;
+	}
+
+	/**
+	 * Add a failed login attempt for the current IP address.
+	 *
+	 * @since 1.6.9
+	 */
+	public function log_failed_login_attempt() {
+		// Bail if the login attempts limit is disabled.
+		if ( 0 === intval( $this->login_attempts_limit ) ) {
+			return;
+		}
+
 		// Get the current user ip.
 		$user_ip = Helper::get_current_user_ip();
 		// Get the login attempts data.
@@ -193,8 +209,6 @@ class Login_Service {
 
 		// Update the login attempts data.
 		update_option( 'sg_security_unsuccessful_login', $login_attempts );
-
-		return $error;
 	}
 
 	/**
