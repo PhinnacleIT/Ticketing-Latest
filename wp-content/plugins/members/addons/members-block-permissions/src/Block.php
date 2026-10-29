@@ -7,7 +7,7 @@
  * @package   MembersBlockPermissions
  * @author    The MemberPress Team 
  * @copyright 2019, The MemberPress Team
- * @link      https://members-plugin.com/-block-permissions
+ * @link      https://members-plugin.com/
  * @license   https://www.gnu.org/licenses/gpl-2.0.html GPL-2.0-or-later
  */
 namespace Members\BlockPermissions;
@@ -46,13 +46,6 @@ class Block {
 	 */
 	public function renderBlock( $content, $block ) {
 
-		// Check if we have nested blocks (e.g. columns)
-		if ( ! empty( $block['innerBlocks'] ) && is_array( $block['innerBlocks'] ) ) {
-			foreach ( $block['innerBlocks'] as $inner_block ) {
-				$this->renderBlock( $content, $inner_block );
-			}
-		}
-
 		// Bail if we're in the admin or there are no block attributes.
 		if ( is_admin() || ! isset( $block['attrs'] ) ) {
 			return $content;
@@ -70,6 +63,11 @@ class Block {
 
 		// Gets the permissions type.
 		$type = $block['attrs']['blockPermissionsType'];
+
+		// These types show the block to some visitors and not others.
+		if ( in_array( $type, [ 'user-status', 'role', 'cap' ], true ) && function_exists( 'members_do_not_cache_page' ) ) {
+			members_do_not_cache_page( 'block_permissions' );
+		}
 
 		// Assume that we will render this block by default.
 		$maybe_render = true;
