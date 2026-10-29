@@ -682,12 +682,25 @@ class DupCloudStorage extends AbstractStorageEntity implements StorageAuthInterf
                 throw new Exception('Archive file not found');
             }
 
-            $params = (new BackupPackage($archivePath, $package))->getOverwriteParams();
+            $params = $this->getRestoreDeployer($archivePath, $package)->getOverwriteParams();
             return PackageUtils::writeOverwriteParams(DUPLICATOR_SSDIR_PATH_TMP, $package->getPrimaryInternalHash(), $params);
         } catch (Throwable $e) {
             DupLog::infoTrace('Failed to create restore Backup config file: ' . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Deployer that builds the restore params for the Backup
+     *
+     * @param string          $archivePath Archive path
+     * @param AbstractPackage $package     the Backup
+     *
+     * @return BackupPackage
+     */
+    protected function getRestoreDeployer(string $archivePath, AbstractPackage $package): BackupPackage
+    {
+        return new BackupPackage($archivePath, $package);
     }
 
     /**

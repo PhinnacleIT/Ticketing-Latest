@@ -104,6 +104,22 @@ class DupCloudClient
     }
 
     /**
+     * Get the incremental backups URL of a website, or the overview of all websites when the UUID is empty
+     *
+     * @param string $websiteUuid Website UUID
+     *
+     * @return string
+     */
+    public static function incrementalBackupsUrl(string $websiteUuid): string
+    {
+        if ($websiteUuid === '') {
+            return DUPLICATOR_CLOUD_HOST . '/dashboard/incremental-backups';
+        }
+
+        return self::manageWebsitesUrl() . '/' . $websiteUuid . '/incremental-backups';
+    }
+
+    /**
      * Set the storage token
      *
      * @param string $storageToken The storage token
@@ -241,6 +257,7 @@ class DupCloudClient
      * if success is false meant that request failed
      * if authorized is false means that the storage token is not valid or expired
      * if ready is false means that the storage is not ready to use, probably another upload is in progress
+     * if storage_active is false means that the storage license is not active
      *
      * Endpoint: website/verify-storage
      * Response: [
@@ -250,6 +267,7 @@ class DupCloudClient
      *         'authorized' => bool,
      *         'user_name' => string,
      *         'user_email' => string,
+     *         'storage_active' => bool,
      *         'ready_for_upload' => bool,
      *         'total_space' => int,
      *         'free_space' => int,
@@ -291,7 +309,9 @@ class DupCloudClient
             (int) $result['data']['free_space'],
             (string) $result['data']['user_name'],
             (string) $result['data']['user_email'],
-            (string) $result['data']['website_uuid']
+            (string) $result['data']['website_uuid'],
+            // Absent on cloud versions that predate the field
+            (bool) ($result['data']['storage_active'] ?? true)
         );
     }
 
@@ -637,14 +657,18 @@ class DupCloudClient
             throw new Exception('No headers returned');
         }
 
-        $url = $result['data']['url'];
+        $url     = $result['data']['url'];
+        $headers = array_map(
+            static fn ($value): string => implode(', ', (array) $value),
+            $result['data']['headers']
+        );
         if (($content = file_get_contents($path)) === false) {
             throw new Exception("Can't read file: $path");
         }
 
         $response = Requests::request(
             $url,
-            [],
+            $headers,
             $content, // @phpstan-ignore-line
             Requests::PUT,
             ['timeout' => 300]
@@ -1133,6 +1157,133 @@ class DupCloudClient
         }
 
         return (int) ($result['data']['backups_deleted'] ?? 0);
+    }
+
+    /**
+     * Get the largest site, files plus database, an incremental backup may hold.
+     *
+     * @return int Size in bytes
+     *
+     * @throws Exception If the token is missing, the request fails or the answer carries no limit.
+     */
+    public function getIncrementalMaxSiteSize(): int
+    {
+        if (strlen($this->storageToken) === 0) {
+            throw new Exception('No storage token provided', 401);
+        }
+
+        $result = $this->request(
+            'backups/incremental/limits',
+            Requests::GET,
+            [],
+            [],
+            ['timeout' => self::STATUS_REQUEST_TIMEOUT]
+        );
+
+        if (!$result['success']) {
+            DupLog::trace('Failed to get the incremental limits: ' . $result['message']);
+            throw new Exception($result['message'], (int) $result['httpCode']);
+        }
+
+        $maxSiteSize = (int) ($result['data']['max_site_size'] ?? 0);
+        if ($maxSiteSize <= 0) {
+            throw new Exception('The incremental limits answer carries no site size limit');
+        }
+
+        return $maxSiteSize;
+    }
+
+    /**
+     * Get the bytes Duplicator Cloud stores for a finished backup.
+     *
+     * Addressed by archive name, not by the uuid of the upload that produced it:
+     * the upload is over by the time this is asked. A missing size_final means
+     * the server does not publish the flag yet, which must read as final —
+     * an unanswerable refresh would leave the row stale forever.
+     *
+     * @param string $archiveName The backup archive file name
+     *
+     * @return array{storedSize:?int,sizeFinal:bool} storedSize is null when the cloud knows no such finished backup
+     *
+     * @throws Exception If the token is missing or the request fails with a non-404 error.
+     */
+    public function getBackupStoredSize(string $archiveName): array
+    {
+        if (strlen($this->storageToken) === 0) {
+            throw new Exception('No storage token provided', 401);
+        }
+
+        if (!self::isAllowedFileName($archiveName)) {
+            throw new Exception('The provided file name is invalid: ' . $archiveName);
+        }
+
+        $result = $this->request('backups/' . rawurlencode($archiveName) . '/stored-size');
+
+        if (!$result['success']) {
+            if ($result['httpCode'] === 404) {
+                return [
+                    'storedSize' => null,
+                    'sizeFinal'  => true,
+                ];
+            }
+
+            DupLog::trace('Failed to get the stored size of ' . $archiveName . ': ' . $result['message']);
+            throw new Exception($result['message'], (int) $result['httpCode']);
+        }
+
+        return [
+            'storedSize' => isset($result['data']['stored_size']) ? (int) $result['data']['stored_size'] : null,
+            'sizeFinal'  => !isset($result['data']['size_final']) || (bool) $result['data']['size_final'],
+        ];
+    }
+
+    /**
+     * Trim the incremental backup chain: the named backup becomes the new
+     * baseline and every older backup is deleted on the cloud.
+     *
+     * @param string $baseline Archive filename of the backup to keep as baseline
+     *
+     * @return array{target_baseline:string,trimmed_backup_names:string[]} The baseline the cloud confirmed and the
+     *                                                                      archive names this run still deletes
+     *
+     * @throws Exception If the token is missing, the filename is invalid, the server rejects the trim
+     *                   or confirms no baseline. The exception code carries the HTTP code.
+     */
+    public function trimIncrementalChain(string $baseline): array
+    {
+        if (strlen($this->storageToken) === 0) {
+            throw new Exception('No storage token provided', 401);
+        }
+
+        if (!self::isAllowedFileName($baseline)) {
+            throw new Exception('The provided file name is invalid: ' . $baseline);
+        }
+
+        $result = $this->request(
+            'backups/incremental/trim',
+            Requests::POST,
+            [],
+            ['baseline' => $baseline],
+            ['timeout' => 30]
+        );
+
+        if (!$result['success']) {
+            $message = strlen($result['message']) > 0
+                ? $result['message']
+                : sprintf('Failed to trim the incremental chain to %s', $baseline);
+            DupLog::trace('DupCloudClient::trimIncrementalChain failed: HTTP ' . $result['httpCode'] . ' ' . $message);
+            throw new Exception($message, (int) $result['httpCode']);
+        }
+
+        $targetBaseline = (string) ($result['data']['target_baseline'] ?? '');
+        if (strlen($targetBaseline) === 0) {
+            throw new Exception('The trim response confirms no baseline', (int) $result['httpCode']);
+        }
+
+        return [
+            'target_baseline'      => $targetBaseline,
+            'trimmed_backup_names' => array_values(array_map('strval', (array) ($result['data']['trimmed_backup_names'] ?? []))),
+        ];
     }
 
     /**

@@ -19,6 +19,9 @@ class DupCloudStorageAdapter extends AbstractStorageAdapter
     /** @var int */
     const DEFAULT_CHUNK_SIZE = 6 * MB_IN_BYTES;
 
+    /** @var string Incremental change manifest sidecar, named after the Backup name hash */
+    const CHANGES_FILE_REGEX = '/^.+_[a-z0-9]{7,}_[0-9]{14}_changes\.json$/';
+
     protected string $accessToken;
     protected DupCloudClient $client;
     /** @var resource */
@@ -111,6 +114,9 @@ class DupCloudStorageAdapter extends AbstractStorageAdapter
             return false;
         } elseif (!$remoteInfo->isAuthorized()) {
             $errorMsg = __('Storage configuration is invalid', 'duplicator');
+            return false;
+        } elseif (!$remoteInfo->isActive()) {
+            $errorMsg = __('Duplicator Cloud storage is inactive. Please check your license status.', 'duplicator');
             return false;
         } elseif ($remoteInfo->getFreeSpace() <= 0) {
             $errorMsg = __('Storage is full', 'duplicator');
@@ -485,7 +491,7 @@ class DupCloudStorageAdapter extends AbstractStorageAdapter
             // 2. All other files will have to be backup archives
             if (($type = self::getDirectUploadFileType($filename)) !== null) {
                 if ($this->client->directUpload($sourceFile, $type, $storageFile) === false) {
-                    throw new Exception('Failed to upload installer file to cloud direcly');
+                    throw new Exception('Failed to upload ' . $type . ' file to cloud directly');
                 }
 
                 return $fileSize;
@@ -627,6 +633,10 @@ class DupCloudStorageAdapter extends AbstractStorageAdapter
 
         if (strpos($filename, (string) DUPLICATOR_LOCAL_OVERWRITE_PARAMS) === 0) {
             return 'installer-params';
+        }
+
+        if (preg_match(self::CHANGES_FILE_REGEX, $filename) === 1) {
+            return 'changes';
         }
 
         return null;

@@ -2,7 +2,7 @@
 
 namespace Duplicator\Libs\Snap;
 
-use Exception;
+use Throwable;
 
 class SnapString
 {
@@ -187,7 +187,7 @@ class SnapString
                 $size /= 1024;
             }
             return round($size, 2) . $units[$i];
-        } catch (Exception $e) {
+        } catch (Throwable $e) { // @phpstan-ignore catch.neverThrown (defensive guard kept on purpose)
             return "n/a";
         }
     }

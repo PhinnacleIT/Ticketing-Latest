@@ -1,12 +1,17 @@
 <?php
 
+// Run only inside an extracted package
+if (!glob(dirname(__DIR__) . '/dup_descriptors_*', GLOB_ONLYDIR)) {
+    exit;
+}
+
 if (!defined('DUPXABSPATH')) {
     define('DUPXABSPATH', __DIR__);
 }
 
 use Duplicator\Installer\Core\Bootstrap;
 
-define('DUPX_VERSION', '5.0.5');
+define('DUPX_VERSION', '5.1.0');
 define('DUPX_INIT', str_replace('\\', '/', dirname(__DIR__)));
 define('DUPX_ROOT', preg_match('/^[\\\\\/]?$/', dirname(DUPX_INIT)) ? '/' : dirname(DUPX_INIT));
 

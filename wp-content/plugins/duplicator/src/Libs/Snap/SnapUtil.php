@@ -3,6 +3,8 @@
 namespace Duplicator\Libs\Snap;
 
 use Exception;
+use ReflectionMethod;
+use ReflectionProperty;
 use Throwable;
 
 class SnapUtil
@@ -993,7 +995,7 @@ class SnapUtil
 
         try {
             $result = @unserialize($data, ['allowed_classes' => false]);
-        } catch (Throwable $e) {
+        } catch (Throwable $e) { // @phpstan-ignore catch.neverThrown (defensive guard kept on purpose)
             return false;
         }
 
@@ -1124,6 +1126,21 @@ class SnapUtil
         }
 
         return true;
+    }
+
+    /**
+     * Makes a reflected property or method accessible on PHP versions that still require it.
+     * Reflection is always accessible since PHP 8.1, and setAccessible() is deprecated since PHP 8.5.
+     *
+     * @param ReflectionProperty|ReflectionMethod $reflector Reflected property or method
+     *
+     * @return void
+     */
+    public static function setAccessible($reflector): void
+    {
+        if (PHP_VERSION_ID < 80100) {
+            $reflector->setAccessible(true);
+        }
     }
 
     /**

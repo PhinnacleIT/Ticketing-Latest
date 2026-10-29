@@ -212,7 +212,7 @@ abstract class AbstractPackage
     protected int $status = self::STATUS_PRE_PROCESS;
     // Chunking progress through build and storage uploads
 
-    /** @var InstallerDescriptors */
+    /** @var ?InstallerDescriptors Built on demand from the hash and the creation date, never saved with the Backup */
     protected $descriptorsMng;
     /** @var BuildProgress */
     public $build_progress;
@@ -719,7 +719,7 @@ abstract class AbstractPackage
      */
     public function getDescriptorMng()
     {
-        if (is_null($this->descriptorsMng)) {
+        if (!$this->descriptorsMng instanceof InstallerDescriptors) {
             $this->descriptorsMng = new InstallerDescriptors(
                 $this->getPrimaryInternalHash(),
                 date(self::PACKAGE_HASH_DATE_FORMAT, strtotime($this->created))

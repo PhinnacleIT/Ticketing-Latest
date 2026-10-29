@@ -1590,9 +1590,7 @@ abstract class AbstractStorageEntity extends AbstractEntity implements ModelMigr
             if ($prop->isStatic()) {
                 continue;
             }
-            if (PHP_VERSION_ID < 80100) {
-                $prop->setAccessible(true);
-            }
+            SnapUtil::setAccessible($prop);
             if ($prop->getName() == 'name') {
                 $newName = sprintf(__('%1$s - Copy', 'duplicator'), $prop->getValue($source));
                 $prop->setValue($target, $newName);
@@ -1651,9 +1649,7 @@ abstract class AbstractStorageEntity extends AbstractEntity implements ModelMigr
             if (!isset($data[$prop->getName()])) {
                 continue;
             }
-            if (PHP_VERSION_ID < 80100) {
-                $prop->setAccessible(true);
-            }
+            SnapUtil::setAccessible($prop);
             if (is_array($data[$prop->getName()])) {
                 $value = array_merge($prop->getValue($this), $data[$prop->getName()]);
                 $prop->setValue($this, $value);
@@ -1674,6 +1670,9 @@ abstract class AbstractStorageEntity extends AbstractEntity implements ModelMigr
     {
         if (static::isUnique()) {
             $storages = static::getAllBySType(static::getSType());
+            if ($storages === false) {
+                throw new Exception('Unable to verify that no other ' . static::getSTypeName() . ' storage exists');
+            }
             if (count($storages) > 0) {
                 throw new Exception('Only one ' . static::getSTypeName() . ' storage can exist');
             }

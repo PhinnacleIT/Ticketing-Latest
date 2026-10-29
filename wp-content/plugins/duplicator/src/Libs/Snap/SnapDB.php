@@ -635,25 +635,36 @@ class SnapDB
         $result       = [];
         $isItemOpen   = false;
         $isStringOpen = false;
-        $char         = '';
-        $pChar        = '';
+        $queryLen     = strlen($query);
 
         $currentItem  = [];
         $currentValue = '';
 
-        for ($i = 0; $i < strlen($query); $i++) {
-            $pChar = $char;
-            $char  = $query[$i];
+        for ($i = 0; $i < $queryLen; $i++) {
+            $char = $query[$i];
+
+            if ($isStringOpen !== false) {
+                if ($char === '\\' && $i + 1 < $queryLen) {
+                    // The escaped byte is copied as is and never closes the string
+                    $char .= $query[++$i];
+                } elseif ($char === $isStringOpen) {
+                    $isStringOpen = false;
+                }
+                if ($isItemOpen) {
+                    $currentValue .= $char;
+                }
+                continue;
+            }
 
             switch ($char) {
                 case '(':
-                    if ($isItemOpen == false && !$isStringOpen) {
+                    if ($isItemOpen == false) {
                         $isItemOpen = true;
                         continue 2;
                     }
                     break;
                 case ')':
-                    if ($isItemOpen && !$isStringOpen) {
+                    if ($isItemOpen) {
                         $isItemOpen    = false;
                         $currentItem[] = trim($currentValue);
                         $currentValue  = '';
@@ -664,21 +675,15 @@ class SnapDB
                     break;
                 case '\'':
                 case '"':
-                    if ($isStringOpen === false && $pChar !== '\\') {
-                        $isStringOpen = $char;
-                    } elseif ($isStringOpen === $char && $pChar !== '\\') {
-                        $isStringOpen = false;
-                    }
+                    $isStringOpen = $char;
                     break;
                 case ',':
                     if ($isItemOpen == false) {
                         continue 2;
-                    } elseif ($isStringOpen === false) {
-                        $currentItem[] = trim($currentValue);
-                        $currentValue  = '';
-                        continue 2;
                     }
-                    break;
+                    $currentItem[] = trim($currentValue);
+                    $currentValue  = '';
+                    continue 2;
                 default:
                     break;
             }
