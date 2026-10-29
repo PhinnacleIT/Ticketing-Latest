@@ -303,7 +303,7 @@ class Fonts_Optimizer extends Abstract_Combinator {
 
 		// Loop trough urls and prepare them for insertion.
 		foreach ( $urls as $url ) {
-			$new_html .= '<link rel="preload" as="font" href="' . $url . '" crossorigin/>';
+			$new_html .= '<link rel="preload" as="font" href="' . esc_url( $url ) . '" crossorigin/>';
 		}
 
 		// Insert the link in the head section.

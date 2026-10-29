@@ -247,6 +247,11 @@ class Htaccess {
 			return false;
 		}
 
+		// Check if file readable.
+		if ( ! $this->wp_filesystem->is_readable( $this->path ) ) {
+			return false;
+		}
+
 		// Get the content of htaccess.
 		$content = $this->wp_filesystem->get_contents( $this->path );
 

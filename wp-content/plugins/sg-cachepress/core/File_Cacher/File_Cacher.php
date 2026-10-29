@@ -767,6 +767,9 @@ class File_Cacher extends Supercacher {
 			return $this->hit_url_cache( $url );
 		}
 
+		// Replace the existing queue, so the repeated purges don't pile up the same URLs.
+		$this->preheat->clear_queue();
+
 		// Check if the user is provided URL list for preheating.
 		$preheat_urls = apply_filters( 'sgo_file_caching_preheat_url_list', array() );
 
@@ -967,6 +970,7 @@ class File_Cacher extends Supercacher {
 		$self->remove_config();
 		$self->remove_advanced_cache();
 		$self->toggle_cache_constant( false );
+		$self->preheat->clear_queue();
 	}
 
 	/**
@@ -1173,6 +1177,8 @@ class File_Cacher extends Supercacher {
 			$file_cacher->remove_config();
 			$file_cacher->remove_advanced_cache();
 			$file_cacher->purge_everything();
+			// Stop the preheat.
+			$file_cacher->preheat->clear_queue();
 			if ( ! Helper_Service::is_siteground() ) {
 				// Enable the cache.
 				Options::disable_option( 'siteground_optimizer_autoflush_cache' );
@@ -1224,8 +1230,12 @@ class File_Cacher extends Supercacher {
 		// The URL preheat limit.
 		$url_preheat_limit = apply_filters( 'sg_file_caching_preheat_url_limit', 200 );
 
-		// Split the URL list into chunks.
-		$url_batches = array_chunk( $url_list, $url_preheat_limit );
+		// Split the URL list into chunks. Max 2 batches.
+		$url_batches = array_slice(
+			array_chunk( $url_list, $url_preheat_limit ),
+			0,
+			2
+		);
 
 		// Iterate through all URL batches.
 		foreach ( $url_batches as $url_batch ) {

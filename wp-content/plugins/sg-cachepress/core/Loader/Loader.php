@@ -46,6 +46,7 @@ class Loader {
 	public $rest;
 	public $database_optimizer;
 	public $performance_reports;
+	public $elementor_css;
 
 	/**
 	 * Configuration map array.
@@ -79,6 +80,7 @@ class Loader {
 			'ssl'                    => 'ssl',
 			'config'                 => 'config',
 			'performance_reports'    => 'performance_reports',
+			'elementor_css'          => 'compatibility',
 		),
 	);
 
@@ -199,6 +201,8 @@ class Loader {
 		add_action( 'after_setup_theme', array( $this->i18n_service, 'load_textdomain' ), 9999 );
 		// Generate JSON translations.
 		add_action( 'upgrader_process_complete', array( $this->i18n_service, 'update_json_translations' ), 10, 2 );
+		// Download and update translations on language change.
+		add_action( 'update_option_WPLANG', array( $this->i18n_service, 'download_translations_on_lang_change' ), 10, 2 );
 	}
 
 	/**
@@ -714,6 +718,34 @@ class Loader {
 
 		add_action( 'updated_option', array( $this->config, 'update_config_check' ), 10, 1 );
 		add_action( 'added_option', array( $this->config, 'update_config_check' ), 10, 1 );
+	}
+
+	/**
+	 * Add Elementor CSS compatibility hooks.
+	 *
+	 * @since 7.8.3
+	 */
+	public function add_elementor_css_hooks() {
+		if (
+			! Options::is_enabled( 'siteground_optimizer_enable_cache' ) &&
+			! Options::is_enabled( 'siteground_optimizer_file_caching' )
+		) {
+			return;
+		}
+
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		if ( ! is_plugin_active( 'elementor/elementor.php' ) ) {
+			return;
+		}
+
+		add_action( 'elementor/core/files/clear_cache', array( $this->elementor_css, 'start_generation' ), 1 );
+		add_filter( 'wp_headers', array( $this->elementor_css, 'filter_cache_headers' ), PHP_INT_MAX );
+		add_action( 'elementor/css-file/after_enqueue', array( $this->elementor_css, 'record_css_health' ) );
+		add_action( 'wp_footer', array( $this->elementor_css, 'mark_render_complete' ), PHP_INT_MAX );
+		add_action( 'shutdown', array( $this->elementor_css, 'commit_validation' ), PHP_INT_MAX );
 	}
 
 	/**

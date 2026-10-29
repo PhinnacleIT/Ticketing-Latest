@@ -157,6 +157,9 @@ class Lazy_Load_Images extends Abstract_Lazy_Load {
 				$processed_image
 			);
 
+			// Order the attributes in the correct order.
+			$processed_image = $this->order_lazyload_image_attributes( $processed_image );
+
 			// Replace the image with itself and add the <noscript> fallback.
 			$html = str_replace(
 				$match[0],
@@ -200,9 +203,6 @@ class Lazy_Load_Images extends Abstract_Lazy_Load {
 			return $image;
 		}
 
-		$processor->remove_attribute( 'width' );
-		$processor->remove_attribute( 'height' );
-
 		// Preserve responsive sources for the lazy-load script.
 		$srcset = $processor->get_attribute( 'srcset' );
 
@@ -234,5 +234,66 @@ class Lazy_Load_Images extends Abstract_Lazy_Load {
 		}
 
 		return false;
+	}
+
+	/**
+	* Re-arrange a lazy-loaded image with src before data-src.
+	*
+	* @param string $image Image HTML.
+	*
+	* @return string Image HTML.
+	*/
+	public function order_lazyload_image_attributes( $image ) {
+		if ( ! class_exists( '\WP_HTML_Tag_Processor' ) ) {
+			return $image;
+		}
+
+		$processor = new \WP_HTML_Tag_Processor( $image );
+
+		if ( ! $processor->next_tag( 'IMG' ) ) {
+			return $image;
+		}
+
+		$attributes = array();
+
+		// Store the values of all attributes.
+		foreach ( $processor->get_attribute_names_with_prefix( '' ) as $name ) {
+			$value = $processor->get_attribute( $name );
+
+			if ( null !== $value ) {
+				$attributes[ $name ] = $value;
+			}
+		}
+
+		// WordPress must encounter the actual src attribute before data-src.
+		$attribute_names = array_unique(
+			array_merge(
+				array( 'src', 'data-src' ),
+				array_keys( $attributes )
+			)
+		);
+
+		// Build the tag with attributes arranged in the desired order.
+		$html = '<img';
+
+		foreach ( $attribute_names as $name ) {
+			if ( ! array_key_exists( $name, $attributes ) ) {
+				continue;
+			}
+
+			// In case of boolean attribute (e.g. disabled).
+			if ( true === $attributes[ $name ] ) {
+				$html .= ' ' . $name;
+				continue;
+			}
+
+			$html .= sprintf(
+				' %s="%s"',
+				$name,
+				esc_attr( (string) $attributes[ $name ] )
+			);
+		}
+
+		return $html . '>';
 	}
 }
