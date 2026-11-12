@@ -40,7 +40,7 @@ if (!class_exists('ImageMapPro_Shortcode')) {
       $_SESSION['image-map-pro-shortcodes'] = array();
     }
     function register_client_script() {
-			wp_register_script('image-map-pro', plugins_url('../js/client/main.js', __FILE__), false, $this->version, true);
+			wp_register_script('image-map-pro', plugins_url('../js/client/main.js', __FILE__), false, filemtime(__DIR__ . '/../js/client/main.js'), true);
 		}
     function print_shortcode($a, $b, $shortcode) {			
       $project = $this->storage->get_project_by_shortcode($shortcode);
