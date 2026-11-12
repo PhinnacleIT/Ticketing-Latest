@@ -247,11 +247,14 @@ class Loader {
 	 */
 	public function add_usernames_service_hooks() {
 		// Bail if the option is not enabled.
-		if ( ! Options_Service::is_enabled( 'disable_usernames' ) ) {
-			return;
+		if ( Options_Service::is_enabled( 'disable_usernames' ) ) {
+			add_action( 'illegal_user_logins', array( $this->usernames_service, 'get_illegal_usernames' ) );
 		}
 
-		add_action( 'illegal_user_logins', array( $this->usernames_service, 'get_illegal_usernames' ) );
+		// REST API user enumeration protection.
+		if ( Options_Service::is_enabled( 'rest_user_enumeration' ) ) {
+			add_filter( 'rest_pre_dispatch', array( $this->usernames_service, 'restrict_rest_api_users_endpoint' ), 10, 3 );
+		}
 	}
 
 	/**
@@ -340,6 +343,8 @@ class Loader {
 			return;
 		}
 
+		add_action( 'set_auth_cookie', array( $this->sg_2fa, 'capture_login_session_token' ), 10, 6 );
+		add_action( 'set_logged_in_cookie', array( $this->sg_2fa, 'capture_login_session_token' ), 10, 6 );
 		add_action( 'wp_login', array( $this->sg_2fa, 'move_encryption_file' ), 9, 2 );
 		add_action( 'wp_login', array( $this->sg_2fa, 'init_2fa' ), 10, 2 );
 		add_filter( 'authenticate', array( $this->sg_2fa, 'block_xmlrpc_for_2fa_users' ), 99, 1 );
@@ -504,6 +509,8 @@ class Loader {
 		add_action( 'after_setup_theme', array( $this->i18n_service, 'load_textdomain' ), 9999 );
 		// Generate JSON translations.
 		add_action( 'upgrader_process_complete', array( $this->i18n_service, 'update_json_translations' ), 10, 2 );
+		// Download and update translations on language change.
+		add_action( 'update_option_WPLANG', array( $this->i18n_service, 'download_translations_on_lang_change' ), 10, 2 );
 	}
 
 	/**

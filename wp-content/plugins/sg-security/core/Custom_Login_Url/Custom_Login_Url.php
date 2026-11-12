@@ -107,7 +107,7 @@ class Custom_Login_Url {
 	 * @return string          Modified message.
 	 */
 	public function change_email_links( $message ) {
-		return str_replace( 'wp-login.php', trailingslashit( $this->options['new_slug'] ), $message );
+		return str_replace( 'wp-login.php', untrailingslashit( $this->options['new_slug'] ), $message );
 	}
 
 	/**

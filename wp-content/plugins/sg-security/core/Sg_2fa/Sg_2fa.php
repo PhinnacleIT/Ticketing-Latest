@@ -27,6 +27,13 @@ class Sg_2fa {
 	public $encryption;
 
 	/**
+	 * Session tokens issued by auth cookies in the current request, keyed by user ID.
+	 *
+	 * @var array
+	 */
+	private $login_session_tokens = array();
+
+	/**
 	 * The singleton instance.
 	 *
 	 * @since 1.1.1
@@ -641,6 +648,30 @@ class Sg_2fa {
 	}
 
 	/**
+	 * Remember the session token of an auth cookie issued in this request,
+	 * so init_2fa() can revoke only the session created by the current login.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param string $cookie     The auth cookie value.
+	 * @param int    $expire     The login grace period expiration timestamp.
+	 * @param int    $expiration The cookie expiration timestamp.
+	 * @param int    $user_id    The user ID.
+	 * @param string $scheme     The authentication scheme.
+	 * @param string $token      The session token (passed since WP 4.9).
+	 */
+	public function capture_login_session_token( $cookie, $expire, $expiration, $user_id, $scheme, $token = '' ) {
+		// Parse the cookie too: older WP versions do not pass $token and the cookie may be filtered.
+		$cookie_data = wp_parse_auth_cookie( $cookie, $scheme );
+
+		foreach ( array( $token, empty( $cookie_data['token'] ) ? '' : $cookie_data['token'] ) as $session_token ) {
+			if ( ! empty( $session_token ) ) {
+				$this->login_session_tokens[ (int) $user_id ][ $session_token ] = true;
+			}
+		}
+	}
+
+	/**
 	 * Initialize the 2fa
 	 *
 	 * @since  1.0.0
@@ -653,6 +684,9 @@ class Sg_2fa {
 		if ( false === $this->check_wp_login_params( $user_login, $user ) ) {
 			return;
 		}
+
+		$login_session_tokens = isset( $this->login_session_tokens[ $user->ID ] ) ? array_keys( $this->login_session_tokens[ $user->ID ] ) : array();
+		unset( $this->login_session_tokens[ $user->ID ] );
 
 		// Bail if the user is not required to use 2FA.
 		if ( ! $this->user_requires_2fa( $user ) ) {
@@ -670,8 +704,17 @@ class Sg_2fa {
 			return $this->disable_2fa_show_notice();
 		}
 
-		// Destroy all server-side sessions before starting the 2FA challenge.
-		WP_Session_Tokens::get_instance( $user->ID )->destroy_all();
+		// Revoke only the session created by this login, other devices stay logged in.
+		$session_manager = WP_Session_Tokens::get_instance( $user->ID );
+
+		if ( empty( $login_session_tokens ) ) {
+			// Fail closed if the token was not captured (e.g. wp_set_auth_cookie() is overridden).
+			$session_manager->destroy_all();
+		}
+
+		foreach ( $login_session_tokens as $session_token ) {
+			$session_manager->destroy( $session_token );
+		}
 
 		// Remove the auth cookie.
 		wp_clear_auth_cookie();

@@ -223,7 +223,7 @@ class Login_Service {
 		$login_attempts = get_option( 'sg_security_unsuccessful_login', array() );
 
 		// Bail if the IP doens't exists in the unsuccessful logins.
-		if ( ! array_key_exists( $user_ip, $login_attempts ) ) {
+		if ( ! is_array( $login_attempts ) || ! array_key_exists( $user_ip, $login_attempts ) ) {
 			return;
 		}
 
