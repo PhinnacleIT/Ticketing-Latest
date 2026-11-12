@@ -331,7 +331,7 @@ abstract class Abstract_Images_Optimizer {
 			}
 
 			// Verify the token matches and is not empty.
-			if ( ! empty( $provided_token ) && hash_equals( $stored_token, $provided_token ) ) {
+			if ( is_string( $stored_token ) && ! empty( $provided_token ) && hash_equals( $stored_token, $provided_token ) ) {
 				return true;
 			}
 

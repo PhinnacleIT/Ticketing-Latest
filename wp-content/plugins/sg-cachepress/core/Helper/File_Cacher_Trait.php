@@ -226,7 +226,7 @@ trait File_Cacher_Trait {
 		}
 
 		// Stringify the array and return the value.
-		return $base_filename . '-' . md5( implode( '', $get_params ) ) . '.html';
+		return $base_filename . '-' . md5( serialize( $get_params ) ) . '.html';
 	}
 
 	/**

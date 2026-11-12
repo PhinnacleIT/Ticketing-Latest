@@ -240,10 +240,25 @@ class Css_Combinator extends Abstract_Combinator {
 	 * @return string               Modified HTML.
 	 */
 	public function get_new_html( $html, $styles_data ) {
+		$new_content = array();
+
 		// Remove style tags.
 		foreach ( $styles_data as $url => $tag ) {
+			// Try to get the content of the URL.
+			$content = $this->get_content( $url );
+
+			// Preserve the original tag if reading fails or returns no CSS.
+			if ( empty( $content ) ) {
+				continue;
+			}
+
+			$new_content[ $url ] = $content;
 			$html = str_replace( $tag, '', $html );
-			$new_content[ $url ] = $this->get_content( $url );
+		}
+
+		// Bail, if there is no CSS data to combine.
+		if ( empty( $new_content ) ) {
+			return $html;
 		}
 
 		// Allows the combined CSS tag, to be added after the closing title or before the closing head tag.

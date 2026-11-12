@@ -534,7 +534,7 @@ class Loader {
 		}
 
 		add_action( 'edit_attachment', array( $this->images_optimizer, 'custom_attachment_compression_level' ) );
-		add_filter( 'attachment_fields_to_edit', array( $this->images_optimizer, 'custom_attachment_compression_level_field' ), null, 2 );
+		add_filter( 'attachment_fields_to_edit', array( $this->images_optimizer, 'custom_attachment_compression_level_field' ), 10, 2 );
 	}
 
 	/**

@@ -137,6 +137,12 @@ class Elementor_Css {
 			return;
 		}
 
+		$template_type = get_post_meta( $css_file->get_post_id(), '_elementor_template_type', true );
+
+		if ( 'loop-item' === $template_type ) {
+			$css_file = new \ElementorPro\Modules\LoopBuilder\Files\Css\Loop( $css_file->get_post_id() );
+		}
+
 		$meta = $css_file->get_meta();
 
 		if ( ! is_array( $meta ) || ! isset( $meta['status'] ) ) {
