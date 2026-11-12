@@ -2,38 +2,18 @@
 
 /**
  * Installer Hooks Manager
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
  */
 
 namespace Duplicator\Installer\Core\Hooks;
 
 final class HooksMng
 {
-    /**
-     *
-     * @var self
-     */
-    private static $instance = null;
-
-    /**
-     *
-     * @var Hook[]
-     */
-    private $filters = array();
-
-    /**
-     *
-     * @var Hook[]
-     */
-    private $actions = array();
-
-    /**
-     *
-     * @var string[]
-     */
-    private $currentFilter = array();
+    /** @var ?self */
+    private static $instance;
+    /** @var Hook[] */
+    private $filters = [];
+    /** @var string[] */
+    private $currentFilter = [];
 
     /**
      *
@@ -49,7 +29,7 @@ final class HooksMng
     }
 
     /**
-     * init params and load
+     * Init params and load
      */
     private function __construct()
     {
@@ -116,7 +96,7 @@ final class HooksMng
      *
      * @return true
      */
-    public function addFilter($tag, $function_to_add, $priority = 10, $accepted_args = 1)
+    public function addFilter($tag, $function_to_add, $priority = 10, $accepted_args = 1): bool
     {
         if (!isset($this->filters[$tag])) {
             $this->filters[$tag] = new Hook();
@@ -250,7 +230,7 @@ final class HooksMng
      *
      * @return true True when finished.
      */
-    public function removeAllFilters($tag, $priority = false)
+    public function removeAllFilters($tag, $priority = false): bool
     {
         if (isset($this->filters[$tag])) {
             $this->filters[$tag]->removeAllFilters($priority);
@@ -281,7 +261,7 @@ final class HooksMng
      *
      * @return true Will always return true.
      */
-    public function addAction($tag, $function_to_add, $priority = 10, $accepted_args = 1)
+    public function addAction($tag, $function_to_add, $priority = 10, $accepted_args = 1): bool
     {
         return $this->addFilter($tag, $function_to_add, $priority, $accepted_args);
     }
@@ -320,7 +300,7 @@ final class HooksMng
      *
      * @return void
      */
-    public function doAction($tag)
+    public function doAction($tag): void
     {
         $arg = $all_args = func_get_args();
         array_shift($arg); // remove tag action
@@ -400,7 +380,7 @@ final class HooksMng
      *
      * @return true True when finished.
      */
-    public function removeAllActions($tag, $priority = false)
+    public function removeAllActions($tag, $priority = false): bool
     {
         return $this->removeAllFilters($tag, $priority);
     }
@@ -440,11 +420,11 @@ final class HooksMng
      *
      * @global Hook[] $this->filters Stores all of the filters and actions.
      *
-     * @param array $args The collected parameters from the hook that was called.
+     * @param mixed[] $args The collected parameters from the hook that was called.
      *
      * @return void
      */
-    private function callAllHook($args)
+    private function callAllHook(array $args): void
     {
         $this->filters['all']->doAllHook($args);
     }

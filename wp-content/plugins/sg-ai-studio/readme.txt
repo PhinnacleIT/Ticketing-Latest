@@ -2,8 +2,8 @@
 Contributors: Hristo Sg, siteground, sstoqnov, stoyangeorgiev, elenachavdarova, ignatggeorgiev
 Tags: AI, agent, connector, siteground, chatbot
 Requires at least: 5.0
-Tested up to: 7.0
-Stable tag: 1.2.6
+Tested up to: 7.1
+Stable tag: 1.3.2
 Requires PHP: 7.4
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -224,8 +224,68 @@ This plugin connects to SiteGround's AI Studio API (api.studio.siteground.ai) to
 1. The SiteGround Optimizer Dashboard Page offers a quick look at the current optimization status of your website, along with shortcuts to the relevant optimization pages.
 
 == Changelog ==
+= 1.3.2 =
+Release Date Nov 2nd, 2026
+
+New: Editor (role) access to the AI Agent
+AI Agent acts as the chatting user
+New: Markdown (.md) file support in AI Agent chat
+Activity Log shows which user made each change
+Clearer connector approval error messages
+WooCommerce refunded orders fixes
+Autoconnect loader centering fix
+
+= 1.3.1 =
+Release Date Sep 30th, 2026
+
+* New: Attachment-only messages in AI Agent chat
+* New: Batch theme updates
+* New: Global template parts editing (header and footer) on block themes
+* Chat drafts and attachments preserved after refresh or WP Admin navigation
+* Site context improvements for menus and page builders
+* Fonts loading fix
+
+= 1.3.0 =
+Release Date Sept 3rd, 2026
+
+* New: Site context awareness
+* New: Block-scoped page and post editing
+* New: WooCommerce variable and grouped product support
+* New: Taxonomy terms support
+* New: View Mode switcher in the chat header
+* Improved multi-step planning
+* Native Chat scrolling behaviour while streaming response
+* Activity Log now records page and post changes
+
+= 1.2.9 =
+Release Date August 20th, 2026
+
+* AI Tokens Manage button link fix
+
+= 1.2.8 =
+Release Date August 19th, 2026
+
+* New: Redesigned plugin page with Dashboard, Settings, and Activity & Usage
+* New: AI Tokens usage and balance
+* New: Activity Log filtering by category
+* New: Satisfaction survey in AI Agent chat
+* Chat input character limit removed
+* Full-screen chat UI refinements
+* Elementor Editor compatibility fix
+* Security hardening
+
+= 1.2.7 =
+Release Date July 28th, 2026
+
+* New: Page context awareness for WP Agent
+* New: Post and page revision support
+* Quick Actions updates
+* Chat input alignment fix
+* Avada Live Builder compatibility fix
+
 = 1.2.6 =
 Release Date July 8th, 2026
+
 * New: Progressive chat display modes
 * New: Real-time AI Agent tool activity view
 * New: AI Agent chat on the logged-in front-end
@@ -234,25 +294,30 @@ Release Date July 8th, 2026
 
 = 1.2.5 =
 Release Date June 23th, 2026
+
 * Gutenberg Editor improvements
 * REST request hardening
 
 = 1.2.4 =
 Release Date June 16th, 2026
+
 * Chat bubble resizing fixes
 * Chat input box alignment fixes
 
 = 1.2.3 =
 Release Date June 10th, 2026
+
 * Add prefixing for additionally loaded libraries
 
 = 1.2.2 =
 Release Date June 5th, 2026
+
 * php-jwt dependency version update
 * Changes to signing/verification keys validation process
 
 = 1.2.1 =
 Release Date June 4th, 2026
+
 * REST responses optimizations
 * Chat bubble improvements
 * Contributor access improvements through plugin REST endpoints
@@ -260,36 +325,43 @@ Release Date June 4th, 2026
 
 = 1.2.0 =
 Release Date May 28th, 2026
+
 * Chat bubble improvements
 * Menus support
 
 = 1.1.9 =
 Release Date May 20th, 2026
+
 * Add AI Image Refinement support
 * Add introductory banner to chat
 * Translation improvements
 
 = 1.1.8 =
 Release Date May 18th, 2026
+
 * Add WP core AI functionalities support
 * Improvements to initial connection flows
 
 = 1.1.7 =
 Release Date May 8th, 2026
+
 * WP-CLI connection improvements
 
 = 1.1.6 =
 Release Date May 4th, 2026
+
 * Assets improvements
 * WooCommerce improvements
 * Post types support
 
 = 1.1.5 =
 Release Date Apr 30th, 2026
+
 * Code improvements
 
 = 1.1.4 =
 Release Date Apr 28th, 2026
+
 * NEW - Chat History
 
 = 1.1.3 =

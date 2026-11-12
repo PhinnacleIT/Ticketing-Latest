@@ -1,10 +1,5 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
-
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 ?>
 <div id="hard_warning_action" class="bottom-step-action margin-top-2 no-display" > 

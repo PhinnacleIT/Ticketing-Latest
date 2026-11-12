@@ -7,25 +7,31 @@
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
  *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-use Duplicator\Libs\Snap\SnapIO;
+use Duplicator\Installer\Core\InstState;
+use Duplicator\Libs\Snap\SnapOpenBasedir;
 
 class DUPX_Validation_test_open_basedir extends DUPX_Validation_abstract_item
 {
-    private $openBaseDirEnabled      = false;
-    private $pathsOutsideOpenBaseDir = array();
+    /** @var bool */
+    private $openBaseDirEnabled = false;
+    /** @var string[] */
+    private $pathsOutsideOpenBaseDir = [];
 
-    protected function runTest()
+    protected function runTest(): int
     {
-        if (($this->openBaseDirEnabled = SnapIO::isOpenBaseDirEnabled()) === false) {
+        if (InstState::isRecoveryMode()) {
+            return self::LV_SKIP;
+        }
+
+        if (($this->openBaseDirEnabled = SnapOpenBasedir::isEnabled()) === false) {
             return self::LV_GOOD;
         }
 
-        $archivePaths = array();
+        $archivePaths = [];
         $pathMapping  = DUPX_ArchiveConfig::getInstance()->getPathsMapping();
         if (is_array($pathMapping)) {
             $archivePaths = $pathMapping;
@@ -34,7 +40,7 @@ class DUPX_Validation_test_open_basedir extends DUPX_Validation_abstract_item
         }
 
         foreach ($archivePaths as $archivePath) {
-            if (SnapIO::getOpenBaseDirRootOfPath($archivePath) === false) {
+            if (SnapOpenBasedir::getRootOfPath($archivePath) === false) {
                 $this->pathsOutsideOpenBaseDir[] = $archivePath;
             }
         }
@@ -46,26 +52,26 @@ class DUPX_Validation_test_open_basedir extends DUPX_Validation_abstract_item
         }
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'PHP Open Base';
     }
 
     protected function hwarnContent()
     {
-        return dupxTplRender('parts/validation/tests/open-basedir', array(
+        return dupxTplRender('parts/validation/tests/open-basedir', [
             'openBaseDirEnabled'      => $this->openBaseDirEnabled,
             'pathsOutsideOpenBaseDir' => $this->pathsOutsideOpenBaseDir,
-            'isOk'                    => false
-        ), false);
+            'isOk'                    => false,
+        ], false);
     }
 
     protected function goodContent()
     {
-        return dupxTplRender('parts/validation/tests/open-basedir', array(
+        return dupxTplRender('parts/validation/tests/open-basedir', [
             'openBaseDirEnabled'      => $this->openBaseDirEnabled,
             'pathsOutsideOpenBaseDir' => $this->pathsOutsideOpenBaseDir,
-            'isOk'                    => true
-        ), false);
+            'isOk'                    => true,
+        ], false);
     }
 }

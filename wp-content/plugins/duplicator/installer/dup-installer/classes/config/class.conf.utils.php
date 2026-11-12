@@ -4,9 +4,11 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX
  */
+
+use Duplicator\Installer\Core\Security;
+use Duplicator\Libs\Snap\FunctionalityCheck;
+use Duplicator\Libs\Snap\SnapUtil;
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
@@ -15,20 +17,6 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
  */
 class DUPX_Conf_Utils
 {
-    /**
-     *
-     * @staticvar null|bool $present
-     * @return    bool
-     */
-    public static function isConfArkPresent()
-    {
-        static $present = null;
-        if (is_null($present)) {
-            $present = file_exists(DUPX_Package::getWpconfigArkPath());
-        }
-        return $present;
-    }
-
     /**
      *
      * @staticvar bool $present
@@ -48,7 +36,7 @@ class DUPX_Conf_Utils
      * @staticvar null|bool $enable
      * @return    bool
      */
-    public static function shellExecUnzipEnable()
+    public static function isShellZipAvailable()
     {
         static $enable = null;
         if (is_null($enable)) {
@@ -61,9 +49,9 @@ class DUPX_Conf_Utils
      *
      * @return bool
      */
-    public static function classZipArchiveEnable()
+    public static function isPhpZipAvailable()
     {
-        return class_exists('ZipArchive');
+        return SnapUtil::classExists(ZipArchive::class);
     }
 
     /**
@@ -75,21 +63,21 @@ class DUPX_Conf_Utils
     {
         static $exists = null;
         if (is_null($exists)) {
-            $exists = file_exists(DUPX_Security::getInstance()->getArchivePath());
+            $exists = file_exists(Security::getInstance()->getArchivePath());
         }
         return $exists;
     }
 
     /**
+     * Get archive size
      *
-     * @staticvar bool $arcSize
-     * @return    bool
+     * @return int
      */
     public static function archiveSize()
     {
         static $arcSize = null;
         if (is_null($arcSize)) {
-            $archivePath = DUPX_Security::getInstance()->getArchivePath();
+            $archivePath = Security::getInstance()->getArchivePath();
             $arcSize     = file_exists($archivePath) ? (int) @filesize($archivePath) : 0;
         }
         return $arcSize;

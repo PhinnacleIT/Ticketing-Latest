@@ -139,6 +139,13 @@
         });
 
         /**
+         * Toggle MCP for AI assistants
+         */
+        $('#wdt-mcp-enabled').change(function (e) {
+            wpdatatable_plugin_config.setMcpEnabled($(this).is(':checked') ? 1 : 0);
+        });
+
+        /**
          * Toggle Align numbers
          */
         $('#wdt-numbers-align').change(function(e){
@@ -235,6 +242,13 @@
         });
 
         /**
+         * Toggle usage tracking
+         */
+        $('#wdt-usage-tracking-enabled').change(function (e) {
+            wpdatatable_plugin_config.setUsageTrackingEnabled($(this).is(':checked') ? 1 : 0);
+        });
+
+        /**
          * Load current config on load
          */
         wpdatatable_plugin_config.setLanguage           ( wdt_current_config.wdtInterfaceLanguage );
@@ -256,6 +270,9 @@
         wpdatatable_plugin_config.setIncludeBootstrapBackEnd   ( wdt_current_config.wdtIncludeBootstrapBackEnd == 1 ? 1 : 0 );
         wpdatatable_plugin_config.setPreventDeletingTables(wdt_current_config.wdtPreventDeletingTables == 1 ? 1 : 0);
         wpdatatable_plugin_config.setParseShortcodes    ( wdt_current_config.wdtParseShortcodes == 1 ? 1 : 0 );
+        wpdatatable_plugin_config.setMcpEnabled(
+            (typeof wdt_current_config.wdtMcpEnabled === 'undefined' || wdt_current_config.wdtMcpEnabled == 1) ? 1 : 0
+        );
         wpdatatable_plugin_config.setAlignNumber        ( wdt_current_config.wdtNumbersAlign == 1 ? 1 : 0  );
         wpdatatable_plugin_config.setCustomCss          ( wdt_current_config.wdtCustomCss );
         wpdatatable_plugin_config.setCustomJs           ( wdt_current_config.wdtCustomJs );
@@ -267,6 +284,7 @@
         wpdatatable_plugin_config.setBorderRemoval(wdt_current_config.wdtBorderRemoval == 1 ? 1 : 0);
         wpdatatable_plugin_config.setBorderRemovalHeader(wdt_current_config.wdtBorderRemovalHeader == 1 ? 1 : 0);
         wpdatatable_plugin_config.setGoogleStableVersion(wdt_current_config.wdtGoogleStableVersion == 1 ? 1 : 0);
+        wpdatatable_plugin_config.setUsageTrackingEnabled(wdt_current_config.wdtUsageTrackingEnabled == 1 ? 1 : 0);
 
         for (var value in wdt_current_config.wdtFontColorSettings) {
             wpdatatable_plugin_config.setColorFontSetting(value, wdt_current_config.wdtFontColorSettings[value]);

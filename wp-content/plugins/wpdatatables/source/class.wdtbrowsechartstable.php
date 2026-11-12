@@ -78,6 +78,11 @@ class WDTBrowseChartsTable extends WP_List_Table
             }
         }
 
+        $query = \WPDataTables\Services\Permissions\BrowseListScope::constrainQueryByIds(
+            $query,
+            'id',
+            \WPDataTables\Services\Permissions\BrowseListScope::allowedChartIds()
+        );
         $count = $wpdb->get_var($query);
 
         return $count;
@@ -136,6 +141,11 @@ class WDTBrowseChartsTable extends WP_List_Table
         $tables_per_page = get_option('wdtTablesPerPage') ? get_option('wdtTablesPerPage') : 10;
 
         $query .= " LIMIT " . ($paged - 1) * $tables_per_page . ", " . $tables_per_page;
+        $query = \WPDataTables\Services\Permissions\BrowseListScope::constrainQueryByIds(
+            $query,
+            'id',
+            \WPDataTables\Services\Permissions\BrowseListScope::allowedChartIds()
+        );
 
         $allCharts = apply_filters('wpdatatables_filter_browse_charts', $wpdb->get_results($query, ARRAY_A));
 
@@ -454,7 +464,7 @@ class WDTBrowseChartsTable extends WP_List_Table
         $current_url = remove_query_arg($removable_query_args, $current_url);
         $search_term = '';
         if( isset($_REQUEST['s'] ) ){
-            $search_term = sanitize_text_field($_REQUEST['s']);
+            $search_term = sanitize_text_field(wp_unslash($_REQUEST['s']));
             $current_url = add_query_arg( 's', $search_term, $current_url );
         }
 

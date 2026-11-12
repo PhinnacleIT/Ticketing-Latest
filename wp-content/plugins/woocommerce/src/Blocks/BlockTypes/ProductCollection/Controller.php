@@ -220,8 +220,7 @@ class Controller extends AbstractBlock {
 	protected function enqueue_data( array $attributes = array() ) {
 		parent::enqueue_data( $attributes );
 
-		// The `loop_shop_per_page` filter can be found in WC_Query::product_query().
-		// phpcs:ignore WooCommerce.Commenting.CommentHooks.MissingHookComment
+		// phpcs:ignore WooCommerce.Commenting.CommentHooks.MissingHookComment -- Documented in WC_Query::product_query().
 		$this->asset_data_registry->add( 'loopShopPerPage', apply_filters( 'loop_shop_per_page', wc_get_default_products_per_row() * wc_get_default_product_rows_per_page() ) );
 	}
 
@@ -364,9 +363,9 @@ class Controller extends AbstractBlock {
 	/**
 	 * Return a custom query based on attributes, filters and global WP_Query.
 	 *
-	 * @param WP_Query $query The WordPress Query.
-	 * @param WP_Block $block The block being rendered.
-	 * @param int      $page  The page number.
+	 * @param WP_Query  $query The WordPress Query.
+	 * @param \WP_Block $block The block being rendered.
+	 * @param int       $page  The page number.
 	 *
 	 * @return array
 	 */
@@ -381,6 +380,7 @@ class Controller extends AbstractBlock {
 
 		// phpcs:ignore WordPress.DB.SlowDBQuery
 		$block_context_query['tax_query'] = ! empty( $query['tax_query'] ) ? $query['tax_query'] : array();
+		$block_context_query['queryId']   = $block->context['queryId'] ?? null;
 
 		$inherit    = $block->context['query']['inherit'] ?? false;
 		$filterable = $block->context['query']['filterable'] ?? false;

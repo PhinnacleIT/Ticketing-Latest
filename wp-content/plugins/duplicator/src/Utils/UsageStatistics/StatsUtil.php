@@ -2,26 +2,37 @@
 
 namespace Duplicator\Utils\UsageStatistics;
 
-use DUP_Archive_Build_Mode;
-use DUP_DB;
-use DUP_Settings;
-use Duplicator\Libs\Snap\SnapUtil;
+use Duplicator\Models\GlobalEntity;
+use Duplicator\Installer\Core\InstState;
+use Duplicator\Libs\Snap\SnapServer;
 use Duplicator\Libs\Snap\SnapWP;
+use Duplicator\Libs\WpUtils\WpDbUtils;
+use Duplicator\Package\Archive\PackageArchive;
+use Duplicator\Package\Create\BuildComponents;
 use Exception;
 
 class StatsUtil
 {
     /**
-     * Get server type
+     * Web server family detected from the request signature.
+     *
+     * @return string One of the SnapServer::WEBSERVER_* constants
+     */
+    public static function getServerFamily(): string
+    {
+        return SnapServer::parseServerSoftware(SnapServer::getServerSoftware())['family'];
+    }
+
+    /**
+     * Web server family with its short version (`apache/2.4`), or the bare
+     * family when no version is exposed.
      *
      * @return string
      */
-    public static function getServerType()
+    public static function getServerLabel(): string
     {
-        if (empty($_SERVER['SERVER_SOFTWARE'])) {
-            return 'unknown';
-        }
-        return SnapUtil::sanitizeNSCharsNewlineTrim(wp_unslash($_SERVER['SERVER_SOFTWARE']));
+        $parsed = SnapServer::parseServerSoftware(SnapServer::getServerSoftware());
+        return $parsed['version'] === '' ? $parsed['family'] : $parsed['family'] . '/' . $parsed['version'];
     }
 
     /**
@@ -29,12 +40,14 @@ class StatsUtil
      *
      * @return string
      */
-    public static function getDbBuildMode()
+    public static function getDbBuildMode(): string
     {
-        switch (DUP_DB::getBuildMode()) {
-            case DUP_DB::BUILD_MODE_MYSQLDUMP:
+        switch (WpDbUtils::getBuildMode()) {
+            case WpDbUtils::BUILD_MODE_MYSQLDUMP:
                 return 'mysqldump';
-            case DUP_DB::BUILD_MODE_PHP_SINGLE_THREAD:
+            case WpDbUtils::BUILD_MODE_PHP_MULTI_THREAD:
+                return 'php-multi';
+            case WpDbUtils::BUILD_MODE_PHP_SINGLE_THREAD:
                 return 'php-single';
             default:
                 throw new Exception('Unknown db build mode');
@@ -46,36 +59,24 @@ class StatsUtil
      *
      * @return string
      */
-    public static function getArchiveBuildMode()
+    public static function getArchiveBuildMode(): string
     {
-        if (DUP_Settings::Get('archive_build_mode') == DUP_Archive_Build_Mode::ZipArchive) {
-            return 'zip-single';
-        } else {
-            return 'dup';
+        $global = GlobalEntity::getInstance();
+        switch ($global->getBuildMode()) {
+            case PackageArchive::BUILD_MODE_ZIP_ARCHIVE:
+                if ($global->getZipArchiveMode() == PackageArchive::ZIP_MODE_MULTI_THREAD) {
+                    return 'zip-multi';
+                } else {
+                    return 'zip-single';
+                }
+            case PackageArchive::BUILD_MODE_DUP_ARCHIVE:
+                return 'dup';
+            default:
+                return 'shellzip';
         }
     }
 
-    /**
-     * Return license types
-     *
-     * @param ?int $type License type, if null will use current license type
-     *
-     * @return string
-     */
-    public static function getLicenseType($type = null)
-    {
-        return 'unlicensed';
-    }
 
-    /**
-     * Return license status
-     *
-     * @return string
-     */
-    public static function getLicenseStatus()
-    {
-        return 'invalid';
-    }
 
     /**
      * Get install type
@@ -84,17 +85,37 @@ class StatsUtil
      *
      * @return string
      */
-    public static function getInstallType($type)
+    public static function getInstallType($type): string
     {
         switch ($type) {
-            case -1:
+            case InstState::TYPE_SINGLE:
                 return 'single';
-            case 4:
+            case InstState::TYPE_STANDALONE:
+                return 'standalone';
+            case InstState::TYPE_MSUBDOMAIN:
+                return 'msubdomain';
+            case InstState::TYPE_MSUBFOLDER:
+                return 'msubfolder';
+            case InstState::TYPE_SINGLE_ON_SUBDOMAIN:
                 return 'single_on_subdomain';
-            case 5:
+            case InstState::TYPE_SINGLE_ON_SUBFOLDER:
                 return 'single_on_subfolder';
-            case 8:
+            case InstState::TYPE_SUBSITE_ON_SUBDOMAIN:
+                return 'subsite_on_subdomain';
+            case InstState::TYPE_SUBSITE_ON_SUBFOLDER:
+                return 'subsite_on_subfolder';
+            case InstState::TYPE_RBACKUP_SINGLE:
                 return 'rbackup_single';
+            case InstState::TYPE_RBACKUP_MSUBDOMAIN:
+                return 'rbackup_msubdomain';
+            case InstState::TYPE_RBACKUP_MSUBFOLDER:
+                return 'rbackup_msubfolder';
+            case InstState::TYPE_RECOVERY_SINGLE:
+                return 'recovery_single';
+            case InstState::TYPE_RECOVERY_MSUBDOMAIN:
+                return 'recovery_msubdomain';
+            case InstState::TYPE_RECOVERY_MSUBFOLDER:
+                return 'recovery_msubfolder';
             default:
                 return 'not_set';
         }
@@ -107,33 +128,33 @@ class StatsUtil
      *
      * @return string
      */
-    public static function getStatsComponents($components)
+    public static function getStatsComponents($components): string
     {
-        $result = array();
+        $result = [];
         foreach ($components as $component) {
             switch ($component) {
-                case 'package_component_db':
+                case BuildComponents::COMP_DB:
                     $result[] = 'db';
                     break;
-                case 'package_component_core':
+                case BuildComponents::COMP_CORE:
                     $result[] = 'core';
                     break;
-                case 'package_component_plugins':
+                case BuildComponents::COMP_PLUGINS:
                     $result[] = 'plugins';
                     break;
-                case 'package_component_plugins_active':
+                case BuildComponents::COMP_PLUGINS_ACTIVE:
                     $result[] = 'plugins_active';
                     break;
-                case 'package_component_themes':
+                case BuildComponents::COMP_THEMES:
                     $result[] = 'themes';
                     break;
-                case 'package_component_themes_active':
+                case BuildComponents::COMP_THEMES_ACTIVE:
                     $result[] = 'themes_active';
                     break;
-                case 'package_component_uploads':
+                case BuildComponents::COMP_UPLOADS:
                     $result[] = 'uploads';
                     break;
-                case 'package_component_other':
+                case BuildComponents::COMP_OTHER:
                     $result[] = 'other';
                     break;
             }
@@ -146,12 +167,18 @@ class StatsUtil
      *
      * @return string
      */
-    public static function getAmFamily()
+    public static function getAmFamily(): string
     {
-        $result   = array();
-        $result[] = 'dup-pro';
-        if (SnapWP::isPluginInstalled('duplicator/duplicator.php')) {
-            $result[] = 'dup-lite';
+        $plugins = [
+            'dup-lite' => 'duplicator/duplicator.php',
+            'dup-pro'  => 'duplicator-pro/duplicator-pro.php',
+        ];
+
+        $result = [];
+        foreach ($plugins as $name => $file) {
+            if (SnapWP::isPluginInstalled($file)) {
+                $result[] = $name;
+            }
         }
 
         return implode(',', $result);
@@ -164,18 +191,27 @@ class StatsUtil
      *
      * @return string
      */
-    public static function getLogicModes($modes)
+    public static function getLogicModes($modes): string
     {
-        $result = array();
+        $result = [];
         foreach ($modes as $mode) {
             switch ($mode) {
-                case 'CLASSIC':
+                case InstState::LOGIC_MODE_IMPORT:
+                    $result[] = 'IMPORT';
+                    break;
+                case InstState::LOGIC_MODE_RECOVERY:
+                    $result[] = 'RECOVERY';
+                    break;
+                case InstState::LOGIC_MODE_CLASSIC:
                     $result[] = 'CLASSIC';
                     break;
-                case 'OVERWRITE':
+                case InstState::LOGIC_MODE_OVERWRITE:
                     $result[] = 'OVERWRITE';
                     break;
-                case 'RESTORE_BACKUP':
+                case InstState::LOGIC_MODE_BRIDGE:
+                    $result[] = 'BRIDGE';
+                    break;
+                case InstState::LOGIC_MODE_RESTORE_BACKUP:
                     $result[] = 'RESTORE';
                     break;
             }
@@ -190,7 +226,7 @@ class StatsUtil
      *
      * @return string
      */
-    public static function getTemplate($template)
+    public static function getTemplate($template): string
     {
         switch ($template) {
             case 'base':

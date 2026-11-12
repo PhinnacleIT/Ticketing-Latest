@@ -74,10 +74,13 @@ abstract class Atomic_Widget_Base extends Widget_Base {
 		$config['atomic_controls'] = $this->get_atomic_controls();
 		$config['base_styles'] = $this->get_base_styles();
 		$config['base_styles_dictionary'] = $this->get_base_styles_dictionary();
+		$config['base_settings'] = $this->get_base_settings();
 		$config['atomic_props_schema'] = $props_schema;
 		$config['atomic_pseudo_states'] = $this->define_atomic_pseudo_states();
 		$config['dependencies_per_target_mapping'] = Dependency_Manager::get_source_to_dependents( $props_schema );
 		$config['version'] = $this->version;
+		$config['default_html_tag'] = static::get_computed_html_tag( [] );
+		$config['html_tag_follows_link'] = static::html_tag_follows_link();
 		$config['meta'] = $this->get_meta();
 
 		return $config;

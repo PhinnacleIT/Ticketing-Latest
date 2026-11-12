@@ -1,22 +1,21 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
 
-use Duplicator\Installer\Utils\InstallerLinkManager;
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $testResult int */
-/* @var $dbuser string */
-/* @var $dbname string */
-/* @var $perms array */
-/* @var $errorMessages string[] */
+/**
+ * Variables
+ *
+ * @var int $testResult
+ * @var string $dbuser
+ * @var string $dbname
+ * @var array<string, int> $perms
+ * @var string[] $errorMessages
+ */
 
-$statusClass = $testResult == DUPX_Validation_test_db_user_perms::LV_PASS ? 'green' : 'red';
+$statusClass   = $testResult == DUPX_Validation_test_db_user_perms::LV_PASS ? 'green' : 'red';
+$installerName = DUPX_ArchiveConfig::getInstance()->getInstallerName();
 ?>
 <div class="sub-title">STATUS</div>
 <p class="<?php echo $statusClass; ?>">
@@ -52,7 +51,8 @@ $statusClass = $testResult == DUPX_Validation_test_db_user_perms::LV_PASS ? 'gre
 
 <div class="sub-title">DETAILS</div>
 <p>
-    This test checks the privileges of the current database user.  In order to successfully use Duplicator all of the privileges should pass.
+    This test checks the privileges of the current database user.
+    In order to successfully use <?php echo DUPX_U::esc_html($installerName); ?> all of the privileges should pass.
     In the event the checks below   fail, contact your hosting provider to make sure the database user has the correct permissions listed below.
     <br/><br/>
 
@@ -136,11 +136,8 @@ $statusClass = $testResult == DUPX_Validation_test_db_user_perms::LV_PASS ? 'gre
         </ul>
     </li>
     <li>
-        <a
-            href="<?php echo InstallerLinkManager::getDocUrl('how-to-fix-database-connection-issues', 'install', 'validation db user perms'); ?>" 
-            target="_help"
-            title="I'm running into issues with the Database what can I do?"
-        >
+        <a href="<?php echo DUPX_U::esc_attr(DUPX_Constants::FAQ_URL); ?>how-to-fix-database-connection-issues/" target="_help"
+           title="I'm running into issues with the Database what can I do?">
             [Additional FAQ Help]
         </a>
     </li>

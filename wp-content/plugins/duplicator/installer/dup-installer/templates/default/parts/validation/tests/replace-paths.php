@@ -1,14 +1,15 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
 
-/* @var $isOk bool */
-/* @var $meessage string */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
+
+/**
+ * Variables
+ *
+ * @var bool $isOk
+ * @var string $meessage
+ */
 ?>
 <p class="maroon">
     The installer will not perform replacements on database PATHs but only on URLs.

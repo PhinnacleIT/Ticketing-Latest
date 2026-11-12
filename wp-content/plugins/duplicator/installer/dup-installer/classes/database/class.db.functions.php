@@ -5,13 +5,11 @@
  *
  * Standard: PSR-2
  *
- * @package SC\DUPX\DB
- * @link    http://www.php-fig.org/psr/psr-2/
+ * @link http://www.php-fig.org/psr/psr-2/
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-use Duplicator\Installer\Core\Params\Descriptors\ParamDescDatabase;
 use Duplicator\Installer\Utils\Log\Log;
 use Duplicator\Installer\Core\Params\PrmMng;
 use Duplicator\Installer\Core\Params\Descriptors\ParamDescUsers;
@@ -19,47 +17,31 @@ use Duplicator\Libs\Snap\SnapDB;
 
 class DUPX_DB_Functions
 {
-    /**
-     *
-     * @var self
-     */
-    protected static $instance = null;
+    const TABLE_NAME_DUPLICATOR_PACKAGES      = 'duplicator_backups';
+    const TABLE_NAME_DUPLICAT_ENTITIES        = 'duplicator_entities';
+    const TABLE_NAME_DUPLICATOR_ACTIVITY_LOGS = 'duplicator_activity_logs';
+    const TABLE_NAME_WP_USERS                 = 'users';
+    const TABLE_NAME_WP_USERMETA              = 'usermeta';
 
-    /** @var \mysqli connection */
-    private $dbh = null;
-    /** @var float */
-    protected $timeStart = 0;
-
-    /**
-     * current data connection
-     *
-     * @var array connection
-     */
-    private $dataConnection = null;
-
-    /**
-     * list of supported engine types
-     *
-     * @var array
-     */
-    private $engineData = null;
-
-    /**
-     * supported charset and collation data
-     *
-     * @var array
-     */
-    private $charsetData = null;
-
-    /**
-     * default charset in dwtabase connection
-     *
-     * @var string
-     */
-    private $defaultCharset = null;
+    /** @var ?self */
+    protected static $instance;
+    /** @var ?mysqli */
+    private $dbh;
+    protected float $timeStart;
+    /** @var ?array<string, string> current data connection */
+    private $dataConnection;
+    /** @var ?array<int,array{name:string,isDefault:bool}> list of supported engine types */
+    private $engineData;
+    /** @var ?array<string,array{defCollation:false|string,collations:string[]}> supported charset and collation data */
+    private $charsetData;
+    /** @var ?array<string,string> default charset in dwtabase connection */
+    private $defaultCharset;
     /** @var int */
     private $rename_tbl_log = 0;
 
+    /**
+     * Class constructor
+     */
     private function __construct()
     {
         $this->timeStart = DUPX_U::getMicrotime();
@@ -80,9 +62,9 @@ class DUPX_DB_Functions
     /**
      * Returns mysqli handle
      *
-     * @param array|null $customConnection
+     * @param ?array<string,?string> $customConnection custom connection data
      *
-     * @return mysqli|null
+     * @return ?mysqli
      */
     public function dbConnection($customConnection = null)
     {
@@ -117,13 +99,13 @@ class DUPX_DB_Functions
 
         if ($dbh != false) {
             $this->dbh            = $dbh;
-            $this->dataConnection = array(
+            $this->dataConnection = [
                 'dbhost' => $dbhost,
                 'dbname' => $dbname,
                 'dbuser' => $dbuser,
                 'dbpass' => $dbpass,
-                'dbflag'  => $dbflag
-            );
+                'dbflag' => $dbflag,
+            ];
         } else {
             $dbConnError = (mysqli_connect_error()) ? 'Error: ' . mysqli_connect_error() : 'Unable to Connect';
             $msg         = "Unable to connect with the following parameters:<br/>"
@@ -146,10 +128,10 @@ class DUPX_DB_Functions
     /**
      * Check flags dbconnection
      *
-     * @param string $dbhost
-     * @param string $dbuser
-     * @param string $dbpass
-     * @param string $dbname
+     * @param string $dbhost host
+     * @param string $dbuser user
+     * @param string $dbpass password
+     * @param string $dbname database name
      *
      * @return bool|mysqli
      */
@@ -162,22 +144,28 @@ class DUPX_DB_Functions
         if (($dbh = DUPX_DB::connect($dbhost, $dbuser, $dbpass, $dbname)) != false) {
             $dbflag                         = DUPX_DB::MYSQLI_CLIENT_NO_FLAGS;
             $wpConfigFalgsVal['inWpConfig'] = false;
-            $wpConfigFalgsVal['value']      = array();
+            $wpConfigFalgsVal['value']      = [];
         } elseif (!$isLocalhost && ($dbh = DUPX_DB::connect($dbhost, $dbuser, $dbpass, $dbname, MYSQLI_CLIENT_SSL)) != false) {
             $dbflag                         = MYSQLI_CLIENT_SSL;
             $wpConfigFalgsVal['inWpConfig'] = true;
-            $wpConfigFalgsVal['value']      = array(MYSQLI_CLIENT_SSL);
+            $wpConfigFalgsVal['value']      = [MYSQLI_CLIENT_SSL];
         } elseif (
             !$isLocalhost &&
             defined("MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT") &&
-            // phpcs:ignore PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
-            ($dbh = DUPX_DB::connect($dbhost, $dbuser, $dbpass, $dbname, MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT)) != false
+            (
+                $dbh = DUPX_DB::connect(
+                    $dbhost,
+                    $dbuser,
+                    $dbpass,
+                    $dbname,
+                    MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT // phpcs:ignore PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
+                )
+            ) != false
         ) {
             // phpcs:ignore PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
             $dbflag                         = MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT;
             $wpConfigFalgsVal['inWpConfig'] = true;
-            // phpcs:ignore PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
-            $wpConfigFalgsVal['value'] = array(MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT);
+            $wpConfigFalgsVal['value']      = [$dbflag];
         } else {
             $dbflag = DUPX_DB::MYSQLI_CLIENT_NO_FLAGS;
         }
@@ -192,8 +180,10 @@ class DUPX_DB_Functions
 
     /**
      * close db connection if is open
+     *
+     * @return void
      */
-    public function closeDbConnection()
+    public function closeDbConnection(): void
     {
         if (!is_null($this->dbh)) {
             mysqli_close($this->dbh);
@@ -204,6 +194,11 @@ class DUPX_DB_Functions
         }
     }
 
+    /**
+     * get default charset
+     *
+     * @return string
+     */
     public function getDefaultCharset()
     {
         if (is_null($this->defaultCharset)) {
@@ -229,9 +224,9 @@ class DUPX_DB_Functions
 
     /**
      *
-     * @param string $charset
+     * @param string $charset charset
      *
-     * @return string|bool // false if charset don't exists
+     * @return string|false false if charset don't exists
      */
     public function getDefaultCollateOfCharset($charset)
     {
@@ -240,7 +235,9 @@ class DUPX_DB_Functions
     }
 
     /**
-     * @return array list of supported MySQL engine data\
+     * Get list of supported MySQL engine
+     *
+     * @return array<int,array{name:string,isDefault:bool}>
      */
     public function getEngineData()
     {
@@ -251,16 +248,16 @@ class DUPX_DB_Functions
                 throw new Exception('SQL ERROR:' . mysqli_error($this->dbh));
             }
 
-            $this->engineData = array();
+            $this->engineData = [];
             while ($row = $result->fetch_array()) {
                 if ($row[1] !== "YES" && $row[1] !== "DEFAULT") {
                     continue;
                 }
 
-                $this->engineData[] = array(
-                    "name"        => $row[0],
-                    "isDefault"   => $row[1] === "DEFAULT"
-                );
+                $this->engineData[] = [
+                    "name"      => $row[0],
+                    "isDefault" => $row[1] === "DEFAULT",
+                ];
             }
         }
 
@@ -268,17 +265,17 @@ class DUPX_DB_Functions
     }
 
     /**
-     * @return array list of supported MySQL engine names
+     * @return string[] list of supported MySQL engine names
      */
-    public function getSupportedEngineList()
+    public function getSupportedEngineList(): array
     {
-        return array_map(function ($engine) {
-            return $engine["name"];
-        }, $this->getEngineData());
+        return array_map(fn($engine): string => $engine["name"], $this->getEngineData());
     }
 
     /**
-     * @return string the default MySQL engine of the database
+     * Returns default MySQL engine of the database
+     *
+     * @return string
      */
     public function getDefaultEngine()
     {
@@ -292,10 +289,11 @@ class DUPX_DB_Functions
     }
 
     /**
+     * Get charset and collation data
      *
-     * @return array
+     * @return array<string,array{defCollation:bool,collations:string[]}>
      */
-    public function getCharsetAndCollationData()
+    public function getCharsetAndCollationData(): array
     {
         if (is_null($this->charsetData)) {
             $this->dbConnection();
@@ -303,6 +301,8 @@ class DUPX_DB_Functions
             if (($result = DUPX_DB::mysqli_query($this->dbh, "SHOW COLLATION")) === false) {
                 throw new Exception('SQL ERROR:' . mysqli_error($this->dbh));
             }
+
+            $this->charsetData = [];
 
             while ($row = $result->fetch_array()) {
                 $collation = $row[0];
@@ -315,10 +315,10 @@ class DUPX_DB_Functions
                 }
 
                 if (!isset($this->charsetData[$charset])) {
-                    $this->charsetData[$charset] = array(
+                    $this->charsetData[$charset] = [
                         'defCollation' => false,
-                        'collations'   => array()
-                    );
+                        'collations'   => [],
+                    ];
                 }
 
                 $this->charsetData[$charset]['collations'][] = $collation;
@@ -341,7 +341,7 @@ class DUPX_DB_Functions
      *
      * @return string[]
      */
-    public function getCharsetsList()
+    public function getCharsetsList(): array
     {
         return array_keys($this->getCharsetAndCollationData());
     }
@@ -350,15 +350,20 @@ class DUPX_DB_Functions
      *
      * @return string[]
      */
-    public function getCollationsList()
+    public function getCollationsList(): array
     {
-        $result = array();
+        $result = [];
         foreach ($this->getCharsetAndCollationData() as $charsetInfo) {
             $result = array_merge($result, $charsetInfo['collations']);
         }
         return array_unique($result);
     }
 
+    /**
+     * Get real charset by param
+     *
+     * @return string
+     */
     public function getRealCharsetByParam()
     {
         $this->getCharsetAndCollationData();
@@ -367,6 +372,11 @@ class DUPX_DB_Functions
         return (array_key_exists($sourceCharset, $this->charsetData) ? $sourceCharset : $this->getDefaultCharset());
     }
 
+    /**
+     * Get real collate by param
+     *
+     * @return string
+     */
     public function getRealCollateByParam()
     {
         $this->getCharsetAndCollationData();
@@ -379,12 +389,13 @@ class DUPX_DB_Functions
     }
 
     /**
+     * Return option name table.
      *
-     * @param null|string $prefix
+     * @param ?string $prefix table prefix, if null take wp table prefix by default
      *
      * @return string
      */
-    public static function getOptionsTableName($prefix = null)
+    public static function getOptionsTableName($prefix = null): string
     {
         if (is_null($prefix)) {
             $prefix = PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_TABLE_PREFIX);
@@ -393,12 +404,27 @@ class DUPX_DB_Functions
     }
 
     /**
+     * Return activity logs table name.
      *
-     * @param null|string $prefix
+     * @param ?string $prefix table prefix, if null take wp table prefix by default
      *
      * @return string
      */
-    public static function getPostsTableName($prefix = null)
+    public static function getActivityLogsTableName($prefix = null): string
+    {
+        if (is_null($prefix)) {
+            $prefix = PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_TABLE_PREFIX);
+        }
+        return $prefix . self::TABLE_NAME_DUPLICATOR_ACTIVITY_LOGS;
+    }
+
+    /**
+     *
+     * @param null|string $prefix table prefix, if null take wp table prefix by default
+     *
+     * @return string
+     */
+    public static function getPostsTableName($prefix = null): string
     {
         if (is_null($prefix)) {
             $prefix = PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_TABLE_PREFIX);
@@ -408,49 +434,79 @@ class DUPX_DB_Functions
 
     /**
      *
-     * @param null|string $prefix
+     * @param null|string $prefix table prefix, if null take wp table prefix by default
      *
      * @return string
      */
-    public static function getUserTableName($prefix = null)
+    public static function getUserTableName($prefix = null): string
     {
         if (is_null($prefix)) {
             $prefix = PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_TABLE_PREFIX);
         }
-        return $prefix . 'users';
+        return $prefix . self::TABLE_NAME_WP_USERS;
     }
 
     /**
      *
-     * @param null|string $prefix
+     * @param null|string $prefix table prefix, if null take wp table prefix by default
      *
      * @return string
      */
-    public static function getUserMetaTableName($prefix = null)
+    public static function getUserMetaTableName($prefix = null): string
     {
         if (is_null($prefix)) {
             $prefix = PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_TABLE_PREFIX);
         }
-        return $prefix . 'usermeta';
+        return $prefix . self::TABLE_NAME_WP_USERMETA;
     }
 
     /**
      *
-     * @param null|string $prefix
+     * @param null|string $prefix table prefix, if null take wp table prefix by default
      *
      * @return string
      */
-    public static function getPackagesTableName($prefix = null)
+    public static function getPackagesTableName($prefix = null): string
     {
         if (is_null($prefix)) {
             $prefix = PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_TABLE_PREFIX);
         }
-        return $prefix . 'duplicator_packages';
+        return $prefix . self::TABLE_NAME_DUPLICATOR_PACKAGES;
     }
 
     /**
      *
-     * @param string $userLogin
+     * @param null|string $prefix table prefix, if null take wp table prefix by default
+     *
+     * @return string
+     */
+    public static function getEntitiesTableName($prefix = null): string
+    {
+        if (is_null($prefix)) {
+            $prefix = PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_TABLE_PREFIX);
+        }
+        return $prefix . self::TABLE_NAME_DUPLICAT_ENTITIES;
+    }
+
+    /**
+     * Get Duplicator tables names
+     *
+     * @param string $prefix table prefix
+     *
+     * @return string[]
+     */
+    public static function getDuplicatorTablesNames($prefix): array
+    {
+        return [
+            self::getEntitiesTableName($prefix),
+            self::getPackagesTableName($prefix),
+            self::getActivityLogsTableName($prefix),
+        ];
+    }
+
+    /**
+     *
+     * @param string $userLogin user login
      *
      * @return boolean return true if user login name exists in users table
      */
@@ -470,7 +526,15 @@ class DUPX_DB_Functions
         return ($result->num_rows > 0);
     }
 
-    public function userPwdReset($userId, $newPassword)
+    /**
+     * User password reset
+     *
+     * @param int    $userId      user id
+     * @param string $newPassword new password
+     *
+     * @return bool
+     */
+    public function userPwdReset($userId, $newPassword): bool
     {
         $tableName = mysqli_real_escape_string($this->dbh, self::getUserTableName());
         $query     = 'UPDATE `' . $tableName . '` '
@@ -486,21 +550,26 @@ class DUPX_DB_Functions
     /**
      * return true if all tables passed in list exists
      *
-     * @param string|array $tables
+     * @param string|string[] $tables list of table names
+     *
+     * @return bool
      */
     public function tablesExist($tables)
     {
+        //SHOW TABLES FROM c1_temptest WHERE Tables_in_c1_temptest IN ('i5tr4_users','i5tr4_usermeta')
         $this->dbConnection();
 
+        if (empty($this->dataConnection['dbname'])) {
+            return false;
+        }
+
         if (is_scalar($tables)) {
-            $tables = array($tables);
+            $tables = [$tables];
         }
         $dbName = mysqli_real_escape_string($this->dbh, $this->dataConnection['dbname']);
         $dbh    = $this->dbh;
 
-        $escapedTables = array_map(function ($table) use ($dbh) {
-            return "'" . mysqli_real_escape_string($dbh, $table) . "'";
-        }, $tables);
+        $escapedTables = array_map(fn($table): string => "'" . mysqli_real_escape_string($dbh, $table) . "'", $tables);
 
         $sql = 'SHOW TABLES FROM `' . $dbName . '` WHERE `Tables_in_' . $dbName . '` IN (' . implode(',', $escapedTables) . ')';
         if (($result = DUPX_DB::mysqli_query($this->dbh, $sql)) === false) {
@@ -513,20 +582,15 @@ class DUPX_DB_Functions
     /**
      * Get table replace names from regex pattern
      *
-     * @param string[] $tableList
-     * @param string $pattern     regex search string
-     * @param string $replacement regex replace string
+     * @param string[] $tableList   list of table names
+     * @param string   $pattern     regex search string
+     * @param string   $replacement regex replace string
      *
-     * @return array [
-     *                 [
-     *                   'old' => string
-     *                   'new' => string
-     *                 ]
-     *               ]
+     * @return array<array{old:string,new:string}> list of table names
      */
-    protected static function getTablesReplaceList($tableList, $pattern, $replacement)
+    protected static function getTablesReplaceList($tableList, $pattern, $replacement): array
     {
-        $result = array();
+        $result = [];
         if (count($tableList) == 0) {
             return $result;
         }
@@ -537,36 +601,40 @@ class DUPX_DB_Functions
             $newName = substr(preg_replace($pattern, $replacement, $oldName), 0, 64); // Truncate too long table names
             $nSuffix = 1;
             while (in_array($newName, $newNames)) {
-                $suffix  = '_' . base_convert($nSuffix, 10, 36);
+                $suffix  = '_' . base_convert((string) $nSuffix, 10, 36);
                 $newName = substr($newName, 0, -strlen($suffix)) . $suffix;
                 $nSuffix++;
             }
             $newNames[$index] = $newName;
-            $result[]         = array(
+            $result[]         = [
                 'old' => $oldName,
-                'new' => $newName
-            );
+                'new' => $newName,
+            ];
         }
         return $result;
     }
 
     /**
+     * Replace table name with regex
      *
-     * @param type $newPrefix
-     * @param type $options
+     * @param string              $pattern     regex pattern
+     * @param string              $replacement regex replacement
+     * @param array<string,mixed> $options     options
+     *
+     * @return void
      */
-    public function pregReplaceTableName($pattern, $replacement, $options = array())
+    public function pregReplaceTableName($pattern, $replacement, $options = []): void
     {
         $this->dbConnection();
 
-        $options = array_merge(array(
-            'exclude'              => array(), // exclude table list,
+        $options = array_merge([
+            'exclude'              => [], // exclude table list,
             'prefixFilter'         => false,
             'regexFilter'          => false, // filter tables with regexp
             'notRegexFilter'       => false, // filter tables with not regexp
             'regexTablesDropFkeys' => false,
-            'copyTables'           => array() // tables that needs to be copied instead of renamed
-            ), $options);
+            'copyTables'           => [], // tables that needs to be copied instead of renamed
+        ], $options);
 
         $escapedDbName = mysqli_real_escape_string($this->dbh, PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_NAME));
 
@@ -586,9 +654,7 @@ class DUPX_DB_Functions
             $where .= ' AND `' . $tablesIn . '` NOT REGEXP "' . mysqli_real_escape_string($this->dbh, $options['notRegexFilter']) . '"';
         }
 
-        if (($tablesList = DUPX_DB::queryColumnToArray($this->dbh, 'SHOW TABLES FROM `' . $escapedDbName . '`' . $where)) === false) {
-            Log::error('SQL ERROR:' . mysqli_error($this->dbh));
-        }
+        $tablesList = DUPX_DB::queryColumnToArray($this->dbh, 'SHOW TABLES FROM `' . $escapedDbName . '`' . $where);
 
         if (is_array($options['exclude'])) {
             $tablesList = array_diff($tablesList, $options['exclude']);
@@ -626,9 +692,9 @@ class DUPX_DB_Functions
 
     /**
      *
-     * @param string $tableNamePatten
+     * @param false|string $tableNamePatten table name pattern
      *
-     * @return array
+     * @return array<array{tableName:string, fKeyName:string}>
      */
     public function getForeinKeysData($tableNamePatten = false)
     {
@@ -653,11 +719,11 @@ class DUPX_DB_Functions
 
     /**
      *
-     * @param string $tableNamePatten
+     * @param false|string $tableNamePatten table name pattern
      *
      * @return boolean
      */
-    public function dropForeignKeys($tableNamePatten = false)
+    public function dropForeignKeys($tableNamePatten = false): bool
     {
         foreach ($this->getForeinKeysData($tableNamePatten) as $fKeyData) {
             $escapedTableName = mysqli_real_escape_string($this->dbh, $fKeyData['tableName']);
@@ -670,35 +736,60 @@ class DUPX_DB_Functions
         return true;
     }
 
-    public function copyTable($existing_name, $new_name, $delete_if_conflict = false)
+    /**
+     * Copy table
+     *
+     * @param string $existing_name      existing table name
+     * @param string $new_name           new table name
+     * @param bool   $delete_if_conflict delete table if conflict
+     *
+     * @return void
+     */
+    public function copyTable($existing_name, $new_name, $delete_if_conflict = false): void
     {
         $this->dbConnection();
-        return DUPX_DB::copyTable($this->dbh, $existing_name, $new_name, $delete_if_conflict);
+        DUPX_DB::copyTable($this->dbh, $existing_name, $new_name, $delete_if_conflict);
     }
 
-    public function renameTable($existing_name, $new_name, $delete_if_conflict = false)
+    /**
+     * Rename table
+     *
+     * @param string $existing_name      existing table name
+     * @param string $new_name           new table name
+     * @param bool   $delete_if_conflict delete table if conflict
+     *
+     * @return void
+     */
+    public function renameTable($existing_name, $new_name, $delete_if_conflict = false): void
     {
         $this->dbConnection();
-        return DUPX_DB::renameTable($this->dbh, $existing_name, $new_name, $delete_if_conflict);
+        DUPX_DB::renameTable($this->dbh, $existing_name, $new_name, $delete_if_conflict);
     }
 
-    public function dropTable($name)
+    /**
+     * Drop table
+     *
+     * @param string $name table name
+     *
+     * @return void
+     */
+    public function dropTable($name): void
     {
         $this->dbConnection();
-        return DUPX_DB::dropTable($this->dbh, $name);
+        DUPX_DB::dropTable($this->dbh, $name);
     }
 
     /**
      *
-     * @param string $prefix
+     * @param string $prefix table prefix
      *
-     * @return boolean
+     * @return false|array<array{id:int,user_login:string}>
      */
     public function getAdminUsers($prefix)
     {
         $escapedPrefix = mysqli_real_escape_string($this->dbh, $prefix);
-        $userTable     = mysqli_real_escape_string($this->dbh, $this->getUserTableName($prefix));
-        $userMetaTable = mysqli_real_escape_string($this->dbh, $this->getUserMetaTableName($prefix));
+        $userTable     = mysqli_real_escape_string($this->dbh, static::getUserTableName($prefix));
+        $userMetaTable = mysqli_real_escape_string($this->dbh, static::getUserMetaTableName($prefix));
 
         $sql = 'SELECT `' . $userTable . '`.`id` AS id, `' . $userTable . '`.`user_login` AS user_login FROM `' . $userTable . '` '
             . 'INNER JOIN `' . $userMetaTable . '` ON ( `' . $userTable . '`.`id` = `' . $userMetaTable . '`.`user_id` ) '
@@ -709,66 +800,84 @@ class DUPX_DB_Functions
             return false;
         }
 
-        $result = array();
-        while ($row    = $queryResult->fetch_assoc()) {
-            $result[] = $row;
+        $result = [];
+        while ($row = $queryResult->fetch_assoc()) {
+            $result[] = [
+                'id'         => (int) $row['id'],
+                'user_login' => $row['user_login'],
+            ];
         }
         return $result;
     }
 
     /**
-     * Returns the Duplicator version if it exists, otherwise false
+     * Returns the Duplicator version if it exists, otherwise false.
      *
-     * @param $prefix
+     * The option value may be stored either as plain "<VERSION>" (older installs)
+     * or "<VERSION>|<VARIANT>" (4.5.26+). Only the version portion is returned so
+     * callers can compare versions without parsing.
+     *
+     * @param string $prefix table prefix
      *
      * @return false|string Duplicator version
      */
     public function getDuplicatorVersion($prefix)
     {
         $optionsTable = self::getOptionsTableName($prefix);
-        $sql          = "SELECT `option_value` FROM `{$optionsTable}` WHERE `option_name` = 'duplicator_version_plugin'";
+        $sql          = "SELECT `option_value` FROM `{$optionsTable}` WHERE `option_name` = 'dupli_opt_version'";
 
         if (($queryResult = DUPX_DB::mysqli_query($this->dbh, $sql)) === false || $queryResult->num_rows === 0) {
             return false;
         }
 
-        $row = $queryResult->fetch_row();
-        return $row[0];
+        $row   = $queryResult->fetch_row();
+        $parts = explode('|', (string) $row[0], 2);
+        return $parts[0];
     }
 
     /**
-     * Return ustat identifier
+     * Return unique identifier identifier of current overwrite site if exists
      *
      * @param string $prefix table prefix
      *
-     * @return string ustat identifier
+     * @return string Unique Identifier
      */
-    public function getUstatIdentifier($prefix)
+    public function getUniqueId($prefix): string
     {
         $optionsTable = self::getOptionsTableName($prefix);
-        $sql          = "SELECT `option_value` FROM `{$optionsTable}` WHERE `option_name` = 'duplicator_plugin_data_stats'";
 
+        // Get from UniqueId option
+        $sql = "SELECT `option_value` FROM `{$optionsTable}` WHERE `option_name` = 'dupli_opt_unique_id'";
+        if (($queryResult = DUPX_DB::mysqli_query($this->dbh, $sql)) !== false && $queryResult->num_rows > 0) {
+            $identifier = $queryResult->fetch_row();
+            if (!empty($identifier[0])) {
+                return $identifier[0];
+            }
+        }
+
+        // Fallback to plugin data stats (for migrations from older sites)
+        $sql = "SELECT `option_value` FROM `{$optionsTable}` WHERE `option_name` = 'dupli_opt_plugin_data_stats'";
         if (($queryResult = DUPX_DB::mysqli_query($this->dbh, $sql)) === false || $queryResult->num_rows === 0) {
             return '';
         }
 
         $dataStat = $queryResult->fetch_row();
         $dataStat = json_decode($dataStat[0], true);
-        return isset($dataStat['identifier']) ? $dataStat['identifier'] : '';
+        return $dataStat['identifier'] ?? '';
     }
 
     /**
      *
-     * @param int $userId
-     * @param null|string $prefix
+     * @param int         $userId user id
+     * @param null|string $prefix table prefix, if null take wp table prefix by default
      *
      * @return boolean
      */
-    public function updatePostsAuthor($userId, $prefix = null)
+    public function updatePostsAuthor($userId, $prefix = null): bool
     {
         $this->dbConnection();
         //UPDATE `i5tr4_posts` SET `post_author` = 7 WHERE TRUE
-        $postsTable = mysqli_real_escape_string($this->dbh, $this->getPostsTableName($prefix));
+        $postsTable = mysqli_real_escape_string($this->dbh, static::getPostsTableName($prefix));
         $sql        = 'UPDATE `' . $postsTable . '` SET `post_author` = ' . ((int) $userId) . ' WHERE TRUE';
         Log::info('EXECUTE QUERY ' . $sql);
         if (($result     = DUPX_DB::mysqli_query($this->dbh, $sql)) === false) {
@@ -782,16 +891,42 @@ class DUPX_DB_Functions
      *
      * @return string[] Array of tables to be excluded
      */
-    public static function getExcludedTables()
+    public static function getExcludedTables(): array
     {
-        $excludedTables = array();
+        $excludedTables = [];
 
         if (ParamDescUsers::getUsersMode() !== ParamDescUsers::USER_MODE_OVERWRITE) {
             $overwriteData    = PrmMng::getInstance()->getValue(PrmMng::PARAM_OVERWRITE_SITE_DATA);
             $excludedTables[] = self::getUserTableName($overwriteData['table_prefix']);
             $excludedTables[] = self::getUserMetaTableName($overwriteData['table_prefix']);
         }
-
         return $excludedTables;
+    }
+
+    /**
+     * Get list of staging table prefixes from database
+     *
+     * Staging tables follow the pattern: dstg{id}_{prefix}
+     * For example: dstg1_wp_, dstg2_wp_
+     *
+     * @param string[] $tables Array of table names to filter
+     *
+     * @return string[] Array of unique staging prefixes found
+     */
+    public static function getStagingTablePrefixes(array $tables): array
+    {
+        $stagingPrefixes = [];
+
+        foreach ($tables as $tableName) {
+            // Match tables starting with dstg followed by digits and underscore
+            if (preg_match('/^(dstg\d+_)/', $tableName, $matches)) {
+                $prefix = $matches[1];
+                if (!in_array($prefix, $stagingPrefixes)) {
+                    $stagingPrefixes[] = $prefix;
+                }
+            }
+        }
+
+        return $stagingPrefixes;
     }
 }

@@ -1416,6 +1416,8 @@ class Orders extends Rest_Controller_Base {
 	 */
 	public function get_orders( $request ) {
 		$args = array(
+			// Exclude refunds (shop_order_refund) so the listed orders match the total count.
+			'type'    => 'shop_order',
 			'limit'   => $request['per_page'],
 			'page'    => $request['page'],
 			'orderby' => $request['orderby'],
@@ -1858,8 +1860,8 @@ class Orders extends Rest_Controller_Base {
 				$errors[ $order_id ] = $response->get_data();
 			} else {
 				$results[ $order_id ] = array(
-					'id'      => $order_id,
-					'message' => $response->get_data()['message'],
+					'id'     => $order_id,
+					'status' => $response->get_data()['status'],
 				);
 			}
 		}

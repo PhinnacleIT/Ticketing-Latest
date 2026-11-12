@@ -7,44 +7,38 @@
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
  *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
 use Duplicator\Libs\Snap\SnapIO;
 
 class DUPX_Validation_test_iswritable_configs extends DUPX_Validation_abstract_item
 {
-    /**
-     *
-     * @var bool[]
-     */
-    protected $configsCheck = array(
+    /** @var bool[] */
+    protected $configsCheck = [
         'wpconfig' => false,
         'htaccess' => false,
-        'other'    => false
-    );
+        'other'    => false,
+    ];
+    /** @var string[] */
+    protected $notWritableConfigsList = [];
 
     /**
+     * Run test
      *
-     * @var string[]
+     * @return int
      */
-    protected $notWritableConfigsList = array();
-
-    /**
-     *
-     * @var string
-     */
-    protected function runTest()
+    protected function runTest(): int
     {
         $this->configsCheck = self::configsWritableChecks();
 
         foreach ($this->configsCheck as $check) {
             if ($check === false) {
                 if (
-                    DUPX_InstallerState::isRestoreBackup() ||
+                    InstState::isRestoreBackup() ||
                     DUPX_Custom_Host_Manager::getInstance()->isManaged() !== false
                 ) {
                     return self::LV_SOFT_WARNING;
@@ -60,11 +54,11 @@ class DUPX_Validation_test_iswritable_configs extends DUPX_Validation_abstract_i
     /**
      * try to set wigth config permission and check if configs files are writeable
      *
-     * @return array
+     * @return array<string, bool>
      */
-    public static function configsWritableChecks()
+    public static function configsWritableChecks(): array
     {
-        $result = array();
+        $result = [];
         // if home path is root path is necessary do a trailingslashit
         $homePath = SnapIO::safePathTrailingslashit(PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_NEW));
 
@@ -111,17 +105,17 @@ class DUPX_Validation_test_iswritable_configs extends DUPX_Validation_abstract_i
      *
      * @return string
      */
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'Permissions: Configs Files ';
     }
 
     protected function hwarnContent()
     {
-        return dupxTplRender('parts/validation/tests/configs-is-writable', array(
+        return dupxTplRender('parts/validation/tests/configs-is-writable', [
             'testResult'   => $this->testResult,
-            'configsCheck' => $this->configsCheck
-            ), false);
+            'configsCheck' => $this->configsCheck,
+        ], false);
     }
 
     protected function swarnContent()

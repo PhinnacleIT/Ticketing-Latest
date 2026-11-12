@@ -164,6 +164,14 @@ class Rest {
 				'permission_callback' => array( $this, 'check_permissions' ),
 			)
 		);
+
+		register_rest_route(
+			self::REST_NAMESPACE, '/rest-user-enumeration/', array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this->site_security_helper, 'rest_user_enumeration' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
 	}
 
 	/**

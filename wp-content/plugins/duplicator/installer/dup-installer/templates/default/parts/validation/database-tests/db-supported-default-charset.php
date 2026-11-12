@@ -1,21 +1,21 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $testResult int // DUPX_Validation_abstract_item::[LV_FAIL|LV_HARD_WARNING|...] */
-/* @var $charsetOk bool */
-/* @var $collateOk bool */
-/* @var $sourceCharset string */
-/* @var $sourceCollate string */
-/* @var $usedCharset string */
-/* @var $usedCollate string */
-/* @var $errorMessage string */
+/**
+ * Variables
+ *
+ * @var int $testResult DUPX_Validation_abstract_item::[LV_FAIL|LV_HARD_WARNING|...]
+ * @var bool $charsetOk
+ * @var bool $collateOk
+ * @var string $sourceCharset
+ * @var string $sourceCollate
+ * @var string $usedCharset
+ * @var string $usedCollate
+ * @var string $errorMessage
+ */
 
 $statusClass = ($testResult === DUPX_Validation_abstract_item::LV_FAIL || !$charsetOk || !$collateOk) ? 'red' : 'green';
 ?>

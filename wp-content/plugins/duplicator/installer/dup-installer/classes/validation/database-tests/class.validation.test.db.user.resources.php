@@ -6,8 +6,6 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -16,19 +14,19 @@ use Duplicator\Libs\Snap\SnapUtil;
 
 class DUPX_Validation_test_db_user_resources extends DUPX_Validation_abstract_item
 {
-    private $userResources             = array();
+    /** @var array<string, int|string> */
+    private $userResources = [];
+    /** @var bool */
     private $userHasRestrictedResource = false;
 
-    protected function runTest()
+    protected function runTest(): int
     {
         if (DUPX_Validation_database_service::getInstance()->skipDatabaseTests()) {
             return self::LV_SKIP;
         }
 
         if (($this->userResources = DUPX_Validation_database_service::getInstance()->getUserResources()) !== false) {
-            $this->userHasRestrictedResource = SnapUtil::inArrayExtended($this->userResources, function ($value) {
-                return $value > 0;
-            });
+            $this->userHasRestrictedResource = SnapUtil::inArrayExtended($this->userResources, fn($value): bool => $value > 0);
         }
 
         if ($this->userHasRestrictedResource) {
@@ -38,24 +36,33 @@ class DUPX_Validation_test_db_user_resources extends DUPX_Validation_abstract_it
         return self::LV_PASS;
     }
 
-    public function getTitle()
+    /**
+     * @return string
+     */
+    public function getTitle(): string
     {
         return 'Privileges: User Resources';
     }
 
+    /**
+     * @return string
+     */
     protected function passContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-user-resources', array(
+        return dupxTplRender('parts/validation/database-tests/db-user-resources', [
             'isOk'          => !$this->userHasRestrictedResource,
             'userResources' => $this->userResources,
-        ), false);
+        ], false);
     }
 
+    /**
+     * @return string
+     */
     protected function swarnContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-user-resources', array(
+        return dupxTplRender('parts/validation/database-tests/db-user-resources', [
             'isOk'          => !$this->userHasRestrictedResource,
             'userResources' => $this->userResources,
-        ), false);
+        ], false);
     }
 }

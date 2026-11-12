@@ -1,15 +1,5 @@
 <?php
 
-/**
- * param descriptor
- *
- * Standard: PSR-2
- *
- * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
- */
-
 namespace Duplicator\Installer\Core\Params\Items;
 
 use Duplicator\Installer\Utils\Log\Log;
@@ -30,13 +20,13 @@ class ParamFormTables extends ParamForm
     /**
      * Class constructor
      *
-     * @param string $name     param identifier
-     * @param string $type     TYPE_STRING | TYPE_ARRAY_STRING | ...
-     * @param string $formType FORM_TYPE_HIDDEN | FORM_TYPE_TEXT | ...
-     * @param array  $attr     list of attributes
-     * @param array  $formAttr list of form attributes
+     * @param string               $name     param identifier
+     * @param string               $type     Enum: TYPE_STRING | TYPE_ARRAY_STRING | ...
+     * @param string               $formType FORM_TYPE_HIDDEN | FORM_TYPE_TEXT | ...
+     * @param array<string, mixed> $attr     list of attributes
+     * @param array<string, mixed> $formAttr list of form attributes
      */
-    public function __construct($name, $type, $formType, $attr = null, $formAttr = array())
+    public function __construct($name, $type, $formType, array $attr = [], array $formAttr = [])
     {
         if ($type != self::TYPE_ARRAY_TABLES) {
             throw new \Exception('the type must be ' . self::TYPE_ARRAY_TABLES);
@@ -123,37 +113,37 @@ class ParamFormTables extends ParamForm
     /**
      * Renter tables items selector
      *
-     * @param array               $vals     form values
-     * @param \DUPX_DB_Table_item $tableOjb table object
-     * @param integer             $index    infex of current item
+     * @param array<string, array{name: string, extract: bool, replace: bool}> $vals     form values
+     * @param \DUPX_DB_Table_item                                              $tableOjb table object
+     * @param integer                                                          $index    infex of current item
      *
      * @return void
      */
     protected function tableHtmlItem($vals, \DUPX_DB_Table_item $tableOjb, $index)
     {
-        $itemClasses          = array(
+        $itemClasses          = [
             'table-item',
-            $this->getFormItemId() . self::TABLE_ITEM_POSTFIX
-        );
-        $hiddenNameAttrs      = array(
+            $this->getFormItemId() . self::TABLE_ITEM_POSTFIX,
+        ];
+        $hiddenNameAttrs      = [
             'id'    => $this->getFormItemId() . self::TABLE_NAME_POSTFIX_TNAME . '_' . $index,
             'type'  => 'hidden',
             'name'  => $this->getName() . '[]',
             'class' => $this->getFormItemId() . self::TABLE_NAME_POSTFIX_TNAME,
-            'value' => $tableOjb->getOriginalName()
-        );
-        $extractCheckboxAttrs = array(
+            'value' => $tableOjb->getOriginalName(),
+        ];
+        $extractCheckboxAttrs = [
             'id'    => $this->getFormItemId() . self::TABLE_NAME_POSTFIX_EXTRACT . '_' . $index,
             'name'  => $this->getName() . self::TABLE_NAME_POSTFIX_EXTRACT . '[]',
             'class' => $this->getFormItemId() . self::TABLE_NAME_POSTFIX_EXTRACT,
-            'value' => 1
-        );
-        $replaceCheckboxAttrs = array(
+            'value' => 1,
+        ];
+        $replaceCheckboxAttrs = [
             'id'    => $this->getFormItemId() . self::TABLE_NAME_POSTFIX_REPLACE . '_' . $index,
             'name'  => $this->getName() . self::TABLE_NAME_POSTFIX_REPLACE . '[]',
             'class' => $this->getFormItemId() . self::TABLE_NAME_POSTFIX_REPLACE,
-            'value' => 1
-        );
+            'value' => 1,
+        ];
 
         if ($tableOjb->canBeExctracted()) {
             if ($vals['extract']) {
@@ -197,9 +187,7 @@ class ParamFormTables extends ParamForm
                 }
                 \DUPX_U_Html::checkboxSwitch(
                     $extractCheckboxAttrs,
-                    array(
-                        'title' => 'Extract in database'
-                    )
+                    ['title' => 'Extract in database']
                 );
         ?>            
             </td>
@@ -207,9 +195,7 @@ class ParamFormTables extends ParamForm
                 <?php
                 \DUPX_U_Html::checkboxSwitch(
                     $replaceCheckboxAttrs,
-                    array(
-                        'title' => 'Apply replace engine at URLs and paths in database'
-                    )
+                    ['title' => 'Apply replace engine at URLs and paths in database']
                 );
                 ?> 
             </td>
@@ -225,25 +211,25 @@ class ParamFormTables extends ParamForm
      *
      * @return bool true if is a valid value for this object
      */
-    public function isValid($value, &$validateValue = null)
+    public function isValid($value, &$validateValue = null): bool
     {
         $validateValue = (array) $value;
 
-        $avaiableTables = \DUPX_DB_Tables::getInstance()->getTablesNames();
-        $validateTables = array_keys($validateValue);
+        $availableTables = \DUPX_DB_Tables::getInstance()->getTablesNames();
+        $validateTables  = array_keys($validateValue);
 
-        // all tables in list have to exist in  avaiable tables
+        // all tables in list have to exist in  available tables
         foreach ($validateValue as $table => $tableValues) {
-            if (!in_array($table, $avaiableTables)) {
-                Log::info('INVALID ' . $table . ' ISN\'T IN AVAIBLE LIST: ' . Log::v2str($avaiableTables));
+            if (!in_array($table, $availableTables)) {
+                Log::info('INVALID ' . $table . ' ISN\'T IN AVAILABLE LIST: ' . Log::v2str($availableTables));
                 return false;
             }
         }
 
         // all tables abaliable have to exists in list
-        foreach ($avaiableTables as $avaibleTable) {
+        foreach ($availableTables as $avaibleTable) {
             if (!in_array($avaibleTable, $validateTables)) {
-                Log::info('AVAIABLE ' . $avaibleTable . ' ISN\'T IN PARAM LIST TABLE');
+                Log::info('AVAILABLE ' . $avaibleTable . ' ISN\'T IN PARAM LIST TABLE');
                 return false;
             }
         }
@@ -254,13 +240,13 @@ class ParamFormTables extends ParamForm
     /**
      * Appli filter to value input
      *
-     * @param array $superObject query string values
+     * @param array<string, mixed> $superObject query string values
      *
-     * @return array
+     * @return array<string, array{name: string, extract: bool, replace: bool}>
      */
-    public function getValueFilter($superObject)
+    public function getValueFilter($superObject): array
     {
-        $result = array();
+        $result = [];
 
         if (($tables = json_decode($superObject[$this->getName()])) == false) {
             throw new \Exception('Invalid json string');
@@ -283,12 +269,12 @@ class ParamFormTables extends ParamForm
      *
      * @param mixed $value value input
      *
-     * @return array
+     * @return array<string, array{name: string, extract: bool,replace: bool}>
      */
-    public function getSanitizeValue($value)
+    public function getSanitizeValue($value): array
     {
         $newValues      = (array) $value;
-        $sanitizeValues = array();
+        $sanitizeValues = [];
 
         foreach ($newValues as $key => $newValue) {
             $sanitizedKey = SnapUtil::sanitizeNSCharsNewlineTrim($key);
@@ -296,8 +282,8 @@ class ParamFormTables extends ParamForm
 
             $sanitizedNewValue            = self::getParamItemValueFromData();
             $sanitizedNewValue['name']    = isset($newValue['name']) ? SnapUtil::sanitizeNSCharsNewlineTrim($newValue['name']) : '';
-            $sanitizedNewValue['extract'] = isset($newValue['extract']) ? filter_var($newValue['extract'], FILTER_VALIDATE_BOOLEAN) : false;
-            $sanitizedNewValue['replace'] = isset($newValue['replace']) ? filter_var($newValue['replace'], FILTER_VALIDATE_BOOLEAN) : false;
+            $sanitizedNewValue['extract'] = isset($newValue['extract']) && filter_var($newValue['extract'], FILTER_VALIDATE_BOOLEAN);
+            $sanitizedNewValue['replace'] = isset($newValue['replace']) && filter_var($newValue['replace'], FILTER_VALIDATE_BOOLEAN);
 
             $sanitizeValues[$sanitizedKey] = $sanitizedNewValue;
         }
@@ -307,15 +293,15 @@ class ParamFormTables extends ParamForm
     /**
      * Get default type attributes
      *
-     * @param string $type param type
+     * @param string $type param value type
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    protected static function getDefaultAttrForType($type)
+    protected static function getDefaultAttrForType($type): array
     {
         $attrs = parent::getDefaultAttrForType($type);
         if ($type == self::TYPE_ARRAY_TABLES) {
-            $attrs['default'] = array();
+            $attrs['default'] = [];
         }
 
         return $attrs;
@@ -326,9 +312,9 @@ class ParamFormTables extends ParamForm
      *
      * @param string $formType form type
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    protected static function getDefaultAttrForFormType($formType)
+    protected static function getDefaultAttrForFormType($formType): array
     {
         $attrs = parent::getDefaultAttrForFormType($formType);
         if ($formType == self::FORM_TYPE_TABLES_SELECT) {
@@ -345,14 +331,14 @@ class ParamFormTables extends ParamForm
      * @param bool   $extract extract
      * @param bool   $replace replace
      *
-     * @return array
+     * @return array{name: string, extract: bool, replace: bool}
      */
-    public static function getParamItemValueFromData($name = '', $extract = false, $replace = false)
+    public static function getParamItemValueFromData($name = '', $extract = false, $replace = false): array
     {
-        return array(
+        return [
             'name'    => $name,
             'extract' => $extract,
-            'replace' => $replace
-        );
+            'replace' => $replace,
+        ];
     }
 }

@@ -206,11 +206,11 @@ class WooCommerceSubscriptions extends BaseCompatibility {
 	 * Checks to see if the product's price should be converted.
 	 *
 	 * @param bool   $should_convert Whether to convert the product's price or not. Default is true.
-	 * @param object $product        Product object to test.
+	 * @param object $_unused_product        Product object to test.
 	 *
 	 * @return bool True if it should be converted.
 	 */
-	public function should_convert_product_price( bool $should_convert, $product ): bool {
+	public function should_convert_product_price( bool $should_convert, $_unused_product ): bool {
 		// If it's already false, return it.
 		if ( ! $should_convert ) {
 			return $should_convert;
@@ -347,11 +347,11 @@ class WooCommerceSubscriptions extends BaseCompatibility {
 	 * and if it is, we clear it, and we also clear the FrontendCurrencies cache.
 	 *
 	 * @param string          $formatted    The subscription formatted total.
-	 * @param WC_Subscription $subscription The subscription being acted on.
+	 * @param WC_Subscription $_unused_subscription The subscription being acted on.
 	 *
 	 * @return string The unmodified subscription formatted total.
 	 */
-	public function maybe_clear_current_my_account_subscription( $formatted, $subscription ): string {
+	public function maybe_clear_current_my_account_subscription( $formatted, $_unused_subscription ): string {
 		if ( $this->is_current_my_account_subscription_set() ) {
 			$this->current_my_account_subscription = null;
 			$this->frontend_currencies->selected_currency_changed();
@@ -382,7 +382,7 @@ class WooCommerceSubscriptions extends BaseCompatibility {
 		$currency_code = $this->current_my_account_subscription->get_currency() ?? get_woocommerce_currency();
 
 		// This is sourced from WC_Payments_Explicit_Price_Formatter::get_explicit_price_with_currency.
-		$price_to_check = html_entity_decode( wp_strip_all_tags( $html_price ) );
+		$price_to_check = \WC_Payments_Utils::decode_html_entities( wp_strip_all_tags( $html_price ) );
 
 		if ( false === strpos( $price_to_check, trim( $currency_code ) ) ) {
 			return $html_price . ' ' . $currency_code;

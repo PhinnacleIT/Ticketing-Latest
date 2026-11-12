@@ -1,9 +1,6 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 ?>
@@ -19,7 +16,7 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
     </div>
     <div class='info'>
         <i class="fas fa-exclamation-circle fa-sm"></i> The system validation checks help to make sure the system is ready for install. <br/>
-         During installation the website will be in maintenance mode and not accessible to users.
+         During installation the website will be in maintenance mode and not accessible for users.
     </div>
     <?php dupxTplRender('pages-parts/step1/actions/hwarn-accept'); ?>
 </div>

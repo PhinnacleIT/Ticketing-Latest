@@ -7,12 +7,13 @@
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
  *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Libs\Index\FileIndexManager;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapWP;
 
@@ -21,10 +22,10 @@ class DUPX_Validation_test_iswritable extends DUPX_Validation_abstract_item
     const TEMP_PHP_FILE_NAME = 'dup_tmp_php_file_test.php';
 
     /** @var string[] */
-    protected $faildDirPerms = array();
+    protected $faildDirPerms = [];
 
-    /** @var array */
-    protected $phpPerms = array();
+    /** @var mixed[] */
+    protected $phpPerms = [];
 
     /**
      * Runs Test
@@ -32,26 +33,26 @@ class DUPX_Validation_test_iswritable extends DUPX_Validation_abstract_item
      * @return int
      * @throws Exception
      */
-    protected function runTest()
+    protected function runTest(): int
     {
         $this->faildDirPerms = $this->checkWritePermissions();
         $testPass            = (count($this->faildDirPerms) == 0);
 
         $prmMng = PrmMng::getInstance();
-        if ($prmMng->getValue(PrmMng::PARAM_ARCHIVE_ENGINE_SKIP_WP_FILES) === DUP_Extraction::FILTER_NONE) {
+        if ($prmMng->getValue(PrmMng::PARAM_ARCHIVE_ENGINE_SKIP_WP_FILES) === DUPX_Extraction::FILTER_NONE) {
             $abspath        = $prmMng->getValue(PrmMng::PARAM_PATH_WP_CORE_NEW);
-            $this->phpPerms = array(
-                array(
-                    'dir' => $abspath . '/wp-admin',
-                    'pass' => false,
-                    'message' => ''
-                ),
-                array(
-                    'dir' => $abspath . '/wp-includes',
-                    'pass' => false,
-                    'message' => ''
-                )
-            );
+            $this->phpPerms = [
+                [
+                    'dir'     => $abspath . '/wp-admin',
+                    'pass'    => false,
+                    'message' => '',
+                ],
+                [
+                    'dir'     => $abspath . '/wp-includes',
+                    'pass'    => false,
+                    'message' => '',
+                ],
+            ];
 
             for ($i = 0; $i < count($this->phpPerms); $i++) {
                 $this->phpPerms[$i]['pass'] = self::checkPhpFileCreation(
@@ -68,7 +69,7 @@ class DUPX_Validation_test_iswritable extends DUPX_Validation_abstract_item
         if ($testPass) {
             return self::LV_PASS;
         } else {
-            if (DUPX_Custom_Host_Manager::getInstance()->isManaged()) {
+            if (InstState::isRecoveryMode() || DUPX_Custom_Host_Manager::getInstance()->isManaged()) {
                 return self::LV_SOFT_WARNING;
             } else {
                 return self::LV_HARD_WARNING;
@@ -82,31 +83,23 @@ class DUPX_Validation_test_iswritable extends DUPX_Validation_abstract_item
      * @return string[]
      * @throws Exception
      */
-    protected function checkWritePermissions()
+    protected function checkWritePermissions(): array
     {
         $prmMng        = PrmMng::getInstance();
-        $failResult    = array();
-        $dirFiles      = DUPX_Package::getDirsListPath();
+        $failResult    = [];
         $archiveConfig = DUPX_ArchiveConfig::getInstance();
-        $skipWpCore    = ($prmMng->getValue(PrmMng::PARAM_ARCHIVE_ENGINE_SKIP_WP_FILES) !== DUP_Extraction::FILTER_NONE);
+        $skipWpCore    = ($prmMng->getValue(PrmMng::PARAM_ARCHIVE_ENGINE_SKIP_WP_FILES) !== DUPX_Extraction::FILTER_NONE);
 
-        if (($handle = fopen($dirFiles, "r")) === false) {
-            throw new Exception('Can\'t open dirs file list');
-        }
-
-        while (($line = fgets($handle)) !== false) {
-            if (($info = json_decode($line)) === null) {
-                throw new Exception('Invalid json line in dirs file: ' . $line);
-            }
-            if ($skipWpCore && SnapWP::isWpCore($info->p, SnapWP::PATH_RELATIVE)) {
+        foreach (DUPX_Package::getIndexManager()->iteratePaths(FileIndexManager::LIST_TYPE_DIRS) as $path) {
+            if ($skipWpCore && SnapWP::isWpCore($path, SnapWP::PATH_RELATIVE)) {
                 continue;
             }
-            $destPath = $archiveConfig->destFileFromArchiveName($info->p);
+            $destPath = $archiveConfig->destFileFromArchiveName($path);
             if (file_exists($destPath) && !SnapIO::dirAddFullPermsAndCheckResult($destPath)) {
                 $failResult[] = $destPath;
             }
         }
-        fclose($handle);
+
         return $failResult;
     }
 
@@ -118,7 +111,7 @@ class DUPX_Validation_test_iswritable extends DUPX_Validation_abstract_item
      *
      * @return bool
      */
-    protected static function checkPhpFileCreation($dir, &$message = '')
+    protected static function checkPhpFileCreation($dir, &$message = ''): bool
     {
         $removeDir = false;
         $exception = null;
@@ -164,20 +157,18 @@ class DUPX_Validation_test_iswritable extends DUPX_Validation_abstract_item
         }
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'Permissions: General';
     }
 
     protected function hwarnContent()
     {
-        $result = dupxTplRender('parts/validation/tests/writeable-checks', array(
+        return dupxTplRender('parts/validation/tests/writeable-checks', [
             'testResult'    => $this->testResult,
             'phpPerms'      => $this->phpPerms,
-            'faildDirPerms' => $this->faildDirPerms
-        ), false);
-
-        return $result;
+            'faildDirPerms' => $this->faildDirPerms,
+        ], false);
     }
 
     protected function swarnContent()

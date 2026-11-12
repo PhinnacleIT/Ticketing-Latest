@@ -1,64 +1,79 @@
 <?php
 
 /**
- * Singlethon class that manages the various controllers of the administration of wordpress
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
+ * Singlethon class that manages the various controllers of the administration of WordPress
  */
 
 namespace Duplicator\Core\Controllers;
 
+use Duplicator\Controllers\HelpPageController;
+use Duplicator\Controllers\MainPageController;
+use Duplicator\Controllers\PackagesPageController;
+use Duplicator\Controllers\SettingsPageController;
+use Duplicator\Controllers\StoragePageController;
+use Duplicator\Controllers\EmailSummaryPreviewPageController;
+use Duplicator\Controllers\ToolsPageController;
+use Duplicator\Controllers\ActivityLogPageController;
 use Duplicator\Libs\Snap\SnapUtil;
 
+/**
+ * ControllersManager
+ */
 final class ControllersManager
 {
-    const MAIN_MENU_SLUG         = 'duplicator';
-    const PACKAGES_SUBMENU_SLUG  = 'duplicator';
-    const IMPORT_SUBMENU_SLUG    = 'duplicator-import';
-    const SCHEDULES_SUBMENU_SLUG = 'duplicator-schedules';
-    const STAGING_SUBMENU_SLUG   = 'duplicator-staging';
-    const STORAGE_SUBMENU_SLUG   = 'duplicator-storage';
-    const ABOUT_US_SUBMENU_SLUG  = 'duplicator-about-us';
-    const TEMPLATES_SUBMENU_SLUG = 'duplicator-templates';
-    const TOOLS_SUBMENU_SLUG     = 'duplicator-tools';
-    const SETTINGS_SUBMENU_SLUG  = 'duplicator-settings';
-    const DEBUG_SUBMENU_SLUG     = 'duplicator-debug';
-    const UPSELL_SUBMENU_SLUG    = 'duplicator-pro';
-
+    const MAIN_MENU_SLUG               = 'duplicator';
+    const PACKAGES_SUBMENU_SLUG        = self::MAIN_MENU_SLUG;
+    const STORAGE_SUBMENU_SLUG         = self::MAIN_MENU_SLUG . '-storage';
+    const TEMPLATES_SUBMENU_SLUG       = self::MAIN_MENU_SLUG . '-templates';
+    const TOOLS_SUBMENU_SLUG           = self::MAIN_MENU_SLUG . '-tools';
+    const ACTIVITY_LOG_SUBMENU_SLUG    = self::MAIN_MENU_SLUG . '-activity-log';
+    const SETTINGS_SUBMENU_SLUG        = self::MAIN_MENU_SLUG . '-settings';
+    const DEBUG_SUBMENU_SLUG           = self::MAIN_MENU_SLUG . '-debug';
     const QUERY_STRING_MENU_KEY_L1     = 'page';
     const QUERY_STRING_MENU_KEY_L2     = 'tab';
     const QUERY_STRING_MENU_KEY_L3     = 'subtab';
     const QUERY_STRING_MENU_KEY_ACTION = 'action';
+    const QUERY_STRING_INNER_PAGE      = 'inner_page';
+
+    /** @var ?self */
+    private static $instance;
 
     /**
-     * Return current menu levels
+     * Return controlle manager instance
      *
-     * @return string[]
+     * @return self
      */
-    public static function getMenuLevels()
+    public static function getInstance()
     {
-        $result  = array();
-        $exChars = '-_';
-        $result[self::QUERY_STRING_MENU_KEY_L1] = SnapUtil::sanitizeStrictInput(
-            SnapUtil::INPUT_REQUEST,
-            self::QUERY_STRING_MENU_KEY_L1,
-            null,
-            $exChars
-        );
-        $result[self::QUERY_STRING_MENU_KEY_L2] = SnapUtil::sanitizeStrictInput(
-            SnapUtil::INPUT_REQUEST,
-            self::QUERY_STRING_MENU_KEY_L2,
-            null,
-            $exChars
-        );
-        $result[self::QUERY_STRING_MENU_KEY_L3] = SnapUtil::sanitizeStrictInput(
-            SnapUtil::INPUT_REQUEST,
-            self::QUERY_STRING_MENU_KEY_L3,
-            null,
-            $exChars
-        );
-        return $result;
+        if (is_null(self::$instance)) {
+            self::$instance = new self();
+        }
+
+        return self::$instance;
+    }
+
+    /**
+     * Class constructor
+     */
+    protected function __construct()
+    {
+        add_action('init', [$this, 'hookWpInit']);
+    }
+
+    /**
+     * Method called on WordPress hook init action
+     *
+     * @return void
+     */
+    public function hookWpInit(): void
+    {
+        foreach (self::getMenuPages() as $menuPage) {
+            if (!$menuPage->isEnabled()) {
+                continue;
+            }
+
+            $menuPage->hookWpInit();
+        }
     }
 
     /**
@@ -66,44 +81,68 @@ final class ControllersManager
      *
      * @return boolean
      */
-    public static function isDuplicatorPage()
+    public function isDuplicatorPage(): bool
     {
-        if (!is_admin()) {
-            return false;
+        foreach (self::getMenuPages() as $menuPage) {
+            if (!$menuPage->isEnabled()) {
+                continue;
+            }
+
+            if ($menuPage->isCurrentPage()) {
+                return true;
+            }
         }
 
-        switch (SnapUtil::sanitizeStrictInput(SnapUtil::INPUT_REQUEST, 'page', '', '-_ ')) {
-            case self::MAIN_MENU_SLUG:
-            case self::PACKAGES_SUBMENU_SLUG:
-            case self::IMPORT_SUBMENU_SLUG:
-            case self::SCHEDULES_SUBMENU_SLUG:
-            case self::STAGING_SUBMENU_SLUG:
-            case self::STORAGE_SUBMENU_SLUG:
-            case self::ABOUT_US_SUBMENU_SLUG:
-            case self::TEMPLATES_SUBMENU_SLUG:
-            case self::TOOLS_SUBMENU_SLUG:
-            case self::SETTINGS_SUBMENU_SLUG:
-            case self::DEBUG_SUBMENU_SLUG:
-            case self::UPSELL_SUBMENU_SLUG:
-                return true;
-            default:
-                return false;
+        return false;
+    }
+
+    /**
+     * Return current menu levels
+     *
+     * @return (null|string)[]
+     */
+    public static function getMenuLevels(): array
+    {
+        $result = SnapUtil::filterInputRequestArray(
+            [
+                self::QUERY_STRING_MENU_KEY_L1 => [
+                    'filter'  => FILTER_UNSAFE_RAW,
+                    'options' => ['default' => null],
+                ],
+                self::QUERY_STRING_MENU_KEY_L2 => [
+                    'filter'  => FILTER_UNSAFE_RAW,
+                    'options' => ['default' => null],
+                ],
+                self::QUERY_STRING_MENU_KEY_L3 => [
+                    'filter'  => FILTER_UNSAFE_RAW,
+                    'options' => ['default' => null],
+                ],
+            ]
+        );
+        foreach ($result as $key => $val) {
+            if (is_null($val)) {
+                continue;
+            }
+            $result[$key] = SnapUtil::sanitizeNSCharsNewlineTabs($val);
         }
+        return $result;
     }
 
     /**
      * Return current action key or false if not exists
      *
-     * @return string|bool
+     * @return string|false
      */
     public static function getAction()
     {
-        return SnapUtil::sanitizeStrictInput(
-            SnapUtil::INPUT_REQUEST,
+        $result = SnapUtil::filterInputRequest(
             self::QUERY_STRING_MENU_KEY_ACTION,
-            false,
-            '-_'
+            FILTER_UNSAFE_RAW,
+            [
+                'options' => ['default' => false],
+            ]
         );
+        return ($result === false ? $result : SnapUtil::sanitizeNSCharsNewlineTabs($result));
     }
 
     /**
@@ -115,7 +154,7 @@ final class ControllersManager
      *
      * @return boolean
      */
-    public static function isCurrentPage($page, $tabL1 = null, $tabL2 = null)
+    public static function isCurrentPage($page, $tabL1 = null, $tabL2 = null): bool
     {
         $levels = self::getMenuLevels();
 
@@ -123,11 +162,15 @@ final class ControllersManager
             return false;
         }
 
-        if (!is_null($tabL1) && $tabL1 !== $levels[self::QUERY_STRING_MENU_KEY_L2]) {
+        $controller = self::getPageControlleBySlug($page);
+        // get defaults
+        $menuSlugs = $controller->getCurrentMenuSlugs();
+
+        if (!is_null($tabL1) && (!isset($menuSlugs[1]) || $tabL1 !== $menuSlugs[1])) {
             return false;
         }
 
-        if (!is_null($tabL1) && !is_null($tabL2) && $tabL2 !== $levels[self::QUERY_STRING_MENU_KEY_L3]) {
+        if (!is_null($tabL1) && !is_null($tabL2) && (!isset($menuSlugs[2]) || $tabL2 !== $menuSlugs[2])) {
             return false;
         }
 
@@ -135,15 +178,58 @@ final class ControllersManager
     }
 
     /**
-     * Return current menu page URL
+     * Return unique id by levels page/tabs
      *
-     * @param array $extraData extra value in query string key=val
+     * @param string $page  page slug
+     * @param string $tabL1 tab level 1 slug, null not set
+     * @param string $tabL2 tab level 2 slug, null not set
      *
      * @return string
      */
-    public static function getCurrentLink($extraData = array())
+    public static function getPageUniqueId($page, $tabL1 = null, $tabL2 = null): string
+    {
+        $result = 'dup_id_' . $page;
+
+        if (!is_null($tabL1)) {
+            $result .= '_' . $tabL1;
+        }
+
+        if (!is_null($tabL1) && !is_null($tabL2)) {
+            $result .= '_' . $tabL2;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Return unique id of current id
+     *
+     * @return string
+     */
+    public static function getUniqueIdOfCurrentPage(): string
     {
         $levels = self::getMenuLevels();
+        return self::getPageUniqueId($levels[self::QUERY_STRING_MENU_KEY_L1], $levels[self::QUERY_STRING_MENU_KEY_L2], $levels[self::QUERY_STRING_MENU_KEY_L3]);
+    }
+
+    /**
+     * Return current menu page URL with inner page if is set
+     *
+     * @param array<string,string|int> $extraData extra value in query string key=val
+     *
+     * @return string
+     */
+    public static function getCurrentLink($extraData = []): string
+    {
+        $levels = self::getMenuLevels();
+
+        if (!isset($extraData[ControllersManager::QUERY_STRING_INNER_PAGE])) {
+            $inner = SnapUtil::sanitizeStrictInput(SnapUtil::INPUT_REQUEST, ControllersManager::QUERY_STRING_INNER_PAGE, false, '-_');
+            if ($inner !== false) {
+                $extraData[ControllersManager::QUERY_STRING_INNER_PAGE] = $inner;
+            }
+        }
+
         return self::getMenuLink(
             $levels[self::QUERY_STRING_MENU_KEY_L1],
             $levels[self::QUERY_STRING_MENU_KEY_L2],
@@ -155,17 +241,17 @@ final class ControllersManager
     /**
      * Return menu page URL
      *
-     * @param string $page      page slug
-     * @param string $subL2     tab level 1 slug, null not set
-     * @param string $subL3     tab level 2 slug, null not set
-     * @param array  $extraData extra value in query string key=val
-     * @param bool   $relative  if true return relative path or absolute
+     * @param string               $page      page slug
+     * @param string               $subL2     tab level 1 slug, null not set
+     * @param string               $subL3     tab level 2 slug, null not set
+     * @param array<string, mixed> $extraData extra value in query string key=val
+     * @param bool                 $relative  if true return relative path or absolute
      *
      * @return string
      */
-    public static function getMenuLink($page, $subL2 = null, $subL3 = null, $extraData = array(), $relative = true)
+    public static function getMenuLink($page, $subL2 = null, $subL3 = null, $extraData = [], $relative = true): string
     {
-        $data = $extraData;
+        $data = (array) $extraData;
 
         $data[self::QUERY_STRING_MENU_KEY_L1] = $page;
 
@@ -178,52 +264,115 @@ final class ControllersManager
         }
 
         if ($relative) {
-            $url = self_admin_url('admin.php', 'relative');
+            //$url = self_admin_url('admin.php', 'relative');
+            $url = is_multisite() ? network_admin_url('admin.php', 'relative') : admin_url('admin.php', 'relative');
         } else {
-            if (is_multisite()) {
-                $url = network_admin_url('admin.php');
-            } else {
-                $url = admin_url('admin.php');
-            }
+            $url = is_multisite() ? network_admin_url('admin.php') : admin_url('admin.php');
         }
         return $url . '?' . http_build_query($data);
     }
 
     /**
-     * Return create package link
+     * Return menu pages list
      *
-     * @return string
+     * @return AbstractMenuPageController[]
      */
-    public static function getPackageBuildUrl()
+    public static function getMenuPages(): array
     {
-        return self::getMenuLink(
-            self::PACKAGES_SUBMENU_SLUG,
-            'new1',
-            null,
-            array(
-                'inner_page' => 'new1',
-                '_wpnonce' => wp_create_nonce('new1-package')
-            )
+        static $basicMenuPages = null;
+
+        if (is_null($basicMenuPages)) {
+            $basicMenuPages   = [];
+            $basicMenuPages[] = MainPageController::getInstance();
+            $basicMenuPages[] = PackagesPageController::getInstance();
+            $basicMenuPages[] = EmailSummaryPreviewPageController::getInstance();
+            $basicMenuPages[] = HelpPageController::getInstance();
+            $basicMenuPages[] = StoragePageController::getInstance();
+            $basicMenuPages[] = SettingsPageController::getInstance();
+            $basicMenuPages[] = ToolsPageController::getInstance();
+            $basicMenuPages[] = ActivityLogPageController::getInstance();
+        }
+
+        return array_filter(
+            apply_filters(
+                'duplicator_menu_pages',
+                $basicMenuPages
+            ),
+            fn($menuPage): bool => is_subclass_of($menuPage, AbstractSinglePageController::class)
         );
     }
 
     /**
-     * Return package detail link
+     * Return menu pages list sorted by position
      *
-     * @param int $packageId package id
-     *
-     * @return string
+     * @return AbstractMenuPageController[]
      */
-    public static function getPackageDetailUrl($packageId)
+    protected static function getMenuPagesSortedByPos(): array
     {
-        return self::getMenuLink(
-            self::PACKAGES_SUBMENU_SLUG,
-            'detail',
-            null,
-            array(
-                'action' => 'detail',
-                'id'     => $packageId
-            )
-        );
+        $menuPages = self::getMenuPages();
+
+        uksort($menuPages, function ($a, $b) use ($menuPages): int {
+            if ($menuPages[$a]->getPosition() == $menuPages[$b]->getPosition()) {
+                if ($a == $b) {
+                    return 0;
+                } elseif ($a > $b) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            } elseif ($menuPages[$a]->getPosition() > $menuPages[$b]->getPosition()) {
+                return 1;
+            } else {
+                return -1;
+            }
+        });
+        return array_values($menuPages);
+    }
+
+    /**
+     * Return page controlle by slug of false if don't exist
+     *
+     * @param string $slug page key
+     *
+     * @return boolean|AbstractMenuPageController
+     */
+    public static function getPageControlleBySlug($slug)
+    {
+        $menuPages = self::getMenuPages();
+        foreach ($menuPages as $page) {
+            if ($page->getSlug() === $slug) {
+                return $page;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Register menu pages
+     *
+     * @return void
+     */
+    public function registerMenu(): void
+    {
+        $menuPages = self::getMenuPagesSortedByPos();
+
+        // before register main pages
+        foreach ($menuPages as $menuPage) {
+            if (!$menuPage->isEnabled() || !$menuPage->isMainPage()) {
+                continue;
+            }
+
+            $menuPage->registerMenu();
+        }
+
+        // after register secondary pages
+        foreach ($menuPages as $menuPage) {
+            if (!$menuPage->isEnabled() || $menuPage->isMainPage()) {
+                continue;
+            }
+
+            $menuPage->registerMenu();
+        }
     }
 }

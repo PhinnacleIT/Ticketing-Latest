@@ -2,22 +2,16 @@
 
 /**
  * Urls and paths params descriptions
- *
- * @category  Duplicator
- * @package   Installer
- * @author    Snapcreek <admin@snapcreek.com>
- * @copyright 2011-2021  Snapcreek LLC
- * @license   https://www.gnu.org/licenses/gpl-3.0.html GPLv3
  */
 
 namespace Duplicator\Installer\Core\Params\Descriptors;
 
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
 use Duplicator\Installer\Core\Params\Items\ParamItem;
 use Duplicator\Installer\Core\Params\Items\ParamForm;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapJson;
-use DUPX_InstallerState;
 
 /**
  * class where all parameters are initialized. Used by the param manager
@@ -34,7 +28,7 @@ final class ParamDescUrlsPaths implements DescriptorInterface
      *
      * @return void
      */
-    public static function init(&$params)
+    public static function init(&$params): void
     {
         $archive_config = \DUPX_ArchiveConfig::getInstance();
         $paths          = $archive_config->getRealValue('archivePaths');
@@ -63,48 +57,71 @@ final class ParamDescUrlsPaths implements DescriptorInterface
         $params[PrmMng::PARAM_URL_OLD] = new ParamItem(
             PrmMng::PARAM_URL_OLD,
             ParamForm::TYPE_STRING,
-            array(
-            'default' => $oldHomeUrl
-            )
+            ['default' => $oldHomeUrl]
         );
 
         $params[PrmMng::PARAM_WP_ADDON_SITES_PATHS] = new ParamItem(
             PrmMng::PARAM_WP_ADDON_SITES_PATHS,
             ParamForm::TYPE_ARRAY_STRING,
-            array(
-            'default' => array()
-            )
+            [
+                'default' => [],
+            ]
         );
 
         $newObj                        = new ParamForm(
             PrmMng::PARAM_URL_NEW,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(// ITEM ATTRIBUTES
+            [// ITEM ATTRIBUTES
                 'default'          => $newHomeUrl,
-                'sanitizeCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'sanitizeUrl'),
-                'validateCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'validateUrlWithScheme')
-            ),
-            array(// FORM ATTRIBUTES
-                'label'  => 'New Site URL:',
-                'status' => function (ParamForm $param) {
+                'sanitizeCallback' => [
+                    ParamsDescriptors::class,
+                    'sanitizeUrl',
+                ],
+                'validateCallback' => [
+                    ParamsDescriptors::class,
+                    'validateUrlWithScheme',
+                ],
+            ],
+            [// FORM ATTRIBUTES
+                'label'          => 'New Site URL:',
+                'status'         => function (ParamForm $param): string {
                     if (
                         PrmMng::getInstance()->getValue(PrmMng::PARAM_TEMPLATE) !== \DUPX_Template::TEMPLATE_ADVANCED ||
-                        DUPX_InstallerState::isRestoreBackup()
+                        InstState::isRestoreBackup() ||
+                        InstState::isAddSiteOnMultisite()
                     ) {
                         return ParamForm::STATUS_INFO_ONLY;
                     } else {
                         return ParamForm::STATUS_ENABLED;
                     }
                 },
-                'wrapperClasses' => array('revalidate-on-change', 'cant-be-empty'),
-                'subNote'        => function (ParamForm $param) {
+                'wrapperClasses' => [
+                    'revalidate-on-change',
+                    'cant-be-empty',
+                    'requires-db-hide',
+                ],
+                'subNote'        => function (ParamForm $param): string {
                     $archive_config = \DUPX_ArchiveConfig::getInstance();
                     $oldHomeUrl     = rtrim($archive_config->getRealValue('homeUrl'), '/');
-                    return 'Old value: <b>' . \DUPX_U::esc_html($oldHomeUrl) . '</b>';
+                    $subsiteId      = PrmMng::getInstance()->getValue(PrmMng::PARAM_SUBSITE_ID);
+                    if (
+                        InstState::isInstType(
+                            [InstState::TYPE_STANDALONE]
+                        ) &&
+                        $subsiteId > 0
+                    ) {
+                        $subsiteObj = $archive_config->getSubsiteObjById($subsiteId);
+                        $oldHomeUrl = $subsiteObj->fullHomeUrl ?? $oldHomeUrl;
+                    }
+                    return 'Old value: <b>' . esc_html($oldHomeUrl) . '</b>';
                 },
-                'postfix' => array('type' => 'button', 'label' => 'get', 'btnAction' => 'DUPX.getNewUrlByDomObj(this);')
-            )
+                'postfix'        => [
+                    'type'      => 'button',
+                    'label'     => 'get',
+                    'btnAction' => 'DUPX.getNewUrlByDomObj(this);',
+                ],
+            ]
         );
         $params[PrmMng::PARAM_URL_NEW] = $newObj;
         $urlNewInputId                 =  $newObj->getFormItemId();
@@ -112,19 +129,20 @@ final class ParamDescUrlsPaths implements DescriptorInterface
         $params[PrmMng::PARAM_PATH_OLD] = new ParamItem(
             PrmMng::PARAM_PATH_OLD,
             ParamForm::TYPE_STRING,
-            array(
-            'default' => $oldMainPath
-            )
+            ['default' => $oldMainPath]
         );
 
         $newObj = new ParamForm(
             PrmMng::PARAM_PATH_NEW,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(// ITEM ATTRIBUTES
+            [// ITEM ATTRIBUTES
                 'default'          => $newMainPath,
-                'sanitizeCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'sanitizePath'),
-                'validateCallback' => function ($value, ParamItem $paramObj) {
+                'sanitizeCallback' => [
+                    ParamsDescriptors::class,
+                    'sanitizePath',
+                ],
+                'validateCallback' => function ($value, ParamItem $paramObj): bool {
                     if (strlen($value) == 0) {
                         $paramObj->setInvalidMessage('The new path can\'t be empty.');
                         return false;
@@ -136,7 +154,7 @@ final class ParamDescUrlsPaths implements DescriptorInterface
                         $paramObj->setInvalidMessage(
                             'The new path must be an existing folder on the server.<br>' .
                             'It is not possible to continue the installation without first creating the folder <br>' .
-                            '<b>' . $value . '</b>'
+                            '<b>' . esc_html($value) . '</b>'
                         );
                         return false;
                     }
@@ -144,23 +162,28 @@ final class ParamDescUrlsPaths implements DescriptorInterface
                     // don't check the return of chmod, if fail the installer must continue
                     SnapIO::chmod($realPath, 'u+rwx');
                     return true;
-                }
-            ),
-            array(// FORM ATTRIBUTES
-                'label'  => 'New Path:',
-                'status' => function (ParamForm $param) {
+                },
+            ],
+            [// FORM ATTRIBUTES
+                'label'          => 'New Path:',
+                'status'         => function (ParamForm $param): string {
                     if (
                         PrmMng::getInstance()->getValue(PrmMng::PARAM_TEMPLATE) !== \DUPX_Template::TEMPLATE_ADVANCED ||
-                        DUPX_InstallerState::isRestoreBackup()
+                        InstState::isRestoreBackup() ||
+                        InstState::isAddSiteOnMultisite()
                     ) {
                         return ParamForm::STATUS_INFO_ONLY;
                     } else {
                         return ParamForm::STATUS_ENABLED;
                     }
                 },
-                'subNote'        => 'Old value: <b>' . \DUPX_U::esc_html($oldMainPath) . '</b>',
-                'wrapperClasses' => array('revalidate-on-change', 'cant-be-empty')
-            )
+                'subNote'        => 'Old value: <b>' . esc_html($oldMainPath) . '</b>',
+                'wrapperClasses' => [
+                    'revalidate-on-change',
+                    'cant-be-empty',
+                    'requires-db-hide',
+                ],
+            ]
         );
 
         $params[PrmMng::PARAM_PATH_NEW] = $newObj;
@@ -169,244 +192,406 @@ final class ParamDescUrlsPaths implements DescriptorInterface
         $params[PrmMng::PARAM_SITE_URL_OLD] = new ParamItem(
             PrmMng::PARAM_SITE_URL_OLD,
             ParamForm::TYPE_STRING,
-            array(
-            'default' => $oldSiteUrl
-            )
+            ['default' => $oldSiteUrl]
         );
 
-        $wrapClasses    = array('revalidate-on-change', 'cant-be-empty', 'auto-updatable', 'autoupdate-enabled');
-        $postfixElement = array(
+        $wrapClasses    = [
+            'revalidate-on-change',
+            'cant-be-empty',
+            'auto-updatable',
+            'autoupdate-enabled',
+        ];
+        $postfixElement = [
             'type'      => 'button',
             'label'     => 'Auto',
-            'btnAction' => 'DUPX.autoUpdateToggle(this, ' . SnapJson::jsonEncode($defValEdit) . ');'
-        );
+            'btnAction' => 'DUPX.autoUpdateToggle(this, ' . SnapJson::jsonEncode($defValEdit) . ');',
+        ];
 
         $params[PrmMng::PARAM_SITE_URL] = new ParamForm(
             PrmMng::PARAM_SITE_URL,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(// ITEM ATTRIBUTES
+            [// ITEM ATTRIBUTES
                 'default'          => '',
-                'sanitizeCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'sanitizeUrl'),
-                'validateCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'validateUrlWithScheme')
-            ),
-            array(// FORM ATTRIBUTES
+                'sanitizeCallback' => [
+                    ParamsDescriptors::class,
+                    'sanitizeUrl',
+                ],
+                'validateCallback' => [
+                    ParamsDescriptors::class,
+                    'validateUrlWithScheme',
+                ],
+            ],
+            [// FORM ATTRIBUTES
                 'label'          => 'WP core URL:',
-                'status'         => ParamForm::STATUS_INFO_ONLY,
-                'subNote'        => 'Old value: <b>' . \DUPX_U::esc_html($oldSiteUrl) . '</b>',
-            )
+                'status'         => [
+                    self::class,
+                    'statusFormOtherPathsUrls',
+                ],
+                'postfix'        => $postfixElement,
+                'subNote'        => 'Old value: <b>' . esc_html($oldSiteUrl) . '</b>',
+                'wrapperClasses' => $wrapClasses,
+                'wrapperAttr'    => ['data-auto-update-from-input' => $urlNewInputId],
+            ]
         );
 
         $params[PrmMng::PARAM_PATH_CONTENT_OLD] = new ParamItem(
             PrmMng::PARAM_PATH_CONTENT_OLD,
             ParamForm::TYPE_STRING,
-            array(
-            'default' => $oldContentPath
-            )
+            ['default' => $oldContentPath]
         );
 
         $params[PrmMng::PARAM_PATH_CONTENT_NEW] = new ParamForm(
             PrmMng::PARAM_PATH_CONTENT_NEW,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(// ITEM ATTRIBUTES
+            [// ITEM ATTRIBUTES
                 'default'          => '',
-                'sanitizeCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'sanitizePath')
-            ),
-            array(// FORM ATTRIBUTES
+                'sanitizeCallback' => [
+                    ParamsDescriptors::class,
+                    'sanitizePath',
+                ],
+                'validateCallback' => [
+                    ParamsDescriptors::class,
+                    'validatePath',
+                ],
+            ],
+            [// FORM ATTRIBUTES
                 'label'          => 'WP-content path:',
-                'status'         => ParamForm::STATUS_INFO_ONLY,
-                'subNote'        => 'Old value: <b>' . \DUPX_U::esc_html($oldContentPath) . '</b>'
-            )
+                'status'         => [
+                    self::class,
+                    'statusFormOtherPathsUrls',
+                ],
+                'postfix'        => $postfixElement,
+                'subNote'        => 'Old value: <b>' . esc_html($oldContentPath) . '</b>',
+                'wrapperClasses' => $wrapClasses,
+                'wrapperAttr'    => ['data-auto-update-from-input' => $pathNewInputId],
+            ]
         );
 
         $params[PrmMng::PARAM_PATH_WP_CORE_OLD] = new ParamItem(
             PrmMng::PARAM_PATH_WP_CORE_OLD,
             ParamForm::TYPE_STRING,
-            array(
-                'default' => $oldWpAbsPath
-            )
+            ['default' => $oldWpAbsPath]
         );
 
         $params[PrmMng::PARAM_PATH_WP_CORE_NEW] = new ParamForm(
             PrmMng::PARAM_PATH_WP_CORE_NEW,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(// ITEM ATTRIBUTES
+            [// ITEM ATTRIBUTES
                 'default'          => '',
-                'sanitizeCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'sanitizePath'),
-            ),
-            array(// FORM ATTRIBUTES
-            'label'          => 'WP core path:',
-            'status'         => ParamForm::STATUS_INFO_ONLY,
-            'subNote'        => 'Old value: <b>' . \DUPX_U::esc_html($oldWpAbsPath) . '</b>'
-            )
+                'sanitizeCallback' => [
+                    ParamsDescriptors::class,
+                    'sanitizePath',
+                ],
+                'validateCallback' => function ($value, ParamItem $paramObj): bool {
+                    $homePath = PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_NEW);
+
+                    if (!SnapIO::isChildPath($value, $homePath)) {
+                        $paramObj->setInvalidMessage(
+                            'ABSPATH have to be a equal or a child of HOMEPATH' .
+                            '<pre>' .
+                            'ABSPATH : ' . esc_html($value) . '<br>' .
+                            'HOMEPATH: ' . esc_html($homePath) . '<br>' .
+                            '</pre>'
+                        );
+                        return false;
+                    }
+
+                    return true;
+                },
+            ],
+            [// FORM ATTRIBUTES
+                'label'          => 'WP core path:',
+                'status'         => [
+                    self::class,
+                    'statusFormOtherPathsUrls',
+                ],
+                'postfix'        => $postfixElement,
+                'subNote'        => 'Old value: <b>' . esc_html($oldWpAbsPath) . '</b>',
+                'wrapperClasses' => $wrapClasses,
+                'wrapperAttr'    => ['data-auto-update-from-input' => $pathNewInputId],
+            ]
         );
 
         $params[PrmMng::PARAM_PATH_UPLOADS_OLD] = new ParamItem(
             PrmMng::PARAM_PATH_UPLOADS_OLD,
             ParamForm::TYPE_STRING,
-            array(
-            'default' => $oldUploadsBasePath
-            )
+            ['default' => $oldUploadsBasePath]
         );
 
         $params[PrmMng::PARAM_PATH_UPLOADS_NEW] = new ParamForm(
             PrmMng::PARAM_PATH_UPLOADS_NEW,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(// ITEM ATTRIBUTES
+            [// ITEM ATTRIBUTES
                 'default'          => '',
-                'sanitizeCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'sanitizePath')
-            ),
-            array(// FORM ATTRIBUTES
+                'sanitizeCallback' => [
+                    ParamsDescriptors::class,
+                    'sanitizePath',
+                ],
+                'validateCallback' => function ($value, ParamItem $paramObj): bool {
+                    $paramsManager = PrmMng::getInstance();
+
+                    $result = (
+                        SnapIO::isChildPath($value, $paramsManager->getValue(PrmMng::PARAM_PATH_NEW), false, false) ||
+                        SnapIO::isChildPath($value, $paramsManager->getValue(PrmMng::PARAM_PATH_CONTENT_NEW), false, false)
+                    );
+
+                    if ($result == false) {
+                        $paramObj->setInvalidMessage('Upload path have to be a child of wp-content path');
+                    }
+
+                    return $result;
+                },
+            ],
+            [// FORM ATTRIBUTES
                 'label'          => 'Uploads path:',
-                'status'         => ParamForm::STATUS_INFO_ONLY,
-                'subNote'        => 'Old value: <b>' . \DUPX_U::esc_html($oldUploadsBasePath) . '</b>'
-            )
+                'status'         => [
+                    self::class,
+                    'statusFormOtherPathsUrls',
+                ],
+                'postfix'        => $postfixElement,
+                'subNote'        => 'Old value: <b>' . esc_html($oldUploadsBasePath) . '</b>',
+                'wrapperClasses' => $wrapClasses,
+                'wrapperAttr'    => ['data-auto-update-from-input' => $pathNewInputId],
+            ]
         );
 
         $params[PrmMng::PARAM_URL_CONTENT_OLD] = new ParamItem(
             PrmMng::PARAM_URL_CONTENT_OLD,
             ParamForm::TYPE_STRING,
-            array(
-                'default' => $oldContentUrl
-            )
+            ['default' => $oldContentUrl]
         );
 
         $params[PrmMng::PARAM_URL_CONTENT_NEW] = new ParamForm(
             PrmMng::PARAM_URL_CONTENT_NEW,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(// ITEM ATTRIBUTES
+            [// ITEM ATTRIBUTES
                 'default'          => '',
-                'sanitizeCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'sanitizeUrl'),
-                'validateCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'validateUrlWithScheme')
-            ),
-            array(// FORM ATTRIBUTES
+                'sanitizeCallback' => [
+                    ParamsDescriptors::class,
+                    'sanitizeUrl',
+                ],
+                'validateCallback' => [
+                    ParamsDescriptors::class,
+                    'validateUrlWithScheme',
+                ],
+            ],
+            [// FORM ATTRIBUTES
                 'label'          => 'WP-content URL:',
-                'status'         => ParamForm::STATUS_INFO_ONLY,
-                'subNote'        => 'Old value: <b>' . \DUPX_U::esc_html($oldContentUrl) . '</b>'
-            )
+                'status'         => [
+                    self::class,
+                    'statusFormOtherPathsUrls',
+                ],
+                'postfix'        => $postfixElement,
+                'subNote'        => 'Old value: <b>' . esc_html($oldContentUrl) . '</b>',
+                'wrapperClasses' => $wrapClasses,
+                'wrapperAttr'    => ['data-auto-update-from-input' => $urlNewInputId],
+            ]
         );
 
         $params[PrmMng::PARAM_URL_UPLOADS_OLD] = new ParamItem(
             PrmMng::PARAM_URL_UPLOADS_OLD,
             ParamForm::TYPE_STRING,
-            array(// ITEM ATTRIBUTES
-                'default' => $oldUploadUrl
-            )
+            ['default' => $oldUploadUrl]
         );
 
         $params[PrmMng::PARAM_URL_UPLOADS_NEW] = new ParamForm(
             PrmMng::PARAM_URL_UPLOADS_NEW,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(// ITEM ATTRIBUTES
-            'default'          => '',
-            'sanitizeCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'sanitizeUrl'),
-            'validateCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'validateUrlWithScheme')
-            ),
-            array(// FORM ATTRIBUTES
+            [
+                'default'          => '',
+                'sanitizeCallback' => [
+                    ParamsDescriptors::class,
+                    'sanitizeUrl',
+                ],
+                'validateCallback' => [
+                    ParamsDescriptors::class,
+                    'validateUrlWithScheme',
+                ],
+            ],
+            [// FORM ATTRIBUTES
                 'label'          => 'Uploads URL:',
-                'status'         => ParamForm::STATUS_INFO_ONLY,
-                'subNote'        => 'Old value: <b>' . \DUPX_U::esc_html($oldUploadUrl) . '</b>'
-            )
+                'status'         => [
+                    self::class,
+                    'statusFormOtherPathsUrls',
+                ],
+                'postfix'        => $postfixElement,
+                'subNote'        => 'Old value: <b>' . esc_html($oldUploadUrl) . '</b>',
+                'wrapperClasses' => $wrapClasses,
+                'wrapperAttr'    => ['data-auto-update-from-input' => $urlNewInputId],
+            ]
         );
 
         $params[PrmMng::PARAM_URL_PLUGINS_OLD] = new ParamItem(
             PrmMng::PARAM_URL_PLUGINS_OLD,
             ParamForm::TYPE_STRING,
-            array(// ITEM ATTRIBUTES
-                'default' => $oldPluginsUrl
-            )
+            ['default' => $oldPluginsUrl]
         );
 
         $params[PrmMng::PARAM_URL_PLUGINS_NEW] = new ParamForm(
             PrmMng::PARAM_URL_PLUGINS_NEW,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(// ITEM ATTRIBUTES
+            [// ITEM ATTRIBUTES
                 'default'          => '',
-                'sanitizeCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'sanitizeUrl'),
-                'validateCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'validateUrlWithScheme')
-            ),
-            array(// FORM ATTRIBUTES
+                'sanitizeCallback' => [
+                    ParamsDescriptors::class,
+                    'sanitizeUrl',
+                ],
+                'validateCallback' => [
+                    ParamsDescriptors::class,
+                    'validateUrlWithScheme',
+                ],
+            ],
+            [// FORM ATTRIBUTES
                 'label'          => 'Plugins URL:',
-                'status'         =>  ParamForm::STATUS_INFO_ONLY,
-                'subNote'        => 'Old value: <b>' . \DUPX_U::esc_html($oldPluginsUrl) . '</b>'
-            )
+                'status'         => [
+                    self::class,
+                    'statusFormOtherPathsUrls',
+                ],
+                'postfix'        => $postfixElement,
+                'subNote'        => 'Old value: <b>' . esc_html($oldPluginsUrl) . '</b>',
+                'wrapperClasses' => $wrapClasses,
+                'wrapperAttr'    => ['data-auto-update-from-input' => $urlNewInputId],
+            ]
         );
 
         $params[PrmMng::PARAM_PATH_PLUGINS_OLD] = new ParamItem(
             PrmMng::PARAM_PATH_PLUGINS_OLD,
             ParamForm::TYPE_STRING,
-            array(
-                'default'          => $oldPluginsPath
-            )
+            [
+                'default'          => $oldPluginsPath,
+                'sanitizeCallback' => [
+                    ParamsDescriptors::class,
+                    'sanitizePath',
+                ],
+                'validateCallback' => [
+                    ParamsDescriptors::class,
+                    'validatePath',
+                ],
+            ]
         );
 
         $params[PrmMng::PARAM_PATH_PLUGINS_NEW] = new ParamForm(
             PrmMng::PARAM_PATH_PLUGINS_NEW,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(// ITEM ATTRIBUTES
+            [// ITEM ATTRIBUTES
                 'default'          => '',
-                'sanitizeCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'sanitizePath')
-            ),
-            array(// FORM ATTRIBUTES
+                'sanitizeCallback' => [
+                    ParamsDescriptors::class,
+                    'sanitizePath',
+                ],
+                'validateCallback' => [
+                    ParamsDescriptors::class,
+                    'validatePath',
+                ],
+            ],
+            [// FORM ATTRIBUTES
                 'label'          => 'Plugins path:',
-                'status'         => ParamForm::STATUS_INFO_ONLY,
-                'subNote'        => 'Old value: <b>' . \DUPX_U::esc_html($oldPluginsPath) . '</b>'
-            )
+                'status'         => [
+                    self::class,
+                    'statusFormOtherPathsUrls',
+                ],
+                'postfix'        => $postfixElement,
+                'subNote'        => 'Old value: <b>' . esc_html($oldPluginsPath) . '</b>',
+                'wrapperClasses' => $wrapClasses,
+                'wrapperAttr'    => ['data-auto-update-from-input' => $pathNewInputId],
+            ]
         );
 
         $params[PrmMng::PARAM_URL_MUPLUGINS_OLD] = new ParamItem(
             PrmMng::PARAM_URL_MUPLUGINS_OLD,
             ParamForm::TYPE_STRING,
-            array(
-                'default' => $oldMuPluginsUrl
-            )
+            ['default' => $oldMuPluginsUrl]
         );
 
         $params[PrmMng::PARAM_URL_MUPLUGINS_NEW] = new ParamForm(
             PrmMng::PARAM_URL_MUPLUGINS_NEW,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(// ITEM ATTRIBUTES
+            [// ITEM ATTRIBUTES
                 'default'          => '',
-                'sanitizeCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'sanitizeUrl'),
-                'validateCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'validateUrlWithScheme')
-            ),
-            array(// FORM ATTRIBUTES
+                'sanitizeCallback' => [
+                    ParamsDescriptors::class,
+                    'sanitizeUrl',
+                ],
+                'validateCallback' => [
+                    ParamsDescriptors::class,
+                    'validateUrlWithScheme',
+                ],
+            ],
+            [// FORM ATTRIBUTES
                 'label'          => 'MU-plugins URL:',
-                'status'         => ParamForm::STATUS_INFO_ONLY,
-                'subNote'        => 'Old value: <b>' . \DUPX_U::esc_html($oldMuPluginsUrl) . '</b>'
-            )
+                'status'         => [
+                    self::class,
+                    'statusFormOtherPathsUrls',
+                ],
+                'postfix'        => $postfixElement,
+                'subNote'        => 'Old value: <b>' . esc_html($oldMuPluginsUrl) . '</b>',
+                'wrapperClasses' => $wrapClasses,
+                'wrapperAttr'    => ['data-auto-update-from-input' => $urlNewInputId],
+            ]
         );
 
         $params[PrmMng::PARAM_PATH_MUPLUGINS_OLD] = new ParamItem(
             PrmMng::PARAM_PATH_MUPLUGINS_OLD,
             ParamForm::TYPE_STRING,
-            array(
-                'default' => $oldMuPluginsPath
-            )
+            ['default' => $oldMuPluginsPath]
         );
 
         $params[PrmMng::PARAM_PATH_MUPLUGINS_NEW] = new ParamForm(
             PrmMng::PARAM_PATH_MUPLUGINS_NEW,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(// ITEM ATTRIBUTES
+            [// ITEM ATTRIBUTES
                 'default'          => '',
-                'sanitizeCallback' => array('Duplicator\\Installer\\Core\\Params\\Descriptors\\ParamsDescriptors', 'sanitizePath')
-            ),
-            array(// FORM ATTRIBUTES
+                'sanitizeCallback' => [
+                    ParamsDescriptors::class,
+                    'sanitizePath',
+                ],
+                'validateCallback' => [
+                    ParamsDescriptors::class,
+                    'validatePath',
+                ],
+            ],
+            [// FORM ATTRIBUTES
                 'label'          => 'MU-plugins path:',
-                'status'         => ParamForm::STATUS_INFO_ONLY,
-                'postfix'        => $postfixElement
-            )
+                'status'         => [
+                    self::class,
+                    'statusFormOtherPathsUrls',
+                ],
+                'postfix'        => $postfixElement,
+                'subNote'        => 'Old value: <b>' . esc_html($oldMuPluginsPath) . '</b>',
+                'wrapperClasses' => $wrapClasses,
+                'wrapperAttr'    => ['data-auto-update-from-input' => $pathNewInputId],
+            ]
         );
+    }
+
+    /**
+     * Return statu form for paths and urls options
+     *
+     * @param ParamForm $param current param
+     *
+     * @return string
+     */
+    public static function statusFormOtherPathsUrls(ParamForm $param): string
+    {
+        if (
+            PrmMng::getInstance()->getValue(PrmMng::PARAM_TEMPLATE) !== \DUPX_Template::TEMPLATE_ADVANCED ||
+            InstState::isRestoreBackup() ||
+            InstState::isAddSiteOnMultisite()
+        ) {
+            return ParamForm::STATUS_INFO_ONLY;
+        } else {
+            return ParamForm::STATUS_READONLY;
+        }
     }
 
     /**
@@ -416,7 +601,7 @@ final class ParamDescUrlsPaths implements DescriptorInterface
      *
      * @return void
      */
-    public static function updateParamsAfterOverwrite($params)
+    public static function updateParamsAfterOverwrite($params): void
     {
         PrmMng::getInstance();
 

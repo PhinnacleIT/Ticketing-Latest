@@ -1,17 +1,11 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
- */
-
 namespace Duplicator\Libs\Snap;
 
 class SnapURL
 {
     /** @var array<string, scalar> */
-    protected static $DEF_ARRAY_PARSE_URL = array(
+    protected static $DEF_ARRAY_PARSE_URL = [
         'scheme'   => false,
         'host'     => false,
         'port'     => false,
@@ -19,8 +13,8 @@ class SnapURL
         'pass'     => false,
         'path'     => '',
         'query'    => false,
-        'fragment' => false
-    );
+        'fragment' => false,
+    ];
 
     /**
      * Append a new query value to the end of a URL
@@ -31,12 +25,11 @@ class SnapURL
      *
      * @return string Returns the new URL with with the query string name and value
      */
-    public static function appendQueryValue($url, $key, $value)
+    public static function appendQueryValue($url, $key, $value): string
     {
-        $separator    = (parse_url($url, PHP_URL_QUERY) == null) ? '?' : '&';
-        $modified_url = $url . "$separator$key=" . $value;
+        $separator = (parse_url($url, PHP_URL_QUERY) == null) ? '?' : '&';
 
-        return $modified_url;
+        return $url . "$separator$key=" . $value;
     }
 
     /**
@@ -46,9 +39,9 @@ class SnapURL
      *
      * @return string
      */
-    public static function wwwAdd($url)
+    public static function wwwAdd($url): string
     {
-        return preg_replace('/^((?:\w+\:)?\/\/)?(?!www\.)(.+)/', '$1www.$2', $url);
+        return (string) preg_replace('/^((?:\w+\:)?\/\/)?(?!www\.)(.+)/', '$1www.$2', $url);
     }
 
     /**
@@ -58,9 +51,9 @@ class SnapURL
      *
      * @return string
      */
-    public static function wwwRemove($url)
+    public static function wwwRemove($url): string
     {
-        return preg_replace('/^((?:\w+\:)?\/\/)?www\.(.+)/', '$1$2', $url);
+        return (string) preg_replace('/^((?:\w+\:)?\/\/)?www\.(.+)/', '$1$2', $url);
     }
 
     /**
@@ -72,44 +65,72 @@ class SnapURL
      *
      * @return string The current page url
      */
-    public static function getCurrentUrl($queryString = true, $requestUri = false, $getParentDirLevel = 0)
+    public static function getCurrentUrl($queryString = true, $requestUri = false, $getParentDirLevel = 0): string
     {
         // *** HOST
-        if (isset($_SERVER['HTTP_X_ORIGINAL_HOST'])) {
-            $host = $_SERVER['HTTP_X_ORIGINAL_HOST'];
+        $httpXOriginalHost = SnapUtil::sanitizeTextInput(INPUT_SERVER, 'HTTP_X_ORIGINAL_HOST', '');
+        if (strlen($httpXOriginalHost) > 0) {
+            $host = $httpXOriginalHost;
         } else {
-            $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $_SERVER['SERVER_NAME']; //WAS SERVER_NAME and caused problems on some boxes
+            $httpHost   = SnapUtil::sanitizeTextInput(INPUT_SERVER, 'HTTP_HOST', '');
+            $serverName = SnapUtil::sanitizeTextInput(INPUT_SERVER, 'SERVER_NAME', '');
+            $host       = strlen($httpHost) > 0 ? $httpHost : $serverName;
         }
 
         // *** PROTOCOL
-        if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
-            $_SERVER ['HTTPS'] = 'on';
+        if (self::isCurrentUrlSSL()) {
+            $_SERVER['HTTPS'] = 'on';
+            $protocol         = 'https';
+        } else {
+            $protocol = 'http';
         }
-        if (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'https') {
-            $_SERVER ['HTTPS'] = 'on';
-        }
-        if (isset($_SERVER['HTTP_CF_VISITOR'])) {
-            $visitor = json_decode($_SERVER['HTTP_CF_VISITOR']);
-            if (is_object($visitor) && property_exists($visitor, 'scheme') && $visitor->scheme == 'https') {
-                $_SERVER ['HTTPS'] = 'on';
-            }
-        }
-        $protocol = 'http' . ((isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) === 'on') ? 's' : '');
 
         if ($requestUri) {
-            $serverUrlSelf = preg_replace('/\?.*$/', '', $_SERVER['REQUEST_URI']);
+            $requestUriString = SnapUtil::sanitizeTextInput(INPUT_SERVER, 'REQUEST_URI', '');
+            $serverUrlSelf    = preg_replace('/\?.*$/', '', $requestUriString);
         } else {
             // *** SCRIPT NAME
-            $serverUrlSelf = $_SERVER['SCRIPT_NAME'];
+            $serverUrlSelf = SnapUtil::sanitizeTextInput(INPUT_SERVER, 'SCRIPT_NAME', '');
             for ($i = 0; $i < $getParentDirLevel; $i++) {
                 $serverUrlSelf = preg_match('/^[\\\\\/]?$/', dirname($serverUrlSelf)) ? '' : dirname($serverUrlSelf);
             }
         }
 
         // *** QUERY STRING
-        $query = ($queryString && isset($_SERVER['QUERY_STRING']) && strlen($_SERVER['QUERY_STRING']) > 0 ) ? '?' . $_SERVER['QUERY_STRING'] : '';
-
+        $queryStringVal = SnapUtil::sanitizeTextInput(INPUT_SERVER, 'QUERY_STRING', '');
+        $query          = ($queryString && strlen($queryStringVal) > 0) ? '?' . $queryStringVal : '';
         return $protocol . '://' . $host . $serverUrlSelf . $query;
+    }
+
+    /**
+     * Check if current URL is SSL
+     *
+     * @return bool
+     */
+    public static function isCurrentUrlSSL(): bool
+    {
+        if (SnapUtil::sanitizeBoolInput(INPUT_SERVER, 'HTTPS', false)) {
+            return true;
+        }
+
+        $httpsProto = SnapUtil::sanitizeTextInput(INPUT_SERVER, 'HTTP_X_FORWARDED_PROTO', '');
+        if (strlen($httpsProto) > 0 && strtolower($httpsProto) == 'https') {
+            return true;
+        }
+
+        $httpsForwarded = SnapUtil::sanitizeTextInput(INPUT_SERVER, 'HTTP_X_FORWARDED_SSL', '');
+        if (strlen($httpsForwarded) > 0 && strtolower($httpsForwarded) == 'https') {
+            return true;
+        }
+
+        $httpCfVisitor = SnapUtil::sanitizeTextInput(INPUT_SERVER, 'HTTP_CF_VISITOR', '');
+        if (strlen($httpCfVisitor) > 0) {
+            $visitor = json_decode($httpCfVisitor);
+            if (is_object($visitor) && property_exists($visitor, 'scheme') && $visitor->scheme == 'https') {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -117,14 +138,15 @@ class SnapURL
      *
      * @return string[]
      */
-    public static function getCurrentQueryURLdata()
+    public static function getCurrentQueryURLdata(): array
     {
-        $result = array();
-        if (!isset($_SERVER['QUERY_STRING']) || strlen($_SERVER['QUERY_STRING']) == 0) {
+        $result      = [];
+        $queryString = SnapUtil::sanitizeTextInput(INPUT_SERVER, 'QUERY_STRING', '');
+        if (strlen($queryString) == 0) {
             return $result;
         }
 
-        parse_str($_SERVER['QUERY_STRING'], $result);
+        parse_str($queryString, $result);
 
         return $result;
     }
@@ -177,7 +199,7 @@ class SnapURL
      *
      * @return string
      */
-    public static function removeScheme($url, $removeWww = false)
+    public static function removeScheme($url, $removeWww = false): string
     {
         $parts = self::parseUrl($url);
         unset($parts['scheme']);
@@ -192,14 +214,14 @@ class SnapURL
      * this function build a url from array result of parse url.
      * if work with both parse_url native function result and snap parseUrl result
      *
-     * @param array<string, mixed> $parts url parts from parseUrl
+     * @param array<string,scalar> $parts url parts from parseUrl
      *
-     * @return bool|string return false if param isn't array
+     * @return string return empty string on error
      */
-    public static function buildUrl($parts)
+    public static function buildUrl($parts): string
     {
         if (!is_array($parts)) {
-            return false;
+            return '';
         }
 
         $result  = '';
@@ -217,9 +239,8 @@ class SnapURL
 
         $result .= (isset($parts['path']) && $parts['path'] !== false) ? $parts['path'] : '';
         $result .= (isset($parts['query']) && $parts['query'] !== false) ? '?' . $parts['query'] : '';
-        $result .= (isset($parts['fragment']) && $parts['fragment'] !== false) ? '#' . $parts['fragment'] : '';
 
-        return $result;
+        return $result . ((isset($parts['fragment']) && $parts['fragment'] !== false) ? '#' . $parts['fragment'] : '');
     }
 
     /**
@@ -229,9 +250,9 @@ class SnapURL
      *
      * @return string
      */
-    public static function urlEncodeAll($url)
+    public static function urlEncodeAll($url): string
     {
         $hex = unpack('H*', urldecode($url));
-        return preg_replace('~..~', '%$0', strtoupper($hex[1]));
+        return (string) preg_replace('~..~', '%$0', strtoupper($hex[1]));
     }
 }

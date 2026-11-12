@@ -228,6 +228,13 @@ var wpdatatable_plugin_config = {
         }
     },
 
+    setMcpEnabled: function (wdtMcpEnabled) {
+        wdt_current_config.wdtMcpEnabled = wdtMcpEnabled;
+        if (jQuery('#wdt-mcp-enabled').val() != wdtMcpEnabled) {
+            jQuery('#wdt-mcp-enabled').prop('checked', wdtMcpEnabled);
+        }
+    },
+
     setAlignNumber: function ( alignNumber ) {
         wdt_current_config.wdtNumbersAlign = alignNumber;
         if( jQuery('#wdt-numbers-align').val() != alignNumber ){
@@ -359,4 +366,11 @@ var wpdatatable_plugin_config = {
             jQuery('#wdt-use-google-stable-version').prop('checked', googleStableVersion);
         }
     },
+
+    setUsageTrackingEnabled: function (usageTrackingEnabled) {
+        wdt_current_config.wdtUsageTrackingEnabled = usageTrackingEnabled;
+        if (jQuery('#wdt-usage-tracking-enabled').prop('checked') != usageTrackingEnabled) {
+            jQuery('#wdt-usage-tracking-enabled').prop('checked', usageTrackingEnabled);
+        }
+    }
 };

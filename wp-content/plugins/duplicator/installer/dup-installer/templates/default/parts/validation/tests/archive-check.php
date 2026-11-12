@@ -1,14 +1,14 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $testResult int */
+/**
+ * Variables
+ *
+ * @var int $testResult
+ */
 
 switch ($testResult) {
     case DUPX_Validation_test_archive_check::LV_PASS:

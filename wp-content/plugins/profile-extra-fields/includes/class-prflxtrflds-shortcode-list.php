@@ -92,7 +92,7 @@ if ( ! class_exists( 'Prflxtrflds_Shortcode_List' ) ) {
 					} else {
 						$value_selected = '';
 					}
-					$prflxtrflds_option_list .= "<option value='" . $value['value_id'] . "' " . $value_selected . '>' . $value['value_name'] . '</option>';
+					$prflxtrflds_option_list .= "<option value='" . esc_attr( $value['value_id'] ) . "' " . $value_selected . '>' . esc_html( $value['value_name'] ) . '</option>';
 
 				}
 				return sprintf(

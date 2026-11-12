@@ -1,17 +1,12 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 /** @var bool $display */
+$display ??= false;
 
-if (!isset($display)) {
-    $display = false;
-}
 ?><div id="progress-area" class="<?php echo $display ? '' : 'no-display'; ?>">
     <div style="width:500px; margin:auto">
         <div class="progress-text"><i class="fas fa-circle-notch fa-spin"></i> <span id="progress-title"></span> <span id="progress-pct"></span></div>

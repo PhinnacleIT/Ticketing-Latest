@@ -3,7 +3,7 @@
 Plugin Name: wpDataTables - Tables & Table Charts
 Plugin URI: https://wpdatatables.com
 Description: Create responsive, sortable tables & charts from Excel, CSV or PHP. Add tables & charts to any post in minutes with DataTables.
-Version: 6.5.1.2
+Version: 6.6.1.1
 Author: Melograno Ventures
 Author URI: https://melograno.io
 Text Domain: wpdatatables
@@ -79,6 +79,30 @@ require_once(WDT_ROOT_PATH . 'controllers/wdt_functions.php');
 // Load dependencies
 require_once WDT_ROOT_PATH . 'lib/autoload.php';
 
+/**
+ * PSR-4 autoload for the permissions slice (`WPDataTables\`).
+ * Lite does not ship the premium PHP-DI backend.
+ */
+spl_autoload_register(static function ($class) {
+    $prefix = 'WPDataTables\\';
+    if (strpos($class, $prefix) !== 0) {
+        return;
+    }
+
+    $relative = substr($class, strlen($prefix));
+    $path = WDT_ROOT_PATH . 'backend/src/' . str_replace('\\', '/', $relative) . '.php';
+    if (is_readable($path)) {
+        require_once $path;
+    }
+});
+
+use Melograno\UsageTracker\Collectors\Plugin\WpDataTablesCollector;
+use Melograno\UsageTracker\Core\UsageTracker;
+
+if (!defined('MELOGRANO_BI_GATE_URL')) {
+    define('MELOGRANO_BI_GATE_URL', 'https://bi.melograno.io');
+}
+
 function wpdatatables_load()
 {
     if (is_admin()) {
@@ -102,8 +126,8 @@ function wpdatatables_load()
     require_once(WDT_ROOT_PATH . 'source/class.wdtbrowsetable.php');
     require_once(WDT_ROOT_PATH . 'source/class.wdtbrowsechartstable.php');
     require_once(WDT_ROOT_PATH . 'source/class.feedback.php');
-    require_once(WDT_ROOT_PATH . 'source/class.permissions.admin.php');
     require_once(WDT_ROOT_PATH . 'source/class.permissions.enforcer.php');
+    wdt_register_permissions_hooks();
     require_once(WDT_ROOT_PATH . 'integrations/page_builders/gutenberg/WDTGutenbergBlocks.php');
     require_once(WDT_ROOT_PATH . 'integrations/page_builders/elementor/class.wdtelementorblock.php');
     require_once(WDT_ROOT_PATH . 'integrations/page_builders/divi-wpdt/divi-wpdt.php');
@@ -113,6 +137,11 @@ function wpdatatables_load()
     require_once(WDT_ROOT_PATH . 'integrations/ivyforms/ivyforms-integration.php');
 
     add_action('plugins_loaded', 'wdtLoadTextdomain');
+
+    add_action('plugins_loaded', static function () {
+        UsageTracker::init(new WpDataTablesCollector(), __FILE__);
+    });
+
     if (is_admin()) {
 
         if (WDT_CURRENT_VERSION !== get_option('wdtVersion')) {
@@ -141,96 +170,10 @@ add_shortcode('wpdatatable_cell', 'wdtWpDataTableCellShortcodeHandler');
 
 wpdatatables_load();
 
-/**
- * Show an admin notice when MCP integration cannot be loaded.
- *
- * @param string $message Human-readable reason (already translated).
- */
-function wdtmcp_register_unavailable_notice($message)
-{
-    if (!is_admin()) {
-        return;
-    }
+\WPDataTables\Plugin\AiBootstrap::register();
 
-    add_action('admin_notices', static function () use ($message) {
-        if (!current_user_can('manage_options')) {
-            return;
-        }
-        ?>
-        <div class="notice notice-warning">
-            <p>
-                <strong><?php esc_html_e('wpDataTables MCP:', 'wpdatatables'); ?></strong>
-                <?php echo esc_html($message); ?>
-            </p>
-        </div>
-        <?php
-    });
-}
+require_once WDT_ROOT_PATH . 'Infrastructure/WP/MCP/WdtmcpAdapterCompatibility.php';
+require_once WDT_ROOT_PATH . 'Infrastructure/WP/MCP/WdtmcpBootstrap.php';
 
-/**
- * Load and register the wpDataTables MCP Adapter integration.
- */
-function wdtmcp_load_integration()
-{
-    global $wp_version;
-
-    if (version_compare($wp_version, WDTMCP_MIN_WP_VERSION, '<')) {
-        wdtmcp_register_unavailable_notice(
-            sprintf(
-                /* translators: 1: required WordPress version, 2: current WordPress version */
-                __('MCP integration requires WordPress %1$s or newer. Your site is running WordPress %2$s.', 'wpdatatables'),
-                WDTMCP_MIN_WP_VERSION,
-                $wp_version
-            )
-        );
-
-        return;
-    }
-
-    if (!function_exists('wp_register_ability') || !class_exists(\WP\MCP\Core\McpAdapter::class)) {
-        $missing = array();
-
-        if (!function_exists('wp_register_ability')) {
-            $missing[] = __('WordPress Abilities API', 'wpdatatables');
-        }
-
-        if (!class_exists(\WP\MCP\Core\McpAdapter::class)) {
-            $missing[] = __('MCP Adapter', 'wpdatatables');
-        }
-
-        wdtmcp_register_unavailable_notice(
-            sprintf(
-                /* translators: %s: comma-separated list of missing components */
-                __('MCP integration is unavailable because required components are missing: %s. Try reinstalling or updating wpDataTables.', 'wpdatatables'),
-                implode(', ', $missing)
-            )
-        );
-
-        return;
-    }
-
-    require_once WDT_ROOT_PATH . 'Infrastructure/WP/MCP/Helpers/McpHelpers/WdtmcpAbilitiesHelper.php';
-    require_once WDT_ROOT_PATH . 'Infrastructure/WP/MCP/Helpers/McpHelpers/WdtmcpLicenseGuideHelper.php';
-    require_once WDT_ROOT_PATH . 'Infrastructure/WP/MCP/WdtmcpAbilitiesRegistrar.php';
-    require_once WDT_ROOT_PATH . 'Infrastructure/WP/MCP/WdtmcpMcpHttpTransport.php';
-    require_once WDT_ROOT_PATH . 'Infrastructure/WP/MCP/WdtmcpMcpServerRegistrar.php';
-
-    \WP\MCP\Core\McpAdapter::instance();
-
-    add_action(
-        'mcp_adapter_init',
-        array('\WDTMCP\Infrastructure\WP\MCP\WdtmcpMcpServerRegistrar', 'init')
-    );
-    add_action(
-        'wp_abilities_api_categories_init',
-        array('\WDTMCP\Infrastructure\WP\MCP\WdtmcpAbilitiesRegistrar', 'registerCategories')
-    );
-    add_action(
-        'wp_abilities_api_init',
-        array('\WDTMCP\Infrastructure\WP\MCP\WdtmcpAbilitiesRegistrar', 'registerAbilities')
-    );
-    add_action('init', 'wdtmcp_maybe_migrate_css_to_global', 99);
-}
-
-wdtmcp_load_integration();
+\WDTMCP\Infrastructure\WP\MCP\WdtmcpBootstrap::load();
 ?>

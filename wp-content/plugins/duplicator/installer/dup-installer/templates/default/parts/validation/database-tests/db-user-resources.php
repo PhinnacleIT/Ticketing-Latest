@@ -1,15 +1,15 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $isOk bool */
-/* @var $userResources array */
+/**
+ * Variables
+ *
+ * @var bool $isOk
+ * @var array<string, int> $userResources
+ */
 
 ?>
 <div class="sub-title">STATUS</div>

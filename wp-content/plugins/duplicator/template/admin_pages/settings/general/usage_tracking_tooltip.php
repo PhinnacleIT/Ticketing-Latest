@@ -1,96 +1,44 @@
 <?php
 
-/**
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
- */
+
 
 defined("ABSPATH") || exit;
 
 /**
  * Variables
  *
+ * @var \Duplicator\Core\Controllers\ControllersManager $ctrlMng
  * @var \Duplicator\Core\Views\TplMng  $tplMng
- * @var array<string, mixed> $tplData
  */
+
 ?>
 <div>
-    <b>
-        <?php _e('All information sent to the server is anonymous.', 'duplicator'); ?><br>
-        <?php _e('No information about storage or Backup\'s content are sent.', 'duplicator'); ?>
-    </b>
+    <?php
+    esc_html_e(
+        'Usage tracking helps us understand the servers and websites Duplicator runs on, so we can improve the plugin and focus our testing.',
+        'duplicator'
+    );
+    ?>
 </div>
 <br>
 <div>
     <?php
-        _e(
-            'Usage tracking for Duplicator helps us better understand our users and their website needs by looking 
-            at a range of server and website environments.',
-            'duplicator'
-        );
-        ?>
-    <b>
-        <?php _e('This allows us to continuously improve our product as well as our Q&A / testing process.', 'duplicator'); ?>
-    </b>
-    <?php _e('Below is the list of information that Duplicator collects as part of the usage tracking:', 'duplicator'); ?>
+    esc_html_e(
+        'The data sent includes server and site environment information (PHP, WordPress, MySQL and Duplicator versions),
+        plugin settings and usage, plus the site URL and the administrator email.',
+        'duplicator'
+    );
+    ?>
 </div>
-<ul>
-    <li>
+<br>
+<div>
+    <b>
         <?php
-        _e(
-            '<b>PHP Version:</b> so we know which PHP versions we have to test against (no one likes whitescreens or log files full of errors).',
+        esc_html_e(
+            'No critical or sensitive Backup information is ever sent: no Backup contents, site files,
+            database data, personal data, passwords or login credentials.',
             'duplicator'
         );
         ?>
-    </li>
-    <li>
-        <?php
-        _e(
-            '<b>WordPress Version:</b> so we know which WordPress versions to support and test against.',
-            'duplicator'
-        );
-        ?>
-    </li>
-    <li>
-        <?php
-        _e(
-            '<b>MySQL Version:</b> so we know which versions of MySQL to support and test against for our custom tables.',
-            'duplicator'
-        );
-        ?>
-    </li>
-    <li>
-        <?php
-        _e(
-            '<b>Duplicator Version:</b> so we know which versions of Duplicator are potentially responsible for issues when we get bug reports, 
-            allowing us to identify issues and release solutions much faster.',
-            'duplicator'
-        );
-        ?>
-    </li>
-    <li>
-        <?php
-        _e(
-            '<b>Plugins and Themes infos:</b> so we can figure out which ones can generate compatibility errors with Duplicator.',
-            'duplicator'
-        );
-        ?>
-    </li>
-    <li>
-        <?php
-        _e(
-            '<b>Site info:</b> General information about the site such as database, file size, number of users, and sites in case it is a multisite. 
-            This is useful for us to understand the critical issues of Backup creation.',
-            'duplicator'
-        );
-        ?>
-    </li>
-    <li>
-        <?php
-        _e(
-            '<b>Backups infos:</b> Information about the Backups created and the type of components included.',
-            'duplicator'
-        );
-        ?>
-    </li>
-</ul>
+    </b>
+</div>

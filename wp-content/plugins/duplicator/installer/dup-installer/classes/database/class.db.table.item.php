@@ -6,34 +6,52 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\InstState;
+use Duplicator\Installer\Core\Params\Descriptors\ParamDescMultisite;
 use Duplicator\Installer\Core\Params\Descriptors\ParamDescUsers;
+use Duplicator\Installer\Core\Params\Models\SiteOwrMap;
 use Duplicator\Installer\Core\Params\PrmMng;
 use Duplicator\Libs\Snap\SnapWP;
 
 /**
- * This class manages the installer table, all table management refers to the table name in the original site.
+ * Database Table Item Class
+ *
+ * This class manages individual database table information during WordPress site migrations.
+ * It handles:
+ * - Table name management
+ * - Table operations (create, drop, rename)
+ * - Multisite support
+ * - Data integrity checks
+ *
+ * Note: The users and usermeta tables are handled separately from core tables.
+ *
+ * @see DUPX_DB_Functions::TABLE_NAME_WP_USERS
+ * @see DUPX_DB_Functions::TABLE_NAME_WP_USERMETA
+ * @see Duplicator\Installer\Core\Deploy\Database\DbUserMode
  */
 class DUPX_DB_Table_item
 {
-    protected $originalName       = '';
+    /** @var string */
+    protected $originalName = '';
+    /** @var string */
     protected $tableWithoutPrefix = '';
-    protected $rows               = 0;
-    protected $size               = 0;
-    protected $havePrefix         = false;
-    protected $subsiteId          = -1;
-    protected $subsitePrefix      = '';
+    protected int $rows;
+    protected int $size;
+    protected bool $havePrefix;
+    /** @var int */
+    protected $subsiteId = -1;
+    /** @var string */
+    protected $subsitePrefix = '';
 
     /**
      *
-     * @param string $name
-     * @param int $rows
-     * @param int $size
+     * @param string $name table name
+     * @param int    $rows number of rows
+     * @param int    $size size in bytes
      */
     public function __construct($name, $rows = 0, $size = 0)
     {
@@ -48,7 +66,8 @@ class DUPX_DB_Table_item
         if (strlen($oldPrefix) === 0) {
             $this->havePrefix         = true;
             $this->tableWithoutPrefix = $this->originalName;
-        } if (strpos($this->originalName, $oldPrefix) === 0) {
+        }
+        if (strpos($this->originalName, $oldPrefix) === 0) {
             $this->havePrefix         = true;
             $this->tableWithoutPrefix = substr($this->originalName, strlen($oldPrefix));
         } else {
@@ -56,8 +75,23 @@ class DUPX_DB_Table_item
             $this->tableWithoutPrefix = $this->originalName;
         }
 
-        $this->subsiteId     = 1;
-        $this->subsitePrefix = $oldPrefix;
+        if (DUPX_ArchiveConfig::getInstance()->isNetwork() && $this->havePrefix) {
+            $matches = null;
+
+            if (preg_match('/^(' . preg_quote($oldPrefix, '/') . '(\d+)_)(.+)/', $this->originalName, $matches)) {
+                $this->subsitePrefix      = $matches[1];
+                $this->subsiteId          = (int) $matches[2];
+                $this->tableWithoutPrefix = $matches[3]; // update table without prefix without subsite prefix
+            } elseif (in_array($this->tableWithoutPrefix, SnapWP::getMultisiteTables())) {
+                $this->subsiteId = -1;
+            } else {
+                $this->subsiteId     = 1;
+                $this->subsitePrefix = $oldPrefix;
+            }
+        } else {
+            $this->subsiteId     = 1;
+            $this->subsitePrefix = $oldPrefix;
+        }
     }
 
     /**
@@ -73,30 +107,32 @@ class DUPX_DB_Table_item
     /**
      * return table name without prefix, if the table has no prefix then the original name returns.
      *
+     * @param bool $includeSubsiteId if true then the subsite id is included in the name
+     *
      * @return string
      */
-    public function getNameWithoutPrefix($includeSubsiteId = false)
+    public function getNameWithoutPrefix($includeSubsiteId = false): string
     {
         return (($includeSubsiteId && $this->subsiteId > 1) ? $this->subsiteId . '_' : '') . $this->tableWithoutPrefix;
     }
 
     /**
      *
-     * @param array $diffData
+     * @param array{oldPrefix:string,newPrefix:string,commonPart:string} $diffData output
      *
      * @return boolean
      */
-    public function isDiffPrefix(&$diffData)
+    public function isDiffPrefix(&$diffData): bool
     {
         $oldPos = strlen(($oldName = $this->getOriginalName()));
         $newPos = strlen(($newName = $this->getNewName()));
 
         if ($oldName == $newName) {
-            $diffData = array(
+            $diffData = [
                 'oldPrefix'  => '',
                 'newPrefix'  => '',
-                'commonPart' => $oldName
-            );
+                'commonPart' => $oldName,
+            ];
             return false;
         }
 
@@ -109,11 +145,11 @@ class DUPX_DB_Table_item
             $newPos--;
         }
 
-        $diffData = array(
+        $diffData = [
             'oldPrefix'  => substr($oldName, 0, $oldPos),
             'newPrefix'  => substr($newName, 0, $newPos),
-            'commonPart' => substr($oldName, $oldPos)
-        );
+            'commonPart' => substr($oldName, $oldPos),
+        ];
         return true;
     }
 
@@ -121,7 +157,7 @@ class DUPX_DB_Table_item
      *
      * @return bool
      */
-    public function havePrefix()
+    public function havePrefix(): bool
     {
         return $this->havePrefix;
     }
@@ -143,15 +179,59 @@ class DUPX_DB_Table_item
 
         $paramsManager = PrmMng::getInstance();
 
-        switch (DUPX_InstallerState::getInstType()) {
-            case DUPX_InstallerState::INSTALL_SINGLE_SITE:
-            case DUPX_InstallerState::INSTALL_RBACKUP_SINGLE_SITE:
+        switch (InstState::getInstType()) {
+            case InstState::TYPE_SINGLE:
+            case InstState::TYPE_MSUBDOMAIN:
+            case InstState::TYPE_MSUBFOLDER:
+            case InstState::TYPE_RBACKUP_SINGLE:
+            case InstState::TYPE_RBACKUP_MSUBDOMAIN:
+            case InstState::TYPE_RBACKUP_MSUBFOLDER:
+            case InstState::TYPE_RECOVERY_SINGLE:
+            case InstState::TYPE_RECOVERY_MSUBDOMAIN:
+            case InstState::TYPE_RECOVERY_MSUBFOLDER:
                 return $paramsManager->getValue(PrmMng::PARAM_DB_TABLE_PREFIX) . $this->getNameWithoutPrefix(true);
-            case DUPX_InstallerState::INSTALL_SINGLE_SITE_ON_SUBDOMAIN:
-            case DUPX_InstallerState::INSTALL_SINGLE_SITE_ON_SUBFOLDER:
-                throw new Exception('Mode not avaiable');
-            case DUPX_InstallerState::INSTALL_NOT_SET:
-                throw new Exception('Cannot change setup with current installation type [' . DUPX_InstallerState::getInstType() . ']');
+            case InstState::TYPE_STANDALONE:
+                if (
+                    $this->subsiteId === $paramsManager->getValue(PrmMng::PARAM_SUBSITE_ID) &&
+                    $this->subsiteId > 1
+                ) {
+                    // convert standalon subsite prefix
+                    return $paramsManager->getValue(PrmMng::PARAM_DB_TABLE_PREFIX) . $this->getNameWithoutPrefix(false);
+                } else {
+                    return $paramsManager->getValue(PrmMng::PARAM_DB_TABLE_PREFIX) . $this->getNameWithoutPrefix(true);
+                }
+            case InstState::TYPE_SINGLE_ON_SUBDOMAIN:
+            case InstState::TYPE_SINGLE_ON_SUBFOLDER:
+            case InstState::TYPE_SUBSITE_ON_SUBDOMAIN:
+            case InstState::TYPE_SUBSITE_ON_SUBFOLDER:
+                if ($this->isUserTable()) {
+                    return $paramsManager->getValue(PrmMng::PARAM_DB_TABLE_PREFIX) . $this->getNameWithoutPrefix(false);
+                }
+
+                if ($this->subsiteId <= 0) {
+                    throw new Exception('Curretn talbe site id isn\'t defined');
+                }
+
+                if (($map = ParamDescMultisite::getOwrMapBySourceId($this->subsiteId)) == false) {
+                    throw new Exception('Map by id ' . $this->subsiteId . ' don\'t exists');
+                }
+
+                switch ($map->getTargetId()) {
+                    case SiteOwrMap::NEW_SUBSITE_WITH_SLUG:
+                    case SiteOwrMap::NEW_SUBSITE_WITH_FULL_DOMAIN:
+                        // Site must be created
+                        return '';
+                    default:
+                        break;
+                }
+
+                if (($targetInfo = $map->getTargetSiteInfo()) == false) {
+                    throw new Exception('Target site info ' . $map->getTargetId() . ' don\'t exists');
+                }
+
+                return $targetInfo['blog_prefix'] . $this->getNameWithoutPrefix(false);
+            case InstState::TYPE_NOT_SET:
+                throw new Exception('Cannot change setup with current installation type [' . InstState::getInstType() . ']');
             default:
                 throw new Exception('Unknown mode');
         }
@@ -161,14 +241,15 @@ class DUPX_DB_Table_item
      *
      * @return int
      */
-    public function getRows()
+    public function getRows(): int
     {
         return $this->rows;
     }
 
     /**
+     * Return table size
      *
-     * @param type $formatted
+     * @param bool $formatted if true then return size in human readable format
      *
      * @return int|string
      */
@@ -178,8 +259,9 @@ class DUPX_DB_Table_item
     }
 
     /**
+     * Get table subsite id
      *
-     * @return int // if -1 isn't a subsite sable
+     * @return int if -1 isn't a subsite sable
      */
     public function getSubsisteId()
     {
@@ -187,20 +269,37 @@ class DUPX_DB_Table_item
     }
 
     /**
+     * Check if table can be extracted
      *
-     * @return boolean
+     * @return bool
      */
     public function canBeExctracted()
     {
+        if (!$this->havePrefix && PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_ONLY_PREFIXED_TABLES)) {
+            return false;
+        }
+
+        if (InstState::isInstType(InstState::TYPE_STANDALONE)) {
+            return $this->standAloneExtractCheck();
+        }
+
+        if (InstState::isAddSiteOnMultisite()) {
+            return $this->addSiteOnMultisiteCheck();
+        }
+
+        if (InstState::isRestoreBackup()) {
+            return $this->restoreBackupCheck();
+        }
+
         return true;
     }
 
     /**
      * If false the current table create query is skipped
      *
-     * @return boolran
+     * @return bool
      */
-    public function createTable()
+    public function createTable(): bool
     {
         if ($this->usersTablesCreateCheck() === false) {
             return false;
@@ -212,7 +311,7 @@ class DUPX_DB_Table_item
     /**
      * Check if create users table
      *
-     * @return boolran
+     * @return bool
      */
     protected function usersTablesCreateCheck()
     {
@@ -228,9 +327,103 @@ class DUPX_DB_Table_item
      *
      * @return boolean
      */
-    public function isUserTable()
+    public function isUserTable(): bool
     {
-        return ($this->havePrefix && in_array($this->tableWithoutPrefix, array('users', 'usermeta')));
+        return (
+            $this->havePrefix &&
+            in_array(
+                $this->tableWithoutPrefix,
+                [
+                    DUPX_DB_Functions::TABLE_NAME_WP_USERS,
+                    DUPX_DB_Functions::TABLE_NAME_WP_USERMETA,
+                ]
+            )
+        );
+    }
+
+    /**
+     *
+     * @return boolean
+     */
+    protected function standAloneExtractCheck(): bool
+    {
+        if ($this->isUserTable()) {
+            return true;
+        }
+
+        // extract tables without prefix
+        if (!$this->havePrefix) {
+            return true;
+        }
+
+        $standaloneId = PrmMng::getInstance()->getValue(PrmMng::PARAM_SUBSITE_ID);
+
+        // exclude multisite tables
+        if ($this->subsiteId < 0) {
+            return false;
+        }
+
+        if ($standaloneId == 1) {
+            // exclude all subsites tables
+            if ($this->subsiteId > 1) {
+                return false;
+            }
+        } else {
+            if ($this->subsiteId > 1) {
+                // exclude all subsite tables except tables with id 1
+                if ($this->subsiteId != $standaloneId) {
+                    return false;
+                }
+            } else {
+                if (in_array($this->tableWithoutPrefix, SnapWP::getSiteCoreTables())) {
+                    // exclude wordpress common main tables
+                    return false;
+                }
+
+                if (in_array($this->tableWithoutPrefix, DUPX_DB_Tables::getInstance()->getStandaoneTablesWithoutPrefix())) {
+                    // I exclude the tables of the standalone site that will be converted into main tables
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * returns true if the table is to be extracted
+     *
+     * @return boolean
+     */
+    protected function addSiteOnMultisiteCheck()
+    {
+        if ($this->isUserTable()) {
+            return true;
+        }
+
+        $originalPrefix = DUPX_ArchiveConfig::getInstance()->wp_tableprefix;
+
+        if (in_array($this->originalName, DUPX_DB_Functions::getDuplicatorTablesNames($originalPrefix))) {
+            return false;
+        }
+
+        return (ParamDescMultisite::getOwrMapBySourceId($this->subsiteId) !== false);
+    }
+
+    /**
+     * Returns true if the table is to be extracted
+     *
+     * @return boolean
+     */
+    protected function restoreBackupCheck()
+    {
+        if (!$this->havePrefix || $this->tableWithoutPrefix != DUPX_DB_Functions::TABLE_NAME_DUPLICATOR_PACKAGES) {
+            return true;
+        }
+
+        $overwriteData = PrmMng::getInstance()->getValue(PrmMng::PARAM_OVERWRITE_SITE_DATA);
+        // Extract table only if don't exists on restore backup mode
+        return (!$overwriteData['packagesTableExists']);
     }
 
     /**

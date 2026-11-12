@@ -1,12 +1,10 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
 
 $paramsManager = PrmMng::getInstance();
@@ -16,7 +14,7 @@ $paramsManager = PrmMng::getInstance();
     <?php // DUPX_View_Funcs::helpIconLink('step2');  ?>
 </div>
 <?php
-if (DUPX_InstallerState::isRestoreBackup()) {
+if (InstState::isRestoreBackup()) {
     dupxTplRender('parts/restore-backup-mode-notice');
 }
 if (DUPX_Custom_Host_Manager::getInstance()->isManaged()) {

@@ -1,15 +1,5 @@
 <?php
 
-/**
- * param descriptor
- *
- * Standard: PSR-2
- *
- * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
- */
-
 namespace Duplicator\Installer\Core\Params\Items;
 
 use Duplicator\Installer\Core\Params\PrmMng;
@@ -43,14 +33,14 @@ class ParamFormPlugins extends ParamForm
      */
     protected function pluginSelectHtml()
     {
-        $pluginsManager = \DUPX_Plugins_Manager::getInstance();
+        $pluginsManager = \Duplicator\Installer\Core\Deploy\Plugins\PluginsManager::getInstance();
         $plugns_list    = $pluginsManager->getPlugins();
 
-        $attrs                       = array(
+        $attrs                       = [
             'id'       => $this->formAttr['id'],
             'name'     => $this->getAttrName() . '[]',
-            'multiple' => ''
-        );
+            'multiple' => '',
+        ];
         $this->formAttr['classes'][] = 'no-display';
 
         if (!empty($this->formAttr['classes'])) {
@@ -73,9 +63,7 @@ class ParamFormPlugins extends ParamForm
                 if ($plugin->isIgnore() || $plugin->isForceDisabled()) {
                     continue;
                 }
-                $optAttr = array(
-                    'value' => $pluginSlug
-                );
+                $optAttr = ['value' => $pluginSlug];
                 if (self::isValueInValue($pluginSlug, $this->getInputValue())) {
                     // can't be selected if is disabled
                     $optAttr['selected'] = 'selected';
@@ -100,9 +88,10 @@ class ParamFormPlugins extends ParamForm
      */
     protected function pluginsSelector()
     {
-        $pluginsManager = \DUPX_Plugins_Manager::getInstance();
+        $pluginsManager = \Duplicator\Installer\Core\Deploy\Plugins\PluginsManager::getInstance();
         $plugns_list    = $pluginsManager->getPlugins();
         $paramsManager  = PrmMng::getInstance();
+        $subsiteId      = $paramsManager->getValue(PrmMng::PARAM_SUBSITE_ID);
         $safe_mode      = $paramsManager->getValue(PrmMng::PARAM_SAFE_MODE);
         ?>
         <div>
@@ -128,12 +117,13 @@ class ParamFormPlugins extends ParamForm
                 </a>
             </li>
             <?php
-            foreach ($pluginsManager->getStatusCounts() as $status => $count) {
+            foreach ($pluginsManager->getStatusCounts($subsiteId) as $status => $count) {
                 if ($count) {
                     ?>
                     <li class="<?php echo \DUPX_U::esc_attr($status); ?>" data-filter-target="orig-<?php echo \DUPX_U::esc_attr($status); ?>" >
                         <a href="#">
-                            <?php echo \DUPX_U::esc_html(\DUPX_Plugin_item::getStatusLabel($status)); ?><span class="count"> (<?php echo $count; ?>)</span>
+                            <?php echo \DUPX_U::esc_html(\Duplicator\Installer\Core\Deploy\Plugins\PluginItem::getStatusLabel($status)); ?>
+                            <span class="count"> (<?php echo $count; ?>)</span>
                         </a>
                     </li>
                     <?php
@@ -157,7 +147,7 @@ class ParamFormPlugins extends ParamForm
                     if ($pluginObj->isIgnore() || $pluginObj->isForceDisabled()) {
                         continue;
                     }
-                    $this->pluginHtmlItem($pluginObj);
+                    $this->pluginHtmlItem($pluginObj, $subsiteId);
                 }
                 ?>
             </tbody>
@@ -169,19 +159,17 @@ class ParamFormPlugins extends ParamForm
     /**
      * Render plugin item
      *
-     * @param \DUPX_Plugin_item $pluginObj plugin object
-     * @param int               $subsiteId selected subsite id
+     * @param \Duplicator\Installer\Core\Deploy\Plugins\PluginItem $pluginObj plugin object
+     * @param int                                                  $subsiteId selected subsite id
      *
      * @return void
      */
-    protected function pluginHtmlItem($pluginObj, $subsiteId = -1)
+    protected function pluginHtmlItem($pluginObj, $subsiteId)
     {
-        $itemClasses   = array(
-            'table-item',
-        );
+        $itemClasses   = ['table-item'];
         $orgiStats     = $pluginObj->getOrgiStatus($subsiteId);
         $itemClasses[] = 'orig-' . $orgiStats;
-        $itemClasses[] = self::isValueInValue($pluginObj->slug, $this->getInputValue()) ? 'active' : 'inactive';
+        $itemClasses[] = self::isValueInValue($pluginObj->getSlug(), $this->getInputValue()) ? 'active' : 'inactive';
 
         //$authorURI = $pluginObj->authorURI;
         if (empty($pluginObj->authorURI)) {
@@ -190,7 +178,7 @@ class ParamFormPlugins extends ParamForm
             $author = '<a href="' . \DUPX_U::esc_attr($pluginObj->authorURI) . '" target="_blank">' . \DUPX_U::esc_html($pluginObj->author) . '</a>';
         }
         ?>
-        <tr class="<?php echo implode(' ', $itemClasses); ?>" data-plugin-slug="<?php echo \DUPX_U::esc_attr($pluginObj->slug); ?>">
+        <tr class="<?php echo implode(' ', $itemClasses); ?>" data-plugin-slug="<?php echo \DUPX_U::esc_attr($pluginObj->getSlug()); ?>">
             <td class="check_input" >
                 <input type="checkbox" <?php echo $this->isReadonly() ? 'readonly' : ''; ?> <?php echo $this->isDisabled() ? 'disabled' : ''; ?>>
             </td>
@@ -304,9 +292,9 @@ class ParamFormPlugins extends ParamForm
      *
      * @param string $formType form type
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    protected static function getDefaultAttrForFormType($formType)
+    protected static function getDefaultAttrForFormType($formType): array
     {
         $attrs = parent::getDefaultAttrForFormType($formType);
         if ($formType == self::FORM_TYPE_PLUGINS_SELECT) {

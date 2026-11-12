@@ -134,7 +134,15 @@ class WC_Payments_Express_Checkout_Button_Handler {
 		$button_type                      = $this->gateway->get_option( 'payment_request_button_type' );
 		$common_settings                  = $this->express_checkout_helper->get_common_button_settings();
 		$express_checkout_button_settings = [
-			// Default format is en_US.
+			/**
+			 * Filters the locale used for the express checkout (payment request) button.
+			 *
+			 * Defaults to the two-letter site locale (e.g. `en`).
+			 *
+			 * @since 2.1.0
+			 *
+			 * @param string $locale The two-letter locale code.
+			 */
 			'locale'       => apply_filters( 'wcpay_payment_request_button_locale', substr( get_locale(), 0, 2 ) ),
 			'branded_type' => 'default' === $button_type ? 'short' : 'long',
 		];
@@ -215,12 +223,16 @@ class WC_Payments_Express_Checkout_Button_Handler {
 	 * @return array Parameters for Express Checkout.
 	 */
 	public function get_express_checkout_params() {
-		/**
-		 * Allowing some specific configuration to be tweaked by 3pd.
-		 *
-		 * @since 9.5.0
-		 */
+		$button_context = $this->express_checkout_helper->get_button_context();
+
 		return array_merge(
+			/**
+			 * Filters the express checkout JS params, allowing some specific configuration to be tweaked by 3pd.
+			 *
+			 * @since 9.6.0
+			 *
+			 * @param array $params The express checkout JS params.
+			 */
 			apply_filters(
 				'wcpay_express_checkout_js_params',
 				[
@@ -245,10 +257,12 @@ class WC_Payments_Express_Checkout_Button_Handler {
 						'display_prices_with_tax'    => 'incl' === get_option( 'woocommerce_tax_display_cart' ),
 					],
 					'has_subscription'            => $this->express_checkout_helper->has_subscription_product(),
+					// Product page (no cart yet) and pay-for-order (order API has no cart extension).
+					'setup_future_usage'          => $this->express_checkout_helper->get_setup_future_usage( $button_context ),
 					'is_manual_capture'           => 'yes' === $this->gateway->get_option( 'manual_capture' ),
 					'button'                      => $this->get_button_settings(),
 					'login_confirmation'          => $this->get_login_confirmation_settings(),
-					'button_context'              => $this->express_checkout_helper->get_button_context(),
+					'button_context'              => $button_context,
 					'has_block'                   => has_block( 'woocommerce/cart' ) || has_block( 'woocommerce/checkout' ),
 					'product'                     => $this->express_checkout_helper->get_product_data(),
 					'store_name'                  => get_bloginfo( 'name' ),

@@ -477,4 +477,38 @@
                 </div>
         </div>
     </div>
+    <div class="row">
+        <div class="col-sm-4 wdt-mcp-enabled">
+            <h4 class="c-title-color m-b-2">
+                <?php esc_html_e('Enable MCP for AI assistants', 'wpdatatables'); ?>
+                <i class=" wpdt-icon-info-circle-thin" data-toggle="tooltip" data-placement="right"
+                   title="<?php esc_attr_e('When enabled, wpDataTables exposes MCP tools for AI assistants such as Angie AI (WordPress 6.9+). Disable to hide the MCP server and stop Angie registration. Developers can force this off with the wpdatatables/mcp/enabled filter.', 'wpdatatables'); ?>"></i>
+            </h4>
+            <div class="toggle-switch" data-ts-color="blue">
+                <input type="checkbox" name="wdt-mcp-enabled" id="wdt-mcp-enabled"/>
+                <label for="wdt-mcp-enabled"
+                       class="ts-label"><?php esc_html_e('Enable MCP for AI assistants', 'wpdatatables'); ?></label>
+            </div>
+        </div>
+        <div class="col-sm-4 wdt-usage-tracking-block">
+            <h4 class="c-title-color m-b-2">
+                <?php esc_html_e('Improve WPDataTables', 'wpdatatables'); ?>
+                <i class="wpdt-icon-info-circle-thin wdt-tooltip-interactive" data-toggle="tooltip" data-placement="right"
+                   data-html="true"
+                   data-original-title='<?php
+                   printf(
+                       '%s <a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+                       esc_html__('Help us improve WPDataTables by sharing anonymous data about your plugin usage. No personal data is collected.', 'wpdatatables'),
+                       esc_url('https://wpdatatables.com/usage-data-privacy/'),
+                       esc_html__('Learn more', 'wpdatatables')
+                   );
+                   ?>'></i>
+            </h4>
+            <div class="toggle-switch" data-ts-color="blue">
+                <input type="checkbox" name="wdt-usage-tracking-enabled" id="wdt-usage-tracking-enabled"/>
+                <label for="wdt-usage-tracking-enabled"
+                       class="ts-label"><?php esc_html_e('Enable data usage', 'wpdatatables'); ?></label>
+            </div>
+        </div>
+    </div>
 </div>

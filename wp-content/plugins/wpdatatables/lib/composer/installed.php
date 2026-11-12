@@ -3,7 +3,7 @@
         'name' => 'tmsplugins/wpdatatables',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => 'ee4c0acb19d172f3bc9d2e0ea05af8c405b276a7',
+        'reference' => 'c1d25bf0f5260a7393cb045f7e8bbf7f2eee68d7',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -82,6 +82,15 @@
             'aliases' => array(),
             'dev_requirement' => true,
         ),
+        'melograno/usage-tracker' => array(
+            'pretty_version' => '1.3.20',
+            'version' => '1.3.20.0',
+            'reference' => '0656a97a7309277eb2838dc84eea2f61e706ec0d',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../melograno/usage-tracker',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'myclabs/php-enum' => array(
             'pretty_version' => '1.8.5',
             'version' => '1.8.5.0',
@@ -148,7 +157,7 @@
         'tmsplugins/wpdatatables' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => 'ee4c0acb19d172f3bc9d2e0ea05af8c405b276a7',
+            'reference' => 'c1d25bf0f5260a7393cb045f7e8bbf7f2eee68d7',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

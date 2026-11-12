@@ -1,15 +1,15 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $testResult int // DUPX_Validation_abstract_item::[LV_FAIL|LV_HARD_WARNING|...] */
-/* @var $pathsList string[] */
+/**
+ * Variables
+ *
+ * @var int $testResult DUPX_Validation_abstract_item::[LV_FAIL|LV_HARD_WARNING|...]
+ * @var string[] $pathsList
+ */
 
 $statusClass = ($testResult > DUPX_Validation_abstract_item::LV_SOFT_WARNING ? 'green' : 'red' );
 ?>

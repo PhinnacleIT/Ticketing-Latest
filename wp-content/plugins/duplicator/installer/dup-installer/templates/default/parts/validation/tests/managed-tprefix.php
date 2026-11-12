@@ -1,14 +1,14 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $isOk bool */
+/**
+ * Variables
+ *
+ * @var bool $isOk
+ */
 ?>
 <p>
     <?php

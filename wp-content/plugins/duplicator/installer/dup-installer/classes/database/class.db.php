@@ -5,8 +5,7 @@
  *
  * Standard: PSR-2
  *
- * @package SC\DUPX\DB
- * @link    http://www.php-fig.org/psr/psr-2/
+ * @link http://www.php-fig.org/psr/psr-2/
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -22,11 +21,11 @@ class DUPX_DB
     /**
      * Modified version of https://developer.wordpress.org/reference/classes/wpdb/db_connect/
      *
-     * @param string $host The server host name
+     * @param string $host     The server host name
      * @param string $username The server DB user name
      * @param string $password The server DB password
-     * @param string $dbname The server DB name
-     * @param int    $flag Extra flags for connection
+     * @param string $dbname   The server DB name
+     * @param int    $flag     Extra flags for connection
      *
      * @return mysqli|null Database connection handle
      */
@@ -38,7 +37,12 @@ class DUPX_DB
             $is_ipv6   = false;
             $host_data = self::parseDBHost($host);
             if ($host_data) {
-                list($host, $port, $socket, $is_ipv6) = $host_data;
+                [
+                    $host,
+                    $port,
+                    $socket,
+                    $is_ipv6,
+                ] = $host_data;
             }
 
             /*
@@ -58,7 +62,7 @@ class DUPX_DB
                 Log::info('DATABASE CONNECTION ERROR: ' . mysqli_connect_error() . '[ERRNO:' . mysqli_connect_errno() . ']');
             } else {
                 if (method_exists($dbh, 'options')) {
-                    $dbh->options(MYSQLI_OPT_LOCAL_INFILE, false);
+                    $dbh->options(MYSQLI_OPT_LOCAL_INFILE, 'disable');
                 }
             }
 
@@ -76,18 +80,18 @@ class DUPX_DB
 
     /**
      * Modified version of https://developer.wordpress.org/reference/classes/wpdb/parse_db_host/
+     * Return Array containing the host, the port, the socket and whether it is an IPv6 address, in that order. If $host couldn't be parsed, returns false
      *
      * @param string $host The DB_HOST setting to parse
      *
-     * @return array|bool Array containing the host, the port, the socket and whether it is an IPv6 address, in that order.
-     *                    If $host couldn't be parsed, returns false
+     * @return false|array{0:string,1:?int,2:?string,3:bool}
      */
     public static function parseDBHost($host)
     {
         $port    = null;
         $socket  = null;
         $is_ipv6 = false;
-// First peel off the socket parameter from the right, if it exists.
+        // First peel off the socket parameter from the right, if it exists.
         $socket_pos = strpos($host, ':/');
         if (false !== $socket_pos) {
             $socket = substr($host, $socket_pos + 1);
@@ -100,37 +104,42 @@ class DUPX_DB
             $pattern = '#^(?:\[)?(?P<host>[0-9a-fA-F:]+)(?:\]:(?P<port>[\d]+))?#';
             $is_ipv6 = true;
         } else {
-        // We seem to be dealing with an IPv4 address.
+            // We seem to be dealing with an IPv4 address.
             $pattern = '#^(?P<host>[^:/]*)(?::(?P<port>[\d]+))?#';
         }
 
-        $matches = array();
+        $matches = [];
         $result  = preg_match($pattern, $host, $matches);
         if (1 !== $result) {
-        // Couldn't parse the address, bail.
+            // Couldn't parse the address, bail.
             return false;
         }
 
         $host = '';
-        foreach (array('host', 'port') as $component) {
+        foreach (['host', 'port'] as $component) {
             if (!empty($matches[$component])) {
-                $$component = $matches[$component];
+                ${$component} = $matches[$component];
             }
         }
 
-        return array($host, $port, $socket, $is_ipv6);
+        return [
+            $host,
+            $port,
+            $socket,
+            $is_ipv6,
+        ];
     }
 
     /**
      *
-     * @param string    $host       The server host name
-     * @param string    $username   The server DB user name
-     * @param string    $password   The server DB password
-     * @param string    $dbname     The server DB name
+     * @param string $host     The server host name
+     * @param string $username The server DB user name
+     * @param string $password The server DB password
+     * @param string $dbname   The server DB name
      *
      * @return boolean
      */
-    public static function testConnection($host, $username, $password, $dbname = '')
+    public static function testConnection($host, $username, $password, $dbname = ''): bool
     {
         if (($dbh = DUPX_DB::connect($host, $username, $password, $dbname))) {
             mysqli_close($dbh);
@@ -143,12 +152,12 @@ class DUPX_DB
     /**
      *  Count the tables in a given database
      *
-     * @param \mysqli    $dbh       A valid database link handle
-     * @param string $dbname    Database to count tables in
+     * @param mysqli $dbh    A valid database link handle
+     * @param string $dbname Database to count tables in
      *
      * @return int  The number of tables in the database
      */
-    public static function countTables($dbh, $dbname)
+    public static function countTables(\mysqli $dbh, string $dbname): int
     {
         $res = self::mysqli_query($dbh, "SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_schema = '" . mysqli_real_escape_string($dbh, $dbname) . "' ");
         $row = mysqli_fetch_row($res);
@@ -158,10 +167,12 @@ class DUPX_DB
     /**
      * Returns the number of rows in a table
      *
-     * @param \mysqli    $dbh   A valid database link handle
-     * @param string $name  A valid table name
+     * @param mysqli $dbh  A valid database link handle
+     * @param string $name A valid table name
+     *
+     * @return int  The number of rows in the table
      */
-    public static function countTableRows($dbh, $name)
+    public static function countTableRows(\mysqli $dbh, string $name): int
     {
         $total = self::mysqli_query($dbh, "SELECT COUNT(*) FROM `" . mysqli_real_escape_string($dbh, $name) . "`");
         if ($total) {
@@ -175,7 +186,7 @@ class DUPX_DB
     /**
      * Get default character set
      *
-     * @param \mysqli $dbh   A valid database link handle
+     * @param mysqli $dbh A valid database link handle
      *
      * @return string    Default charset
      */
@@ -200,15 +211,15 @@ class DUPX_DB
     /**
      * Get Supported charset list
      *
-     * @param \mysqli $dbh   A valid database link handle
+     * @param mysqli $dbh A valid database link handle
      *
-     * @return array     Supported charset list
+     * @return string[] Supported charset list
      */
     public static function getSupportedCharSetList($dbh)
     {
         static $charsetList = null;
         if (is_null($charsetList)) {
-            $charsetList = array();
+            $charsetList = [];
             $query       = "SHOW CHARACTER SET;";
             if (($result = self::mysqli_query($dbh, $query))) {
                 while ($row = $result->fetch_assoc()) {
@@ -224,15 +235,15 @@ class DUPX_DB
     /**
      * Get Supported collations along with character set
      *
-     * @param \mysqli $dbh   A valid database link handle
+     * @param mysqli $dbh A valid database link handle
      *
-     * @return array     Supported collation
+     * @return array<array{Collation:string,Charset:string,Id:int,Default:string,Sortlen:int}>
      */
     public static function getSupportedCollates($dbh)
     {
         static $collations = null;
         if (is_null($collations)) {
-            $collations = array();
+            $collations = [];
             $query      = "SHOW COLLATION";
             if (($result     = self::mysqli_query($dbh, $query))) {
                 while ($row = $result->fetch_assoc()) {
@@ -241,10 +252,7 @@ class DUPX_DB
                 $result->free();
             }
 
-            usort($collations, function ($a, $b) {
-
-                return strcmp($a['Collation'], $b['Collation']);
-            });
+            usort($collations, fn($a, $b): int => strcmp($a['Collation'], $b['Collation']));
         }
         return $collations;
     }
@@ -252,15 +260,15 @@ class DUPX_DB
     /**
      * Get Supported collations along with character set
      *
-     * @param \mysqli $dbh   A valid database link handle
+     * @param mysqli $dbh A valid database link handle
      *
-     * @return array     Supported collation
+     * @return string[] Supported collation
      */
     public static function getSupportedCollateList($dbh)
     {
         static $collates = null;
         if (is_null($collates)) {
-            $collates = array();
+            $collates = [];
             $query    = "SHOW COLLATION";
             if (($result = self::mysqli_query($dbh, $query))) {
                 while ($row = $result->fetch_assoc()) {
@@ -276,38 +284,36 @@ class DUPX_DB
     /**
      * Returns the database names as an array
      *
-     * @param \mysqli $dbh          A valid database link handle
-     * @param string $dbuser    An optional dbuser name to search by
+     * @param mysqli $dbh    A valid database link handle
+     * @param string $dbuser An optional dbuser name to search by
      *
-     * @return array  A list of all database names
+     * @return string[]  A list of all database names
      */
-    public static function getDatabases($dbh, $dbuser = '')
+    public static function getDatabases($dbh, $dbuser = ''): array
     {
-        $sql   = strlen($dbuser) ? "SHOW DATABASES LIKE '%" . mysqli_real_escape_string($dbh, $dbuser) . "%'" : 'SHOW DATABASES';
-        $query = self::mysqli_query($dbh, $sql);
+        $result = [];
+        $sql    = strlen($dbuser) ? "SHOW DATABASES LIKE '%" . mysqli_real_escape_string($dbh, $dbuser) . "%'" : 'SHOW DATABASES';
+        $query  = self::mysqli_query($dbh, $sql);
         if ($query) {
             while ($db = @mysqli_fetch_array($query)) {
-                $all_dbs[] = $db[0];
-            }
-            if (isset($all_dbs) && is_array($all_dbs)) {
-                return $all_dbs;
+                $result[] = $db[0];
             }
         }
-        return array();
+        return $result;
     }
 
     /**
      * Check if database exists
      *
-     * @param obj|mysqli $dbh    DB connection
-     * @param string     $dbname database name
+     * @param mysqli $dbh    DB connection
+     * @param string $dbname database name
      *
      * @return bool
      */
-    public static function databaseExists($dbh, $dbname)
+    public static function databaseExists(\mysqli $dbh, string $dbname): bool
     {
         $sql = 'SELECT COUNT(SCHEMA_NAME) AS databaseExists ' .
-                'FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = "' . mysqli_real_escape_string($dbh, $dbname) . '"';
+            'FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = "' . mysqli_real_escape_string($dbh, $dbname) . '"';
 
         $res = self::mysqli_query($dbh, $sql);
         $row = mysqli_fetch_row($res);
@@ -316,10 +322,24 @@ class DUPX_DB
     }
 
     /**
+     * Check if table exists
+     *
+     * @param mysqli $dbh       A valid database link handle
+     * @param string $tablename Table name to check for
+     *
+     * @return bool  Whether or not if given table exists
+     */
+    public static function tableExists(\mysqli $dbh, string $tablename): bool
+    {
+        $query = self::mysqli_query($dbh, "SHOW TABLES LIKE '" . mysqli_real_escape_string($dbh, $tablename) . "'");
+        return $query && mysqli_num_rows($query) == 1;
+    }
+
+    /**
      * Select database if exists
      *
-     * @param mysqli|obj $dbh
-     * @param string     $dbname
+     * @param mysqli $dbh    DB connection
+     * @param string $dbname database name
      *
      * @return bool false on failure
      */
@@ -335,31 +355,31 @@ class DUPX_DB
     /**
      * Returns the tables for a database as an array
      *
-     * @param \mysqli $dbh   A valid database link handle
+     * @param mysqli $dbh A valid database link handle
      *
-     * @return array  A list of all table names
+     * @return string[] A list of all table names
      */
-    public static function getTables($dbh)
+    public static function getTables(mysqli $dbh): array
     {
         $query = self::mysqli_query($dbh, 'SHOW TABLES');
         if ($query) {
-            $all_tables = array();
+            $all_tables = [];
             while ($table = @mysqli_fetch_array($query)) {
                 $all_tables[] = $table[0];
             }
             return $all_tables;
         }
-        return array();
+        return [];
     }
 
     /**
      * Get the requested MySQL system variable
      *
-     * @param \mysqli $dbh     A valid database link handle
-     * @param string  $name    The database variable name to lookup
-     * @param mixed   $default default value if query fail
+     * @param mysqli $dbh     A valid database link handle
+     * @param string $name    The database variable name to lookup
+     * @param mixed  $default default value if query fail
      *
-     * @return string the server variable to query for
+     * @return mixed the server variable to query for
      */
     public static function getVariable($dbh, $name, $default = null)
     {
@@ -368,15 +388,17 @@ class DUPX_DB
         }
         $row = @mysqli_fetch_array($result);
         @mysqli_free_result($result);
-        return isset($row[1]) ? $row[1] : $default;
+        return $row[1] ?? $default;
     }
 
     /**
      * Gets the MySQL database version number
      *
-     * @param \mysqli $dbh  A valid database link handle
-     * @param bool    $full True:  Gets the full version
-     *                      False: Gets only the numeric portion i.e. 5.5.6 or 10.1.2 (for MariaDB)
+     * @param mysqli $dbh  A valid database link handle
+     * @param bool   $full True:  Gets the full version
+     *                     False: Gets only the numeric
+     *                     portion i.e. 5.5.6 or 10.1.2
+     *                     (for MariaDB)
      *
      * @return string '0' on failure, version number on success
      */
@@ -404,7 +426,7 @@ class DUPX_DB
     /**
      * Determine if a MySQL database supports a particular feature
      *
-     * @param \mysqli $dbh Database connection handle
+     * @param mysqli $dbh     Database connection handle
      * @param string $feature the feature to check for
      *
      * @return bool
@@ -426,14 +448,15 @@ class DUPX_DB
     /**
      * Runs a query and returns the results as an array with the column names
      *
-     * @param obj    $dbh   A valid database link handle
-     * @param string $sql   The sql to run
+     * @param mysqli $dbh          A valid database link handle
+     * @param string $sql          The sql to run
+     * @param int    $column_index The column index to use as the key
      *
-     * @return array    The result of the query as an array with the column name as the key
+     * @return scalar[] The result of the query as an array with the column name as the key
      */
-    public static function queryColumnToArray($dbh, $sql, $column_index = 0)
+    public static function queryColumnToArray(\mysqli $dbh, string $sql, $column_index = 0): array
     {
-        $result_array      = array();
+        $result_array      = [];
         $full_result_array = self::queryToArray($dbh, $sql);
 
         for ($i = 0; $i < count($full_result_array); $i++) {
@@ -445,14 +468,14 @@ class DUPX_DB
     /**
      * Runs a query with no result
      *
-     * @param \mysqli    $dbh   A valid database link handle
-     * @param string $sql   The sql to run
+     * @param mysqli $dbh A valid database link handle
+     * @param string $sql The sql to run
      *
-     * @return array    The result of the query as an array
+     * @return scalar[][] The result of the query as an array
      */
-    public static function queryToArray($dbh, $sql)
+    public static function queryToArray(\mysqli $dbh, string $sql): array
     {
-        $result       = array();
+        $result       = [];
         $query_result = self::mysqli_query($dbh, $sql);
         if ($query_result !== false) {
             if (mysqli_num_rows($query_result) > 0) {
@@ -471,12 +494,12 @@ class DUPX_DB
     /**
      * Runs a query with no result
      *
-     * @param \mysqli    $dbh   A valid database link handle
-     * @param string $sql   The sql to run
+     * @param mysqli $dbh A valid database link handle
+     * @param string $sql The sql to run
      *
      * @return void
      */
-    public static function queryNoReturn($dbh, $sql)
+    public static function queryNoReturn($dbh, $sql): void
     {
         if (self::mysqli_query($dbh, $sql) === false) {
             $error = mysqli_error($dbh);
@@ -487,12 +510,12 @@ class DUPX_DB
     /**
      * Drops the table given
      *
-     * @param \mysqli    $dbh   A valid database link handle
-     * @param string $name  A valid table name to remove
+     * @param mysqli $dbh  A valid database link handle
+     * @param string $name A valid table name to remove
      *
-     * @return null
+     * @return void
      */
-    public static function dropTable($dbh, $name)
+    public static function dropTable($dbh, $name): void
     {
         Log::info('DROP TABLE ' . $name, Log::LV_DETAILED);
         $escapedName = mysqli_real_escape_string($dbh, $name);
@@ -500,18 +523,32 @@ class DUPX_DB
     }
 
     /**
+     * Empty the table given
+     *
+     * @param mysqli $dbh  A valid database link handle
+     * @param string $name A valid table name to remove
+     *
+     * @return void
+     */
+    public static function emptyTable($dbh, $name): void
+    {
+        Log::info('TRUNCATE TABLE ' . $name, Log::LV_DETAILED);
+        $escapedName = mysqli_real_escape_string($dbh, $name);
+        self::queryNoReturn($dbh, 'TRUNCATE TABLE `' . $escapedName . '`');
+    }
+
+    /**
      * Renames an existing table
      *
-     * @param \mysqli    $dbh                   A valid database link handle
-     * @param string $existing_name         The current tables name
-     * @param string $new_name              The new table name to replace the existing name
-     * @param string $delete_if_conflict    Delete the table name if there is a conflict
+     * @param mysqli $dbh                A valid database link handle
+     * @param string $existing_name      The current tables name
+     * @param string $new_name           The new table name to replace the existing name
+     * @param bool   $delete_if_conflict Delete the table name if there is a conflict
      *
-     * @return null
+     * @return void
      */
-    public static function renameTable($dbh, $existing_name, $new_name, $delete_if_conflict = false)
+    public static function renameTable($dbh, $existing_name, $new_name, $delete_if_conflict = false): void
     {
-
         if ($delete_if_conflict) {
             self::dropTable($dbh, $new_name);
         }
@@ -525,14 +562,14 @@ class DUPX_DB
     /**
      * Renames an existing table
      *
-     * @param \mysqli    $dbh                   A valid database link handle
-     * @param string $existing_name         The current tables name
-     * @param string $new_name              The new table name to replace the existing name
-     * @param string $delete_if_conflict    Delete the table name if there is a conflict
+     * @param mysqli $dbh                A valid database link handle
+     * @param string $existing_name      The current tables name
+     * @param string $new_name           The new table name to replace the existing name
+     * @param bool   $delete_if_conflict Delete the table name if there is a conflict
      *
-     * @return null
+     * @return void
      */
-    public static function copyTable($dbh, $existing_name, $new_name, $delete_if_conflict = false)
+    public static function copyTable($dbh, $existing_name, $new_name, $delete_if_conflict = false): void
     {
         if ($delete_if_conflict) {
             self::dropTable($dbh, $new_name);
@@ -548,9 +585,11 @@ class DUPX_DB
     /**
      * Sets the MySQL connection's character set.
      *
-     * @param \mysqli $dbh     The resource given by mysqli_connect
+     * @param mysqli  $dbh     The resource given by mysqli_connect
      * @param ?string $charset The character set, null default value
      * @param ?string $collate The collation, null default value
+     *
+     * @return bool
      */
     public static function setCharset($dbh, $charset = null, $collate = null)
     {
@@ -558,9 +597,8 @@ class DUPX_DB
             return false;
         }
 
-        $charset = (!isset($charset) ) ? $GLOBALS['DBCHARSET_DEFAULT'] : $charset;
-        $collate = (!isset($collate) ) ? '' : $collate;
-
+        $charset = (!isset($charset)) ? $GLOBALS['DBCHARSET_DEFAULT'] : $charset;
+        $collate = (!isset($collate)) ? '' : $collate;
         if (empty($charset)) {
             return true;
         }
@@ -610,9 +648,9 @@ class DUPX_DB
 
     /**
      *
-     * @param \mysqli $dbh     The resource given by mysqli_connect
+     * @param mysqli $dbh The resource given by mysqli_connect\
      *
-     * @return bool|string // return false if current database isent selected or the string name
+     * @return bool|string return false if current database isent selected or the string name
      */
     public static function getCurrentDatabase($dbh)
     {
@@ -621,21 +659,26 @@ class DUPX_DB
             return false;
         }
         $assoc = $result->fetch_assoc();
-        return isset($assoc['db']) ? $assoc['db'] : false;
+        return $assoc['db'] ?? false;
     }
 
     /**
      * mysqli_query wrapper with logging
      *
-     * @param mysqli $link
-     * @param string $sql
-     * @param int $logFailLevel // Write in the log only if the log level is equal to or greater than level
+     * @param mysqli $link         db connection
+     * @param string $query        query string
+     * @param int    $logFailLevel Write in the log only if the log level is equal to or greater than level
+     * @param int    $resultmode   The result mode can be one of 3 constants indicating how the result will be returned from the MySQL server.
      *
      * @return mysqli_result|bool For successful SELECT, SHOW, DESCRIBE or EXPLAIN queries, mysqli_query() will return a mysqli_result object.
      *                            For other successful queries mysqli_query() will return TRUE. Returns FALSE on failure
      */
-    public static function mysqli_query(\mysqli $link, $query, $logFailLevel = Log::LV_DEFAULT, $resultmode = MYSQLI_STORE_RESULT)
-    {
+    public static function mysqli_query(
+        mysqli $link,
+        $query,
+        $logFailLevel = Log::LV_DEFAULT,
+        $resultmode = MYSQLI_STORE_RESULT
+    ) {
         try {
             $result = mysqli_query($link, $query, $resultmode);
         } catch (Exception $e) {
@@ -647,14 +690,20 @@ class DUPX_DB
     }
 
     /**
+     * Query log callback
      *
-     * @param mysqli_result|bool $result
+     * @param mysqli             $link         db connection
+     * @param mysqli_result|bool $result       mysqli_result object or false on failure
+     * @param string             $query        query string
+     * @param int                $logFailLevel ENUM Log::LV_*
+     *
+     * @return void
      */
-    public static function query_log_callback(\mysqli $link, $result, $query, $logFailLevel = Log::LV_DEFAULT)
+    public static function query_log_callback(mysqli $link, $result, $query, $logFailLevel = Log::LV_DEFAULT): void
     {
         if ($result === false) {
             if (Log::isLevel($logFailLevel)) {
-                $callers  = debug_backtrace();
+                $callers  = debug_backtrace(); // phpcs:ignore PHPCompatibility.FunctionUse.ArgumentFunctionsReportCurrentValue.NeedsInspection
                 $file     = $callers[0]['file'];
                 $line     = $callers[0]['line'];
                 $queryLog = substr($query, 0, Log::isLevel(Log::LV_DEBUG) ? 10000 : 500);
@@ -663,7 +712,7 @@ class DUPX_DB
             }
         } else {
             if (Log::isLevel(Log::LV_HARD_DEBUG)) {
-                $callers = debug_backtrace();
+                $callers = debug_backtrace(); // phpcs:ignore PHPCompatibility.FunctionUse.ArgumentFunctionsReportCurrentValue.NeedsInspection
                 $file    = $callers[0]['file'];
                 $line    = $callers[0]['line'];
                 Log::info('DB QUERY [' . $file . ':' . $line . ']: ' . Log::v2str(substr($query, 0, 2000)), Log::LV_HARD_DEBUG);

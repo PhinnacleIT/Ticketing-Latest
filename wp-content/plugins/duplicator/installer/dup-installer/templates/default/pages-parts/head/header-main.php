@@ -1,35 +1,34 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-// @var $showInstallerMode bool
-// @var $showSwitchView bool
+/**
+ * Variables
+ *
+ * @var string $htmlTitle
+ * @var ?bool $showSwitchView
+ * @var ?bool $showHeaderLinks
+ */
 
-//$showInstallerMode = !isset($showInstallerMode) ? true : $showInstallerMode;
-$showInstallerMode = false;
-$showSwitchView    = !isset($showSwitchView) ? false : $showSwitchView;
-$showInstallerLog  = !isset($showInstallerLog) ? false : $showInstallerLog;
+$showSwitchView  = !isset($showSwitchView) ? false : $showSwitchView; // @phpstan-ignore varTag.nativeType
+$showHeaderLinks = !isset($showHeaderLinks) ? false : $showHeaderLinks;
 ?>
 <div id="header-main-wrapper" >
     <div class="hdr-main">
         <?php echo $htmlTitle; ?>
     </div>
     <div class="hdr-secodary">
-        <?php if ($showInstallerMode) { ?>
-            <div class="dupx-modes">
-                <?php echo DUPX_InstallerState::getInstance()->getHtmlModeHeader(); ?>
-            </div>
-            <?php
-        }
-        if ($showInstallerLog) {
+        <?php
+        if ($showHeaderLinks) {
             ?>
-            <div class="installer-log" >
-                <?php DUPX_View_Funcs::installerLogLink(); ?>
+            <div class="wiz-dupx-version" >
+                <?php dupxTplRender('parts/header-links/version-link'); ?>
+                <span>&nbsp;|&nbsp;</span>
+                <?php dupxTplRender('parts/header-links/log-link'); ?>
+                <span>&nbsp;|&nbsp;</span>
+                <?php dupxTplRender('parts/header-links/help-link'); ?>
             </div>
             <?php
         }
@@ -39,3 +38,4 @@ $showInstallerLog  = !isset($showInstallerLog) ? false : $showInstallerLog;
         ?>
     </div>
 </div>
+<?php do_action('duplicator_installer_after_header_main'); ?>

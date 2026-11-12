@@ -1,15 +1,17 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 ?>
 <div id="installer-switch-wrapper">
-    <span class="btn-group">
-        <button type="button" id="s1-switch-template-btn-basic" class="s1-switch-template-btn active" title="Enable basic installer mode">
+    <span class="btn-group small">
+        <button 
+            type="button" 
+            id="s1-switch-template-btn-basic" 
+            class="s1-switch-template-btn active" 
+            title="Enable basic installer mode"
+        >
             Basic
         </button>
         <button 

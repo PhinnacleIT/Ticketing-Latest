@@ -324,7 +324,10 @@ class Supercacher {
 		require_once ABSPATH . '/wp-includes/pluggable.php';
 
 		// Bail if we do not have option page and nonce is invalid.
-		if ( false === \wp_verify_nonce( $_POST['_wpnonce'], $_POST['option_page'] . '-options' ) ) {
+		$nonce       = sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) );
+		$option_page = sanitize_key( wp_unslash( $_POST['option_page'] ) );
+
+		if ( false === \wp_verify_nonce( $nonce, $option_page . '-options' ) ) {
 			return;
 		}
 

@@ -1,9 +1,7 @@
 <?php
 
 /**
- * Plugin API: WP_Hook class
- *
- * From wordpress WP_Hook class
+ * From WordPress WP_Hook class
  */
 
 namespace Duplicator\Installer\Core\Hooks;
@@ -11,31 +9,31 @@ namespace Duplicator\Installer\Core\Hooks;
 /**
  * Core class used to implement action and filter hook functionality.
  *
- * @see Iterator
- * @see ArrayAccess
+ *  @implements \Iterator<mixed,mixed>
+ *  @implements \ArrayAccess<mixed,mixed>
  */
 final class Hook implements \Iterator, \ArrayAccess
 {
     /**
      * Hook callbacks.
      *
-     * @var array
+     * @var mixed[]
      */
-    public $callbacks = array();
+    public $callbacks = [];
 
     /**
      * The priority keys of actively running iterations of a hook.
      *
-     * @var array
+     * @var mixed[]
      */
-    private $iterations = array();
+    private $iterations = [];
 
     /**
      * The current priority of actively running iterations of a hook.
      *
-     * @var array
+     * @var int[]
      */
-    private $currentPriority = array();
+    private $currentPriority = [];
 
     /**
      * Number of levels this hook can be recursively called.
@@ -64,16 +62,16 @@ final class Hook implements \Iterator, \ArrayAccess
      *
      * @return void
      */
-    public function addFilter($tag, $function_to_add, $priority, $accepted_args)
+    public function addFilter($tag, $function_to_add, $priority, $accepted_args): void
     {
         $idx = self::wpFilterBuildUniqueId($tag, $function_to_add, $priority);
 
         $priority_existed = isset($this->callbacks[$priority]);
 
-        $this->callbacks[$priority][$idx] = array(
+        $this->callbacks[$priority][$idx] = [
             'function'      => $function_to_add,
             'accepted_args' => $accepted_args,
-        );
+        ];
 
         // If we're adding a new priority to the list, put them back in sorted order.
         if (!$priority_existed && count($this->callbacks) > 1) {
@@ -95,7 +93,7 @@ final class Hook implements \Iterator, \ArrayAccess
      *
      * @return void
      */
-    private function resortActiveIterations($new_priority = false, $priority_existed = false)
+    private function resortActiveIterations($new_priority = false, bool $priority_existed = false): void
     {
         $new_priorities = array_keys($this->callbacks);
 
@@ -199,7 +197,7 @@ final class Hook implements \Iterator, \ArrayAccess
             return $this->hasFilters();
         }
 
-        $function_key = self::wpFilterBuildUniqueId($tag, $function_to_check, false);
+        $function_key = self::wpFilterBuildUniqueId($tag, $function_to_check, 0);
         if (!$function_key) {
             return false;
         }
@@ -218,7 +216,7 @@ final class Hook implements \Iterator, \ArrayAccess
      *
      * @return bool True if callbacks have been registered for the current hook, otherwise false.
      */
-    public function hasFilters()
+    public function hasFilters(): bool
     {
         foreach ($this->callbacks as $callbacks) {
             if ($callbacks) {
@@ -235,14 +233,14 @@ final class Hook implements \Iterator, \ArrayAccess
      *
      * @return void
      */
-    public function removeAllFilters($priority = false)
+    public function removeAllFilters($priority = false): void
     {
         if (!$this->callbacks) {
             return;
         }
 
         if (false === $priority) {
-            $this->callbacks = array();
+            $this->callbacks = [];
         } elseif (isset($this->callbacks[$priority])) {
             unset($this->callbacks[$priority]);
         }
@@ -255,9 +253,9 @@ final class Hook implements \Iterator, \ArrayAccess
     /**
      * Calls the callback functions that have been added to a filter hook.
      *
-     * @param mixed $value The value to filter.
-     * @param array $args  Additional parameters to pass to the callback functions.
-     *                     This array is expected to include $value at index 0.
+     * @param mixed   $value The value to filter.
+     * @param mixed[] $args  Additional parameters to pass to the callback functions.
+     *                       This array is expected to include $value at index 0.
      *
      * @return mixed The filtered value after all hooked functions are applied to it.
      */
@@ -303,11 +301,11 @@ final class Hook implements \Iterator, \ArrayAccess
     /**
      * Calls the callback functions that have been added to an action hook.
      *
-     * @param array $args Parameters to pass to the callback functions.
+     * @param mixed[] $args Parameters to pass to the callback functions.
      *
      * @return void
      */
-    public function doAction($args)
+    public function doAction($args): void
     {
         $this->doingAction = true;
         $this->applyFilters('', $args);
@@ -321,11 +319,11 @@ final class Hook implements \Iterator, \ArrayAccess
     /**
      * Processes the functions hooked into the 'all' hook.
      *
-     * @param array $args Arguments to pass to the hook callbacks. Passed by reference.
+     * @param mixed[] $args Arguments to pass to the hook callbacks. Passed by reference.
      *
      * @return void
      */
-    public function doAllHook(&$args)
+    public function doAllHook(&$args): void
     {
         $nestingLevel                    = $this->nestingLevel++;
         $this->iterations[$nestingLevel] = array_keys($this->callbacks);
@@ -379,14 +377,16 @@ final class Hook implements \Iterator, \ArrayAccess
      *         ),
      *     );
      *
-     * @param array $filters Filters to normalize. See documentation above for details.
+     * @param mixed[] $filters Filters to normalize. See documentation above for details.
      *
-     * @return WP_Hook[] Array of normalized filters.
+     * @return self[] Array of normalized filters.
      */
     public static function buildPreinitializedHooks($filters)
     {
-        /** @var WP_Hook[] $normalized */
-        $normalized = array();
+        /**
+ * @var self[] $normalized
+*/
+        $normalized = [];
 
         foreach ($filters as $tag => $callback_groups) {
             if (is_object($callback_groups) && $callback_groups instanceof self) {
@@ -434,7 +434,7 @@ final class Hook implements \Iterator, \ArrayAccess
     #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
-        return isset($this->callbacks[$offset]) ? $this->callbacks[$offset] : null;
+        return $this->callbacks[$offset] ?? null;
     }
 
     /**
@@ -448,7 +448,7 @@ final class Hook implements \Iterator, \ArrayAccess
      * @return void
      */
     #[\ReturnTypeWillChange]
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         if (is_null($offset)) {
             $this->callbacks[] = $value;
@@ -467,7 +467,7 @@ final class Hook implements \Iterator, \ArrayAccess
      * @return void
      */
     #[\ReturnTypeWillChange]
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         unset($this->callbacks[$offset]);
     }
@@ -477,7 +477,7 @@ final class Hook implements \Iterator, \ArrayAccess
      *
      * @link https://www.php.net/manual/en/iterator.current.php
      *
-     * @return array Of callbacks at current priority.
+     * @return mixed[] Of callbacks at current priority.
      */
     #[\ReturnTypeWillChange]
     public function current()
@@ -490,7 +490,7 @@ final class Hook implements \Iterator, \ArrayAccess
      *
      * @link https://www.php.net/manual/en/iterator.next.php
      *
-     * @return array Of callbacks at next priority.
+     * @return mixed[] Of callbacks at next priority.
      */
     #[\ReturnTypeWillChange]
     public function next()
@@ -532,7 +532,7 @@ final class Hook implements \Iterator, \ArrayAccess
      * @return void
      */
     #[\ReturnTypeWillChange]
-    public function rewind()
+    public function rewind(): void
     {
         reset($this->callbacks);
     }
@@ -569,7 +569,7 @@ final class Hook implements \Iterator, \ArrayAccess
      *
      * @return string Unique function ID for usage as array key.
      */
-    protected static function wpFilterBuildUniqueId($tag, $function, $priority)
+    protected static function wpFilterBuildUniqueId($tag, $function, $priority): string
     {
         if (is_string($function)) {
             return $function;
@@ -577,7 +577,10 @@ final class Hook implements \Iterator, \ArrayAccess
 
         if (is_object($function)) {
             // Closures are currently implemented as objects.
-            $function = array($function, '');
+            $function = [
+                $function,
+                '',
+            ];
         } else {
             $function = (array) $function;
         }
@@ -588,6 +591,8 @@ final class Hook implements \Iterator, \ArrayAccess
         } elseif (is_string($function[0])) {
             // Static calling.
             return $function[0] . '::' . $function[1];
+        } else {
+            return '';
         }
     }
 }

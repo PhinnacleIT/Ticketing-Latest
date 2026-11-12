@@ -210,6 +210,29 @@ class WC_Payments_Features {
 	}
 
 	/**
+	 * Checks whether WooPay signs this store's requests instead of attesting them.
+	 *
+	 * The platform decides, per account, which of the two credentials WooPay presents: the
+	 * blog token signature every release used to require, or the attestation envelope that
+	 * replaced it. It answers yes for a store below the release that can verify an envelope,
+	 * and for a newer store put back on the signed path by hand while the replacement is
+	 * proved out.
+	 *
+	 * Read from the cached account payload rather than from the request, so what the store
+	 * accepts cannot be chosen by whoever is calling it.
+	 *
+	 * @return bool
+	 */
+	public static function is_woopay_force_signed_requests_enabled() {
+		// Read directly from cache, ignore cache expiration check: an expired answer is the
+		// one this store has been working from, and guessing instead would change which
+		// credential it accepts at the moment the platform is hardest to reach.
+		$account = WC_Payments::get_database_cache()->get( WCPay\Database_Cache::ACCOUNT_KEY, true );
+
+		return is_array( $account ) && ( $account['platform_woopay_force_signed_requests'] ?? false );
+	}
+
+	/**
 	 * Checks whether documents section is enabled.
 	 *
 	 * @return bool
@@ -360,9 +383,25 @@ class WC_Payments_Features {
 	/**
 	 * Checks whether the Reports area is enabled. Disabled by default.
 	 *
+	 * Resolution order:
+	 *  1. The server's per-account flag, when it has an opinion. `false` is an explicit kill switch and
+	 *     deliberately beats the local option, so we can disable the area for a single account while we
+	 *     investigate an issue.
+	 *  2. Otherwise the local feature flag, which merchants can set themselves via the documented snippet
+	 *     or WP CLI.
+	 *
+	 * Note this is the only flag here where the server can act as an enabler rather than only as a veto.
+	 *
 	 * @return bool
 	 */
 	public static function is_reports_area_enabled(): bool {
+		$account     = WC_Payments::get_database_cache()->get( WCPay\Database_Cache::ACCOUNT_KEY, true );
+		$server_flag = is_array( $account ) ? ( $account['reports_area_enabled'] ?? null ) : null;
+
+		if ( null !== $server_flag ) {
+			return (bool) $server_flag;
+		}
+
 		return '1' === get_option( self::REPORTS_AREA_FLAG_NAME, '0' );
 	}
 

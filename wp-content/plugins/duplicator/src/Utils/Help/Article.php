@@ -5,19 +5,19 @@ namespace Duplicator\Utils\Help;
 class Article
 {
     /** @var int The ID */
-    private $id = -1;
+    private $id;
 
     /** @var string The title */
-    private $title = '';
+    private $title;
 
     /** @var string Link to the article */
-    private $link = '';
+    private $link;
 
     /** @var int[] Categoriy IDs */
-    private $categories = [];
+    private $categories;
 
     /** @var string[] The tags */
-    private $tags = [];
+    private $tags;
 
     /**
      * Constructor
@@ -28,7 +28,7 @@ class Article
      * @param int[]    $categories Categories
      * @param string[] $tags       Tags
      */
-    public function __construct($id, $title, $link, $categories, $tags = array())
+    public function __construct($id, $title, $link, $categories, $tags = [])
     {
         $this->id         = $id;
         $this->title      = $title;

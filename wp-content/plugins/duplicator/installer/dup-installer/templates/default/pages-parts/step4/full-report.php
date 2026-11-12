@@ -1,12 +1,10 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
 
 $paramsManager   = PrmMng::getInstance();
@@ -16,14 +14,15 @@ $finalReportData = $paramsManager->getValue(PrmMng::PARAM_FINAL_REPORT_DATA);
 <div id="s4-install-report" >    
     <div id="s4-notice-reports" class="report-sections-list">
         <?php
-        $nManager->displayFinalRepostSectionHtml('general', 'General Notices Report');
-        $nManager->displayFinalRepostSectionHtml('files', 'Files Notices Report');
-        $nManager->displayFinalRepostSectionHtml('database', 'Database Notices Report');
-        $nManager->displayFinalRepostSectionHtml('search_replace', 'Search and Replace Notices Report');
-        $nManager->displayFinalRepostSectionHtml('plugins', 'Plugins Actions Report');
+        $nManager->displayFinalRepostSectionHtml('general', 'General notices report');
+        $nManager->displayFinalRepostSectionHtml('files', 'Files notices report');
+        $nManager->displayFinalRepostSectionHtml('database', 'Database notices report');
+        $nManager->displayFinalRepostSectionHtml('search_replace', 'Search and replace notices report');
+        $nManager->displayFinalRepostSectionHtml('plugins', 'Plugins actions report');
         ?>
     </div>
 
+    <?php if (!InstState::dbDoNothing()) : ?>
     <table class="s4-report-results" >
         <tr>
             <th colspan="4">Database Report</th>
@@ -53,4 +52,5 @@ $finalReportData = $paramsManager->getValue(PrmMng::PARAM_FINAL_REPORT_DATA);
             <td><span><?php echo $finalReportData['replace']['updt_cells']; ?></span></td>
         </tr>
     </table>
+    <?php endif; ?>
 </div>

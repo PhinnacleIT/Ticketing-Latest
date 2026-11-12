@@ -1,6 +1,26 @@
 Changelog
 =========
 
+= 4.14.1 =
+
+_Release date: Sep 10, 2026_
+
+- Security: Escape dynamic content tags based on where they appear in the HTML. Values in URL attributes can no longer use a protocol like `javascript:`, and values in event handler attributes are removed.
+- Integrations: Prosopo Procaptcha now follows the alignment of the surrounding form. Thanks [Chris Taylor](https://github.com/forgetso)!
+- Integrations: Fix Prosopo Procaptcha breaking other scripts on the page when the theme wraps the form in paragraph tags. Thanks [Chris Taylor](https://github.com/forgetso)!
+- Misc: Fix the Mailchimp Site Tracking Pixel not finding an already connected site for the same domain, for example when it was registered with a `www.` prefix or on a multisite subdirectory install.
+- Misc: Log the full Mailchimp error message when the Site Tracking Pixel fails to connect.
+
+
+= 4.14.0 =
+
+_Release date: Aug 4, 2026_
+
+- Integrations: Show the sign-up checkbox on the admin "Add New User" form. Thanks [arnelap](https://github.com/arnelap)!
+- Misc: Add a code snippet for sending the WordPress username to Mailchimp with User Sync.
+- Misc: Update WordPress Coding Standards to 3.4 and fix a few incorrect type annotations.
+
+
 = 4.13.1 =
 
 _Release date: Jun 22, 2026_

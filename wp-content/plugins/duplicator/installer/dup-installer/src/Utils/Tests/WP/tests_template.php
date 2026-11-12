@@ -12,7 +12,7 @@ use Exception;
 // phpcs:disable
 die(); // [REMOVE LINE BY SCRIPT] don't remove/change this *********************************
 
-if (!defined('DUPXABSPATH')) {
+if (!defined('DUPXABSPATH')) { // @phpstan-ignore-line
     define('DUPXABSPATH', __DIR__);
 }
 
@@ -27,14 +27,36 @@ Autoloader::register();
 require_once(DUPX_INIT . '/classes/utilities/class.u.notices.manager.php');
 $GLOBALS["NOTICES_FILE_PATH"] = '$_$_NOTICES_FILE_PATH_$_$';
 
-$GLOBALS["TEST_SCRIPT"] = SnapUtil::filterInputDefaultSanitizeString(INPUT_GET, 'dpro_test_script_name');
+$GLOBALS["TEST_SCRIPT"] = SnapUtil::sanitizeDefaultInput(INPUT_GET, 'dupli_test_script_name');
 ob_start();
 TestsErrorHandler::register();
-TestsErrorHandler::setShutdownCallabck(function ($errors) {
+TestsErrorHandler::setShutdownCallabck(function ($errors): void {
 
-    $nManager     = DUPX_NOTICE_MANAGER::getInstance();
-    $scriptName   = basename($GLOBALS["TEST_SCRIPT"]);
-    $scriptNameId = str_replace(array('.', '-', '#'), '_', $scriptName);
+    $nManager   = DUPX_NOTICE_MANAGER::getInstance();
+    $scriptName = basename($GLOBALS["TEST_SCRIPT"]);
+
+    if (!file_exists($GLOBALS["TEST_SCRIPT"])) {
+        $longMessage = "- The file " . $GLOBALS["TEST_SCRIPT"] . " doesn't exist.\n";
+        $data        = [
+            'shortMsg'    => "Some files required for the final tests were not found.",
+            'level'       => DUPX_NOTICE_ITEM::HARD_WARNING,
+            'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_PRE,
+            'longMsg'     => $longMessage,
+            'sections'    => 'general',
+        ];
+
+        $nManager->addBothNextAndFinalReportNotice($data, DUPX_NOTICE_MANAGER::ADD_UNIQUE_APPEND, 'test_file_not_found');
+
+        if ($nManager->saveNotices()) {
+            echo json_encode(true);
+        } else {
+            echo json_encode(false);
+        }
+
+        return;
+    }
+
+    $scriptNameId = str_replace(['.', '-', '#'], '_', $scriptName);
     $firstFatal   = true;
     $firstNotice  = true;
 
@@ -83,22 +105,18 @@ TestsErrorHandler::setShutdownCallabck(function ($errors) {
                 break;
         }
 
-        if ($addBeforeNotice) {
-            $longMessage = 'SCRIPT FILE TEST: ' . $GLOBALS["TEST_SCRIPT"] . "\n\n";
-        } else {
-            $longMessage = '';
-        }
+        $longMessage  = $addBeforeNotice ? 'SCRIPT FILE TEST: ' . $GLOBALS["TEST_SCRIPT"] . "\n\n" : '';
         $longMessage .= TestsErrorHandler::errorToString($error) . "\n-----\n\n";
-        $longMessage .= "For solutions to these issues see the online FAQs \nhttps://duplicator.com/knowledge-base/ \n\n";
+        $longMessage .= "For solutions to these issues see the online FAQs \nhttps://duplicator.com/knowledge-base \n\n";
 
         MessageCustomizer::applyAllNoticeCustomizations($shortMessage, $longMessage, $noticeId);
-        $data = array(
+        $data = [
             'shortMsg'    => $shortMessage,
             'level'       => $errorLevel,
             'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_PRE,
             'longMsg'     => $longMessage,
-            'sections'    => 'general'
-        );
+            'sections'    => 'general',
+        ];
         if ($errorLevel == DUPX_NOTICE_ITEM::FATAL) {
             $nManager->addBothNextAndFinalReportNotice($data, DUPX_NOTICE_MANAGER::ADD_UNIQUE_APPEND, $noticeId);
         } else {

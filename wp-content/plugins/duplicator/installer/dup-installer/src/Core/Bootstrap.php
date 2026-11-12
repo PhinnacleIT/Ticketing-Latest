@@ -1,25 +1,29 @@
 <?php
 
-/**
- * Interface that collects the functions of initial duplicator Bootstrap
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
- */
-
 namespace Duplicator\Installer\Core;
 
+use Duplicator\Installer\Core\Addons\InstAddonsManager;
+use Duplicator\Installer\Core\Deploy\Database\DbGunzip;
+use Duplicator\Installer\Core\Deploy\ServerConfigs;
+use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Installer\Utils\InstallerOrigFileMng;
+use Duplicator\Installer\Utils\InstDescMng;
 use Duplicator\Installer\Utils\Log\Log;
 use Duplicator\Installer\Utils\Log\LogHandler;
-use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapURL;
 use Duplicator\Libs\Snap\SnapUtil;
-use Duplicator\Installer\Core\Addons\InstAddonsManager;
+use DUPX_DBInstall;
+use DUPX_Extraction;
+use DUPX_S3_Funcs;
+use DUPX_U;
 
+/**
+ * Class that collects the functions of initial duplicator Bootstrap
+ */
 class Bootstrap
 {
-    const ARCHIVE_PREFIX      = 'dup-archive__';
-    const ARCHIVE_EXTENSION   = '.txt';
+    const DESCRIPTORS_PREFIX  = 'dup_descriptors_';
     const MINIMUM_PHP_VERSION = '7.4';
 
     /**
@@ -42,7 +46,7 @@ class Bootstrap
      *
      * @return void
      */
-    public static function init($folderParentLevel = 1)
+    public static function init($folderParentLevel = 1): void
     {
         self::setHTTPHeaders();
         self::$dupInitFolderParentLevel = max(1, (int) $folderParentLevel);
@@ -52,11 +56,11 @@ class Bootstrap
 
         // INIT ERROR LOG FILE (called before evrithing)
         if (function_exists('register_shutdown_function')) {
-            register_shutdown_function(array(__CLASS__, 'bootShutdown'));
+            register_shutdown_function([self::class, 'bootShutdown']);
         }
         if (self::initPhpErrorLog(false) === false) {
             // Enable this only for debugging. Generate a log too alarmist.
-            SnapUtil::errorLog('DUPLICATOR CAN\'T CHANGE THE PATH OF PHP ERROR LOG FILE', E_USER_NOTICE);
+            SnapUtil::errorLog('DUPLICATOR CAN\'T CHANGE THE PATH OF PHP ERROR LOG FILE');
         }
 
         /*
@@ -77,11 +81,11 @@ class Bootstrap
         \DUPX_Constants::init();
 
         // init addond before evrithing
-        InstAddonsManager::getInstance()->inizializeAddons();
+        InstAddonsManager::getInstance()->initializeAddons();
         // init templates
         self::templatesInit();
         // SECURITY CHECK
-        \DUPX_Security::getInstance()->check();
+        Security::getInstance()->check();
         // init error handler after constant
         LogHandler::initErrorHandler();
 
@@ -94,7 +98,7 @@ class Bootstrap
         // check custom hosts
         \DUPX_Custom_Host_Manager::getInstance()->init();
 
-        $pathInfo = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '';
+        $pathInfo = $_SERVER['PATH_INFO'] ?? '';
         Log::info("\n\n"
             . "==============================================\n"
             . "= BOOT INIT OK [" . $pathInfo . "]\n"
@@ -115,9 +119,9 @@ class Bootstrap
      *
      * @return void
      */
-    public static function phpIni()
+    public static function phpIni(): void
     {
-        /* Absolute path to the Installer directory. - necessary for php protection */
+        // Absolute path to the Installer directory. - necessary for php protection
         if (!defined('KB_IN_BYTES')) {
             define('KB_IN_BYTES', 1024);
         }
@@ -132,6 +136,10 @@ class Bootstrap
         }
 
         date_default_timezone_set('UTC'); // Some machines don’t have this set so just do it here.
+        if (strlen(@ini_get('date.timezone')) === 0) {
+            // Some machines don’t date.timezone set
+            @ini_set('date.timezone', 'UTC');
+        }
         @ignore_user_abort(true);
 
         @set_time_limit(3600);
@@ -141,13 +149,13 @@ class Bootstrap
             @ini_set("default_charset", 'utf-8');
         }
         if (SnapUtil::isIniValChangeable('memory_limit')) {
-            @ini_set('memory_limit', DUPLICATOR_PHP_MAX_MEMORY);
+            @ini_set('memory_limit', (string) DUPLICATOR_PHP_MAX_MEMORY);
         }
         if (SnapUtil::isIniValChangeable('max_input_time')) {
             @ini_set('max_input_time', '-1');
         }
         if (SnapUtil::isIniValChangeable('pcre.backtrack_limit')) {
-            @ini_set('pcre.backtrack_limit', PHP_INT_MAX);
+            @ini_set('pcre.backtrack_limit', (string) PHP_INT_MAX);
         }
 
         //PHP INI SETUP: all time in seconds
@@ -173,35 +181,24 @@ class Bootstrap
      *
      * @return void
      */
-    public static function includes()
+    public static function includes(): void
     {
-        require_once(DUPX_INIT . '/vendor/requests/library/Requests.php');
-        \Requests::register_autoloader();
-
         require_once(DUPX_INIT . '/classes/config/class.conf.wp.php');
         require_once(DUPX_INIT . '/classes/utilities/class.u.php');
+        require_once(DUPX_INIT . '/src/Core/wp-stubs.php');
         require_once(DUPX_INIT . '/classes/utilities/class.u.notices.manager.php');
         require_once(DUPX_INIT . '/classes/utilities/template/class.u.template.manager.php');
-        require_once(DUPX_INIT . '/classes/utilities/class.u.orig.files.manager.php');
         require_once(DUPX_INIT . '/classes/validation/class.validation.manager.php');
-        require_once(DUPX_INIT . '/classes/config/class.security.php');
-        require_once(DUPX_INIT . '/classes/plugins/class.plugins.manager.php');
-        require_once(DUPX_INIT . '/classes/class.password.php');
         require_once(DUPX_INIT . '/classes/database/class.db.php');
         require_once(DUPX_INIT . '/classes/database/class.db.functions.php');
         require_once(DUPX_INIT . '/classes/database/class.db.tables.php');
         require_once(DUPX_INIT . '/classes/database/class.db.table.item.php');
         require_once(DUPX_INIT . '/classes/class.http.php');
-        require_once(DUPX_INIT . '/classes/class.crypt.php');
-        require_once(DUPX_INIT . '/classes/class.csrf.php');
         require_once(DUPX_INIT . '/classes/class.package.php');
         require_once(DUPX_INIT . '/classes/class.server.php');
-        require_once(DUPX_INIT . '/classes/rest/class.rest.php');
-        require_once(DUPX_INIT . '/classes/rest/class.rest.auth.php');
         require_once(DUPX_INIT . '/classes/config/class.archive.config.php');
         require_once(DUPX_INIT . '/classes/config/class.constants.php');
         require_once(DUPX_INIT . '/classes/config/class.conf.utils.php');
-        require_once(DUPX_INIT . '/classes/class.installer.state.php');
         require_once(DUPX_INIT . '/ctrls/classes/class.ctrl.ajax.php');
         require_once(DUPX_INIT . '/ctrls/classes/class.ctrl.params.php');
         require_once(DUPX_INIT . '/ctrls/ctrl.base.php');
@@ -211,7 +208,6 @@ class Bootstrap
         require_once(DUPX_INIT . '/classes/view-helpers/class.u.html.php');
         require_once(DUPX_INIT . '/classes/view-helpers/class.view.php');
         require_once(DUPX_INIT . '/classes/host/class.custom.host.manager.php');
-        require_once(DUPX_INIT . '/classes/config/class.conf.srv.php');
         require_once(DUPX_INIT . '/classes/class.engine.php');
     }
 
@@ -225,13 +221,13 @@ class Bootstrap
      *
      * @return boolean
      */
-    public static function initPhpErrorLog($reset = false)
+    public static function initPhpErrorLog($reset = false): bool
     {
         if (!function_exists('ini_set')) {
             return false;
         }
 
-        $logFile = DUPX_INIT . '/php_error__' . self::getPackageHash() . '.log';
+        $logFile = DUPX_INIT . '/' . InstDescMng::getInstance()->getName(InstDescMng::TYPE_INST_PHP_ERROR_LOG);
 
         if (file_exists($logFile)) {
             if (!is_writable($logFile)) {
@@ -245,7 +241,7 @@ class Bootstrap
             error_reporting(E_ALL);
         }
 
-        @ini_set("log_errors", 1);
+        @ini_set("log_errors", '1');
         if (@ini_set("error_log", $logFile) === false) {
             return false;
         }
@@ -268,14 +264,14 @@ class Bootstrap
     {
         static $packageHash = null;
         if (is_null($packageHash)) {
-            $searchStr    = DUPX_INIT . '/' . self::ARCHIVE_PREFIX . '*' . self::ARCHIVE_EXTENSION;
-            $config_files = glob($searchStr);
+            $searchStr    = DUPX_INIT . '/' . self::DESCRIPTORS_PREFIX . '*';
+            $config_files = glob($searchStr, GLOB_ONLYDIR);
             if (empty($config_files)) {
                 $packageHash = false;
             } else {
-                $config_file_absolute_path = array_pop($config_files);
-                $config_file_name          = basename($config_file_absolute_path, self::ARCHIVE_EXTENSION);
-                $packageHash               = substr($config_file_name, strlen(self::ARCHIVE_PREFIX));
+                $descriptor_folder_path = array_pop($config_files);
+                $descriptor_folder_name = basename($descriptor_folder_path);
+                $packageHash            = substr($descriptor_folder_name, strlen(self::DESCRIPTORS_PREFIX));
             }
         }
         return $packageHash;
@@ -293,10 +289,10 @@ class Bootstrap
 
         // set log level from params
         Log::setLogLevel();
-        Log::setPostProcessCallback(array('DUPX_CTRL', 'renderPostProcessings'));
-        Log::setAfterFatalErrorCallback(function () {
-            if (\DUPX_InstallerState::getInstance()->getMode() === \DUPX_InstallerState::MODE_OVR_INSTALL) {
-                \DUPX_U::maintenanceMode(false);
+        Log::setPostProcessCallback(['DUPX_CTRL', 'renderPostProcessings']);
+        Log::setAfterFatalErrorCallback(function (): void {
+            if (InstState::getInstance()->getMode() === InstState::MODE_OVR_INSTALL) {
+                DUPX_U::maintenanceMode(false);
             }
         });
 
@@ -333,7 +329,7 @@ class Bootstrap
             self::initPhpErrorLog(true);
             Log::clearLog();
             Log::info("********************************************************************************");
-            Log::info('* DUPLICATOR LITE: Install-Log');
+            Log::info('* DUPLICATOR-PRO: Install-Log');
             Log::info('* STEP-0 START @ ' . @date('h:i:s'));
             Log::info('* NOTICE: Do NOT post to public sites or forums!!');
             Log::info("********************************************************************************");
@@ -360,46 +356,69 @@ class Bootstrap
             // LOAD PARAMS AFTER LOG RESET
             $paramManager = PrmMng::getInstance();
             $paramManager->load(true);
-            \DUPX_Orig_File_Manager::getInstance()->init(false);
             try {
-                \DUPX_Orig_File_Manager::getInstance()->restoreAll(array(
-                    \DUPX_ServerConfig::CONFIG_ORIG_FILE_USERINI_ID,
-                    \DUPX_ServerConfig::CONFIG_ORIG_FILE_PHPINI_ID,
-                    \DUPX_ServerConfig::CONFIG_ORIG_FILE_WEBCONFIG_ID,
-                    \DUPX_ServerConfig::CONFIG_ORIG_FILE_HTACCESS_ID,
-                    \DUPX_ServerConfig::CONFIG_ORIG_FILE_WPCONFIG_ID
-                ));
+                InstallerOrigFileMng::getInstance()->restoreAll([
+                    ServerConfigs::CONFIG_ORIG_FILE_USERINI_ID,
+                    ServerConfigs::CONFIG_ORIG_FILE_PHPINI_ID,
+                    ServerConfigs::CONFIG_ORIG_FILE_WEBCONFIG_ID,
+                    ServerConfigs::CONFIG_ORIG_FILE_HTACCESS_ID,
+                    ServerConfigs::CONFIG_ORIG_FILE_WPCONFIG_ID,
+                ]);
             } catch (\Exception $e) {
-                Log::logException($e, 'CANT RESTORE CONFIG FILES FORM PREVISION INSTALLATION');
-                \DUPX_NOTICE_MANAGER::getInstance()->addNextStepNotice(array(
+                Log::logException($e, Log::LV_DEFAULT, 'CANT RESTORE CONFIG FILES FORM PREVISION INSTALLATION');
+                \DUPX_NOTICE_MANAGER::getInstance()->addNextStepNotice([
                     'shortMsg'    => 'The installer cannot restore files from a previous installation. ',
                     'longMsg'     => 'This problem does not affect the current installation so you can continue.<br>'
-                    . 'This can happen if the root folder does not have write permissions.',
+                        . 'This can happen if the root folder does not have write permissions.',
                     'longMsgMode' => \DUPX_NOTICE_ITEM::MSG_MODE_HTML,
-                    'level'       => \DUPX_NOTICE_ITEM::NOTICE
-                ));
+                    'level'       => \DUPX_NOTICE_ITEM::NOTICE,
+                ]);
             }
 
             self::initParamsBase();
 
-            \DUP_Extraction::resetData();
-            \DUPX_DBInstall::resetData();
-            \DUPX_S3_Funcs::resetData();
+            DbGunzip::resetData();
+            DUPX_Extraction::resetData();
+            DUPX_DBInstall::resetData();
+            DUPX_S3_Funcs::resetData();
+            self::renameHtaccess();
 
             // update state only if isn't set by param overwrite
-            \DUPX_InstallerState::getInstance()->checkState(true, false);
+            InstState::getInstance()->checkState(true, false);
             // On init remove maintenance mode
             \DUPX_U::maintenanceMode(false);
         } else {
             // INIT PARAMS
             $paramManager = PrmMng::getInstance();
             $paramManager->load();
-            \DUPX_Orig_File_Manager::getInstance()->init(false);
-
             self::initParamsBase();
         }
 
         $paramManager->save();
+    }
+
+    /**
+     * Rename .htaccess file in dup-installer folder if it exists, so that it does not interfere with installer
+     *
+     * @return void
+     */
+    protected static function renameHtaccess()
+    {
+        $htaccessPath = DUPXABSPATH . "/.htaccess";
+        if (!file_exists($htaccessPath)) {
+            return;
+        }
+
+        $htaccessPathRenamed = DUPXABSPATH . "/renamed_" . date_format(new \DateTime(), 'mdYHis') . ".htaccess";
+        if (!SnapIO::rename($htaccessPath, $htaccessPathRenamed)) {
+            $error     = error_get_last();
+            $errorMsg  = "WARNING: Could not delete/rename file \"$htaccessPath\". That file could interfere with the installation.\n";
+            $errorMsg .= ($error === null ? '' : "Reason: " . $error['message'] . "\n");
+            $errorMsg .= "If you encounter problems like buttons not working, please remove it yourself manually and restart the installer.";
+            Log::info($errorMsg);
+        } else {
+            Log::info(".htaccess file was found in dup-installer folder and it was renamed to avoid interference with installer.");
+        }
     }
 
     /**
@@ -451,7 +470,7 @@ class Bootstrap
      *
      * @return bool
      */
-    public static function isInit()
+    public static function isInit(): bool
     {
         // don't use param manager because isn't initialized
         $isFirstStep   = isset($_REQUEST[PrmMng::PARAM_CTRL_ACTION]) && $_REQUEST[PrmMng::PARAM_CTRL_ACTION] === "ctrl-step1";
@@ -464,7 +483,7 @@ class Bootstrap
      *
      * @return void
      */
-    public static function disableBootShutdownFunction()
+    public static function disableBootShutdownFunction(): void
     {
         self::$shutdownFunctionEnaled = false;
     }
@@ -479,7 +498,7 @@ class Bootstrap
      *
      * @return void
      */
-    public static function bootShutdown()
+    public static function bootShutdown(): void
     {
         if (!self::$shutdownFunctionEnaled) {
             return;
@@ -489,12 +508,12 @@ class Bootstrap
             ?>
             <h1>BOOT SHUTDOWN FATAL ERROR</H1>
             <pre><?php
-            echo 'Error: ' . htmlspecialchars($error['message']) . "\n\n\n" .
-            'Type: ' . htmlspecialchars($error['type']) . "\n" .
-            'File: ' . htmlspecialchars($error['file']) . "\n" .
-            'Line: ' . htmlspecialchars($error['line']) . "\n";
+                    echo 'Error: ' . htmlspecialchars($error['message']) . "\n\n\n" .
+                        'Type: ' . $error['type'] . "\n" .
+                        'File: ' . htmlspecialchars($error['file']) . "\n" .
+                        'Line: ' . $error['line'] . "\n";
             ?></pre>
-                <?php
+            <?php
         }
     }
 
@@ -503,20 +522,16 @@ class Bootstrap
      *
      * @return boolean
      */
-    public static function phpVersionCheck()
+    public static function phpVersionCheck(): bool
     {
         if (version_compare(PHP_VERSION, self::MINIMUM_PHP_VERSION, '>=')) {
             return true;
         }
-        $match = null;
-        if (preg_match("#^\d+(\.\d+)*#", PHP_VERSION, $match)) {
-            $phpVersion = $match[0];
-        } else {
-            $phpVersion = PHP_VERSION;
-        }
+        $match      = null;
+        $phpVersion = preg_match("#^\d+(\.\d+)*#", PHP_VERSION, $match) ? $match[0] : PHP_VERSION;
         // no html
         echo 'This server is running PHP: ' . $phpVersion . '. A minimum of PHP ' . self::MINIMUM_PHP_VERSION . ' is required to run the installer.'
-        . ' Contact your hosting provider or server administrator and let them know you would like to upgrade your PHP version.';
+            . ' Contact your hosting provider or server administrator and let them know you would like to upgrade your PHP version.';
         die();
     }
 
@@ -532,6 +547,7 @@ class Bootstrap
         $tpl->addTemplate(\DUPX_Template::TEMPLATE_BASE, DUPX_INIT . '/templates/base', \DUPX_Template::TEMPLATE_ADVANCED);
         $tpl->addTemplate(\DUPX_Template::TEMPLATE_IMPORT_ADVANCED, DUPX_INIT . '/templates/import-advanced', \DUPX_Template::TEMPLATE_ADVANCED);
         $tpl->addTemplate(\DUPX_Template::TEMPLATE_IMPORT_BASE, DUPX_INIT . '/templates/import-base', \DUPX_Template::TEMPLATE_IMPORT_ADVANCED);
+        $tpl->addTemplate(\DUPX_Template::TEMPLATE_RECOVERY, DUPX_INIT . '/templates/recovery', \DUPX_Template::TEMPLATE_BASE);
 
         $tpl->setTemplate(\DUPX_Template::TEMPLATE_ADVANCED);
     }

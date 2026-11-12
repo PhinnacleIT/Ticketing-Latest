@@ -1,18 +1,15 @@
 <?php
 
-/**
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
- */
-
 namespace Duplicator\Ajax;
 
-use DUP_Handler;
-use DUP_Log;
-use DUP_Util;
+use Duplicator\Utils\Logging\DupLog;
+use Duplicator\Core\CapMng;
 use Duplicator\Libs\Snap\SnapIO;
+use Duplicator\Libs\Snap\SnapNet;
 use Duplicator\Libs\Snap\SnapUtil;
+use Duplicator\Utils\Logging\ErrorHandler;
 use Exception;
+use Throwable;
 
 class AjaxWrapper
 {
@@ -30,52 +27,63 @@ class AjaxWrapper
      *      ]
      * ]
      *
-     * @param callable $callback              callback function
-     * @param string   $nonceaction           if action is null don't verify nonce
-     * @param string   $nonce                 nonce string
-     * @param string   $capability            if capability is null don't verify capability
-     * @param bool     $errorUnespectedOutput if true thorw exception with unespected optput
+     * @param callable        $callback              callback function
+     * @param string          $nonceaction           nonce action
+     * @param string          $nonce                 nonce string
+     * @param string|string[] $capabilities          if capability is an empty array don't verify capability
+     * @param bool            $errorUnespectedOutput if true thorw exception with unespected optput
      *
-     * @return void
+     * @return never
      */
     public static function json(
         $callback,
-        $nonceaction = null,
-        $nonce = null,
-        $capability = null,
+        $nonceaction,
+        $nonce,
+        $capabilities = [],
         $errorUnespectedOutput = true
-    ) {
+    ): void {
         $error = false;
 
-        $result = array(
+        $result = [
             'funcData' => null,
             'output'   => '',
-            'message'  => ''
-        );
+            'message'  => '',
+        ];
 
         ob_start();
         try {
-            DUP_Handler::init_error_handler();
+            ErrorHandler::init();
             $nonce = SnapUtil::sanitizeNSCharsNewline($nonce);
-            if (is_null($nonceaction) || !wp_verify_nonce($nonce, $nonceaction)) {
-                DUP_Log::trace('Security issue');
+            if (!wp_verify_nonce($nonce, $nonceaction)) {
+                DupLog::trace('Security issue');
                 throw new Exception('Security issue');
             }
-            if (!is_null($capability)) {
-                DUP_Util::hasCapability($capability, DUP_Util::SECURE_ISSUE_THROW);
+
+            if ($capabilities !== []) {
+                if (is_scalar($capabilities)) {
+                    $capabilities = [$capabilities];
+                }
+
+                foreach ($capabilities as $cap) {
+                    CapMng::can($cap);
+                }
             }
 
             // execute ajax function
             $result['funcData'] = call_user_func($callback);
-        } catch (Exception $e) {
+            DupLog::trace("AJAX FUCION [" . SnapUtil::getCallbackName($callback) . "] RESULT: " . substr(wp_json_encode($result), 0, 100));
+        } catch (Throwable $e) {
+            DupLog::traceException($e, 'Error executing ajax callback');
             $error             = true;
             $result['message'] = $e->getMessage();
+        } finally {
+            $result['output'] = ob_get_clean();
+            if ($errorUnespectedOutput && !empty($result['output'])) {
+                DupLog::trace('Unexpected output: ' . substr($result['output'], 0, 250));
+                $error = true;
+            }
         }
 
-        $result['output'] = ob_get_clean();
-        if ($errorUnespectedOutput && !empty($result['output'])) {
-            $error = true;
-        }
 
         if ($error) {
             wp_send_json_error($result);
@@ -88,26 +96,38 @@ class AjaxWrapper
      * This function wrap a callback and start a chunked file download.
      * The callback must return a file path.
      *
-     * @param callable():false|array{path:string,name:string} $callback              Callback function that return a file path for download or false on error
-     * @param string                                          $nonceaction           if action is null don't verify nonce
-     * @param string                                          $nonce                 nonce string
-     * @param bool                                            $errorUnespectedOutput if true thorw exception with unespected optput
+     * @param callable        $callback              Callback function that return a file path for download or false on error
+     * @param string          $nonceaction           nonce action
+     * @param string          $nonce                 nonce string
+     * @param string|string[] $capabilities          if capability is an empty string don't verify capability
+     * @param bool            $errorUnespectedOutput if true thorw exception with unespected optput
      *
      * @return never
      */
     public static function fileDownload(
         $callback,
-        $nonceaction = null,
-        $nonce = null,
+        $nonceaction,
+        $nonce,
+        $capabilities = [],
         $errorUnespectedOutput = true
-    ) {
+    ): void {
         ob_start();
         try {
-            DUP_Handler::init_error_handler();
+            ErrorHandler::init();
             $nonce = SnapUtil::sanitizeNSCharsNewline($nonce);
-            if (!is_null($nonceaction) && !wp_verify_nonce($nonce, $nonceaction)) {
-                DUP_Log::trace('Security issue');
+            if (!wp_verify_nonce($nonce, $nonceaction)) {
+                DupLog::trace('Security issue');
                 throw new Exception('Security issue');
+            }
+
+            if ($capabilities !== []) {
+                if (is_scalar($capabilities)) {
+                    $capabilities = [$capabilities];
+                }
+
+                foreach ($capabilities as $cap) {
+                    CapMng::can($cap);
+                }
             }
 
             // execute ajax function
@@ -121,13 +141,19 @@ class AjaxWrapper
 
             $result['output'] = ob_get_clean();
             if ($errorUnespectedOutput && !empty($result['output'])) {
-                throw new Exception('Unespected output');
+                throw new Exception('Unexpected output');
             }
 
-            SnapIO::serveFileForDownload($fileInfo['path'], $fileInfo['name'], DUPLICATOR_BUFFER_READ_WRITE_SIZE);
-        } catch (Exception $e) {
-            DUP_Log::trace($e->getMessage());
-            SnapIO::serverError500();
+            SnapNet::serveFileForDownload(
+                $fileInfo['path'],
+                $fileInfo['name'],
+                DUPLICATOR_BUFFER_DOWNLOAD_SIZE
+            );
+        } catch (Throwable $e) {
+            DupLog::traceException($e, 'Error executing ajax callback file download');
+            SnapNet::serverError500();
+        } finally {
+            ob_end_clean();
         }
     }
 }

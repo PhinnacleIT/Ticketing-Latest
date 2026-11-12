@@ -2,12 +2,6 @@
 
 /**
  * Database params descriptions
- *
- * @category  Duplicator
- * @package   Installer
- * @author    Snapcreek <admin@snapcreek.com>
- * @copyright 2011-2021  Snapcreek LLC
- * @license   https://www.gnu.org/licenses/gpl-3.0.html GPLv3
  */
 
 namespace Duplicator\Installer\Core\Params\Descriptors;
@@ -22,7 +16,7 @@ use Duplicator\Installer\Core\Params\Items\ParamFormPass;
 use Duplicator\Installer\Utils\Log\Log;
 use Duplicator\Libs\Snap\SnapJson;
 use Duplicator\Libs\Snap\SnapUtil;
-use DUPX_InstallerState;
+use Duplicator\Installer\Core\InstState;
 
 /**
  * class where all parameters are initialized. Used by the param manager
@@ -42,260 +36,322 @@ final class ParamDescDatabase implements DescriptorInterface
      *
      * @return void
      */
-    public static function init(&$params)
+    public static function init(&$params): void
     {
         $archiveConfig = \DUPX_ArchiveConfig::getInstance();
 
         $params[PrmMng::PARAM_DB_DISPLAY_OVERWIRE_WARNING] = new ParamItem(
             PrmMng::PARAM_DB_DISPLAY_OVERWIRE_WARNING,
             ParamItem::TYPE_BOOL,
-            array(
-                'default' => true
-            )
+            ['default' => true]
+        );
+
+        $params[PrmMng::PARAM_DB_ONLY_PREFIXED_TABLES] = new ParamItem(
+            PrmMng::PARAM_DB_ONLY_PREFIXED_TABLES,
+            ParamItem::TYPE_BOOL,
+            ['default' => false]
         );
 
         $params[PrmMng::PARAM_DB_VIEW_MODE] = new ParamForm(
             PrmMng::PARAM_DB_VIEW_MODE,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_BGROUP,
-            array(
+            [
                 'default'      => 'basic',
-                'acceptValues' => array(
+                'acceptValues' => [
                     'basic',
-                    'cpnl'
-                )
-            ),
-            array(
+                    'cpnl',
+                ],
+            ],
+            [
                 'label'                 => 'Database view mode',
                 'renderLabel'           => false,
-                'options'               => array(
+                'options'               => [
                     new ParamOption('basic', 'Default'),
-                    new ParamOption('cpnl', 'cPanel')
-                ),
-                'wrapperClasses'        => array('revalidate-on-change', 'align-right'),
-                'inputContainerClasses' => array('small')
-            )
+                    new ParamOption('cpnl', 'CPanel'),
+                ],
+                'wrapperClasses'        => [
+                    'revalidate-on-change',
+                    'align-right',
+                    'requires-db-hide',
+                ],
+                'inputContainerClasses' => ['small'],
+            ]
         );
 
         $params[PrmMng::PARAM_DB_HOST] = new ParamForm(
             PrmMng::PARAM_DB_HOST,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(
+            [
                 'persistence'      => true,
                 'default'          => 'localhost',
-                'sanitizeCallback' => array('Duplicator\\Libs\\Snap\\SnapUtil', 'sanitizeNSCharsNewline'),
-                'validateCallback' => array(__CLASS__, 'validateNoEmptyIfBasic'),
-                'invalidMessage'   => self::INVALID_EMPTY
-            ),
-            array(
+                'sanitizeCallback' => [
+                    SnapUtil::class,
+                    'sanitizeNSCharsNewline',
+                ],
+                'validateCallback' => [
+                    self::class,
+                    'validateNoEmptyIfBasic',
+                ],
+                'invalidMessage'   => self::INVALID_EMPTY,
+            ],
+            [
                 'label'          => 'Host:',
-                'wrapperClasses' => array('revalidate-on-change'),
-                'attr'           => array(
+                'wrapperClasses' => [
+                    'revalidate-on-change',
+                    'requires-db-hide',
+                ],
+                'attr'           => [
                     'required'    => 'required',
-                    'placeholder' => 'localhost'
-                )
-            )
+                    'placeholder' => 'localhost',
+                ],
+            ]
         );
 
         $params[PrmMng::PARAM_DB_NAME] = new ParamForm(
             PrmMng::PARAM_DB_NAME,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(
+            [
                 'persistence'      => true,
                 'default'          => '',
-                'sanitizeCallback' => array('Duplicator\\Libs\\Snap\\SnapUtil', 'sanitizeNSCharsNewline'),
-                'validateCallback' => array(__CLASS__, 'validateNoEmptyIfBasic'),
-                'invalidMessage'   => self::INVALID_EMPTY
-            ),
-            array(
+                'sanitizeCallback' => [
+                    SnapUtil::class,
+                    'sanitizeNSCharsNewline',
+                ],
+                'validateCallback' => [
+                    self::class,
+                    'validateNoEmptyIfBasic',
+                ],
+                'invalidMessage'   => self::INVALID_EMPTY,
+            ],
+            [
                 'label'          => 'Database:',
-                'wrapperClasses' => array('revalidate-on-change'),
-                'attr'           => array(
+                'wrapperClasses' => [
+                    'revalidate-on-change',
+                    'requires-db-hide',
+                ],
+                'attr'           => [
                     'required'    => 'required',
-                    'placeholder' => 'new or existing database name'
-                ),
-                'subNote'        => dupxTplRender('parts/params/db-name-notes', array(), false)
-            )
+                    'placeholder' => 'new or existing database name',
+                ],
+                'subNote'        => dupxTplRender('parts/params/db-name-notes', [], false),
+            ]
         );
 
         $params[PrmMng::PARAM_DB_USER] = new ParamForm(
             PrmMng::PARAM_DB_USER,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(
+            [
                 'persistence'      => true,
                 'default'          => '',
-                'sanitizeCallback' => array('Duplicator\\Libs\\Snap\\SnapUtil', 'sanitizeNSCharsNewline'),
-                'validateCallback' => array(__CLASS__, 'validateNoEmptyIfBasic'),
-                'invalidMessage'   => self::INVALID_EMPTY
-            ),
-            array(
+                'sanitizeCallback' => [
+                    SnapUtil::class,
+                    'sanitizeNSCharsNewline',
+                ],
+                'validateCallback' => [
+                    self::class,
+                    'validateNoEmptyIfBasic',
+                ],
+                'invalidMessage'   => self::INVALID_EMPTY,
+            ],
+            [
                 'label'          => 'User:',
-                'wrapperClasses' => array('revalidate-on-change'),
-                'attr'           => array(
+                'wrapperClasses' => [
+                    'revalidate-on-change',
+                    'requires-db-hide',
+                ],
+                'attr'           => [
                     'placeholder'  => 'valid database username',
                     // Can be written field wise
                     // Ref. https://developer.mozilla.org/en-US/docs/Web/Security/Securing_your_site/Turning_off_form_autocompletion
-                    'autocomplete' => "off"
-                )
-            )
+                    'autocomplete' => "off",
+                ],
+            ]
         );
 
         $params[PrmMng::PARAM_DB_PASS] = new ParamFormPass(
             PrmMng::PARAM_DB_PASS,
             ParamFormPass::TYPE_STRING,
             ParamFormPass::FORM_TYPE_PWD_TOGGLE,
-            array(
+            [
                 'persistence'      => true,
                 'default'          => '',
-                'sanitizeCallback' => array('Duplicator\\Libs\\Snap\\SnapUtil', 'sanitizeNSCharsNewline')
-            ),
-            array(
+                'sanitizeCallback' => [
+                    SnapUtil::class,
+                    'sanitizeNSCharsNewline',
+                ],
+            ],
+            [
                 'label'          => 'Password:',
-                'wrapperClasses' => array('revalidate-on-change'),
-                'attr'           => array(
+                'wrapperClasses' => [
+                    'revalidate-on-change',
+                    'requires-db-hide',
+                ],
+                'attr'           => [
                     'placeholder'  => 'valid database user password',
                     // Can be written field wise
                     // Ref. https://devBasicBasiceloper.mozilla.org/en-US/docs/Web/Security/Securing_your_site/Turning_off_form_autocompletion
-                    'autocomplete' => "off"
-                )
-            )
+                    'autocomplete' => "off",
+                ],
+            ]
         );
 
         $params[PrmMng::PARAM_DB_FLAG] = new ParamItem(
             PrmMng::PARAM_DB_FLAG,
             ParamForm::TYPE_INT,
-            array(
+            [
                 'default'      => \DUPX_DB::DB_CONNECTION_FLAG_NOT_SET,
-                'acceptValues' => function (ParamItem $param) {
-                    $result = array(
+                'acceptValues' => function (ParamItem $param): array {
+                    $result = [
                         \DUPX_DB::MYSQLI_CLIENT_NO_FLAGS,
                         MYSQLI_CLIENT_SSL,
-                    );
+                    ];
                     if (defined("MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT")) {
                         // phpcs:ignore PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
                         $result[] = MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT;
                     }
                     return $result;
-                }
-            )
+                },
+            ]
         );
 
         $params[PrmMng::PARAM_DB_CHARSET] = new ParamForm(
             PrmMng::PARAM_DB_CHARSET,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_SELECT,
-            array(
+            [
                 'default'          => $archiveConfig->getWpConfigDefineValue('DB_CHARSET', ''),
-                'sanitizeCallback' => array('Duplicator\\Libs\\Snap\\SnapUtil', 'sanitizeNSCharsNewlineTrim'),
-                'validateRegex'    => ParamForm::VALIDATE_REGEX_AZ_NUMBER_SEP_EMPTY
-            ),
-            array(
-                'label'  => 'Charset:',
-                'status' => function (ParamForm $param) {
-                    if (DUPX_InstallerState::isRestoreBackup()) {
+                'sanitizeCallback' => [
+                    SnapUtil::class,
+                    'sanitizeNSCharsNewlineTrim',
+                ],
+                'validateRegex'    => ParamForm::VALIDATE_REGEX_AZ_NUMBER_SEP_EMPTY,
+            ],
+            [
+                'label'   => 'Charset:',
+                'status'  => function (ParamForm $param): string {
+                    if (InstState::isRestoreBackup()) {
                         return ParamForm::STATUS_INFO_ONLY;
                     } else {
                         return ParamForm::STATUS_ENABLED;
                     }
                 },
-                'options' => array(__CLASS__, 'getCharsetSelectOptions')
-            )
+                'options' => [
+                    self::class,
+                    'getCharsetSelectOptions',
+                ],
+            ]
         );
 
         $params[PrmMng::PARAM_DB_COLLATE] = new ParamForm(
             PrmMng::PARAM_DB_COLLATE,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_SELECT,
-            array(
+            [
                 'default'          => $archiveConfig->getWpConfigDefineValue('DB_COLLATE', ''),
-                'sanitizeCallback' => array('Duplicator\\Libs\\Snap\\SnapUtil', 'sanitizeNSCharsNewlineTrim'),
-                'validateRegex'    => ParamForm::VALIDATE_REGEX_AZ_NUMBER_SEP_EMPTY
-            ),
-            array(
-                'label'  => 'Collation:',
-                'status' => function () {
-                    if (DUPX_InstallerState::isRestoreBackup()) {
+                'sanitizeCallback' => [
+                    SnapUtil::class,
+                    'sanitizeNSCharsNewlineTrim',
+                ],
+                'validateRegex'    => ParamForm::VALIDATE_REGEX_AZ_NUMBER_SEP_EMPTY,
+            ],
+            [
+                'label'   => 'Collation:',
+                'status'  => function (): string {
+                    if (InstState::isRestoreBackup()) {
                         return ParamForm::STATUS_INFO_ONLY;
                     } else {
                         return ParamForm::STATUS_ENABLED;
                     }
                 },
-                'options' => array(__CLASS__, 'getCollationSelectOptions')
-            )
+                'options' => [
+                    self::class,
+                    'getCollationSelectOptions',
+                ],
+            ]
         );
+
+        $tablePrefixWarning = "Changing this setting alters the database table prefix by renaming all tables and references to them.\n"
+            . "Change it only if you're sure you know what you're doing!";
 
         $params[PrmMng::PARAM_DB_TABLE_PREFIX] = new ParamForm(
             PrmMng::PARAM_DB_TABLE_PREFIX,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(
+            [
                 'default'          => \DUPX_ArchiveConfig::getInstance()->wp_tableprefix,
-                'sanitizeCallback' => array('Duplicator\\Libs\\Snap\\SnapUtil', 'sanitizeNSCharsNewlineTrim'),
-                'validateRegex'    => ParamForm::VALIDATE_REGEX_AZ_NUMBER_SEP
-            ),
-            array(
-                'status' => function () {
-                    return ParamForm::STATUS_DISABLED;
+                'sanitizeCallback' => [
+                    SnapUtil::class,
+                    'sanitizeNSCharsNewlineTrim',
+                ],
+                'validateRegex'    => ParamForm::VALIDATE_REGEX_AZ_NUMBER_SEP,
+            ],
+            [
+                'status'         => function (): string {
+                    if (
+                        InstState::isRestoreBackup() ||
+                        InstState::isAddSiteOnMultisite()
+                    ) {
+                        return ParamForm::STATUS_DISABLED;
+                    } else {
+                        return ParamForm::STATUS_READONLY;
+                    }
                 },
                 'label'          => 'Table Prefix:',
-                'proFlagTitle'   => 'Upgrade Features',
-                'proFlag'        => '<p>Enhance the install experiance by changing the table prefix to a new name during installation.</p>'
-            )
+                'wrapperClasses' => ['revalidate-on-change'],
+                'postfix'        => [
+                    'type'      => 'button',
+                    'label'     => 'edit',
+                    'btnAction' => 'DUPX.editActivate(this, ' . SnapJson::jsonEncode($tablePrefixWarning) . ');',
+                ],
+            ]
         );
 
         $params[PrmMng::PARAM_DB_VIEW_CREATION] = new ParamForm(
             PrmMng::PARAM_DB_VIEW_CREATION,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            array(
-                'default' => true
-            ),
-            array(
+            ['default' => true],
+            [
                 'label'         => 'Objects:',
-                'checkboxLabel' => 'Enable View Creation'
-            )
+                'checkboxLabel' => 'Enable View Creation',
+            ]
         );
 
         $params[PrmMng::PARAM_DB_PROC_CREATION] = new ParamForm(
             PrmMng::PARAM_DB_PROC_CREATION,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            array(
-                'default' => true
-            ),
-            array(
+            ['default' => true],
+            [
                 'label'         => ' ',
-                'checkboxLabel' => 'Enable Stored Procedure Creation'
-            )
+                'checkboxLabel' => 'Enable Stored Procedure Creation',
+            ]
         );
 
         $params[PrmMng::PARAM_DB_FUNC_CREATION] = new ParamForm(
             PrmMng::PARAM_DB_FUNC_CREATION,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            array(
-                'default' => true
-            ),
-            array(
+            ['default' => true],
+            [
                 'label'         => ' ',
-                'checkboxLabel' => 'Enable Function Creation'
-            )
+                'checkboxLabel' => 'Enable Function Creation',
+            ]
         );
 
         $params[PrmMng::PARAM_DB_REMOVE_DEFINER] = new ParamForm(
             PrmMng::PARAM_DB_REMOVE_DEFINER,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            array(
-                'default' => false
-            ),
-            array(
+            ['default' => false],
+            [
                 'label'         => ' ',
-                'checkboxLabel' => 'Remove security DEFINER declarations'
-            )
+                'checkboxLabel' => 'Remove security DEFINER declarations',
+            ]
         );
 
         $numTables                              = count((array) \DUPX_ArchiveConfig::getInstance()->dbInfo->tablesList);
@@ -303,33 +359,33 @@ final class ParamDescDatabase implements DescriptorInterface
             PrmMng::PARAM_DB_SPLIT_CREATES,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            array(
-                'default' => ($numTables > self::SPLIT_CREATE_MAX_VALUE_TO_DEFAULT ? false : true)
-            ),
-            array(
+            [
+                'default' => ($numTables <= self::SPLIT_CREATE_MAX_VALUE_TO_DEFAULT),
+            ],
+            [
                 'label'         => 'Create:',
-                'checkboxLabel' => 'Run all CREATE SQL statements at once'
-            )
+                'checkboxLabel' => 'Run all CREATE SQL statements at once',
+            ]
         );
 
         $newObj = new ParamForm(
             PrmMng::PARAM_DB_MYSQL_MODE_OPTS,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
-            array(
+            [
                 'default'          => '',
                 'validateRegex'    => '/^[A-Za-z0-9_\-,]*$/', // db options with , and can be empty
-                'sanitizeCallback' => function ($value) {
+                'sanitizeCallback' => function ($value): string {
                     $value = SnapUtil::sanitizeNSCharsNewlineTrim($value);
                     return str_replace(' ', '', $value);
                 },
-            ),
-            array(
+            ],
+            [
                 'label'          => ' ', // for aligment at PARAM_DB_MYSQL_MODE
                 'wrapperClasses' => 'no-display',
                 'subNote'        => 'Separate additional ' . \DUPX_View_Funcs::helpLink('step2', 'sql modes', false) . ' with commas &amp; no spaces.<br>'
-                . 'Example: <i>NO_ENGINE_SUBSTITUTION,NO_ZERO_IN_DATE,...</i>.</small>'
-            )
+                . 'Example: <i>NO_ENGINE_SUBSTITUTION,NO_ZERO_IN_DATE,...</i>.</small>',
+            ]
         );
         $params[PrmMng::PARAM_DB_MYSQL_MODE_OPTS] = $newObj;
         $modeOptsWrapper                          = $newObj->getFormWrapperId();
@@ -338,52 +394,54 @@ final class ParamDescDatabase implements DescriptorInterface
             PrmMng::PARAM_DB_MYSQL_MODE,
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_RADIO,
-            array(
-            'default'      => 'DEFAULT',
-            'acceptValues' => array(
-                'DEFAULT',
-                'DISABLE',
-                'CUSTOM'
-            )
-            ),
-            array(
-            'label'   => 'Mode:',
-            'options' => array(
-                new ParamOption('DEFAULT', 'Default', ParamOption::OPT_ENABLED, array(
-                    'onchange' => "if ($(this).is(':checked')) { "
+            [
+                'default'      => 'DEFAULT',
+                'acceptValues' => [
+                    'DEFAULT',
+                    'DISABLE',
+                    'CUSTOM',
+                ],
+            ],
+            [
+                'label'   => 'Mode:',
+                'options' => [
+                    new ParamOption('DEFAULT', 'Default', ParamOption::OPT_ENABLED, [
+                        'onchange' => "if ($(this).is(':checked')) { "
                     . "jQuery('#" . $modeOptsWrapper . "').addClass('no-display');"
-                    . "}"
-                    )),
-                new ParamOption('DISABLE', 'Disable', ParamOption::OPT_ENABLED, array(
-                    'onchange' => "if ($(this).is(':checked')) { "
+                    . "}",
+                    ]),
+                    new ParamOption('DISABLE', 'Disable', ParamOption::OPT_ENABLED, [
+                        'onchange' => "if ($(this).is(':checked')) { "
                     . "jQuery('#" . $modeOptsWrapper . "').addClass('no-display');"
-                    . "}"
-                    )),
-                new ParamOption('CUSTOM', 'Custom', ParamOption::OPT_ENABLED, array(
-                    'onchange' => "if ($(this).is(':checked')) { "
+                    . "}",
+                    ]),
+                    new ParamOption('CUSTOM', 'Custom', ParamOption::OPT_ENABLED, [
+                        'onchange' => "if ($(this).is(':checked')) { "
                     . "jQuery('#" . $modeOptsWrapper . "').removeClass('no-display');"
-                    . "}")),
-            ))
+                    . "}",
+                    ]),
+                ],
+            ]
         );
 
         $params[PrmMng::PARAM_DB_TABLES] = new ParamFormTables(
             PrmMng::PARAM_DB_TABLES,
             ParamFormTables::TYPE_ARRAY_TABLES,
             ParamFormTables::FORM_TYPE_TABLES_SELECT,
-            array(// ITEM ATTRIBUTES
-                'default' => array()
-            ),
-            array(// FORM ATTRIBUTES
+            [// ITEM ATTRIBUTES
+                'default' => [],
+            ],
+            [// FORM ATTRIBUTES
                 'label'       => 'Tables',
                 'renderLabel' => false,
-                'status' => function (ParamForm $paramObj) {
-                    if (DUPX_InstallerState::isRestoreBackup()) {
+                'status'      => function (ParamForm $paramObj): string {
+                    if (InstState::isRestoreBackup()) {
                         return ParamForm::STATUS_INFO_ONLY;
                     } else {
                         return ParamForm::STATUS_ENABLED;
                     }
-                }
-            )
+                },
+            ]
         );
     }
 
@@ -409,23 +467,23 @@ final class ParamDescDatabase implements DescriptorInterface
      *
      * @return ParamOption[]
      */
-    public static function getCharsetSelectOptions()
+    public static function getCharsetSelectOptions(): array
     {
         if (PrmMng::getInstance()->getValue(PrmMng::PARAM_VALIDATION_LEVEL) < \DUPX_Validation_manager::MIN_LEVEL_VALID) {
-            return array();
+            return [];
         }
 
         $data       = \DUPX_DB_Functions::getInstance()->getCharsetAndCollationData();
         $charsetDef = \DUPX_DB_Functions::getInstance()->getDefaultCharset();
 
-        $options = array();
+        $options = [];
 
         foreach ($data as $charset => $charsetInfo) {
             $label     = $charset . ($charset == $charsetDef ? self::DEFAULT_CHARSET_POSTFIX : '');
-            $options[] = new ParamOption($charset, $label, ParamOption::OPT_ENABLED, array(
+            $options[] = new ParamOption($charset, $label, ParamOption::OPT_ENABLED, [
                 'data-collations'        => json_encode($charsetInfo['collations']),
-                'data-collation-default' => $charsetInfo['defCollation']
-            ));
+                'data-collation-default' => $charsetInfo['defCollation'],
+            ]);
         }
 
         return $options;
@@ -436,11 +494,9 @@ final class ParamDescDatabase implements DescriptorInterface
      *
      * @return ParamOption[]
      */
-    public static function getCollationSelectOptions()
+    public static function getCollationSelectOptions(): array
     {
-        $options = array(
-            new ParamOption('', self::EMPTY_COLLATION_LABEL)
-        );
+        $options = [new ParamOption('', self::EMPTY_COLLATION_LABEL)];
 
         if (PrmMng::getInstance()->getValue(PrmMng::PARAM_VALIDATION_LEVEL) < \DUPX_Validation_manager::MIN_LEVEL_VALID) {
             return $options;
@@ -455,9 +511,7 @@ final class ParamDescDatabase implements DescriptorInterface
 
         $defaultCollation = \DUPX_DB_Functions::getInstance()->getDefaultCollateOfCharset($currentCharset);
         // if charset exists update default
-        $options = array(
-            new ParamOption('', self::EMPTY_COLLATION_LABEL . ' [' . $defaultCollation . ']')
-        );
+        $options = [new ParamOption('', self::EMPTY_COLLATION_LABEL . ' [' . $defaultCollation . ']')];
 
         foreach ($data[$currentCharset]['collations'] as $collation) {
             $label     = $collation . ($collation == $data[$currentCharset]['defCollation'] ? self::DEFAULT_COLLATE_POSTFIX : '');
@@ -472,8 +526,12 @@ final class ParamDescDatabase implements DescriptorInterface
      *
      * @return void
      */
-    public static function updateCharsetAndCollateByDatabaseSettings()
+    public static function updateCharsetAndCollateByDatabaseSettings(): void
     {
+        if (InstState::dbDoNothing()) {
+            return;
+        }
+
         $paramsManager = PrmMng::getInstance();
         $data          = \DUPX_DB_Functions::getInstance()->getCharsetAndCollationData();
         $charsetDef    = \DUPX_DB_Functions::getInstance()->getDefaultCharset();
@@ -499,7 +557,7 @@ final class ParamDescDatabase implements DescriptorInterface
      *
      * @return void
      */
-    public static function updateParamsAfterOverwrite($params)
+    public static function updateParamsAfterOverwrite($params): void
     {
         $params[PrmMng::PARAM_DB_TABLES]->setValue(\DUPX_DB_Tables::getInstance()->getDefaultParamValue());
     }

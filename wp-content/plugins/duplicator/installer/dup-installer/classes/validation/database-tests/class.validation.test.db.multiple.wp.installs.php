@@ -6,12 +6,11 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
 use Duplicator\Libs\Snap\SnapWP;
 
@@ -20,14 +19,14 @@ class DUPX_Validation_test_db_multiple_wp_installs extends DUPX_Validation_abstr
     /**
      * @var string[] unique wp prefixes in the DB
      */
-    protected $uniquePrefixes = array();
+    protected $uniquePrefixes = [];
 
     /**
      * Check mutiple db install in database
      *
      * @return int
      */
-    protected function runTest()
+    protected function runTest(): int
     {
         $dbAction = PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_ACTION);
         if (
@@ -38,7 +37,7 @@ class DUPX_Validation_test_db_multiple_wp_installs extends DUPX_Validation_abstr
             return self::LV_SKIP;
         }
 
-        if (DUPX_Validation_database_service::getInstance()->dbTablesCount() === 0) {
+        if (DUPX_Validation_database_service::getInstance()->dbTablesCount() === 0 || InstState::isAddSiteOnMultisite()) {
             return self::LV_PASS;
         }
 
@@ -57,9 +56,9 @@ class DUPX_Validation_test_db_multiple_wp_installs extends DUPX_Validation_abstr
      *
      * @return string
      */
-    public function getTitle()
+    public function getTitle(): string
     {
-        return 'Multiple WordPress Installs';
+        return 'Multiple WP Installs';
     }
 
     /**
@@ -69,10 +68,10 @@ class DUPX_Validation_test_db_multiple_wp_installs extends DUPX_Validation_abstr
      */
     protected function swarnContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-multiple-wp-installs', array(
-            'isOk'          => false,
-            'uniquePrefixes' => $this->uniquePrefixes
-        ), false);
+        return dupxTplRender('parts/validation/database-tests/db-multiple-wp-installs', [
+            'isOk'           => false,
+            'uniquePrefixes' => $this->uniquePrefixes,
+        ], false);
     }
 
     /**
@@ -82,9 +81,9 @@ class DUPX_Validation_test_db_multiple_wp_installs extends DUPX_Validation_abstr
      */
     protected function passContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-multiple-wp-installs', array(
-            'isOk'          => true,
-            'uniquePrefixes' => $this->uniquePrefixes
-        ), false);
+        return dupxTplRender('parts/validation/database-tests/db-multiple-wp-installs', [
+            'isOk'           => true,
+            'uniquePrefixes' => $this->uniquePrefixes,
+        ], false);
     }
 }

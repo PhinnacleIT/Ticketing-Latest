@@ -1,9 +1,6 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 ?>
@@ -18,7 +15,12 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
         >
             Basic
         </button>
-        <button type="button" id="s1-switch-template-btn-advanced" class="s1-switch-template-btn active" title="Enable advanced import mode">
+        <button 
+            type="button" 
+            id="s1-switch-template-btn-advanced"
+            class="s1-switch-template-btn active" 
+            title="Enable advanced import mode"
+        >
             Advanced
         </button>
     </span>

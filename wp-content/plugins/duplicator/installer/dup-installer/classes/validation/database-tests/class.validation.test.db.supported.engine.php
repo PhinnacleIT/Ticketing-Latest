@@ -6,19 +6,22 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 class DUPX_Validation_test_db_supported_engine extends DUPX_Validation_abstract_item
 {
-    protected $errorMessage   = '';
-    protected $invalidEngines = array();
-    protected $defaultEngine  = "";
+    /** @var string */
+    protected $errorMessage = '';
+    /** @var string[] */
+    protected $invalidEngines = [];
+    /** @var string */
+    protected $defaultEngine = "";
+    /** @var bool */
+    protected $engineListRead = false;
 
-    protected function runTest()
+    protected function runTest(): int
     {
         if (DUPX_Validation_database_service::getInstance()->skipDatabaseTests()) {
             return self::LV_SKIP;
@@ -27,6 +30,7 @@ class DUPX_Validation_test_db_supported_engine extends DUPX_Validation_abstract_
         try {
             $this->invalidEngines = DUPX_ArchiveConfig::getInstance()->invalidEngines();
             $this->defaultEngine  = DUPX_DB_Functions::getInstance()->getDefaultEngine();
+            $this->engineListRead = true;
 
             if (empty($this->invalidEngines)) {
                 return self::LV_PASS;
@@ -34,24 +38,26 @@ class DUPX_Validation_test_db_supported_engine extends DUPX_Validation_abstract_
                 return self::LV_HARD_WARNING;
             }
         } catch (Exception $e) {
-            $this->errorMessage = $e->getMessage();
-            return self::LV_FAIL;
+            $this->errorMessage   = $e->getMessage();
+            $this->engineListRead = false;
+            return self::LV_HARD_WARNING;
         }
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'Database Engine Support';
     }
 
     protected function failContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-supported-engine', array(
+        return dupxTplRender('parts/validation/database-tests/db-supported-engine', [
             'testResult'     => $this->testResult,
             'invalidEngines' => $this->invalidEngines,
             'defaultEngine'  => $this->defaultEngine,
-            'errorMessage'   => $this->errorMessage
-        ), false);
+            'errorMessage'   => $this->errorMessage,
+            'engineListRead' => $this->engineListRead,
+        ], false);
     }
 
     protected function hwarnContent()

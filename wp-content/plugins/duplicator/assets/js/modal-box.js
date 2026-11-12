@@ -8,27 +8,22 @@ class DuplicatorModalBox {
     #canClose;
     #closeButton;
     #openCallack;
+    #closeInContent;
+    #fullscreen;
+    #defaultOptions;
+    #closeColor = '#fff';
 
     constructor(options = {}) {
-        if (!options.url && !options.htmlContent) {
-            throw 'DuplicatorModalBox: url or htmlContent option is required';
-        }
+        this.#defaultOptions = {
+            url: null,
+            htmlContent: '',
+            openCallback: null,
+            closeColor: '#fff',
+            closeInContent: false,
+            fullscreen: false
+        };
 
-        if (options.url && options.htmlContent) {
-            throw 'DuplicatorModalBox: url and htmlContent options cannot be used together';
-        }
-
-        if (options.url) {
-            this.#url = options.url;
-        } else {
-            this.#htmlContent = options.htmlContent;
-        }
-
-        if (options.openCallback && typeof options.openCallback === 'function') {
-            this.#openCallack = options.openCallback;
-        } else {
-            this.#openCallack = null;
-        }
+        this.setOptions(options);
 
         this.#modal = null;
         this.#iframe = null;
@@ -36,10 +31,55 @@ class DuplicatorModalBox {
         this.#closeButton = null;
     }
 
+    setOptions(options = {}) {
+        if (options.url) {
+            this.#url = options.url;
+            this.#htmlContent = '';
+        } else if (!options.url && !options.htmlContent) {
+            this.#url = null;
+            this.#htmlContent = '';
+        } else {
+            this.#url = null;
+            this.#htmlContent = options.htmlContent;
+        }
+
+        if (options.openCallback && typeof options.openCallback === 'function') {
+            this.#openCallack = options.openCallback;
+        } else {
+            this.#openCallack = this.#defaultOptions.openCallback;
+        }
+
+        if (options.closeColor) {
+            this.#closeColor = options.closeColor;
+        }
+
+        if (options.closeInContent) {
+            this.#closeInContent = options.closeInContent;
+        } else {
+            this.#closeInContent = this.#defaultOptions.closeInContent;
+        }
+
+        if (options.fullscreen) {
+            this.#fullscreen = options.fullscreen;
+        } else {
+            this.#fullscreen = this.#defaultOptions.fullscreen;
+        }
+
+        if (this.#modal !== null) {
+            this.#updateContent();
+        }
+    }
+
     open() {
+        // If modal is already open, do nothing
+        if (this.#modal !== null) {
+            return;
+        }
+
         // Create modal element
         this.#modal = document.createElement('div');
         this.#modal.classList.add('dup-modal-wrapper');
+        this.#modal.classList.add('dup-styles');
 
         // Add modal styles
         this.#addModalStyles();
@@ -48,19 +88,21 @@ class DuplicatorModalBox {
         this.#closeButton = document.createElement('div');
         this.#closeButton.classList.add('dup-modal-close-button');
         this.#closeButton.innerHTML = '<i class="fa-regular fa-circle-xmark"></i>';
+        this.#closeButton.style.color = this.#closeColor;
 
         // Add event listener to close button
         this.#closeButton.addEventListener('click', () => {
             this.close();
         });
 
-        // Add close button to modal
-        this.#modal.appendChild(this.#closeButton);
+        // Update content
+        this.#updateContent();
 
-        if (this.#url) {
-            this.#insertContentAsIframe();
+        // Add close button to modal
+        if (this.#closeInContent) {
+            this.#modal.querySelector('.dup-modal-content').appendChild(this.#closeButton);
         } else {
-            this.#insertContentAsHtml();
+            this.#modal.appendChild(this.#closeButton);
         }
 
         // Set overflow property of body to hidden
@@ -80,7 +122,7 @@ class DuplicatorModalBox {
     }
 
     close() {
-        if (!this.#canClose) {
+        if (!this.#canClose || !this.#modal) {
             return;
         }
 
@@ -107,6 +149,9 @@ class DuplicatorModalBox {
     #insertContentAsHtml() {
         let content = document.createElement('div');
         content.classList.add('dup-modal-content');
+        if (this.#fullscreen) {
+            content.classList.add('fullscreen');
+        }
         content.innerHTML = this.#htmlContent;
 
         // Add content to modal
@@ -123,13 +168,13 @@ class DuplicatorModalBox {
         this.#iframe.classList.add('dup-modal-iframe');
 
         // Add open callback function
-        if(typeof this.#openCallack == 'function') {
+        if (typeof this.#openCallack == 'function') {
             let openCallack = this.#openCallack;
             let iframe = this.#iframe;
             let modalObj = this;
-            this.#iframe.onload = function() {
+            this.#iframe.onload = function () {
                 openCallack(iframe, modalObj);
-            }; 
+            };
         }
 
         this.#iframe.src = this.#url;
@@ -138,6 +183,30 @@ class DuplicatorModalBox {
 
         // Add iframe to modal
         this.#modal.appendChild(this.#iframe);
+    }
+
+    #updateContent() {
+        if (!this.#modal) {
+            return;
+        }
+
+        // Remove existing content
+        if (this.#iframe) {
+            this.#modal.removeChild(this.#iframe);
+            this.#iframe = null;
+        } else {
+            const existingContent = this.#modal.querySelector('.dup-modal-content');
+            if (existingContent) {
+                this.#modal.removeChild(existingContent);
+            }
+        }
+
+        // Update content
+        if (this.#url) {
+            this.#insertContentAsIframe();
+        } else {
+            this.#insertContentAsHtml();
+        }
     }
 
     #addModalStyles() {
@@ -149,24 +218,24 @@ class DuplicatorModalBox {
                 left: 0;
                 width: 100vw;
                 height: 100vh;
-                background-color: rgba(230, 230, 230, 0.9);
+                background-color: rgba(0, 0, 0, 0.7);
                 z-index: 1000005;
                 display: flex;
                 justify-content: center;
                 align-items: center;
             }
 
-            .dup-modal-iframe {
+            .dup-styles.dup-modal-wrapper .dup-modal-iframe {
                 width: 100%;
                 height: 100%;
             }
 
-            .dup-modal-close-button {
+            .dup-styles.dup-modal-wrapper .dup-modal-close-button {
                 position: absolute;
                 top: 0;
                 right: 0;
                 font-size: 23px;
-                color: #000;
+                color: #fff;
                 cursor: pointer;
                 line-height: 0;
                 text-align: center;
@@ -174,9 +243,32 @@ class DuplicatorModalBox {
                 padding: 20px;
             }
 
-            .dup-modal-close-button[disabled] {
+            .dup-styles.dup-modal-wrapper .dup-modal-close-button i {
+                font-size: 23px;
+                line-height: normal;
+            }
+
+            .dup-styles.dup-modal-wrapper .dup-modal-close-button[disabled] {
                 opacity: 0.5;
                 cursor: not-allowed;
+            }
+
+            .dup-styles.dup-modal-wrapper .dup-modal-content {
+                position: relative;
+                max-height: calc(100vh - 40px);
+                max-width: calc(100vw - 40px);
+                overflow: auto;
+            }
+
+            .dup-styles.dup-modal-wrapper .dup-modal-content.fullscreen {
+                width: 100vw!important;
+                height: 100vh!important;
+                max-width: none;
+                max-height: none;
+            }
+
+            .dup-styles.dup-modal-wrapper .dup-modal-content .dup-modal-close-button {
+                padding: 9px;
             }
         `;
         document.head.appendChild(style);

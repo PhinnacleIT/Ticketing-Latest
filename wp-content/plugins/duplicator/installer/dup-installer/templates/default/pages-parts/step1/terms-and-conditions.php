@@ -1,18 +1,17 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
+
+$installerName = DUPX_ArchiveConfig::getInstance()->getInstallerName();
 ?>
 <div id="dialog-terms" title="Terms and Notices" style="display:none">
     <div id="s1-warning-msg">
         <b>TERMS &amp; NOTICES</b> <br/><br/>
 
         <b>Disclaimer:</b>
-        The Duplicator software and installer should be used at your own risk. 
+        The <?php echo DUPX_U::esc_html($installerName); ?> software and installer should be used at your own risk.
         Users should always back up or have backups of your database and files before running this installer.
         If you're not sure about how to use this tool then please enlist the guidance of a technical professional. 
         <u>Always</u> test this installer in a sandbox environment
@@ -52,7 +51,7 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
         <br/><br/>
 
         <b>License Overview</b><br/>
-        Duplicator is licensed under the GPL v3 https://www.gnu.org/licenses/gpl-3.0.en.html 
+        <?php echo DUPX_U::esc_html($installerName); ?> is licensed under the GPL v3 https://www.gnu.org/licenses/gpl-3.0.en.html
         including the following disclaimers and limitation of liability.
         <br/><br/>
 

@@ -1,19 +1,6 @@
 <?php
 
-/**
- * param descriptor
- *
- * Standard: PSR-2
- *
- * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
- */
-
 namespace Duplicator\Installer\Core\Params\Items;
-
-use Duplicator\Installer\Core\Params\PrmMng;
-use Duplicator\Installer\Core\Params\Descriptors\ParamDescUsers;
 
 /**
  * this class manages a password type input with the hide / show passwrd button
@@ -22,6 +9,7 @@ class ParamFormUsersReset extends ParamFormPass
 {
     const FORM_TYPE_USERS_PWD_RESET = 'usrpwdreset';
 
+    /** @var int<-1, max> */
     protected $currentUserId = -1;
 
     /**
@@ -71,7 +59,7 @@ class ParamFormUsersReset extends ParamFormPass
      *
      * @return string
      */
-    protected function getAttrName()
+    protected function getAttrName(): string
     {
         return $this->name . '[' . $this->currentUserId . ']';
     }
@@ -83,7 +71,7 @@ class ParamFormUsersReset extends ParamFormPass
      */
     protected function getInputValue()
     {
-        return isset($this->value[$this->currentUserId]) ? $this->value[$this->currentUserId] : '';
+        return $this->value[$this->currentUserId] ?? '';
     }
 
     /**
@@ -91,9 +79,9 @@ class ParamFormUsersReset extends ParamFormPass
      *
      * @param string $formType form type
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    protected static function getDefaultAttrForFormType($formType)
+    protected static function getDefaultAttrForFormType($formType): array
     {
         $attrs = parent::getDefaultAttrForFormType($formType);
         if ($formType == self::FORM_TYPE_USERS_PWD_RESET) {

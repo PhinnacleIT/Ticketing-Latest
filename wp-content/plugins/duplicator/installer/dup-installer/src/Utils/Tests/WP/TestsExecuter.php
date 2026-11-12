@@ -6,40 +6,38 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 namespace Duplicator\Installer\Utils\Tests\WP;
 
+use Duplicator\Installer\Core\Security;
 use Duplicator\Installer\Utils\Log\Log;
 use Duplicator\Installer\Core\Params\PrmMng;
 use Duplicator\Installer\Utils\Tests\TestInterface;
 use DUPX_NOTICE_ITEM;
 use DUPX_NOTICE_MANAGER;
-use DUPX_Security;
 
 class TestsExecuter implements TestInterface
 {
-    const SCRIPT_NAME_HTTP_PARAM = 'dpro_test_script_name';
+    const SCRIPT_NAME_HTTP_PARAM = 'dupli_test_script_name';
 
     /**
      * @return bool true on success
      * @throws \Exception
      */
-    public static function preTestPrepare()
+    public static function preTestPrepare(): bool
     {
         $nManager       = DUPX_NOTICE_MANAGER::getInstance();
         $scriptFilePath = self::getScriptTestPath();
         Log::info('PREPARE FILE BEFORE TEST: ' . $scriptFilePath, Log::LV_DETAILED);
         if (file_put_contents($scriptFilePath, self::getExecFileContent()) === false) {
-            $nManager->addFinalReportNotice(array(
+            $nManager->addFinalReportNotice([
                 'shortMsg'    => 'Can\'t create final text script file',
                 'longMsg'     => 'Can\'t create file ' . $scriptFilePath,
                 'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_DEFAULT,
                 'level'       => DUPX_NOTICE_ITEM::HARD_WARNING,
-                'sections'    => array('general'),
-            ));
+                'sections'    => ['general'],
+            ]);
 
             return false;
         }
@@ -51,20 +49,20 @@ class TestsExecuter implements TestInterface
      * @return bool true on success
      * @throws \Exception
      */
-    public static function afterTestClean()
+    public static function afterTestClean(): bool
     {
         $nManager       = DUPX_NOTICE_MANAGER::getInstance();
         $scriptFilePath = self::getScriptTestPath();
         Log::info('DELETE FILE AFTER TEST: ' . $scriptFilePath, Log::LV_DETAILED);
         if (file_exists($scriptFilePath)) {
             if (unlink($scriptFilePath) == false) {
-                $nManager->addFinalReportNotice(array(
+                $nManager->addFinalReportNotice([
                     'shortMsg'    => 'Can\'t deleta final text script file',
                     'longMsg'     => 'Can\'t delete file ' . $scriptFilePath . '. Remove it manually',
                     'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_DEFAULT,
                     'level'       => DUPX_NOTICE_ITEM::HARD_WARNING,
-                    'sections'    => array('general'),
-                ));
+                    'sections'    => ['general'],
+                ]);
             }
         }
 
@@ -75,12 +73,10 @@ class TestsExecuter implements TestInterface
      * @return string url of WP front-end
      * @throws \Exception
      */
-    public static function getFrontendUrl()
+    public static function getFrontendUrl(): string
     {
         $indexPath = PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_NEW) . '/index.php';
-        $data      = array(
-            self::SCRIPT_NAME_HTTP_PARAM => $indexPath
-        );
+        $data      = [self::SCRIPT_NAME_HTTP_PARAM => $indexPath];
 
         return self::getScriptTestUrl() . '?' . http_build_query($data);
     }
@@ -89,12 +85,10 @@ class TestsExecuter implements TestInterface
      * @return string url of WP back-end
      * @throws \Exception
      */
-    public static function getBackendUrl()
+    public static function getBackendUrl(): string
     {
         $indexPath = PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_WP_CORE_NEW) . '/wp-login.php';
-        $data      = array(
-            self::SCRIPT_NAME_HTTP_PARAM => $indexPath
-        );
+        $data      = [self::SCRIPT_NAME_HTTP_PARAM => $indexPath];
 
         return self::getScriptTestUrl() . '?' . http_build_query($data);
     }
@@ -102,16 +96,16 @@ class TestsExecuter implements TestInterface
     /**
      * @return string test script name
      */
-    protected static function getScriptTestName()
+    protected static function getScriptTestName(): string
     {
-        return 'wp_test_script_' . DUPX_Security::getInstance()->getSecondaryPackageHash() . '.php';
+        return 'wp_test_script_' . Security::getInstance()->getSecondaryPackageHash() . '.php';
     }
 
     /**
      * @return string test script path
      * @throws \Exception
      */
-    public static function getScriptTestPath()
+    public static function getScriptTestPath(): string
     {
         // use wp-content path and not root path
         return PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_CONTENT_NEW) . '/' . self::getScriptTestName();
@@ -121,7 +115,7 @@ class TestsExecuter implements TestInterface
      * @return string test script url
      * @throws \Exception
      */
-    public static function getScriptTestUrl()
+    public static function getScriptTestUrl(): string
     {
         // use wp-content path and not root path
         return PrmMng::getInstance()->getValue(PrmMng::PARAM_URL_CONTENT_NEW) . '/' . self::getScriptTestName();
@@ -130,19 +124,19 @@ class TestsExecuter implements TestInterface
     /**
      * @return string contents to be added to the test script file
      */
-    public static function getExecFileContent()
+    public static function getExecFileContent(): string
     {
         $result = file_get_contents(__DIR__ . '/tests_template.php');
         $result = preg_replace('/^.*\[REMOVE LINE BY SCRIPT].*\n/m', '', $result);  // remove first line with die
         return str_replace(
-            array(
+            [
                 '$_$_NOTICES_FILE_PATH_$_$',
-                '$_$_DUPX_INIT_$_$'
-            ),
-            array(
+                '$_$_DUPX_INIT_$_$',
+            ],
+            [
                 $GLOBALS["NOTICES_FILE_PATH"],
-                DUPX_INIT
-            ),
+                DUPX_INIT,
+            ],
             $result
         );
     }

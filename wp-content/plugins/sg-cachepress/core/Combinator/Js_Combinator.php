@@ -507,6 +507,7 @@ class Js_Combinator extends Abstract_Combinator {
 		'wc-square',
 		'wp-dom-ready',
 		'siteground-optimizer-lazy-sizes-js',
+		'wp-private-apis',
 	);
 
 	/**
@@ -519,6 +520,11 @@ class Js_Combinator extends Abstract_Combinator {
 	public $excluded_ids = array(
 		'@wordpress/block-library/navigation-js-module',
 		'@wordpress/block-library/navigation/view-js-module',
+		'@wordpress/block-library/accordion/view-js-module',
+		'@wordpress/block-library/image/view-js-module',
+		'@wordpress/block-library/file/view-js-module',
+		'@wordpress/block-library/search/view-js-module',
+		'@wordpress/block-library/query/view-js-module',
 	);
 
 	/**
@@ -637,7 +643,7 @@ class Js_Combinator extends Abstract_Combinator {
 
 		// Get the excluded scripts list.
 		$excluded_handles = apply_filters(
-			'sgo_javascript_combine_exclude',
+			'sgo_javascript_combine_exclude', // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible public filter.
 			array_merge(
 				$this->combined_scripts_exclude_handles,
 				get_option( 'siteground_optimizer_combine_javascript_exclude', array() )
@@ -732,7 +738,7 @@ class Js_Combinator extends Abstract_Combinator {
 				preg_match( '/id="([^"]+)"/', $script[0], $match_id );
 				if ( ! empty( $match_id ) ) {
 					$script_id = $match_id[1];
-					$excluded_ids = apply_filters( 'sgo_javascript_combine_exclude_ids', $this->excluded_ids );
+					$excluded_ids = apply_filters( 'sgo_javascript_combine_exclude_ids', $this->excluded_ids ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible public filter.
 					if ( in_array( $script_id, $excluded_ids ) ) {
 						continue;
 					}
@@ -786,14 +792,14 @@ class Js_Combinator extends Abstract_Combinator {
 	 */
 	public function try_to_process_inline_script( $script ) {
 		// Check if all inline scripts are excluded from combination via filter.
-		if ( true === apply_filters( 'sgo_javascript_combine_exclude_all_inline', false ) ) {
+		if ( true === apply_filters( 'sgo_javascript_combine_exclude_all_inline', false ) ) { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible public filter.
 			return;
 		}
 
 		// Check if all inline module scripts are excluded from combination via filter.
 		if (
 			preg_match( '~script type=["\']module["\']~', $script ) &&
-			true === apply_filters( 'sgo_javascript_combine_exclude_all_inline_modules', false )
+			true === apply_filters( 'sgo_javascript_combine_exclude_all_inline_modules', false ) // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible public filter.
 		) {
 			return;
 		}
@@ -850,7 +856,7 @@ class Js_Combinator extends Abstract_Combinator {
 		}
 
 		// Get excluded inline content.
-		$excluded_inline_content = apply_filters( 'sgo_javascript_combine_excluded_inline_content', $this->excluded_inline_content );
+		$excluded_inline_content = apply_filters( 'sgo_javascript_combine_excluded_inline_content', $this->excluded_inline_content ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible public filter.
 
 		// Do not combine excluded content.
 		foreach ( $excluded_inline_content as $excluded_content ) {
@@ -860,7 +866,7 @@ class Js_Combinator extends Abstract_Combinator {
 		}
 
 		// Get excluded inline content.
-		$move_after_scripts = apply_filters( 'sgo_javascript_combine_exclude_move_after', $this->move_after_excludes );
+		$move_after_scripts = apply_filters( 'sgo_javascript_combine_exclude_move_after', $this->move_after_excludes ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible public filter.
 
 		foreach ( $move_after_scripts as $move_after_script ) {
 			if ( false !== @strpos( $data['content'], $move_after_script ) ) {
@@ -885,7 +891,7 @@ class Js_Combinator extends Abstract_Combinator {
 	public function is_excluded( $src, $external = false ) {
 		// Check if the script is external.
 		if ( true === $external ) {
-			$excluded_paths = apply_filters( 'sgo_javascript_combine_excluded_external_paths', $this->excluded_paths );
+			$excluded_paths = apply_filters( 'sgo_javascript_combine_excluded_external_paths', $this->excluded_paths ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible public filter.
 			foreach ( $excluded_paths as $path ) {
 				if ( false !== @strpos( $src, $path ) ) {
 					return true;
@@ -899,7 +905,7 @@ class Js_Combinator extends Abstract_Combinator {
 			}
 
 			// Also check and exclude internal paths.
-			$excluded_internal_paths = apply_filters( 'sgo_javascript_combine_excluded_internal_paths', $this->excluded_internal_paths );
+			$excluded_internal_paths = apply_filters( 'sgo_javascript_combine_excluded_internal_paths', $this->excluded_internal_paths ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible public filter.
 
 			foreach ( $excluded_internal_paths as $path ) {
 				if ( false !== @strpos( $src, $path ) ) {

@@ -1,11 +1,5 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
- */
-
 namespace Duplicator\Libs\WpConfig;
 
 use Exception;
@@ -35,9 +29,9 @@ class WPConfigTransformer
     /**
      * Array of parsed configs.
      *
-     * @var array
+     * @var array<string, mixed>
      */
-    protected $wp_configs = array();
+    protected $wp_configs = [];
 
     /**
      * Instantiates the class with a valid wp-config.php.
@@ -73,7 +67,7 @@ class WPConfigTransformer
      *
      * @return bool
      */
-    public function exists($type, $name)
+    public function exists($type, $name): bool
     {
         $wp_config_src = file_get_contents($this->wp_config_path);
 
@@ -83,7 +77,7 @@ class WPConfigTransformer
 
         // SnapCreek custom change
         // Normalize the newline to prevent an issue coming from OSX
-        $wp_config_src = str_replace(array("\r\n", "\r"), "\n", $wp_config_src);
+        $wp_config_src = str_replace(["\r\n", "\r"], "\n", $wp_config_src);
 
         $this->wp_config_src = $wp_config_src;
         $this->wp_configs    = $this->parseWpConfig($this->wp_config_src);
@@ -105,7 +99,7 @@ class WPConfigTransformer
      * @param string $name           Config name.
      * @param bool   $get_real_value if true return real value
      *
-     * @return array
+     * @return mixed
      */
     public function getValue($type, $name, $get_real_value = true)
     {
@@ -116,7 +110,7 @@ class WPConfigTransformer
 
         // SnapCreek custom change
         // Normalize the newline to prevent an issue coming from OSX
-        $wp_config_src = str_replace(array("\r\n", "\r"), "\n", $wp_config_src);
+        $wp_config_src = str_replace(["\r\n", "\r"], "\n", $wp_config_src);
 
         $this->wp_config_src = $wp_config_src;
         $this->wp_configs    = $this->parseWpConfig($this->wp_config_src);
@@ -132,8 +126,6 @@ class WPConfigTransformer
         } else {
             return $val;
         }
-
-        return $val;
     }
 
     /**
@@ -148,7 +140,7 @@ class WPConfigTransformer
         if ($val[0] === '\'') {
             // string with '
             $result = substr($val, 1, strlen($val) - 2);
-            return str_replace(array('\\\'', '\\\\'), array('\'', '\\'), $result);
+            return str_replace(['\\\'', '\\\\'], ['\'', '\\'], $result);
         } elseif ($val[0] === '"') {
             // string with "
             return json_decode(str_replace('\\$', '$', $val));
@@ -173,14 +165,14 @@ class WPConfigTransformer
      * @throws Exception If the config value provided is not a string.
      * @throws Exception If the config placement anchor could not be located.
      *
-     * @param string $type    Config type (constant or variable).
-     * @param string $name    Config name.
-     * @param string $value   Config value.
-     * @param array  $options (optional) Array of special behavior options.
+     * @param string               $type    Config type (constant or variable).
+     * @param string               $name    Config name.
+     * @param string               $value   Config value.
+     * @param array<string, mixed> $options (optional) Array of special behavior options.
      *
      * @return bool
      */
-    public function add($type, $name, $value, array $options = array())
+    public function add($type, $name, $value, array $options = [])
     {
         if (! is_string($value)) {
             throw new Exception('Config value must be a string.');
@@ -190,14 +182,19 @@ class WPConfigTransformer
             return false;
         }
 
-        $defaults = array(
+        $defaults = [
             'raw'       => false, // Display value in raw format without quotes.
             'anchor'    => "/* That's all, stop editing!", // Config placement anchor string.
             'separator' => PHP_EOL, // Separator between config definition and anchor string.
             'placement' => 'before', // Config placement direction (insert before or after).
-        );
+        ];
 
-        list( $raw, $anchor, $separator, $placement ) = array_values(array_merge($defaults, $options));
+        [
+            $raw,
+            $anchor,
+            $separator,
+            $placement,
+        ] = array_values(array_merge($defaults, $options));
 
         $raw       = (bool) $raw;
         $anchor    = (string) $anchor;
@@ -206,7 +203,7 @@ class WPConfigTransformer
 
         // Custom code by the SnapCreek Team
         if (false === strpos($this->wp_config_src, $anchor)) {
-            $other_anchor_points = array(
+            $other_anchor_points = [
                 '/** Absolute path to the WordPress directory',
                 // ABSPATH defined check with single quote
                 "if ( !defined('ABSPATH') )",
@@ -256,7 +253,7 @@ class WPConfigTransformer
                 'define("DB_NAME"',
                 'require',
                 'include_once',
-            );
+            ];
             foreach ($other_anchor_points as $anchor_point) {
                 $anchor_point = (string) $anchor_point;
                 if (false !== strpos($this->wp_config_src, $anchor_point)) {
@@ -282,33 +279,37 @@ class WPConfigTransformer
      *
      * @throws Exception If the config value provided is not a string.
      *
-     * @param string $type    Config type (constant or variable).
-     * @param string $name    Config name.
-     * @param string $value   Config value.
-     * @param array  $options (optional) Array of special behavior options.
+     * @param string              $type    Config type (constant or variable).
+     * @param string              $name    Config name.
+     * @param string              $value   Config value.
+     * @param array<string, bool> $options (optional) Array of special behavior options.
      *
      * @return bool
      */
-    public function update($type, $name, $value, array $options = array())
+    public function update($type, $name, $value, array $options = [])
     {
         if (! is_string($value)) {
             throw new Exception('Config value must be a string.');
         }
 
-        $defaults = array(
+        $defaults = [
             'add'       => true, // Add the config if missing.
             'raw'       => false, // Display value in raw format without quotes.
             'normalize' => false, // Normalize config output using WP Coding Standards.
-        );
+        ];
 
-        list( $add, $raw, $normalize ) = array_values(array_merge($defaults, $options));
+        [
+            $add,
+            $raw,
+            $normalize,
+        ] = array_values(array_merge($defaults, $options));
 
         $add       = (bool) $add;
         $raw       = (bool) $raw;
         $normalize = (bool) $normalize;
 
         if (! $this->exists($type, $name)) {
-            return ( $add ) ? $this->add($type, $name, $value, $options) : false;
+            return $add && $this->add($type, $name, $value, $options);
         }
 
         $old_src   = $this->wp_configs[ $type ][ $name ]['src'];
@@ -382,7 +383,7 @@ class WPConfigTransformer
      *
      * @return string
      */
-    protected function normalize($type, $name, $value)
+    protected function normalize($type, $name, $value): string
     {
         if ('constant' === $type) {
             $placeholder = "define( '%s', %s );";
@@ -400,18 +401,18 @@ class WPConfigTransformer
      *
      * @param string $src Config file source.
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    protected function parseWpConfig($src)
+    protected function parseWpConfig($src): array
     {
-        $configs             = array();
-        $configs['constant'] = array();
-        $configs['variable'] = array();
+        $configs             = [];
+        $configs['constant'] = [];
+        $configs['variable'] = [];
 
         if (function_exists('token_get_all')) {
             // Strip comments.
             foreach (token_get_all($src) as $token) {
-                if (in_array($token[0], array( T_COMMENT, T_DOC_COMMENT ), true)) {
+                if (in_array($token[0], [ T_COMMENT, T_DOC_COMMENT ], true)) {
                     $src = str_replace($token[1], '', $src);
                 }
             }
@@ -435,15 +436,15 @@ class WPConfigTransformer
             !empty($constants[5])
         ) {
             foreach ($constants[2] as $index => $name) {
-                $configs['constant'][ $name ] = array(
+                $configs['constant'][ $name ] = [
                     'src'   => $constants[0][ $index ],
                     'value' => $constants[4][ $index ],
-                    'parts' => array(
+                    'parts' => [
                         $constants[1][ $index ],
                         $constants[3][ $index ],
                         $constants[5][ $index ],
-                    ),
-                );
+                    ],
+                ];
             }
         }
 
@@ -451,14 +452,14 @@ class WPConfigTransformer
             // Remove duplicate(s), last definition wins.
             $variables[2] = array_reverse(array_unique(array_reverse($variables[2], true)), true);
             foreach ($variables[2] as $index => $name) {
-                $configs['variable'][ $name ] = array(
+                $configs['variable'][ $name ] = [
                     'src'   => $variables[0][ $index ],
                     'value' => $variables[4][ $index ],
-                    'parts' => array(
+                    'parts' => [
                         $variables[1][ $index ],
                         $variables[3][ $index ],
-                    ),
-                );
+                    ],
+                ];
             }
         }
 
@@ -475,7 +476,7 @@ class WPConfigTransformer
      *
      * @return bool
      */
-    protected function save($contents)
+    protected function save($contents): bool
     {
         if (!trim($contents)) {
             throw new Exception('Cannot save the wp-config.php file with empty contents.');

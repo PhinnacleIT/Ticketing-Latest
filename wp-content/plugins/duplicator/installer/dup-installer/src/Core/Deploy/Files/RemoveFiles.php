@@ -2,14 +2,16 @@
 
 namespace Duplicator\Installer\Core\Deploy\Files;
 
-use DUP_Extraction;
+use DUPX_Extraction;
+use Duplicator\Installer\Core\Deploy\Plugins\PluginsManager;
+use Duplicator\Installer\Core\Params\Models\SiteOwrMap;
 use Duplicator\Installer\Core\Params\PrmMng;
 use Duplicator\Installer\Utils\Log\Log;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapWP;
 use DUPX_ArchiveConfig;
 use DUPX_Custom_Host_Manager;
-use DUPX_InstallerState;
+use Duplicator\Installer\Core\InstState;
 use DUPX_NOTICE_ITEM;
 use DUPX_NOTICE_MANAGER;
 use Error;
@@ -17,8 +19,7 @@ use Exception;
 
 class RemoveFiles
 {
-    /** @var Filters */
-    protected $removeFilters = null;
+    protected \Duplicator\Installer\Core\Deploy\Files\Filters $removeFilters;
 
     /**
      * Class contructor
@@ -35,21 +36,27 @@ class RemoveFiles
      *
      * @return void
      */
-    public function remove()
+    public function remove(): void
     {
         $paramsManager = PrmMng::getInstance();
 
+        if (InstState::isAddSiteOnMultisite()) {
+            $this->removeAddonSiteToMultisite();
+            return;
+        }
+
         switch ($paramsManager->getValue(PrmMng::PARAM_ARCHIVE_ACTION)) {
-            case DUP_Extraction::ACTION_REMOVE_ALL_FILES:
+            case DUPX_Extraction::ACTION_REMOVE_ALL_FILES:
                 $this->removeAllFiles();
                 break;
-            case DUP_Extraction::ACTION_REMOVE_WP_FILES:
+            case DUPX_Extraction::ACTION_REMOVE_WP_FILES:
                 $this->removeWpFiles();
                 break;
-            case DUP_Extraction::ACTION_REMOVE_UPLOADS:
+            case DUPX_Extraction::ACTION_REMOVE_UPLOADS:
                 $this->removeUploads();
                 break;
-            case DUP_Extraction::ACTION_DO_NOTHING:
+            case DUPX_Extraction::ACTION_DO_NOTHING:
+                $this->removeDoNothing();
                 break;
             default:
                 throw new Exception('Invalid engine action ' . $paramsManager->getValue(PrmMng::PARAM_ARCHIVE_ACTION));
@@ -59,48 +66,54 @@ class RemoveFiles
     /**
      * This function remove files before extraction
      *
-     * @param string[] $folders Folders lists
+     * @param string[] $paths Paths lists
      *
      * @return void
      */
-    protected function removeFiles($folders = array())
+    protected function removeFiles($paths = [])
     {
         Log::info('REMOVE FILES');
 
-        $excludeFiles = array_map(function ($value) {
-            return '/^' . preg_quote($value, '/') . '$/';
-        }, $this->removeFilters->getFiles());
+        $filesFilters = $this->removeFilters->getFiles();
 
-        $excludeFolders   = array_map(function ($value) {
-            return '/^' . preg_quote($value, '/') . '(?:\/.*)?$/';
-        }, $this->removeFilters->getDirs());
+        $excludeFiles = array_map(fn($value): string => '/^' . preg_quote($value, '/') . '$/', $filesFilters);
+
+        $excludeFolders   = array_map(fn($value): string => '/^' . preg_quote($value, '/') . '(?:\/.*)?$/', $this->removeFilters->getDirs());
         $excludeFolders[] =  '/.+\/backups-dup-(lite|pro)$/';
 
         $excludeDirsWithoutChilds = $this->removeFilters->getDirsWithoutChilds();
 
-        foreach ($folders as $folder) {
-            Log::info('REMOVE FOLDER ' . Log::v2str($folder));
-            SnapIO::regexGlobCallback($folder, function ($path) use ($excludeDirsWithoutChilds) {
-                foreach ($excludeDirsWithoutChilds as $excludePath) {
-                    if (SnapIO::isChildPath($excludePath, $path)) {
-                        return;
+        foreach ($paths as $path) {
+            if (is_file($path)) {
+                if (in_array($path, $excludeFiles)) {
+                    continue;
+                }
+                Log::info('REMOVE FILE ' . Log::v2str($path));
+                unlink($path);
+            } else {
+                Log::info('REMOVE FOLDER ' . Log::v2str($path));
+                SnapIO::regexGlobCallback($path, function ($path) use ($excludeDirsWithoutChilds): void {
+                    foreach ($excludeDirsWithoutChilds as $excludePath) {
+                        if (SnapIO::isChildPath($excludePath, $path)) {
+                            return;
+                        }
                     }
-                }
 
-                $result = (is_dir($path) ? rmdir($path) : unlink($path));
-                if ($result == false) {
-                    $lastError = error_get_last();
-                    $message   = (isset($lastError['message']) ? $lastError['message'] : 'Couldn\'t remove file');
-                    RemoveFiles::reportRemoveNotices($path, $message);
-                }
-            }, array(
-                'regexFile'     => $excludeFiles,
-                'regexFolder'   => $excludeFolders,
-                'checkFullPath' => true,
-                'recursive'     => true,
-                'invert'        => true,
-                'childFirst'    => true
-            ));
+                    $result = (is_dir($path) ? rmdir($path) : unlink($path));
+                    if ($result == false) {
+                        $lastError = error_get_last();
+                        $message   = ($lastError['message'] ?? 'Couldn\'t remove file');
+                        RemoveFiles::reportRemoveNotices($path, $message);
+                    }
+                }, [
+                    'regexFile'     => $excludeFiles,
+                    'regexFolder'   => $excludeFolders,
+                    'checkFullPath' => true,
+                    'recursive'     => true,
+                    'invert'        => true,
+                    'childFirst'    => true,
+                ]);
+            }
         }
     }
 
@@ -118,10 +131,10 @@ class RemoveFiles
             $paramsManager = PrmMng::getInstance();
             $absDir        = SnapIO::safePathTrailingslashit($paramsManager->getValue(PrmMng::PARAM_PATH_WP_CORE_NEW));
             if (!is_dir($absDir) || !is_readable($absDir)) {
-                return false;
+                return;
             }
 
-            $removeFolders = array();
+            $removeFolders = [];
 
             if (!FilterMng::filterWpCoreFiles() && ($dh = opendir($absDir))) {
                 while (($elem = readdir($dh)) !== false) {
@@ -143,17 +156,43 @@ class RemoveFiles
                 closedir($dh);
             }
 
-            $removeFolders[] = $paramsManager->getValue(PrmMng::PARAM_PATH_CONTENT_NEW);
+            if (!InstState::isAddSiteOnMultisite()) {
+                $removeFolders[] = $paramsManager->getValue(PrmMng::PARAM_PATH_CONTENT_NEW);
+            }
             $removeFolders[] = $paramsManager->getValue(PrmMng::PARAM_PATH_UPLOADS_NEW);
             $removeFolders[] = $paramsManager->getValue(PrmMng::PARAM_PATH_PLUGINS_NEW);
             $removeFolders[] = $paramsManager->getValue(PrmMng::PARAM_PATH_MUPLUGINS_NEW);
 
             $this->removeFiles(array_unique($removeFolders));
             Log::logTime('FOLDERS REMOVED', Log::LV_DEFAULT, false);
-        } catch (Exception $e) {
+        } catch (Exception | Error $e) {
             Log::logException($e);
-        } catch (Error $e) {
-            Log::logException($e);
+        }
+    }
+
+    /**
+     * Clean uplod forlser of selectes subsites
+     *
+     * @return void
+     */
+    protected function removeAddonSiteToMultisite()
+    {
+        Log::info('CLEAN UPLOAD FOLDERS FOR ADD SITES');
+        $paramsManager = PrmMng::getInstance();
+        /** @var SiteOwrMap[] $overwriteMapping */
+        $overwriteMapping = $paramsManager->getValue(PrmMng::PARAM_SUBSITE_OVERWRITE_MAPPING);
+
+        foreach ($overwriteMapping as $map) {
+            if (($subsiteInfo = $map->getTargetSiteInfo()) == false) {
+                throw new Exception('Target site id ' . $map->getTargetId() . ' not valid');
+            }
+
+            Log::info("\tEMPTY " . $subsiteInfo['fullUploadPath']);
+            if ($map->getTargetId() == 1) {
+                SnapIO::emptyDir($subsiteInfo['fullUploadPath'], ['sites']);
+            } else {
+                SnapIO::emptyDir($subsiteInfo['fullUploadPath']);
+            }
         }
     }
 
@@ -170,14 +209,38 @@ class RemoveFiles
 
             $paramsManager = PrmMng::getInstance();
 
-            $removeFolders   = array();
-            $removeFolders[] = $paramsManager->getValue(PrmMng::PARAM_PATH_UPLOADS_NEW);
+            $removePaths   = [];
+            $removePaths[] = $paramsManager->getValue(PrmMng::PARAM_PATH_UPLOADS_NEW);
+            foreach (PluginsManager::getInstance()->getAllPluginsPaths(true, true) as $pluginPath) {
+                $removePaths[] = $pluginPath;
+            }
 
-            $this->removeFiles(array_unique($removeFolders));
+            $this->removeFiles(array_unique($removePaths));
             Log::logTime('FOLDERS REMOVED', Log::LV_DEFAULT, false);
-        } catch (Exception $e) {
+        } catch (Exception | Error $e) {
             Log::logException($e);
-        } catch (Error $e) {
+        }
+    }
+
+    /**
+     * Remove ony uploads files
+     *
+     * @return void
+     */
+    protected function removeDoNothing()
+    {
+        try {
+            Log::info('REMOVE DONOTHING FILES');
+            Log::resetTime(Log::LV_DEFAULT, false);
+
+            $removePaths = [];
+            foreach (PluginsManager::getInstance()->getAllPluginsPaths(true, true) as $pluginPath) {
+                $removePaths[] = $pluginPath;
+            }
+
+            $this->removeFiles(array_unique($removePaths));
+            Log::logTime('FOLDERS REMOVED', Log::LV_DEFAULT, false);
+        } catch (Exception | Error $e) {
             Log::logException($e);
         }
     }
@@ -193,13 +256,11 @@ class RemoveFiles
             Log::info('REMOVE ALL FILES');
             Log::resetTime(Log::LV_DEFAULT, false);
             $pathsMapping = DUPX_ArchiveConfig::getInstance()->getPathsMapping();
-            $folders      = is_string($pathsMapping) ? array($pathsMapping) : array_values($pathsMapping);
+            $folders      = is_string($pathsMapping) ? [$pathsMapping] : array_values($pathsMapping);
 
             $this->removeFiles($folders);
             Log::logTime('FOLDERS REMOVED', Log::LV_DEFAULT, false);
-        } catch (Exception $e) {
-            Log::logException($e);
-        } catch (Error $e) {
+        } catch (Exception | Error $e) {
             Log::logException($e);
         }
     }
@@ -212,7 +273,7 @@ class RemoveFiles
      *
      * @return void
      */
-    public static function reportRemoveNotices($fileName, $errorMessage)
+    public static function reportRemoveNotices($fileName, $errorMessage): void
     {
         if (DUPX_Custom_Host_Manager::getInstance()->skipWarningExtractionForManaged($fileName)) {
             // @todo skip warning for managed hostiong (it's a temp solution)
@@ -242,13 +303,13 @@ class RemoveFiles
         $longMsg = 'FILE: <b>' . htmlspecialchars($fileName) . '</b><br>Message: ' . htmlspecialchars($errorMessage) . '<br><br>';
 
         $nManager->addBothNextAndFinalReportNotice(
-            array(
+            [
                 'shortMsg'    => $shortMsg,
                 'longMsg'     => $longMsg,
                 'longMsgMode' => DUPX_NOTICE_ITEM::MSG_MODE_HTML,
                 'level'       => $errLevel,
-                'sections'    => array('files')
-            ),
+                'sections'    => ['files'],
+            ],
             DUPX_NOTICE_MANAGER::ADD_UNIQUE_APPEND,
             $idManager
         );

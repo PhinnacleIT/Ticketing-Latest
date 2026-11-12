@@ -7,14 +7,13 @@
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
  *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 class DUPX_Validation_test_manual_extraction extends DUPX_Validation_abstract_item
 {
-    protected function runTest()
+    protected function runTest(): int
     {
         if (DUPX_Conf_Utils::isManualExtractFilePresent()) {
             return self::LV_SOFT_WARNING;
@@ -23,7 +22,7 @@ class DUPX_Validation_test_manual_extraction extends DUPX_Validation_abstract_it
         }
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'Manual extraction detected';
     }
@@ -39,11 +38,11 @@ class DUPX_Validation_test_manual_extraction extends DUPX_Validation_abstract_it
 
     protected function swarnContent()
     {
-        return dupxTplRender('parts/validation/tests/manual-extraction', array(), false);
+        return dupxTplRender('parts/validation/tests/manual-extraction', [], false);
     }
 
     protected function goodContent()
     {
-        return dupxTplRender('parts/validation/tests/manual-extraction', array(), false);
+        return dupxTplRender('parts/validation/tests/manual-extraction', [], false);
     }
 }

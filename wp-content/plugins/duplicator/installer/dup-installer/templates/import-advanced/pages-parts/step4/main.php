@@ -1,10 +1,5 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
-
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 dupxTplRender('pages-parts/step4/actions/admin-login-button');

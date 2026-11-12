@@ -5,13 +5,13 @@
  *
  * Standard: PSR-2
  *
- * @package SC\DUPX\DB
- * @link    http://www.php-fig.org/psr/psr-2/
+ * @link http://www.php-fig.org/psr/psr-2/
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Libs\Snap\SnapUtil;
 
 /**
  * class for wpengine managed hosting
@@ -25,7 +25,7 @@ class DUPX_WPEngine_Host implements DUPX_Host_interface
      *
      * @return string
      */
-    public static function getIdentifier()
+    public static function getIdentifier(): string
     {
         return DUPX_Custom_Host_Manager::HOST_WPENGINE;
     }
@@ -33,12 +33,12 @@ class DUPX_WPEngine_Host implements DUPX_Host_interface
     /**
      * @return bool true if is current host
      */
-    public function isHosting()
+    public function isHosting(): bool
     {
-        // check only mu plugin file exists
-
-        $file = PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_MUPLUGINS_NEW) . '/wpengine-security-auditor.php';
-        return file_exists($file);
+        ob_start();
+        SnapUtil::phpinfo(INFO_ENVIRONMENT);
+        $serverinfo = ob_get_clean();
+        return (strpos($serverinfo, "WPENGINE_ACCOUNT") !== false);
     }
 
     /**
@@ -47,7 +47,7 @@ class DUPX_WPEngine_Host implements DUPX_Host_interface
      *
      * @return void
      */
-    public function init()
+    public function init(): void
     {
     }
 
@@ -55,23 +55,25 @@ class DUPX_WPEngine_Host implements DUPX_Host_interface
      *
      * @return string
      */
-    public function getLabel()
+    public function getLabel(): string
     {
         return 'WP Engine';
     }
 
     /**
      * this function is called if current hosting is this
+     *
+     * @return void
      */
-    public function setCustomParams()
+    public function setCustomParams(): void
     {
-        PrmMng::getInstance()->setValue(PrmMng::PARAM_IGNORE_PLUGINS, array(
+        PrmMng::getInstance()->setValue(PrmMng::PARAM_IGNORE_PLUGINS, [
             'mu-plugin.php',
             'advanced-cache.php',
             'wpengine-security-auditor.php',
             'stop-long-comments.php',
-            'slt-force-strong-passwords.php'
-        ));
+            'slt-force-strong-passwords.php',
+        ]);
 
         $this->force_disable_plugins();
     }
@@ -83,15 +85,15 @@ class DUPX_WPEngine_Host implements DUPX_Host_interface
      *
      * @return void
      */
-    private function force_disable_plugins()
+    private function force_disable_plugins(): void
     {
         $fdPlugins = PrmMng::getInstance()->getValue(PrmMng::PARAM_FORCE_DIABLE_PLUGINS);
 
         if (!is_array($fdPlugins)) {
-            $fdPlugins = array();
+            $fdPlugins = [];
         }
 
-        $fdPlugins = array_merge($fdPlugins, array(
+        $fdPlugins = array_merge($fdPlugins, [
             'gd-system-plugin.php',
             'hcs.php',
             'hello.php',
@@ -149,8 +151,8 @@ class DUPX_WPEngine_Host implements DUPX_Host_interface
             'wp-symposium-alerts/wp-symposium-alerts.php',
             'wponlinebackup/wponlinebackup.php',
             'yet-another-featured-posts-plugin/yafpp.php',
-            'yet-another-related-posts-plugin/yarpp.php'
-        ));
+            'yet-another-related-posts-plugin/yarpp.php',
+        ]);
 
         PrmMng::getInstance()->setValue(PrmMng::PARAM_FORCE_DIABLE_PLUGINS, $fdPlugins);
     }

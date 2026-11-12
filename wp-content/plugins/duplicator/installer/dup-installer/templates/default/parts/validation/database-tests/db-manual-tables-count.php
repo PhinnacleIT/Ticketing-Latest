@@ -1,18 +1,17 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $isOk bool */
-/* @var $dbname string */
-/* @var $numTables int */
-/* @var $minNumTables int */
-/* @var $errorMessage string */
+/**
+ * Variables
+ *
+ * @var bool $isOk
+ * @var string $dbname
+ * @var int $numTables
+ * @var string $errorMessage
+ */
 
 $statusClass = $isOk ? 'green' : 'red';
 ?>

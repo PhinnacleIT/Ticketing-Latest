@@ -6,21 +6,29 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 class DUPX_Validation_test_db_supported_default_charset extends DUPX_Validation_abstract_item
 {
-    protected $errorMessage  = '';
-    protected $charsetOk     = true;
-    protected $collateOk     = true;
-    protected $sourceCharset = null;
-    protected $sourceCollate = null;
+    /** @var string */
+    protected $errorMessage = '';
+    /** @var bool */
+    protected $charsetOk = true;
+    /** @var bool */
+    protected $collateOk = true;
+    /** @var string */
+    protected $sourceCharset = '';
+    /** @var string */
+    protected $sourceCollate = '';
 
-    protected function runTest()
+    /**
+     * Run the test
+     *
+     * @return int Enum LV_* result
+     */
+    protected function runTest(): int
     {
         if (DUPX_Validation_database_service::getInstance()->skipDatabaseTests()) {
             return self::LV_SKIP;
@@ -50,16 +58,22 @@ class DUPX_Validation_test_db_supported_default_charset extends DUPX_Validation_
         }
     }
 
-    public function getTitle()
+    /**
+     * @return string
+     */
+    public function getTitle(): string
     {
         return 'Character Set and Collation Support';
     }
 
+    /**
+     * @return string
+     */
     protected function failContent()
     {
         $dbFuncs = DUPX_DB_Functions::getInstance();
 
-        return dupxTplRender('parts/validation/database-tests/db-supported-default-charset', array(
+        return dupxTplRender('parts/validation/database-tests/db-supported-default-charset', [
             'testResult'    => $this->testResult,
             'charsetOk'     => $this->charsetOk,
             'collateOk'     => $this->collateOk,
@@ -67,15 +81,21 @@ class DUPX_Validation_test_db_supported_default_charset extends DUPX_Validation_
             'sourceCollate' => $this->sourceCollate,
             'usedCharset'   => $dbFuncs->getRealCharsetByParam(),
             'usedCollate'   => $dbFuncs->getRealCollateByParam(),
-            'errorMessage'  => $this->errorMessage
-            ), false);
+            'errorMessage'  => $this->errorMessage,
+        ], false);
     }
 
+    /**
+     * @return string
+     */
     protected function swarnContent()
     {
         return $this->failContent();
     }
 
+    /**
+     * @return string
+     */
     protected function passContent()
     {
         return $this->failContent();

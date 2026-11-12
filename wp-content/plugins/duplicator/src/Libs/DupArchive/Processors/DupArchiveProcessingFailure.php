@@ -1,11 +1,5 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
- */
-
 namespace Duplicator\Libs\DupArchive\Processors;
 
 /**
@@ -17,8 +11,12 @@ class DupArchiveProcessingFailure
     const TYPE_FILE      = 1;
     const TYPE_DIRECTORY = 2;
 
-    public $type        = self::TYPE_UNKNOWN;
+    /** @var int<0,2> */
+    public $type = self::TYPE_UNKNOWN;
+    /** @var string */
     public $description = '';
-    public $subject     = '';
-    public $isCritical  = false;
+    /** @var string */
+    public $subject = '';
+    /** @var bool */
+    public $isCritical = false;
 }

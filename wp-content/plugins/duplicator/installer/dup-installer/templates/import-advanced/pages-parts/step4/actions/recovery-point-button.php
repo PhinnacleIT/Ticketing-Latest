@@ -1,9 +1,6 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
@@ -22,7 +19,7 @@ if (empty($recoveryLink)) {
 <div class="flex-final-button-wrapper" >
     <div class="button-wrapper" >
         <a href="<?php echo DUPX_U::esc_url($recoveryLink); ?>" class="secondary-btn" target="_blank">
-            <i class="fas fa-undo-alt"></i> Run Recovery Wizard
+            <i class="fas fa-house-fire"></i> Run Disaster Recovery Wizard
         </a> 
     </div>
     <div class="content-wrapper" >

@@ -1,24 +1,25 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-dupxTplRender('pages-parts/page-header', array(
+/**
+ * Variables
+ *
+ * @var string $bodyClasses
+ */
+
+dupxTplRender('pages-parts/page-header', [
     'paramView'       => 'secure',
     'bodyId'          => 'page-secure',
     'bodyClasses'     => $bodyClasses,
-    'skipTopMessages' => true
-));
+    'skipTopMessages' => true,
+]);
 ?>
 <div id="content-inner">
     <?php
-    dupxTplRender('pages-parts/head/header-main', array(
-        'htmlTitle' => 'Installer Security'
-    ));
+    dupxTplRender('pages-parts/head/header-main', ['htmlTitle' => 'Installer Security']);
     ?>
     <div id="main-content-wrapper" >
         <?php dupxTplRender('pages-parts/secure/main'); ?>

@@ -128,6 +128,7 @@ final class Settings_Page {
 		require_once( members_plugin()->dir . 'admin/views/class-view.php'         );
 		require_once( members_plugin()->dir . 'admin/views/class-view-general.php' );
 		require_once( members_plugin()->dir . 'admin/views/class-view-addons.php'  );
+		require_once( members_plugin()->dir . 'admin/views/class-view-ai.php'      );
 	}
 
 	/**
@@ -151,9 +152,12 @@ final class Settings_Page {
 	public function toggle_addon() {
 		
 		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'mbrs_toggle_addon' ) ) {
-			die();
+			wp_send_json_error( array(
+				'msg' => esc_html__( 'Your session has expired. Please reload the page and try again.', 'members' )
+			) );
 		}
-		if ( ! current_user_can( 'manage_options' ) ) {
+		// Same capability as the Add-Ons screen itself.
+		if ( ! current_user_can( apply_filters( 'members_settings_capability', 'manage_options' ) ) ) {
 			wp_send_json_error( array(
 				'msg' => esc_html__( 'You are not allowed to make these changes.', 'members' )
 			) );
@@ -166,31 +170,26 @@ final class Settings_Page {
 			) );
 		}
 
-		// Grab the currently active add-ons
-		$active_addons = get_option( 'members_active_addons', array() );
+		$activate = ! in_array( $addon, (array) get_option( 'members_active_addons', array() ), true );
+		$result   = members_plugin()->set_addon_active( $addon, $activate );
 
-		if ( ! in_array( $addon, $active_addons ) ) { // Activate the addon
-			$active_addons[] = $addon;
-			$response = array(
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array(
+				'msg' => $result->get_error_message()
+			) );
+		}
+
+		$response = $activate
+			? array(
 				'status' => 'active',
 				'action_label' => esc_html__( 'Active', 'members' ),
 				'msg' => esc_html__( 'Add-on activated', 'members' )
-			);
-
-			// Run the add-on's activation hook
-			members_plugin()->run_addon_activator( $addon );
-
-		} else { // Deactivate the addon
-			$key = array_search( $addon, $active_addons );
-			unset( $active_addons[$key] );
-			$response = array(
+			)
+			: array(
 				'status' => 'inactive',
 				'action_label' => esc_html__( 'Activate', 'members' ),
 				'msg' => esc_html__( 'Add-on deactivated', 'members' )
 			);
-		}
-
-		update_option( 'members_active_addons', $active_addons );
 
 		wp_send_json_success( $response );
 	}

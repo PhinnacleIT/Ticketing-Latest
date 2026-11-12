@@ -1,15 +1,15 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $testResult int // DUPX_Validation_abstract_item::[LV_FAIL|LV_HARD_WARNING|...] */
-/* @var $configsCheck array */
+/**
+ * Variables
+ *
+ * @var int $testResult
+ * @var array{wpconfig: bool, htaccess: bool, other: bool} $configsCheck
+ */
 
 $statusClass = ($testResult > DUPX_Validation_abstract_item::LV_SOFT_WARNING ? 'green' : 'red' );
 ?>

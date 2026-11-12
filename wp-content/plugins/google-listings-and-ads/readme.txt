@@ -1,11 +1,11 @@
 === Google for WooCommerce ===
 Contributors: automattic, google, woocommerce
 Tags: woocommerce, google, product feed, ads, listings
-Requires at least: 6.6
-Tested up to: 6.9
+Requires at least: 6.9
+Tested up to: 7.1
 Requires PHP: 7.4
 Requires PHP Architecture: 64 Bits
-Stable tag: 3.7.3
+Stable tag: 3.10.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -51,8 +51,8 @@ Once you’re running Google Ads campaigns, the Google tag feature in the extens
 
 = Minimum Requirements =
 
-* WordPress 6.6 or greater
-* WooCommerce 10.6 or greater
+* WordPress 6.8 or greater
+* WooCommerce 11.0 or greater
 * PHP version 7.4 or greater
 * PHP Architecture 64 bits
 * MySQL version 5.6 or greater
@@ -140,27 +140,32 @@ To allow your products to appear in all relevant locations, make sure you’ve c
 
 == Changelog ==
 
-= 3.7.3 - 2026-07-08 =
-* Add - Added update notification when plugin version 3.8.0 is available
+= 3.10.0 - 2026-10-20 =
+* Add - Let merchants collect Google Customer Reviews after purchase and display their aggregate Google rating on the storefront.
+* Update - Remove the US tax rate setting, as Google is retiring the US Sales Tax service.
+* Tweak - Improved account connection experience for service-based merchants.
+* Tweak - Remove unused phone verification routes and Content API product calls.
+* Tweak - Remove the remaining API Pull code.
+* Tweak - Harden the Connection Test debug page and add Merchant API Data Sources tools.
+* Fix - Prevent product and promotion sync from stalling when the plugin resolves a Merchant Center data source that only accepts file uploads or local products, and point the resulting error at data source guidance instead of a product attribute that doesn't exist.
+* Fix - Validate the product and coupon content language against Merchant Center supported languages, falling back to English, so unsupported locale or WPML codes no longer block syncing.
+* Fix - Translate Content API keys and drop unknown keys returned by the `woocommerce_gla_product_attribute_values` filter, so products still sync to Merchant Center.
+* Fix - Product status refresh failing with a TypeError when a variable product holds both its own and its variations' pre-sync errors.
 
-= 3.7.2 - 2026-06-29 =
-* Add - Added an option to connect a Merchant Center account when a service-based user adds physical products.
-* Dev - Remove $_GET parameter overrides in Options::get_ads_id() and Options::get_merchant_id().
-* Fix - Align the main tab navigation's keyboard-focus indicator with the WordPress core style and stop showing a focus indicator on mouse press.
-* Fix - Ensure incomplete connection states show as disconnected.
-* Fix - Fix flaky E2E tests for onboarding step-3 campaign flow.
-* Fix - Fix webpack commons chunk misconfiguration causing disproportionate bundle growth; add dedicated bundlewatch entries for all page chunks with realistic size limits.
-* Fix - Resolved console log errors when selecting AI generated images in campaigns.
+= 3.9.6 - 2026-10-12 =
+* Add - Show a dismissible Google Ads promo on the WooCommerce Analytics Overview page when product revenue or products sold decline.
+* Add - Add multilingual and multicurrency market counts in the tracker snapshot.
+* Add - Notify merchants when synced products have main images smaller than 500 x 500 pixels.
+* Tweak - Replace channel visibility select with a toggle control.
+* Tweak - Bump WooCommerce "tested up to" version 11.2.
+* Tweak - Bump WooCommerce minimum supported version to 11.0.
+* Fix - Skip ads settings fetch when no Google Ads account connected.
+* Fix - Show the notification count bubble on the correct menu item after returning from Settings.
+* Fix - Settings tabs are no longer hidden behind the WooCommerce header after editing your store address or a paid ads campaign.
+* Fix - Record campaign-management FAQ interactions with the documented event name.
+* Fix - Support Content API-style getters (e.g. `getLink()`) on the adapter passed to `woocommerce_gla_product_attribute_values`, so extensions that read them no longer break product sync.
 
-= 3.7.1 - 2026-06-09 =
-* Add - Better User Guidance Feature.
-* Fix - Split budget recommendation and metrics cache keys by advertiser type so recommendations refresh correctly after the first campaign is created.
-* Fix - chore: pin third-party GitHub Actions to SHAs + enable Dependabot.
-* Fix - Update table paddings and borders within cards.
-* Fix - Remove API Pull infrastructure.
-* Fix - MainTabNav intermittently showing an incomplete tab list when MC connection state changes mid-session.
-* Fix - Shipping settings tab empty settings.
-* Fix - Update EU declaration modal title.
-* Fix - Exclude tall_portrait_marketing_image type and images with no type set from generated ad assets.
+= 3.9.5 - 2026-09-29 =
+* Fix - Fixed security issues.
 
 [See changelog for all versions](https://raw.githubusercontent.com/woocommerce/google-listings-and-ads/trunk/changelog.txt).

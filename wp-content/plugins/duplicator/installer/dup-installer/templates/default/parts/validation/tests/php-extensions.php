@@ -1,14 +1,14 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var array $extensionTests */
+/**
+ * Variables
+ *
+ * @var array<string, array{failLevel: int, pass: bool}> $extensionTests
+ */
 ?>
 <div class="sub-title">DETAILS</div>
 <p>

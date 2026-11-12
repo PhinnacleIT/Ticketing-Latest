@@ -1,15 +1,15 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $category string */
-/* @var $title string */
+/**
+ * Variables
+ *
+ * @var string $category
+ * @var string $title
+ */
 
 $vManager = DUPX_Validation_manager::getInstance();
 $tests    = $vManager->getTestsCategory($category);
@@ -24,7 +24,7 @@ $tests    = $vManager->getTestsCategory($category);
     <div class="category-content" >
         <?php
         foreach ($tests as $test) {
-            dupxTplRender('parts/validation/validation-test', array('test' => $test));
+            dupxTplRender('parts/validation/validation-test', ['test' => $test]);
         }
         ?>
     </div>

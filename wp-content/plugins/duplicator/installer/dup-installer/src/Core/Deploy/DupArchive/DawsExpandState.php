@@ -2,30 +2,55 @@
 
 /**
  * Dup archvie expand state
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
  */
 
 namespace Duplicator\Installer\Core\Deploy\DupArchive;
 
+use Duplicator\Libs\DupArchive\Headers\DupArchiveHeader;
 use Duplicator\Libs\DupArchive\States\DupArchiveExpandState;
 use Duplicator\Libs\DupArchive\Utils\DupArchiveUtil;
+use VendorDuplicator\Amk\JsonSerialize\JsonSerialize;
 use Duplicator\Libs\Snap\SnapIO;
-use stdClass;
+use DUPX_Package;
+use Exception;
 
 class DawsExpandState extends DupArchiveExpandState
 {
-    protected static $instance = null;
-
-    const STATE_FILE = 'expandstate.json';
-
     /**
      * Class constructor
+     *
+     * @param DupArchiveHeader $archiveHeader archive header
      */
-    public function __construct()
+    public function __construct(DupArchiveHeader $archiveHeader)
     {
-        $this->initMembers();
+        parent::__construct($archiveHeader);
+    }
+
+    /**
+     * Read object from file
+     *
+     * @return self
+     */
+    public static function getFromFile()
+    {
+        $stateFilepath = self::dataFilePath();
+
+        if (!file_exists($stateFilepath)) {
+            throw new Exception('Data file don\'t exists');
+        }
+
+        if (($json = file_get_contents($stateFilepath)) === false) {
+            throw new Exception('Can\'t read data file');
+        }
+
+        $result = JsonSerialize::unserialize($json);
+        if ($result instanceof self) {
+            return $result;
+        } else {
+            $msg  = "Invalid data file. It is possible that your disc is full, ";
+            $msg .= "in which case you need to free up some space, then restart the installer.";
+            throw new Exception($msg);
+        }
     }
 
     /**
@@ -33,67 +58,14 @@ class DawsExpandState extends DupArchiveExpandState
      *
      * @return bool
      */
-    public static function purgeStatefile()
+    public static function purgeStatefile(): bool
     {
-        $stateFilepath = __DIR__ . '/' . self::STATE_FILE;
+        $stateFilepath = self::dataFilePath();
         if (!file_exists($stateFilepath)) {
             return true;
         }
-        return SnapIO::rm($stateFilepath, false);
-    }
-
-    /**
-     *
-     * @param boolean $reset reset state
-     *
-     * @return self
-     */
-    public static function getInstance($reset = false)
-    {
-        if ((self::$instance == null) && (!$reset)) {
-            $stateFilepath = __DIR__ . '/' . self::STATE_FILE;
-
-            self::$instance = new self();
-
-            if (file_exists($stateFilepath)) {
-                $stateHandle = SnapIO::fopen($stateFilepath, 'rb');
-
-                // RSR we shouldn't need read locks and it seems to screw up on some boxes anyway.. SnapIO::flock($stateHandle, LOCK_EX);
-                $stateString = fread($stateHandle, filesize($stateFilepath));
-                $data        = json_decode($stateString, false);
-                self::$instance->setFromData($data);
-                self::$instance->fileRenames = (array) (self::$instance->fileRenames);
-
-                //     SnapIO::flock($stateHandle, LOCK_UN);
-                SnapIO::fclose($stateHandle);
-            } else {
-                $reset = true;
-            }
-        }
-
-        if ($reset) {
-            self::$instance = new self();
-            self::$instance->reset();
-        }
-
-        return self::$instance;
-    }
-
-    /**
-     * Init state from data
-     *
-     * @param stdClass $data data
-     *
-     * @return void
-     */
-    private function setFromData($data)
-    {
-        foreach ($data as $key => $val) {
-            if (!property_exists($this, $key)) {
-                continue;
-            }
-            $this->{$key} = $val;
-        }
+        SnapIO::rm($stateFilepath, false);
+        return true;
     }
 
     /**
@@ -101,16 +73,10 @@ class DawsExpandState extends DupArchiveExpandState
      *
      * @return void
      */
-    public function reset()
+    public function reset(): void
     {
-        $stateFilepath = __DIR__ . '/' . self::STATE_FILE;
-        $stateHandle   = SnapIO::fopen($stateFilepath, 'w');
-        SnapIO::flock($stateHandle, LOCK_EX);
-
-        $this->initMembers();
-        SnapIO::fwrite($stateHandle, json_encode($this));
-        SnapIO::flock($stateHandle, LOCK_UN);
-        SnapIO::fclose($stateHandle);
+        parent::reset();
+        $this->save();
     }
 
     /**
@@ -118,44 +84,27 @@ class DawsExpandState extends DupArchiveExpandState
      *
      * @return void
      */
-    public function save()
+    public function save(): void
     {
-        $stateFilepath = __DIR__ . '/' . self::STATE_FILE;
+        $stateFilepath = self::dataFilePath();
         $stateHandle   = SnapIO::fopen($stateFilepath, 'w');
         SnapIO::flock($stateHandle, LOCK_EX);
-
-        DupArchiveUtil::tlog("saving state");
-        SnapIO::fwrite($stateHandle, json_encode($this));
+        DupArchiveUtil::tlog("Saving state");
+        SnapIO::fwrite($stateHandle, JsonSerialize::serialize($this));
         SnapIO::flock($stateHandle, LOCK_UN);
         SnapIO::fclose($stateHandle);
     }
 
     /**
-     * Init props
      *
-     * @return void
+     * @return string
      */
-    private function initMembers()
+    protected static function dataFilePath()
     {
-        $this->currentFileHeader     = null;
-        $this->archiveOffset         = 0;
-        $this->archiveHeader         = 0;
-        $this->archivePath           = null;
-        $this->basePath              = null;
-        $this->currentFileOffset     = 0;
-        $this->failures              = array();
-        $this->isCompressed          = false;
-        $this->startTimestamp        = time();
-        $this->timeSliceInSecs       = -1;
-        $this->working               = false;
-        $this->validateOnly          = false;
-        $this->filteredDirectories   = array();
-        $this->filteredFiles         = array();
-        $this->fileRenames           = array();
-        $this->directoryModeOverride = -1;
-        $this->fileModeOverride      = -1;
-        $this->lastHeaderOffset      = -1;
-        $this->throttleDelayInUs     = 0;
-        $this->timerEnabled          = true;
+        static $path = null;
+        if (is_null($path)) {
+            $path = DUPX_INIT . '/dup-dawn-extraction__' . DUPX_Package::getPackageHash() . '.json';
+        }
+        return $path;
     }
 }

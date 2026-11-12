@@ -2,9 +2,9 @@
 
 namespace Duplicator\Utils\CachesPurge;
 
-use DUP_Log;
-use Error;
+use Duplicator\Utils\Logging\DupLog;
 use Exception;
+use Throwable;
 
 class CacheItem
 {
@@ -20,21 +20,19 @@ class CacheItem
      *
      * @var callable|bool
      */
-    protected $checkCallback = null;
+    protected $checkCallback;
 
     /**
      * Purge cache callback
      *
      * @var callable
      */
-    protected $purgeCallback = null;
+    protected $purgeCallback;
 
     /**
      * Message when cache is purged
-     *
-     * @var string
      */
-    protected $purgedMessage = '';
+    protected string $purgedMessage;
 
     /**
      * Construnctor
@@ -68,7 +66,7 @@ class CacheItem
      *
      * @return void
      */
-    public function setPurgedMessage($message)
+    public function setPurgedMessage(string $message): void
     {
         $this->purgedMessage = $message;
     }
@@ -80,14 +78,14 @@ class CacheItem
      *
      * @return bool
      */
-    public function purge(&$message)
+    public function purge(&$message): bool
     {
         try {
             if (
                 (is_bool($this->checkCallback) && $this->checkCallback) ||
-                call_user_func($this->checkCallback) == true
+                (is_callable($this->checkCallback) && call_user_func($this->checkCallback) == true)
             ) {
-                DUP_Log::trace('Purge ' . $this->name);
+                DupLog::trace('Purge ' . $this->name);
                 if (!is_callable($this->purgeCallback)) {
                     throw new Exception('purgeCallback must be callable');
                 }
@@ -95,12 +93,8 @@ class CacheItem
                 $message = $this->purgedMessage;
             }
             return true;
-        } catch (Exception $e) {
-            DUP_Log::trace('Error purge ' . $this->name . ' message:' . $e->getMessage());
-            $message = sprintf(__('Error on caches purge of <b>%s</b>.', 'duplicator'), $this->name);
-            return false;
-        } catch (Error $e) {
-            DUP_Log::trace('Error purge ' . $this->name . ' message:' . $e->getMessage());
+        } catch (Throwable $e) {
+            DupLog::trace('Error purge ' . $this->name . ' message:' . $e->getMessage());
             $message = sprintf(__('Error on caches purge of <b>%s</b>.', 'duplicator'), $this->name);
             return false;
         }

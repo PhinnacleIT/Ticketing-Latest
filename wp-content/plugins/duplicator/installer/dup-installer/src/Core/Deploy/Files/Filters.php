@@ -2,7 +2,7 @@
 
 namespace  Duplicator\Installer\Core\Deploy\Files;
 
-use Duplicator\Libs\Snap\JsonSerialize\AbstractJsonSerializable;
+use VendorDuplicator\Amk\JsonSerialize\AbstractJsonSerializable;
 use Duplicator\Libs\Snap\SnapIO;
 
 /**
@@ -11,11 +11,11 @@ use Duplicator\Libs\Snap\SnapIO;
 class Filters extends AbstractJsonSerializable
 {
     /** @var string[] */
-    protected $files = array();
+    protected $files = [];
     /** @var string[] */
-    protected $dirsWithoutChilds = array();
+    protected $dirsWithoutChilds = [];
     /** @var string[] */
-    protected $dirs = array();
+    protected array $dirs;
 
     /**
      * Class contructor
@@ -24,7 +24,7 @@ class Filters extends AbstractJsonSerializable
      * @param string[] $dirsWithoutChilds dirs without child filters
      * @param string[] $files             files filters
      */
-    public function __construct($dirs = array(), $dirsWithoutChilds = array(), $files = array())
+    public function __construct($dirs = [], $dirsWithoutChilds = [], $files = [])
     {
         $this->files             = (array) $files;
         $this->dirs              = (array) $dirs;
@@ -32,7 +32,7 @@ class Filters extends AbstractJsonSerializable
     }
 
     /**
-     * Check if passe path is filterd
+     * Check if passed path is filtered
      *
      * @param string $path path to check
      *
@@ -61,7 +61,7 @@ class Filters extends AbstractJsonSerializable
      *
      * @return void
      */
-    public function addDir($dir, $withoutChild = false)
+    public function addDir($dir, $withoutChild = false): void
     {
         if ($withoutChild) {
             $this->dirsWithoutChilds[] = (string) $dir;
@@ -77,7 +77,7 @@ class Filters extends AbstractJsonSerializable
      *
      * @return void
      */
-    public function addFile($file)
+    public function addFile($file): void
     {
         $this->files[] = (string) $file;
     }
@@ -93,8 +93,8 @@ class Filters extends AbstractJsonSerializable
         $this->dirsWithoutChilds = array_values(array_unique($this->dirsWithoutChilds));
         $this->dirs              = array_values(array_unique($this->dirs));
 
-        $optimizedDirs  = array();
-        $optimizedFiles = array();
+        $optimizedDirs  = [];
+        $optimizedFiles = [];
 
         for ($i = 0; $i < count($this->dirs); $i++) {
             $exclude = false;

@@ -4,6 +4,7 @@ namespace Elementor\Modules\AtomicWidgets\Elements\Atomic_Form;
 use Elementor\Modules\AtomicWidgets\Controls\Section;
 use Elementor\Modules\AtomicWidgets\Controls\Types\Chips_Control;
 use Elementor\Modules\AtomicWidgets\Controls\Types\Email_Form_Action_Control;
+use Elementor\Modules\AtomicWidgets\Controls\Types\Switch_Control;
 use Elementor\Modules\AtomicWidgets\Controls\Types\Text_Control;
 use Elementor\Modules\AtomicWidgets\Controls\Types\Toggle_Control;
 use Elementor\Modules\AtomicWidgets\Elements\Atomic_Paragraph\Atomic_Paragraph;
@@ -12,21 +13,24 @@ use Elementor\Modules\AtomicWidgets\Elements\Atomic_Form\Form_Error_Message\Form
 use Elementor\Modules\AtomicWidgets\Elements\Base\Atomic_Element_Base;
 use Elementor\Modules\AtomicWidgets\Elements\Base\Element_Builder;
 use Elementor\Modules\AtomicWidgets\Elements\Base\Has_Element_Template;
+use Elementor\Modules\AtomicWidgets\Elements\Base\Html_Tag_Computer;
 use Elementor\Modules\AtomicWidgets\Elements\Base\Widget_Builder;
 use Elementor\Modules\AtomicWidgets\PropDependencies\Manager as Dependency_Manager;
 use Elementor\Modules\AtomicWidgets\PropTypes\Attributes_Prop_Type;
 use Elementor\Modules\AtomicWidgets\PropTypes\Classes_Prop_Type;
-use Elementor\Modules\AtomicWidgets\PropTypes\Email_Prop_Type;
+use Elementor\Modules\AtomicWidgets\PropTypes\Emails_Prop_Type;
 use Elementor\Modules\AtomicWidgets\PropTypes\Key_Value_Prop_Type;
+use Elementor\Modules\AtomicWidgets\PropTypes\Primitives\Boolean_Prop_Type;
 use Elementor\Modules\AtomicWidgets\PropTypes\Primitives\Number_Prop_Type;
 use Elementor\Modules\AtomicWidgets\PropTypes\Size_Prop_Type;
-use Elementor\Modules\AtomicWidgets\PropTypes\Html_V3_Prop_Type;
+use Elementor\Modules\AtomicWidgets\PropTypes\Escaped_Html_Prop_Type;
 use Elementor\Modules\AtomicWidgets\PropTypes\Primitives\String_Array_Prop_Type;
 use Elementor\Modules\AtomicWidgets\PropTypes\Primitives\String_Prop_Type;
 use Elementor\Modules\AtomicWidgets\Styles\Style_Definition;
 use Elementor\Modules\AtomicWidgets\Styles\Style_Variant;
 use Elementor\Core\Breakpoints\Manager as Breakpoints_Manager;
 use Elementor\Modules\Components\PropTypes\Overridable_Prop_Type;
+use Elementor\Plugin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -50,6 +54,7 @@ class Atomic_Form extends Atomic_Element_Base {
 	public function __construct( $data = [], $args = null ) {
 		parent::__construct( $data, $args );
 		$this->meta( 'is_container', true );
+		$this->meta( 'is_compound', true );
 	}
 
 	public static function get_default_recipient_email(): string {
@@ -80,20 +85,15 @@ class Atomic_Form extends Atomic_Element_Base {
 		return 'eicon-atomic-form';
 	}
 
+	public static function get_computed_html_tag( array $settings ): string {
+		return Html_Tag_Computer::compute( $settings, 'form' );
+	}
+
 	public static function get_base_props_schema(): array {
 		return self::define_props_schema();
 	}
 
 	protected static function define_props_schema(): array {
-		$email_dependencies = Dependency_Manager::make()
-			->where( [
-				'operator' => 'contains',
-				'path' => [ 'actions-after-submit' ],
-				'value' => self::ACTION_EMAIL,
-				'effect' => 'hide',
-			] )
-			->get();
-
 		$submissions_metadata_dependencies = Dependency_Manager::make()
 			->where( [
 				'operator' => 'contains',
@@ -112,16 +112,19 @@ class Atomic_Form extends Atomic_Element_Base {
 			] )
 			->get();
 
-		return [
+		$props = [
 			'classes' => Classes_Prop_Type::make()
 				->default( [] ),
 			'form-name' => String_Prop_Type::make()
 				->default( __( 'Form', 'elementor' ) ),
+			'webmcp-autosubmit' => Boolean_Prop_Type::make()
+				->default( false ),
 			'form-state' => String_Prop_Type::make()
 				->enum( [ 'default', 'success', 'error' ] )
 				->default( 'default' )
 				->meta( 'generates_class', 'form-state-{value}' ),
 			'actions-after-submit' => String_Array_Prop_Type::make()
+				->initial_value( [ String_Prop_Type::generate( self::ACTION_EMAIL ) ] )
 				->default( [ String_Prop_Type::generate( self::ACTION_EMAIL ) ] ),
 			'submissions_metadata' => String_Array_Prop_Type::make()
 				->set_dependencies( $submissions_metadata_dependencies )
@@ -129,76 +132,81 @@ class Atomic_Form extends Atomic_Element_Base {
 					String_Prop_Type::generate( self::METADATA_REMOTE_IP ),
 					String_Prop_Type::generate( self::METADATA_USER_AGENT ),
 				] ),
-			'email' => Email_Prop_Type::make()
-				->set_dependencies( $email_dependencies )
-				->meta( Overridable_Prop_Type::ignore() )
-				->default( [
-					'to' => String_Prop_Type::generate( self::get_default_recipient_email() ),
-					'from' => String_Prop_Type::generate( self::get_default_sender_email() ),
-				] ),
+		];
+
+		$props = array_merge( $props, self::get_emails_prop_settings(), [
 			'webhook_url' => String_Prop_Type::make()
 				->set_dependencies( $webhook_dependencies )
 				->meta( Overridable_Prop_Type::ignore() )
 				->default( '' ),
 			'attributes' => Attributes_Prop_Type::make()->meta( Overridable_Prop_Type::ignore() ),
-		];
+		] );
+
+		return $props;
 	}
 
 	protected function define_atomic_controls(): array {
 		$state_control = Toggle_Control::bind_to( 'form-state' )
+			->add_options( [
+				'default' => [
+					'title' => __( 'Normal', 'elementor' ),
+				],
+				'success' => [
+					'title' => __( 'Success', 'elementor' ),
+				],
+				'error' => [
+					'title' => __( 'Error', 'elementor' ),
+				],
+			] )
+			->set_exclusive( true )
+			->set_convert_options( true )
+			->set_size( 'tiny' )
+			->set_full_width( true )
 			->set_label( __( 'States', 'elementor' ) )
 			->set_meta( [ 'topDivider' => true ] );
 
-		if ( $state_control instanceof Toggle_Control ) {
-			$state_control
-				->add_options( [
-					'default' => [
-						'title' => __( 'Normal', 'elementor' ),
+		$email_control_settings = $this->get_emails_control_settings();
+		$form_action_chips = $email_control_settings['form-action-chips'];
+		$email_controls = $email_control_settings['email-controls'];
+
+		if ( class_exists( '\ElementorPro\License\API' ) ) {
+			$has_form_submissions_feature = \ElementorPro\License\API::is_licence_has_feature( 'form-submissions' );
+
+			if ( $has_form_submissions_feature ) {
+				$form_action_chips = array_merge( $form_action_chips, [
+					[
+						'label' => __( 'Collect submissions', 'elementor' ),
+						'value' => self::ACTION_COLLECT_SUBMISSIONS,
 					],
-					'success' => [
-						'title' => __( 'Success', 'elementor' ),
-					],
-					'error' => [
-						'title' => __( 'Error', 'elementor' ),
-					],
-				] )
-				->set_exclusive( true )
-				->set_convert_options( true )
-				->set_size( 'tiny' )
-				->set_full_width( true );
+				] );
+			}
 		}
+
+		$content_controls = [
+			Text_Control::bind_to( 'form-name' )
+				->set_label( __( 'Form name', 'elementor' ) ),
+			$state_control,
+			Chips_Control::bind_to( 'actions-after-submit' )
+				->set_options( array_merge( $form_action_chips, [
+					[
+						'label' => __( 'Webhook', 'elementor' ),
+						'value' => self::ACTION_WEBHOOK,
+					],
+				] ) )
+				->set_label( __( 'Actions after submit', 'elementor' ) )
+				->set_meta( [ 'topDivider' => true ] ),
+		];
 
 		return [
 			Section::make()
 				->set_label( __( 'Content', 'elementor' ) )
+				->set_id( 'content' )
+				->set_items( $content_controls ),
+			...$email_controls,
+			Section::make()
+				->set_label( __( 'Collect submissions', 'elementor' ) )
 				->set_items( [
-					Text_Control::bind_to( 'form-name' )
-						->set_label( __( 'Form name', 'elementor' ) ),
-					$state_control,
-					Chips_Control::bind_to( 'actions-after-submit' )
-						->set_label( __( 'Actions after submit', 'elementor' ) )
-						->set_meta( [ 'topDivider' => true ] )
-						->set_options( [
-							[
-								'label' => __( 'Email', 'elementor' ),
-								'value' => self::ACTION_EMAIL,
-							],
-							[
-								'label' => __( 'Collect submissions', 'elementor' ),
-								'value' => self::ACTION_COLLECT_SUBMISSIONS,
-							],
-							[
-								'label' => __( 'Webhook', 'elementor' ),
-								'value' => self::ACTION_WEBHOOK,
-							],
-						] ),
-					Email_Form_Action_Control::bind_to( 'email' )
-						->set_meta( [
-							'topDivider' => true,
-						] ),
 					Chips_Control::bind_to( 'submissions_metadata' )
-						->set_label( __( 'Include metadata', 'elementor' ) )
-						->set_meta( [ 'topDivider' => true ] )
 						->set_options( [
 							[
 								'label' => __( 'User IP', 'elementor' ),
@@ -208,11 +216,15 @@ class Atomic_Form extends Atomic_Element_Base {
 								'label' => __( 'User Agent', 'elementor' ),
 								'value' => self::METADATA_USER_AGENT,
 							],
-						] ),
+						] )
+						->set_label( __( 'Include metadata', 'elementor' ) ),
+				] ),
+			Section::make()
+				->set_label( __( 'Webhook', 'elementor' ) )
+				->set_items( [
 					Text_Control::bind_to( 'webhook_url' )
-						->set_label( __( 'Webhook URL', 'elementor' ) )
 						->set_placeholder( __( 'https://your-webhook-url.com', 'elementor' ) )
-						->set_meta( [ 'topDivider' => true ] ),
+						->set_label( __( 'Webhook URL', 'elementor' ) ),
 				] ),
 			Section::make()
 				->set_label( __( 'Settings', 'elementor' ) )
@@ -221,8 +233,20 @@ class Atomic_Form extends Atomic_Element_Base {
 					Text_Control::bind_to( '_cssid' )
 						->set_label( __( 'ID', 'elementor' ) )
 						->set_meta( $this->get_css_id_control_meta() ),
+					Switch_Control::bind_to( 'webmcp-autosubmit' )
+						->set_label( __( 'Agent auto-submit', 'elementor' ) ),
 				] ),
 		];
+	}
+
+	protected function define_base_settings(): array {
+		$settings = [];
+
+		foreach ( self::build_email_action_defaults() as $key => $default_email ) {
+			$settings[ $key ] = Emails_Prop_Type::generate( $default_email );
+		}
+
+		return $settings;
 	}
 
 	protected function define_base_styles(): array {
@@ -266,10 +290,6 @@ class Atomic_Form extends Atomic_Element_Base {
 		return [ 'atomic-form' ];
 	}
 
-	protected function define_default_html_tag() {
-		return 'form';
-	}
-
 	protected function define_default_children() {
 
 		$prefix = 'e-form-';
@@ -292,10 +312,7 @@ class Atomic_Form extends Atomic_Element_Base {
 
 		$children[] = Widget_Builder::make( 'e-form-submit-button' )
 			->settings( [
-				'text' => Html_V3_Prop_Type::generate( [
-					'content'  => String_Prop_Type::generate( __( 'Submit', 'elementor' ) ),
-					'children' => [],
-				] ),
+				'text' => Escaped_Html_Prop_Type::generate( __( 'Submit', 'elementor' ) ),
 			] )
 			->build();
 		$children[] = $this->build_status_message(
@@ -332,10 +349,7 @@ class Atomic_Form extends Atomic_Element_Base {
 	private function build_label( string $text, string $input_id ): array {
 		return Widget_Builder::make( 'e-form-label' )
 			->settings( [
-				'text' => Html_V3_Prop_Type::generate( [
-					'content'  => String_Prop_Type::generate( $text ),
-					'children' => [],
-				] ),
+				'text' => Escaped_Html_Prop_Type::generate( $text ),
 				'input-id' => String_Prop_Type::generate( $input_id ),
 			] )
 			->build();
@@ -362,10 +376,7 @@ class Atomic_Form extends Atomic_Element_Base {
 	}
 
 	private function build_status_message( string $message, string $state, string $title ): array {
-		$paragraph_value = Html_V3_Prop_Type::generate( [
-			'content'  => String_Prop_Type::generate( $message ),
-			'children' => [],
-		] );
+		$paragraph_value = Escaped_Html_Prop_Type::generate( $message );
 
 		$element_type = 'success' === $state
 			? Form_Success_Message::get_element_type()
@@ -402,7 +413,19 @@ class Atomic_Form extends Atomic_Element_Base {
 
 		$context['form_state'] = 'default';
 
+		if ( ! $this->is_webmcp_enabled() ) {
+			return $context;
+		}
+
+		$form_name = (string) ( $this->get_atomic_settings()['form-name'] ?? '' );
+		$context['webmcp_tool_name'] = Webmcp_Utils::build_tool_name( $form_name, (string) $this->get_id() );
+		$context['webmcp_tool_description'] = Webmcp_Utils::build_tool_description( $form_name );
+
 		return $context;
+	}
+
+	private function is_webmcp_enabled(): bool {
+		return ! Plugin::$instance->editor->is_edit_mode();
 	}
 
 	public static function is_instance_form( $instance ): bool {
@@ -411,5 +434,99 @@ class Atomic_Form extends Atomic_Element_Base {
 
 	public function render_markdown(): string {
 		return '';
+	}
+
+	private static function get_emails_prop_settings(): array {
+		$props = [];
+
+		foreach ( self::build_email_action_defaults() as $key => $default_value ) {
+			$props[ $key ] = Emails_Prop_Type::make()
+				->set_dependencies( self::make_action_dependency( $key ) )
+				->meta( Overridable_Prop_Type::ignore() )
+				->initial_value( $default_value )
+				->default( $default_value );
+		}
+
+		return $props;
+	}
+
+	private function get_emails_control_settings(): array {
+		$form_action_chips = [];
+		$email_controls = [];
+
+		for ( $i = 0; $i < self::get_email_action_count(); $i++ ) {
+			$key = self::get_email_action_key( $i );
+			$label = self::get_email_action_label( $i );
+
+			$form_action_chips[] = [
+				'label' => $label,
+				'value' => $key,
+			];
+
+			$email_controls[] = Section::make()
+					->set_label( $label )
+					->set_items( [
+						Email_Form_Action_Control::bind_to( $key )
+							->set_free_chips( true )
+							->set_label( $label ),
+					] );
+		}
+
+		return [
+			'form-action-chips' => $form_action_chips,
+			'email-controls' => $email_controls,
+		];
+	}
+
+	private static function get_email_action_key( int $index ): string {
+		return 0 === $index
+			? self::ACTION_EMAIL
+			: self::ACTION_EMAIL . '_' . ( $index + 1 );
+	}
+
+	private static function get_email_action_label( int $index ): string {
+		if ( 0 === $index ) {
+			return __( 'Email', 'elementor' );
+		}
+
+		// translators: %d is the index of the email action.
+		return sprintf( __( 'Email %d', 'elementor' ), $index + 1 );
+	}
+
+	private static function build_email_action_defaults(): array {
+		$defaults = [];
+		$default_email = self::get_default_email_value();
+
+		for ( $i = 0; $i < self::get_email_action_count(); $i++ ) {
+			$key = self::get_email_action_key( $i );
+			$defaults[ $key ] = $default_email;
+		}
+
+		return $defaults;
+	}
+
+	private static function get_default_email_value(): array {
+		return [
+			'to' => String_Array_Prop_Type::generate( [
+				String_Prop_Type::generate( self::get_default_recipient_email() ),
+			] ),
+			'from' => String_Prop_Type::generate( self::get_default_sender_email() ),
+			'message' => String_Prop_Type::generate( '[all-fields]' ),
+		];
+	}
+
+	private static function make_action_dependency( string $action_key ): ?array {
+		return Dependency_Manager::make()
+			->where( [
+				'operator' => 'contains',
+				'path' => [ 'actions-after-submit' ],
+				'value' => $action_key,
+				'effect' => 'hide',
+			] )
+			->get();
+	}
+
+	private static function get_email_action_count(): int {
+		return apply_filters( 'elementor/atomic/form/email_action_count', 1 );
 	}
 }

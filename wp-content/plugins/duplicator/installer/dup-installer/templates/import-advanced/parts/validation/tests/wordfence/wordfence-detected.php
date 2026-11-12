@@ -1,10 +1,14 @@
 <?php
-/**
- *
- * @package templates/default
- * @var     $wordFencePath
- */
+
+
+
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
+
+/**
+ * Variables
+ *
+ * @var string $wordFencePath
+ */
 ?>
 <div class="sub-title">STATUS</div>
 <p class="maroon"> A Wordfence firewall instance was detected at <b><?php echo DUPX_U::esc_html($wordFencePath); ?></b>. </p>

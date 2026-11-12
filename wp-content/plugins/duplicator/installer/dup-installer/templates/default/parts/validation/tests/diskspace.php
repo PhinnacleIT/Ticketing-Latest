@@ -1,16 +1,16 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $isOk bool */
-/* @var $freeSpace int */
-/* @var $requiredSpace int */
+/**
+ * Variables
+ *
+ * @var bool $isOk
+ * @var int $freeSpace
+ * @var int $requiredSpace
+ */
 ?>
 <div class="sub-title">STATUS</div>
 <p>

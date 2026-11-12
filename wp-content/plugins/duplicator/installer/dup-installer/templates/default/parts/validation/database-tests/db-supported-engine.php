@@ -1,23 +1,24 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $testResult int // DUPX_Validation_abstract_item::[LV_FAIL|LV_HARD_WARNING|...] */
-/* @var $invalidEngines string[] */
-/* @var $defaultEngine string */
-/* @var $errorMessage string */
+/**
+ * Variables
+ *
+ * @var int $testResult DUPX_Validation_abstract_item::[LV_FAIL|LV_HARD_WARNING|...]
+ * @var string[] $invalidEngines
+ * @var string $defaultEngine
+ * @var string $errorMessage
+ * @var bool $engineListRead
+ */
 
 
 
 $statusClass = $testResult > DUPX_Validation_abstract_item::LV_SOFT_WARNING ? 'green' : 'red';
 
-$dupDatabase          = basename(DUPX_Package::getSqlFilePath());
+$dupDatabase          = basename(DUPX_Package::getSqlDumpDirPath());
 $dupDatabaseDupFolder = basename(DUPX_INIT) . '/' . $dupDatabase;
 $invalidCheckboxTitle = '';
 $subTitle             = '';
@@ -27,15 +28,22 @@ $subTitle             = '';
 <p class="<?php echo $statusClass; ?>">
     <?php
     switch ($testResult) {
-        case DUPX_Validation_abstract_item::LV_FAIL:
-            ?>
-            The Duplicator Installer is currently unable to verify the list of engines in the database.
-            <?php
-            break;
         case DUPX_Validation_abstract_item::LV_HARD_WARNING:
-            ?>
-            Some of the MySQL engines used in the source site are not supported on the current database.
-            <?php
+            if ($engineListRead) {
+                ?>
+                The following MySQL engines Engine(s) were found to not be supported by the current database: 
+                <?php
+                echo "[" . implode(",", $invalidEngines) . "]";
+                ?>
+                <br>
+                and are going to be replaced by the default MySQL Engines
+                <?php
+                echo "[" . $defaultEngine . "]";
+            } else {
+                ?>
+                Impossible to verify list of supported engines
+                <?php
+            }
             break;
         default:
             ?>
@@ -45,7 +53,7 @@ $subTitle             = '';
     }
     ?>
 </p>
-<?php if (!empty($errorMessage)) : ?>
+<?php if (strlen($errorMessage)) : ?>
     <p>
         Error detail: <span class="maroon" ><?php echo htmlentities($errorMessage); ?></span>
     </p>
@@ -53,11 +61,11 @@ $subTitle             = '';
 
 <div class="sub-title">DETAILS</div>
 <p>
-    This test checks to make sure this database can support the MySQL engines found in the
-    <b><?php echo htmlentities($dupDatabaseDupFolder); ?></b> script.
+    This test checks to make sure this database can support the MySQL engines found in the SQL files in
+    <b><?php echo htmlentities($dupDatabaseDupFolder); ?></b>.
 </p>
 
-<?php if ($testResult == DUPX_Validation_abstract_item::LV_HARD_WARNING) : ?>
+<?php if ($testResult == DUPX_Validation_abstract_item::LV_HARD_WARNING && $engineListRead) : ?>
     <p>
        The following MySQL Engine(s) were found to not be supported by the current database:
     </p>
@@ -72,7 +80,7 @@ $subTitle             = '';
 <div class="sub-title">TROUBLESHOOT</div>
 <ul>
     <li>
-        In case some of the MySQL engines of the source site are not supported and replacing them with the default engine
+        In case some of the MySQL engines of the source site are not supported, not verified and replacing them with the default engine
         is not desired, please try getting in touch with your hosting provider and asking them to enable the engine.
     </li>
 </ul>

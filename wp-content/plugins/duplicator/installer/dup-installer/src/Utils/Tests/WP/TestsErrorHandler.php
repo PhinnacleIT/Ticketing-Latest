@@ -10,11 +10,13 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 namespace Duplicator\Installer\Utils\Tests\WP;
+
+use Error;
+use Exception;
+use Throwable;
 
 class TestsErrorHandler
 {
@@ -24,25 +26,26 @@ class TestsErrorHandler
     const ERR_TYPE_DEPRECATED = 'deprecated';
     const ERRNO_EXCEPTION     = 1073741824; // 31 pos of bit mask
 
-    protected static $errors = array();
+    /** @var array<int, array<int, array<string, mixed>>> */
+    protected static $errors = [];
 
     /**
      * If it is null a json is displayed otherwise the callback function is executed in the shutd
      *
-     * @var null| callable
+     * @var ?callable
      */
-    protected static $shutdownCallback = null;
+    protected static $shutdownCallback;
 
     /**
-     * register error handlers
+     * Register error handlers
      *
      * @return void
      */
-    public static function register()
+    public static function register(): void
     {
-        @register_shutdown_function(array(__CLASS__, 'shutdown'));
-        @set_error_handler(array(__CLASS__, 'error'));
-        @set_exception_handler(array(__CLASS__, 'exception'));
+        @register_shutdown_function([self::class, 'shutdown']);
+        @set_error_handler([self::class, 'error']);
+        @set_exception_handler([self::class, 'exception']);
     }
 
     /**
@@ -50,37 +53,33 @@ class TestsErrorHandler
      *
      * @return void
      */
-    public static function setShutdownCallabck($callback)
+    public static function setShutdownCallabck($callback): void
     {
-        if (is_callable($callback)) {
-            self::$shutdownCallback = $callback;
-        } else {
-            self::$shutdownCallback = null;
-        }
+        self::$shutdownCallback = is_callable($callback) ? $callback : null;
     }
 
     /**
-     * add error on list
+     * Add error on list
      *
-     * @param int    $errno   error number
-     * @param string $errstr  error string
-     * @param string $errfile error file
-     * @param int    $errline error line
-     * @param array  $trace   error trace
+     * @param int                              $errno   error number
+     * @param string                           $errstr  error string
+     * @param string                           $errfile error file
+     * @param int                              $errline error line
+     * @param array<int, array<string, mixed>> $trace   error trace
      *
      * @return void
      */
     protected static function addError($errno, $errstr, $errfile, $errline, $trace)
     {
-        $newError = array(
+        $newError = [
             'error_cat' => self::getErrorCategoryFromErrno($errno),
             'errno'     => $errno,
             'errno_str' => self::errnoToString($errno),
             'errstr'    => $errstr,
             'errfile'   => $errfile,
             'errline'   => $errline,
-            'trace'     => array_map(array(__CLASS__, 'normalizeTraceElement'), $trace)
-        );
+            'trace'     => array_map([self::class, 'normalizeTraceElement'], $trace),
+        ];
 
         self::$errors[] = $newError;
 
@@ -90,14 +89,14 @@ class TestsErrorHandler
     }
 
     /**
-     * @param array $error the error array
+     * @param array<string, mixed> $error the error array
      *
      * @return string human-readable error message with trace
      */
-    public static function errorToString($error)
+    public static function errorToString($error): string
     {
         $result  = $error['errno_str'] . ' ' . $error['errstr'] . "\n";
-        $result .= "\t" . 'FILE: ' . $error['errfile'] . '[' . $error['errline'] . ']' . "\n";
+        $result .= "\tFILE: " . $error['errfile'] . '[' . $error['errline'] . ']' . "\n";
         $result .= "\t--- TRACE ---\n";
         foreach ($error['trace'] as $trace) {
             $result .= "\t";
@@ -120,25 +119,26 @@ class TestsErrorHandler
      * @param string  $errfile Error file
      * @param integer $errline Error line
      *
-     * @return void
+     * @return bool
      */
-    public static function error($errno, $errstr, $errfile, $errline)
+    public static function error($errno, $errstr, $errfile, $errline): bool
     {
         $trace = debug_backtrace();
         array_shift($trace);
-        self::adderror($errno, $errstr, $errfile, $errline, $trace);
+        self::addError($errno, $errstr, $errfile, $errline, $trace);
+        return true;
     }
 
     /**
      * Exception handler
      *
-     * @param Exception|Error $e // Throwable in php 7
+     * @param Exception|Error|Throwable $e Throwable in php 7
      *
      * @return void
      */
-    public static function exception($e)
+    public static function exception($e): void
     {
-        self::adderror(self::ERRNO_EXCEPTION, $e->getMessage(), $e->getFile(), $e->getLine(), $e->getTrace());
+        self::addError(self::ERRNO_EXCEPTION, $e->getMessage(), $e->getFile(), $e->getLine(), $e->getTrace());
     }
 
     /**
@@ -146,7 +146,7 @@ class TestsErrorHandler
      *
      * @return void
      */
-    public static function shutdown()
+    public static function shutdown(): void
     {
         self::obCleanAll();
 
@@ -172,7 +172,7 @@ class TestsErrorHandler
      *
      * @return string
      */
-    protected static function obCleanAll($getContent = true)
+    protected static function obCleanAll($getContent = true): string
     {
         $result = '';
         for ($i = 0; $i < ob_get_level(); $i++) {
@@ -185,25 +185,26 @@ class TestsErrorHandler
     }
 
     /**
-     * @param array $elem normalize error element
+     * @param array<string, scalar> $elem normalize error element
      *
-     * @return array
+     * @return array{file: string, line: int, function: string, class: string, type: string}
      */
-    public static function normalizeTraceElement($elem)
+    public static function normalizeTraceElement($elem): array
     {
         if (!is_array($elem)) {
-            $elem = array();
+            $elem = [];
         }
 
         unset($elem['args']);
         unset($elem['object']);
 
-        return array_merge(array(
+        return array_merge([
             'file'     => '',
             'line'     => -1,
             'function' => '',
             'class'    => '',
-            'type'     => ''), $elem);
+            'type'     => '',
+        ], $elem);
     }
 
     /**
@@ -212,7 +213,7 @@ class TestsErrorHandler
      *
      * @return string
      */
-    public static function getErrorCategoryFromErrno($errno)
+    public static function getErrorCategoryFromErrno($errno): string
     {
         switch ($errno) {
             case E_PARSE:
@@ -250,7 +251,7 @@ class TestsErrorHandler
      *
      * @return string
      */
-    public static function errnoToString($errno)
+    public static function errnoToString($errno): string
     {
         switch ($errno) {
             case E_PARSE:

@@ -1,11 +1,5 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
- */
-
 namespace Duplicator\Libs\Snap;
 
 /**
@@ -22,31 +16,38 @@ class SnapOrigFileManager
     const ORIG_FOLDER_PREFIX    = 'original_files_';
     const PERSISTANCE_FILE_NAME = 'entries_stored.json';
 
-    /** @var string */
-    protected $persistanceFile = null;
-    /** @var string */
-    protected $origFilesFolder = null;
+    protected string $persistanceFile;
+    protected string $origFilesFolder;
     /** @var array<string, array{baseName:string, source:string, stored: string, mode:string, isRelative: bool}> */
-    protected $origFolderEntries = array();
-    /** @var string */
-    protected $rootPath = null;
+    protected $origFolderEntries = [];
+    protected string $rootPath;
 
     /**
      * Class constructor
      *
-     * @param string $root                 wordpress root path
+     * @param string $root                 WordPress root path
      * @param string $origFolderParentPath orig files folder path
      * @param string $hash                 package hash
      */
     public function __construct($root, $origFolderParentPath, $hash)
     {
         $this->rootPath        = SnapIO::safePathUntrailingslashit($root, true);
-        $this->origFilesFolder = SnapIO::safePathTrailingslashit($origFolderParentPath, true) . self::ORIG_FOLDER_PREFIX . $hash;
+        $this->origFilesFolder = $this->generateOrigFolderPath($origFolderParentPath, $hash);
         $this->persistanceFile = $this->origFilesFolder . '/' . self::PERSISTANCE_FILE_NAME;
+        $this->load();
+    }
 
-        if (file_exists($this->persistanceFile)) {
-            $this->load();
-        }
+    /**
+     * Generate orig folder path
+     *
+     * @param string $origFolderParentPath orig files folder parent path
+     * @param string $hash                 package hash
+     *
+     * @return string
+     */
+    protected function generateOrigFolderPath($origFolderParentPath, $hash): string
+    {
+        return SnapIO::safePathTrailingslashit($origFolderParentPath, true) . self::ORIG_FOLDER_PREFIX . $hash;
     }
 
     /**
@@ -56,7 +57,7 @@ class SnapOrigFileManager
      *
      * @return void
      */
-    public function init($reset = false)
+    public function init($reset = false): void
     {
         $this->createMainFolder($reset);
         $this->load();
@@ -71,7 +72,7 @@ class SnapOrigFileManager
      *
      * @throws \Exception
      */
-    protected function createMainFolder($reset = false)
+    protected function createMainFolder($reset = false): bool
     {
         if ($reset) {
             $this->deleteMainFolder();
@@ -86,8 +87,13 @@ class SnapOrigFileManager
         $htaccessFile = $this->origFilesFolder . '/.htaccess';
         if (!file_exists($htaccessFile)) {
             $content = <<<HTACCESS
-Order Allow,Deny
-Deny from All
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order Allow,Deny
+    Deny from All
+</IfModule>
 HTACCESS;
             @file_put_contents($htaccessFile, $content);
         }
@@ -103,7 +109,7 @@ HTACCESS;
      * @return string Main folder path
      * @throws \Exception
      */
-    public function getMainFolder()
+    public function getMainFolder(): string
     {
         if (!file_exists($this->origFilesFolder)) {
             throw new \Exception('Can\'t get the original files folder ' . SnapLog::v2str($this->origFilesFolder));
@@ -118,12 +124,12 @@ HTACCESS;
      * @return boolean
      * @throws \Exception
      */
-    public function deleteMainFolder()
+    public function deleteMainFolder(): bool
     {
         if (file_exists($this->origFilesFolder) && !SnapIO::rrmdir($this->origFilesFolder)) {
             throw new \Exception('Can\'t delete the original files folder ' . SnapLog::v2str($this->origFilesFolder));
         }
-        $this->origFolderEntries = array();
+        $this->origFolderEntries = [];
 
         return true;
     }
@@ -139,7 +145,7 @@ HTACCESS;
      *
      * @return boolean true if succeded
      */
-    public function addEntry($identifier, $path, $mode = self::MODE_MOVE, $rename = false)
+    public function addEntry($identifier, $path, $mode = self::MODE_MOVE, $rename = false): bool
     {
         if (!file_exists($path)) {
             return false;
@@ -168,7 +174,7 @@ HTACCESS;
             case self::MODE_MOVE:
                 // Don't use rename beacause new files must have the current script owner
                 if (!SnapIO::rcopy($path, $dest)) {
-                    throw new \Exception('Can\'t copy the original file  ' . SnapLog::v2str($path));
+                    throw SnapException::fromLastError("Can't copy the original file.\n" . SnapLog::v2str($path));
                 }
                 if (!SnapIO::rrmdir($path)) {
                     throw new \Exception('Can\'t remove the original file  ' . SnapLog::v2str($path));
@@ -176,20 +182,20 @@ HTACCESS;
                 break;
             case self::MODE_COPY:
                 if (!SnapIO::rcopy($path, $dest)) {
-                    throw new \Exception('Can\'t copy the original file  ' . SnapLog::v2str($path));
+                    throw SnapException::fromLastError("Can't copy the original file.\n" . SnapLog::v2str($path));
                 }
                 break;
             default:
                 throw new \Exception('invalid mode addEntry');
         }
 
-        $this->origFolderEntries[$identifier] = array(
+        $this->origFolderEntries[$identifier] = [
             'baseName'   => $baseName,
             'source'     => $isRelative ? $relativePath : $path,
             'stored'     => $parentFolder . $baseName,
             'mode'       => $mode,
-            'isRelative' => $isRelative
-        );
+            'isRelative' => $isRelative,
+        ];
 
         $this->save();
         return true;
@@ -278,7 +284,7 @@ HTACCESS;
      *
      * @return boolean true if succeded
      */
-    public function restoreEntry($identifier, $save = true, $defaultIfIsAbsolute = null)
+    public function restoreEntry($identifier, $save = true, $defaultIfIsAbsolute = null): bool
     {
         if (!isset($this->origFolderEntries[$identifier])) {
             return false;
@@ -292,7 +298,7 @@ HTACCESS;
         switch ($this->origFolderEntries[$identifier]['mode']) {
             case self::MODE_MOVE:
                 if (!SnapIO::rename($stored, $original)) {
-                    throw new \Exception('Can\'t move the original file  ' . SnapLog::v2str($stored));
+                    throw SnapException::fromLastError("Can't move the original file.\n" . SnapLog::v2str($stored));
                 }
                 break;
             case self::MODE_COPY:
@@ -318,7 +324,7 @@ HTACCESS;
      *
      * @return boolean
      */
-    public function restoreAll($exclude = array())
+    public function restoreAll($exclude = []): bool
     {
         foreach (array_keys($this->origFolderEntries) as $ident) {
             if (in_array($ident, $exclude)) {
@@ -335,7 +341,7 @@ HTACCESS;
      *
      * @return bool
      */
-    public function save()
+    public function save(): bool
     {
         if (!file_put_contents($this->persistanceFile, SnapJson::jsonEncodePPrint($this->origFolderEntries))) {
             throw new \Exception('Can\'t write persistence file');
@@ -348,13 +354,13 @@ HTACCESS;
      *
      * @return bool
      */
-    private function load()
+    private function load(): bool
     {
-        if (file_exists($this->persistanceFile)) {
-            $json                    = file_get_contents($this->persistanceFile);
-            $this->origFolderEntries = json_decode($json, true);
+        $json = SnapIO::safeFileGetContents($this->persistanceFile);
+        if ($json !== false) {
+            $this->origFolderEntries = json_decode($json, true) ?: [];
         } else {
-            $this->origFolderEntries = array();
+            $this->origFolderEntries = [];
         }
         return true;
     }

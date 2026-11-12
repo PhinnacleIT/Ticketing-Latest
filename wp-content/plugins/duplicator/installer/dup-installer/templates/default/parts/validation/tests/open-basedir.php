@@ -1,16 +1,16 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $openBaseDirEnabled bool */
-/* @var $pathsOutsideOpenBaseDir array */
-/* @var $isOk bool */
+/**
+ * Variables
+ *
+ * @var bool $openBaseDirEnabled
+ * @var string[] $pathsOutsideOpenBaseDir
+ * @var bool $isOk
+ */
 ?>
 <p>
     <b>Open BaseDir:</b> 

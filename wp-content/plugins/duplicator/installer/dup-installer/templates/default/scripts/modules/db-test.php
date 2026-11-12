@@ -1,18 +1,16 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
 use Duplicator\Libs\Snap\SnapJson;
 
 $paramsManager = PrmMng::getInstance();
 
-if (DUPX_InstallerState::getInstance()->getMode() === DUPX_InstallerState::MODE_OVR_INSTALL) {
+if (InstState::getInstance()->getMode() === InstState::MODE_OVR_INSTALL) {
     $overwriteData = $paramsManager->getValue(PrmMng::PARAM_OVERWRITE_SITE_DATA);
     $ovr_dbhost    = $overwriteData['dbhost'];
     $ovr_dbname    = $overwriteData['dbname'];
@@ -26,6 +24,22 @@ if (DUPX_InstallerState::getInstance()->getMode() === DUPX_InstallerState::MODE_
 }
 ?>
 <script>
+    const fileExtractMode = <?php echo SnapJson::jsonEncode(InstState::dbDoNothing()); ?>;
+
+    DUPX.toggleFileExtractMode = function(enable = false)   
+    {
+        if (enable) {
+            $('.requires-db-hide').hide();
+            $('.requires-db-disable').prop('disabled', true);
+            $('.requires-no-db').show();
+            $('#label-for-advanced').trigger('click');
+        } else {
+            $('.requires-db-hide').show();
+            $('.requires-db-disable').prop('disabled', false);
+            $('.requires-no-db').hide();
+        }
+    }
+
     const dbViewModeInputId = <?php echo SnapJson::jsonEncode($paramsManager->getFormItemId(PrmMng::PARAM_DB_VIEW_MODE)); ?>;
     const dbHostInputId = <?php echo SnapJson::jsonEncode($paramsManager->getFormItemId(PrmMng::PARAM_DB_HOST)); ?>;
     const dbNameInputId = <?php echo SnapJson::jsonEncode($paramsManager->getFormItemId(PrmMng::PARAM_DB_NAME)); ?>;
@@ -39,6 +53,8 @@ if (DUPX_InstallerState::getInstance()->getMode() === DUPX_InstallerState::MODE_
         $('.s2-basic-pane .s2-warning-manualdb').hide();
         $('.s2-basic-pane .s2-warning-emptydb').hide();
         $('.s2-basic-pane .s2-warning-renamedb').hide();
+
+        DUPX.toggleFileExtractMode(fileExtractMode);
         switch (action)
         {
             case 'create'  :
@@ -52,8 +68,12 @@ if (DUPX_InstallerState::getInstance()->getMode() === DUPX_InstallerState::MODE_
             case 'manual'  :
                 $('.s2-basic-pane .s2-warning-manualdb').show(300);
                 break;
+            case 'dbdonothing':
+                DUPX.toggleFileExtractMode(true);
+                break;
         }
     };
+
 
     //DOCUMENT INIT
     $(document).ready(function ()
@@ -86,22 +106,33 @@ if (DUPX_InstallerState::getInstance()->getMode() === DUPX_InstallerState::MODE_
             $("#" + dbPassInputId).val('').attr('placeholder', '').prop('readonly', false);
         };
 
-        <?php if (DUPX_InstallerState::getInstance()->getMode() === DUPX_InstallerState::MODE_OVR_INSTALL) : ?>
+<?php if (InstState::getInstance()->getMode() === InstState::MODE_OVR_INSTALL) : ?>
             DUPX.fillInPlaceHolders();
-        <?php endif; ?>
-    
+<?php endif; ?>
+
+        DUPX.togglePanels = function ()
+        {
+            if ($('#' + dbViewModeInputId).val() == 'basic') {
+                $('#' + dbViewModeInputId).val("cpnl").change();
+            } else {
+                $('#' + dbViewModeInputId).val("basic").change();
+            }
+        }
+
         $('#' + dbViewModeInputId).change(function () {
             switch ($(this).val()) {
                 case 'cpnl':
                     $('.s2-cpnl-pane').removeClass('no-display');
                     $('.s2-basic-pane').addClass('no-display');
-                    $('#validate-button').attr('disabled', 'true');
+                    $('#' + dbViewModeInputId + "_0").removeClass("active");
+                    $('#' + dbViewModeInputId + "_1").addClass("active");
                     break;
                 case 'basic':
                 default:
                     $('.s2-cpnl-pane').addClass('no-display');
                     $('.s2-basic-pane').removeClass('no-display');
-                    $('#validate-button').removeAttr('disabled');
+                    $('#' + dbViewModeInputId + "_1").removeClass("active");
+                    $('#' + dbViewModeInputId + "_0").addClass("active");                    
                     break;
             }
         });

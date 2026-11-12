@@ -1,13 +1,15 @@
 <?php
 
-use Duplicator\Installer\Utils\InstallerLinkManager;
+use Duplicator\Installer\Utils\InstDescMng;
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
-?>
-<!-- ============================================
-SECURITY STEP
-============================================== -->
-<?php
+
+/**
+ * Variables
+ *
+ * @var bool $open_section;
+ */
+
 $sectionId   = 'section-security';
 $expandClass = $sectionId == $open_section ? 'open' : 'close';
 ?>
@@ -45,7 +47,7 @@ $expandClass = $sectionId == $open_section ? 'open' : 'close';
             <tr>
                 <td class="col-opt">
                     <i class="fas fa-shield-alt"></i> Secure-File <br/>
-                    <small>Archive File Name</small>
+                    <small>Backup File Name</small>
                 </td>
                 <td>
                     When Duplicator creates a site archive it generates three separate files.  The archive.zip/daf, installer.php, and a log
@@ -73,13 +75,16 @@ $expandClass = $sectionId == $open_section ? 'open' : 'close';
                         <li><b>Secure:</b> <i>[name]_[hash]_[time]_installer.php</i> (recommended)</li>
                     </ul>
 
-                    <i class="fas fa-info-circle"></i> Archive File Name Tip: The secure-file archive name can be viewed the following ways:
+                    <i class="fas fa-info-circle"></i> Backup File Name Tip: The secure-file archive name can be viewed the following ways:
                     <ul>
                         <li>Goto: WordPress Admin ❯ Duplicator ❯ Packages ❯ Details of the site where the package was built</li>
                         <li>Copy the name from any cPanel, file explorer, or FTP client where it was downloaded/uploaded</li>
                         <li>
-                            Search for 'package_name' in the <i>archive.zip/daf//dup-installer/<b>dup-archive__[hash].txt</b></i> file<br/>
-                            <small>Example of hashed file name in archive file would be <i>dup-archive__3b8ded1-19035119.txt</i></small>
+                            Search for 'package_name' in the <i>archive.(zip|daf)/dup-installer/
+                                <b><?php echo InstDescMng::getInstance()->getGenericName(InstDescMng::TYPE_ARCHIVE_CONFIG); ?></b></i> file<br/>
+                            <small>Example of hashed file name in Backup file would be 
+                                <i><?php echo InstDescMng::DESCRIPTORS_FOLDER_PREFIX; ?>3b8ded1-19035119.txt/archive.txt</i>
+                            </small>
                         </li>
                     </ul>
                 </td>
@@ -93,12 +98,7 @@ $expandClass = $sectionId == $open_section ? 'open' : 'close';
         <small>
             For forgotten passwords users can log in to the site where the package was created and check the package details for the original password.
             For detail on how to override this setting visit the online FAQ for
-            <a 
-                href="<?php echo InstallerLinkManager::getDocUrl('how-to-fix-installer-security-protection-issues', 'install', 'help security'); ?>"
-                target="_blankopen_section"
-            >
-                more details
-            </a>.
+            <a href="<?php echo DUPX_Constants::FAQ_URL; ?>how-to-fix-installer-security-protection-issues" target="_blankopen_section">more details</a>.
         </small>
         <br/><br/>
 
@@ -106,17 +106,16 @@ $expandClass = $sectionId == $open_section ? 'open' : 'close';
         When you attempt an <i class="maroon">"Overwrite Install"</i> using the "installer.php"  filename on a public server (non-localhost) and
         have not set a password, the installer will prompt for the filename of the associated archive.zip/daf file.  This is to prevent an outside
         entity from executing the installer.   To complete the install, simply copy the filename of the archive and paste (or type) it into the
-        archive filename box.
+        Backup filename box.
         <small>
              Using a secure-file installer name (Settings &gt; Packages), renames the installer to something unique, setting a password or installing
-             from localhost will cause the archive filename to no longer be required.
+             from localhost will cause the Backup filename to no longer be required.
         </small>
         <br/><br/>
 
        <b>Archive Encryption</b>
-       <sup class="hlp-pro-lbl">Pro</sup><br/>
        The archive encryption is the most secure and recommended encryption method.   This option is set during the package creation process and encrypts
-       the archive.zip/daf file.   The archive file cannot be opened without a password which can be done from either the installer file or from a client
+       the archive.zip/daf file.   The Backup file cannot be opened without a password which can be done from either the installer file or from a client
        side program like 7-Zip, WinZip, iZip etc.
        <br/><br/>
 

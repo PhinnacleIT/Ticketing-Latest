@@ -1,15 +1,5 @@
 <?php
 
-/**
- * param descriptor
- *
- * Standard: PSR-2
- *
- * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
- */
-
 namespace Duplicator\Installer\Core\Params\Items;
 
 use Duplicator\Installer\Utils\Log\Log;
@@ -24,13 +14,13 @@ class ParamFormWpConfig extends ParamForm
     /**
      * Class constructor
      *
-     * @param string $name     param identifier
-     * @param string $type     TYPE_STRING | TYPE_ARRAY_STRING | ...
-     * @param string $formType FORM_TYPE_HIDDEN | FORM_TYPE_TEXT | ...
-     * @param array  $attr     list of attributes
-     * @param array  $formAttr list of form attributes
+     * @param string               $name     param identifier
+     * @param string               $type     TYPE_STRING | TYPE_ARRAY_STRING | ...
+     * @param string               $formType FORM_TYPE_HIDDEN | FORM_TYPE_TEXT | ...
+     * @param array<string, mixed> $attr     list of attributes
+     * @param array<string, mixed> $formAttr list of form attributes
      */
-    public function __construct($name, $type, $formType, $attr = null, $formAttr = array())
+    public function __construct($name, $type, $formType, array $attr = [], array $formAttr = [])
     {
         parent::__construct($name, $type, $formType, $attr, $formAttr);
         $this->attr['defaultFromInput']               = $this->attr['default'];
@@ -45,16 +35,16 @@ class ParamFormWpConfig extends ParamForm
      * this function is calle before sanitization.
      * Is use in extendend classs and transform value before the sanitization and validation process
      *
-     * @param array $superObject query string super object
+     * @param array<string,mixed> $superObject query string super object
      *
-     * @return mixed
+     * @return mixed[]
      */
-    protected function getValueFilter($superObject)
+    protected function getValueFilter($superObject): array
     {
-        $result = array(
+        $result = [
             'value'      => parent::getValueFilter($superObject),
-            'inWpConfig' => filter_var($superObject[$this->name . self::IN_WP_CONF_POSTFIX], FILTER_VALIDATE_BOOLEAN)
-        );
+            'inWpConfig' => filter_var($superObject[$this->name . self::IN_WP_CONF_POSTFIX], FILTER_VALIDATE_BOOLEAN),
+        ];
 
         if (!parent::isValueInInput($superObject)) {
             $result['value'] = $this->attr['defaultFromInput']['value'];
@@ -68,9 +58,9 @@ class ParamFormWpConfig extends ParamForm
      *
      * @param mixed $value input value
      *
-     * @return mixed
+     * @return mixed[]
      */
-    public function getSanitizeValue($value)
+    public function getSanitizeValue($value): array
     {
         $result          = (array) $value;
         $result['value'] = parent::getSanitizeValue($result['value']);
@@ -82,7 +72,7 @@ class ParamFormWpConfig extends ParamForm
      *
      * @return string
      */
-    protected function valueToInfo()
+    protected function valueToInfo(): string
     {
         if ($this->value['inWpConfig']) {
             return 'Set in wp config with value ' . parent::valueToInfo();
@@ -104,11 +94,11 @@ class ParamFormWpConfig extends ParamForm
     /**
      * Return true if value is in input method
      *
-     * @param array $superObject query string super object
+     * @param array<string, mixed> $superObject query string super object
      *
      * @return bool
      */
-    protected function isValueInInput($superObject)
+    protected function isValueInInput($superObject): bool
     {
         return parent::isValueInInput($superObject) || isset($superObject[$this->name . self::IN_WP_CONF_POSTFIX]);
     }
@@ -121,7 +111,7 @@ class ParamFormWpConfig extends ParamForm
      *
      * @return bool true if is a valid value for this object
      */
-    public function isValid($value, &$validateValue = null)
+    public function isValid($value, &$validateValue = null): bool
     {
         if (!is_array($value) || !isset($value['value']) || !isset($value['inWpConfig'])) {
             Log::info('WP CONFIG INVALID ARRAY VAL:' . Log::v2str($value));
@@ -163,19 +153,17 @@ class ParamFormWpConfig extends ParamForm
             }
         }
 
-        $inputAttrs = array(
+        $inputAttrs = [
             'name'  => $this->name . self::IN_WP_CONF_POSTFIX,
-            'value' => 1
-        );
+            'value' => 1,
+        ];
         if ($this->value['inWpConfig']) {
             $inputAttrs['checked'] = 'checked';
         }
         echo '<span class="wpinconf-check-wrapper" >';
         \DUPX_U_Html::checkboxSwitch(
             $inputAttrs,
-            array(
-                'title' => 'Add in wp config'
-            )
+            ['title' => 'Add in wp config']
         );
         echo '</span>';
     }
@@ -187,17 +175,17 @@ class ParamFormWpConfig extends ParamForm
      *
      * @param string $type param value type
      *
-     * @return array
+     * @return array<string,mixed>
      */
-    protected static function getDefaultAttrForType($type)
+    protected static function getDefaultAttrForType($type): array
     {
         $attrs        = parent::getDefaultAttrForType($type);
         $valFromInput = $attrs['defaultFromInput'];
 
-        $attrs['defaultFromInput'] = array(
+        $attrs['defaultFromInput'] = [
             'value'      => $valFromInput,
-            'inWpConfig' => false
-        );
+            'inWpConfig' => false,
+        ];
         return $attrs;
     }
 
@@ -208,9 +196,9 @@ class ParamFormWpConfig extends ParamForm
      *
      * @param string $formType form type
      *
-     * @return array
+     * @return array<string,mixed>
      */
-    protected static function getDefaultAttrForFormType($formType)
+    protected static function getDefaultAttrForFormType($formType): array
     {
         $attrs = parent::getDefaultAttrForFormType($formType);
 

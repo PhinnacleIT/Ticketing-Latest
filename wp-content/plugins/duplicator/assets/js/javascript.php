@@ -1,397 +1,111 @@
 <?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
+defined("ABSPATH") or die("");
 ?>
 <script>
-/* DESCRIPTION: Methods and Objects in this file are global and common in 
- * nature use this file to place all shared methods and varibles */ 
+/*! ============================================================================
+* DESCRIPTION: Methods and Objects in this file are global and common in nature
+* use this file to place all shared methods and varibles
+* NAMESPACE: DupliJs (defined in dupli-namespace.js, loaded via main.js bundle)
+* ============================================================================ */
 
-//UNIQUE NAMESPACE
-Duplicator          = new Object();
-Duplicator.Util     = new Object();
-Duplicator.UI       = new Object();
-Duplicator.Pack     = new Object();
-Duplicator.Settings = new Object();
-Duplicator.Tools    = new Object();
-Duplicator.Debug    = new Object();
-Duplicator.Help     = new Object();
-
-//GLOBAL CONSTANTS
-Duplicator.DEBUG_AJAX_RESPONSE = false;
-Duplicator.AJAX_TIMER = null;
-
-Duplicator.parseJSON = function(mixData) {
-    try {
-        var parsed = JSON.parse(mixData);
-        return parsed;
-    } catch (e) {
-        console.log("JSON parse failed - 1");
-        console.log(mixData);
+DupliJs.Pack.DownloadFile = function (url, fileName='') {
+    var link = document.createElement('a');
+    link.className = "dupli-dnload-menu-item";
+    link.href = url;
+    if (fileName !== '') {
+        link.download = fileName;
     }
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    return false;
+};
 
-    if (mixData.indexOf('[') > -1 && mixData.indexOf('{') > -1) {
-        if (mixData.indexOf('{') < mixData.indexOf('[')) {
-            var startBracket = '{';
-            var endBracket = '}';
-        } else {
-            var startBracket = '[';
-            var endBracket = ']';
-        }
-    } else if (mixData.indexOf('[') > -1 && mixData.indexOf('{') === -1) {
-        var startBracket = '[';
-        var endBracket = ']';
-    } else {
-        var startBracket = '{';
-        var endBracket = '}';
-    }
-    
-    var jsonStartPos = mixData.indexOf(startBracket);
-    var jsonLastPos = mixData.lastIndexOf(endBracket);
-    if (jsonStartPos > -1 && jsonLastPos > -1) {
-        var expectedJsonStr = mixData.slice(jsonStartPos, jsonLastPos + 1);
+(function ($) {
+
+    /* ============================================================================
+     *  BASE NAMESPACE: All methods at the top of the Duplicator Namespace
+     * ============================================================================ */
+
+    DupliJs._WordPressInitDateTime = '<?php echo esc_js(current_time("D M d Y H:i:s O")) ?>';
+    DupliJs._WordPressInitTime = '<?php echo esc_js(current_time("H:i:s")) ?>';
+    DupliJs._ServerInitDateTime = '<?php echo esc_js(date("D M d Y H:i:s O")) ?>';
+    DupliJs._ClientInitDateTime = new Date();
+
+    DupliJs.parseJSON = function (mixData) {
         try {
-            var parsed = JSON.parse(expectedJsonStr);
+            var parsed = JSON.parse(mixData);
             return parsed;
         } catch (e) {
-            console.log("JSON parse failed - 2");
+            console.log("JSON parse failed - 1");
             console.log(mixData);
-            throw e;
-            return false;
         }
-    }
-    throw "could not parse the JSON";
-    return false;
-}
 
+        if (mixData.indexOf('[') > -1 && mixData.indexOf('{') > -1) {
+            if (mixData.indexOf('{') < mixData.indexOf('[')) {
+                var startBracket = '{';
+                var endBracket = '}';
+            } else {
+                var startBracket = '[';
+                var endBracket = ']';
+            }
+        } else if (mixData.indexOf('[') > -1 && mixData.indexOf('{') === -1) {
+            var startBracket = '[';
+            var endBracket = ']';
+        } else {
+            var startBracket = '{';
+            var endBracket = '}';
+        }
 
-/* ============================================================================
-*  BASE NAMESPACE: All methods at the top of the Duplicator Namespace  
-*  ============================================================================ */
-
-/*  Starts a timer for Ajax calls */ 
-Duplicator.StartAjaxTimer = function() 
-{
-    Duplicator.AJAX_TIMER = new Date();
-};
-
-/*  Ends a timer for Ajax calls */ 
-Duplicator.EndAjaxTimer = function() 
-{
-    var endTime = new Date();
-    Duplicator.AJAX_TIMER =  (endTime.getTime()  - Duplicator.AJAX_TIMER) /1000;
-};
-
-/*  Reloads the current window
-*   @param data     An xhr object  */ 
-Duplicator.ReloadWindow = function(data) 
-{
-    if (Duplicator.DEBUG_AJAX_RESPONSE) {
-        Duplicator.Pack.ShowError('debug on', data);
-    } else {
-        window.location.reload(true);
-    }
-};
-
-//Basic Util Methods here:
-Duplicator.OpenLogWindow = function(target)
-{
-    var target = "log-win" || null;
-    if (target != null) {
-        window.open('?page=duplicator-tools&tab=diagnostics&section=log', 'log-win');
-    } else {
-        window.open('<?php echo esc_js(DUP_Settings::getSsdirUrl()); ?>' + '/' + log)
-    }
-};
-
-
-/* ============================================================================
-*  UI NAMESPACE: All methods at the top of the Duplicator Namespace  
-*  ============================================================================ */
-
-/*  Saves the state of a UI element */ 
-Duplicator.UI.SaveViewState = function (key, value) 
-{
-    if (key != undefined && value != undefined ) {
-        jQuery.ajax({
-            type: "POST",
-            url: ajaxurl,
-            dataType: "text",
-            data: {
-                action : 'DUP_CTRL_UI_SaveViewState',
-                key: key,
-                value: value,
-                nonce: '<?php echo wp_create_nonce('DUP_CTRL_UI_SaveViewState'); ?>'
-            },
-            success: function(respData) {
-                try {
-                    var data = Duplicator.parseJSON(respData);
-                } catch(err) {
-                    console.error(err);
-                    console.error('JSON parse failed for response data: ' + respData);
-                    return false;
-                }
-            },
-            error: function(data) {}
-        }); 
-    }
-}
-
-/*  Saves multiple states of a UI element */ 
-Duplicator.UI.SaveMulViewStates = function (states)
-{
-    jQuery.ajax({
-        type: "POST",
-        url: ajaxurl,
-        dataType: "text",
-        data: {
-            action : 'DUP_CTRL_UI_SaveViewState',
-            states: states,
-            nonce: '<?php echo wp_create_nonce('DUP_CTRL_UI_SaveViewState'); ?>'
-        },
-        success: function(respData) {
+        var jsonStartPos = mixData.indexOf(startBracket);
+        var jsonLastPos = mixData.lastIndexOf(endBracket);
+        if (jsonStartPos > -1 && jsonLastPos > -1) {
+            var expectedJsonStr = mixData.slice(jsonStartPos, jsonLastPos + 1);
             try {
-                var data = Duplicator.parseJSON(respData);
-            } catch(err) {
-                console.error(err);
-                console.error('JSON parse failed for response data: ' + respData);
+                var parsed = JSON.parse(expectedJsonStr);
+                return parsed;
+            } catch (e) {
+                console.log("JSON parse failed - 2");
+                console.log(mixData);
+                throw e;
+                // errorCallback(xHr, textstatus, 'extract');
                 return false;
             }
-        },
-        error: function(data) {}
-    });
-}
-
-/* Animates the progress bar */
-Duplicator.UI.AnimateProgressBar = function(id) 
-{
-    //Create Progress Bar
-    var $mainbar   = jQuery("#" + id);
-    $mainbar.progressbar({ value: 100 });
-    $mainbar.height(25);
-    runAnimation($mainbar);
-
-    function runAnimation($pb) {
-        $pb.css({ "padding-left": "0%", "padding-right": "90%" });
-        $pb.progressbar("option", "value", 100);
-        $pb.animate({ paddingLeft: "90%", paddingRight: "0%" }, 3000, "linear", function () { runAnimation($pb); });
-    }
-}
-
-Duplicator.UI.IsSaveViewState = true;
-/* Toggle MetaBoxes */ 
-Duplicator.UI.ToggleMetaBox = function() 
-{
-    var $title = jQuery(this);
-    var $panel = $title.parent().find('.dup-box-panel');
-    var $arrow = $title.parent().find('.dup-box-arrow i');
-    var key   = $panel.attr('id');
-    var value = $panel.is(":visible") ? 0 : 1;
-    $panel.toggle();
-    if (Duplicator.UI.IsSaveViewState)
-        Duplicator.UI.SaveViewState(key, value);
-    (value) 
-        ? $arrow.removeClass().addClass('fa fa-caret-up') 
-        : $arrow.removeClass().addClass('fa fa-caret-down');
-    
-}
-
-Duplicator.UI.readonly = function(item)
-{
-    jQuery(item).attr('readonly', 'true').css({color:'#999'});
-}
-
-Duplicator.UI.disable = function(item)
-{
-    jQuery(item).attr('disabled', 'true').css({color:'#999'});
-}
-
-Duplicator.UI.enable = function(item)
-{
-    jQuery(item).removeAttr('disabled').css({color:'#000'});
-    jQuery(item).removeAttr('readonly').css({color:'#000'});
-}
-
-//Init
-jQuery(document).ready(function($) 
-{
-
-    Duplicator.UI.loadQtip = function()
-    {
-        //Look for tooltip data
-        $('[data-tooltip!=""]').qtip({
-            content: {
-                attr: 'data-tooltip',
-                title:  function() { 
-                    if ($(this)[0].hasAttribute("data-tooltip-title")) {
-                        return  $(this).data('tooltip-title');
-                    } else {
-                        return false;
-                    }
-                }
-            },
-            style: {
-                classes: 'qtip-light qtip-rounded qtip-shadow',
-                width: 500
-            },
-            position: {
-                my: 'top left',
-                at: 'bottom center'
-            }
-        });
+        }
+        // errorCallback(xHr, textstatus, 'extract');
+        throw "could not parse the JSON";
+        return false;
     }
 
-    Duplicator.UI.loadSimpeQtip = function()
-    {
-        //Look for tooltip data
-        $('[data-simpletip!=""]').qtip({
-            content: {
-                attr: 'data-simpletip'
-            },
-            style: {
-                classes: 'qtip-light qtip-rounded qtip-shadow'
-            },
-            position: {
-                my: 'top left',
-                at: 'bottom center'
-            }
-        });
-    }  
-
-    Duplicator.UI.Copytext = function () {
-        $('[data-dup-copy-text]').each(function () {
-            $(this).click(function () {
-                var elem = $(this);
-                var message = '';
-                var textToCopy = elem.data('dup-copy-text');
-                var tmpArea = jQuery("<textarea></textarea>").css({
-                    position: 'absolute',
-                    top: '-10000px'
-                }).text(textToCopy).appendTo( "body" );
-                tmpArea.select();
-                try {
-                    var successful = document.execCommand('copy');
-                    message = successful ? '<?php echo esc_html_e('Copied: ', 'duplicator'); ?>' + textToCopy : '<?php echo esc_html_e('unable to copy'); ?>';
-                } catch (err) {
-                    message = '<?php echo esc_html_e('unable to copy', 'duplicator'); ?>';
-                }
-                elem.qtip('option', 'content.text', message).qtip('show');
-                setTimeout(function(){ 
-                    elem.qtip('option', 'content.text', '<?php esc_html_e('Copy to Clipboard!', 'duplicator'); ?>');
-                }, 2000);
-            }).qtip({
-                content: {
-                    text: '<?php esc_html_e('Copy to Clipboard!', 'duplicator'); ?>'
-                },
-                style: {
-                    classes: 'qtip-light qtip-rounded qtip-shadow'
-                },
-                position: {
-                    my: 'top left',
-                    at: 'bottom center'
-                }
-            });
-        });
+    DupliJs.escapeHtml = function(str) {
+        return str
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
     };
 
-    //INIT: Tabs
-    $("div[data-dup-tabs='true']").each(function () {
+    DupliJs.isInViewport = function ( $element ) {
+        const rect = $element[ 0 ].getBoundingClientRect();
 
-        //Load Tab Setup
-        var $root   = $(this);
-        var $lblRoot = $root.find('ul:first-child')
-        var $lblKids = $lblRoot.children('li');
-        var $pnls    = $root.children('div');
-
-        //Apply Styles
-        $root.addClass('categorydiv');
-        $lblRoot.addClass('category-tabs');
-        $pnls.addClass('tabs-panel').css('display', 'none');
-        $lblKids.eq(0).addClass('tabs').css('font-weight', 'bold');
-        $pnls.eq(0).show();
-
-        //Attach Events
-        $lblKids.click(function(evt) 
-        {
-            var $lbls = $(evt.target).parent().children('li');
-            var $pnls = $(evt.target).parent().parent().children('div');
-            var index = ($(evt.target).index());
-            
-            $lbls.removeClass('tabs').css('font-weight', 'normal');
-            $lbls.eq(index).addClass('tabs').css('font-weight', 'bold');
-            $pnls.hide();
-            $pnls.eq(index).show();
-        });
-     });
-    
-    //Init: Toggle MetaBoxes
-    $('div.dup-box div.dup-box-title').each(function() { 
-        var $title = $(this);
-        var $panel = $title.parent().find('.dup-box-panel');
-        var $arrow = $title.find('.dup-box-arrow');
-        $title.click(Duplicator.UI.ToggleMetaBox); 
-        ($panel.is(":visible")) 
-            ? $arrow.html('<i class="fa fa-caret-up"></i>')
-            : $arrow.html('<i class="fa fa-caret-down"></i>');
-    });
-
-    
-    Duplicator.UI.loadQtip();
-    Duplicator.UI.loadSimpeQtip();
-    Duplicator.UI.Copytext();
-
-    //HANDLEBARS HELPERS
-    if  (typeof(Handlebars) != "undefined"){
-
-        function _handleBarscheckCondition(v1, operator, v2) {
-            switch(operator) {
-                case '==':
-                    return (v1 == v2);
-                case '===':
-                    return (v1 === v2);
-                case '!==':
-                    return (v1 !== v2);
-                case '<':
-                    return (v1 < v2);
-                case '<=':
-                    return (v1 <= v2);
-                case '>':
-                    return (v1 > v2);
-                case '>=':
-                    return (v1 >= v2);
-                case '&&':
-                    return (v1 && v2);
-                case '||':
-                    return (v1 || v2);
-                case 'obj||':
-                    v1 = typeof(v1) == 'object' ? v1.length : v1;
-                    v2 = typeof(v2) == 'object' ? v2.length : v2;
-                    return (v1 !=0 || v2 != 0);
-                default:
-                    return false;
-            }
-        }
-
-        Handlebars.registerHelper('ifCond', function (v1, operator, v2, options) {
-            return _handleBarscheckCondition(v1, operator, v2)
-                        ? options.fn(this)
-                        : options.inverse(this);
-        });
-
-        Handlebars.registerHelper('if_eq',      function(a, b, opts) { return (a == b) ? opts.fn(this) : opts.inverse(this);});
-        Handlebars.registerHelper('if_neq',     function(a, b, opts) { return (a != b) ? opts.fn(this) : opts.inverse(this);});
-    }
-
-    //Prevent notice boxes from flashing as its re-positioned in DOM
-    $('div.dup-wpnotice-box').show(300);
+        return (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= ( window.innerHeight || document.documentElement.clientHeight ) &&
+            rect.right <= ( window.innerWidth || document.documentElement.clientWidth )
+        );
+    };
 
     /**
      *
      * @param string message // html message conent
      * @param string errLevel // notice warning error
      * @param function updateCallback // called after message content is updated
-     * 
+     *
      * @returns void
      */
-    Duplicator.addAdminMessage = function (message, errLevel, options) {
+    DupliJs.addAdminMessage = function (message, errLevel, options) {
         let settings = $.extend({}, {
             'isDismissible': true,
             'hideDelay': 0, // 0 no hide or millisec
@@ -412,29 +126,20 @@ jQuery(document).ready(function($)
                 break;
         }
 
-        var noticeCLasses = 'duplicator-admin-notice notice ' + classErrLevel + ' no_display';
+        var noticeCLasses = 'dupli-admin-notice notice ' + classErrLevel + ' no-display';
         if (settings.isDismissible) {
             noticeCLasses += ' is-dismissible';
         }
 
         var msgNode = $('<div class="' + noticeCLasses + '">' +
-                '<div class="margin-top-1 margin-bottom-1 msg-content">' + message + '</div>' +
+                '<div class="msg-content">' + message + '</div>' +
                 '</div>');
         var dismissButton = $('<button type="button" class="notice-dismiss">' +
                 '<span class="screen-reader-text">Dismiss this notice.</span>' +
                 '</button>');
 
-        var anchor = $("#wpcontent");
-        if (anchor.find('.wrap').length) {
-            anchor = anchor.find('.wrap').first();
-        }
-
-        if (anchor.find('h1').length) {
-            anchor = anchor.find('h1').first();
-            msgNode.insertAfter(anchor);
-        } else {
-            msgNode.prependTo(anchor);
-        }
+        let anchor = $(".wp-header-end").first();
+        msgNode.insertAfter(anchor);
 
         if (settings.isDismissible) {
             dismissButton.appendTo(msgNode).click(function () {
@@ -449,7 +154,7 @@ jQuery(document).ready(function($)
         }
 
         $("body, html").animate({scrollTop: 0}, 500);
-        $(msgNode).css('display', 'none').removeClass("no_display").fadeIn("slow", function () {
+        $(msgNode).css('display', 'none').removeClass("no-display").fadeIn("slow", function () {
             if (settings.hideDelay > 0) {
                 setTimeout(function () {
                     dismissButton.closest('.is-dismissible').fadeOut("slow", function () {
@@ -459,37 +164,298 @@ jQuery(document).ready(function($)
             }
         });
     };
-});
 
-jQuery(document).ready(function($) {
-    $('.duplicator-message .notice-dismiss, .duplicator-message .duplicator-notice-dismiss, .duplicator-message  .duplicator-notice-rate-now')
-    .on('click', function (event) {
-        if ('button button-primary duplicator-notice-rate-now' !== $(event.target).attr('class')) {
-            event.preventDefault();
-        }
-        $.post(ajaxurl, {
-            action: 'duplicator_set_admin_notice_viewed',
-            notice_id: $(this).closest('.duplicator-message-dismissed').data('notice_id'),
-            nonce: '<?php echo wp_create_nonce('duplicator_set_admin_notice_viewed'); ?>'
-        });
-        var $wrapperElm = $(this).closest('.duplicator-message-dismissed');
-        $wrapperElm.fadeTo(100, 0, function () {
-            $wrapperElm.slideUp(100, function () {
-                $wrapperElm.remove();
+    /**
+     *
+     * @param string filename
+     * @param string content
+     * @param string mimeType // text/html, text/plain
+     * @returns {undefined}
+     */
+    DupliJs.downloadContentAsfile = function (filename, content, mimeType) {
+        mimeType = (typeof mimeType !== 'undefined') ? mimeType : 'text/plain';
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(content));
+        element.setAttribute('download', filename);
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    }
+
+
+    DupliJs.openWindow = function () {
+        $("[data-dup-open-window]").each(function () {
+            let url = $(this).data('dup-open-window');
+            let name = $(this).data('dup-window-name');
+
+            $(this).click(function () {
+                window.open(url, name);
             });
         });
-    });
+    }
 
-    $('#screen-meta-links, #screen-meta').prependTo('#dup-meta-screen');
-    $('#screen-meta-links').show();
-});
+    DupliJs.passwordToggle = function () {
+        $('.dup-password-toggle').each(function () {
+            let inputElem = $(this).find('input');
+            let buttonElem = $(this).find('button');
+            let iconElem = $(this).find('button i');
 
+            buttonElem.click(function () {
+                if (inputElem.attr('type') == 'password') {
+                    inputElem.attr('type','text');
+                    iconElem.removeClass('fa-eye').addClass('fa-eye-slash');
+                } else {
+                    inputElem.attr('type','password');
+                    iconElem.removeClass('fa-eye-slash').addClass('fa-eye');
+                }
+            });
+        });
+    }
+
+})(jQuery);
 </script>
+
 <?php
-    require_once(DUPLICATOR_PLUGIN_PATH . '/assets/js/duplicator/dup.util.php');
+    require_once(DUPLICATOR____PATH . '/assets/js/duplicator/dup.ui.php');
+    require_once(DUPLICATOR____PATH . '/assets/js/duplicator/dup.util.php');
 ?>
 <script>
     <?php
-        require_once(DUPLICATOR_PLUGIN_PATH . '/assets/js/modal-box.js');
+        require_once(DUPLICATOR____PATH . '/assets/js/modal-box.js');
     ?>
+</script>
+
+<script>
+//Init
+jQuery(document).ready(function ($)
+{
+    DupliJs.openWindow();
+
+    //INIT: DupliJs Tabs
+    $("div[data-dupli-tabs='true']").each(function ()
+    {
+        //Load Tab Setup
+        var $root = $(this);
+        var $lblRoot = $root.find('> ul:first-child')
+        var $lblKids = $lblRoot.children('li');
+        var $lblButton = $lblKids.find('button');
+        var $pnls = $root.children('div');
+
+        //Apply Styles
+        $root.addClass('categorydiv');
+        $lblRoot.addClass('category-tabs');
+        $pnls.addClass('tabs-panel').css('display', 'none');
+
+        //Init accessibility improvement
+        $lblKids.each(function () {
+            var $content = $(this).text();
+            $(this).html("<button role='tabs' aria-selected='false'>" +
+                "<span class='screen-reader-text'><?php esc_html_e('Toggle Tab: ', 'duplicator') ?></span> "+$content+
+                "</button>")
+        })
+
+        //Activate first tab
+        $lblKids.eq(0).addClass('tabs').css('font-weight', 'bold');
+        $lblKids.eq(0).find('button').attr("aria-selected", true)
+        $pnls.eq(0).show();
+
+        //Initialize tab click event
+        var _clickEvt = function (evt)
+        {
+            var $target = $(evt.target);
+            if (evt.target.nodeName === 'BUTTON') {
+                $target = $(evt.target).parent();
+            }
+            var $lbls = $target.parent().children('li');
+            var $pnls = $target.parent().parent().children('div');
+            var index = $target.index();
+
+            $lbls.removeClass('tabs').css('font-weight', 'normal');
+            $lbls.find("button").attr("aria-selected", false);
+
+            $lbls.eq(index).addClass('tabs').css('font-weight', 'bold');
+            $lbls.eq(index).find("button").attr("aria-selected", true);
+
+            $pnls.hide();
+            $pnls.eq(index).show();
+
+            return false;
+        }
+
+        //Attach Events
+        $lblKids.click(_clickEvt);
+        $lblButton.on("click", _clickEvt);
+    });
+
+    //INIT: Toggle MetaBoxes (static boxes are always open and not clickable)
+    $('div.dup-box:not(.dupli-box-static) div.dup-box-title').each(function () {
+        var $title = $(this);
+        var $panel = $title.parent().find('.dup-box-panel');
+        var $arrow = $title.find('.dup-box-arrow');
+
+        $title.click(DupliJs.UI.ToggleMetaBox);
+        //$arrow.on("keypress", DupliJs.UI.ToggleMetaBox)
+        $arrow.attr("aria-haspopup", true);
+
+        if ($panel.is(":visible")) {
+            $arrow.attr("aria-expanded", true);
+            $arrow.append('<i class="fa fa-caret-up"></i>');
+        } else {
+            $arrow.attr("aria-expanded", false);
+            $arrow.append('<i class="fa fa-caret-down"></i>')
+        }
+    });
+
+    DuplicatorTooltip.load();
+    DupliJs.passwordToggle();
+
+    //HANDLEBARS HELPERS
+    if (typeof DupliJs !== "undefined" && DupliJs.Libs && typeof DupliJs.Libs.Handlebars !== "undefined") {
+
+        function _handleBarscheckCondition(v1, operator, v2) {
+            switch (operator) {
+                case '==':
+                    return (v1 == v2);
+                case '===':
+                    return (v1 === v2);
+                case '!==':
+                    return (v1 !== v2);
+                case '<':
+                    return (v1 < v2);
+                case '<=':
+                    return (v1 <= v2);
+                case '>':
+                    return (v1 > v2);
+                case '>=':
+                    return (v1 >= v2);
+                case '&&':
+                    return (v1 && v2);
+                case '||':
+                    return (v1 || v2);
+                case 'obj||':
+                    v1 = typeof (v1) == 'object' ? v1.length : v1;
+                    v2 = typeof (v2) == 'object' ? v2.length : v2;
+                    return (v1 != 0 || v2 != 0);
+                default:
+                    return false;
+            }
+        }
+
+        DupliJs.Libs.Handlebars.registerHelper('ifCond', function (v1, operator, v2, options) {
+            return _handleBarscheckCondition(v1, operator, v2)
+                    ? options.fn(this)
+                    : options.inverse(this);
+        });
+
+        DupliJs.Libs.Handlebars.registerHelper('if_eq', function (a, b, opts) {
+            return (a == b) ? opts.fn(this) : opts.inverse(this);
+        });
+        DupliJs.Libs.Handlebars.registerHelper('if_neq', function (a, b, opts) {
+            return (a != b) ? opts.fn(this) : opts.inverse(this);
+        });
+    }
+
+    $('.dup-pseudo-checkbox').each(function () {
+        let checkbox = $(this);
+        checkbox.attr("tabindex", 0);
+        checkbox.attr("role", "checkbox")
+
+        checkbox.on('click', function(e) {
+            e.stopPropagation();
+            if (checkbox.hasClass('disabled')) {
+                return;
+            }
+            checkbox.toggleClass('checked');
+        });
+
+        checkbox.on('keypress', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            if (checkbox.hasClass('disabled')) {
+                return;
+            }
+            checkbox.toggleClass('checked');
+        });
+
+        checkbox.closest('label').on('click', function () {
+            checkbox.trigger('click');
+        });
+    });
+
+    /**
+     * Register a change event handler for all forms with the class 'dup-monitored-form'.
+     * This will set a flag to indicate that the form has unsaved changes.
+     */
+    $('form.dup-monitored-form').each(function (index, form) {
+        DupliJs.UI.formOnChangeValues($(form), function() {
+            DupliJs.UI.hasUnsavedChanges = true;
+        });
+    });
+
+    /**
+     * Accordion
+     */
+    $('.dup-accordion-wrapper .accordion-header').on('click', function () {
+        let accordion = $(this).parent();
+        let content = accordion.find('.accordion-content');
+        if (accordion.hasClass('close')) {
+            accordion.removeClass('close').addClass('open');
+            content.css('opacity', 0).animate({
+                opacity: 1
+            }, 300);
+        } else {
+            content.animate({
+                opacity: 0
+            }, 300, function() {
+                accordion.removeClass('open').addClass('close');
+            });
+        }
+    });
+
+    /**
+    * Meta Screen
+    */
+    if ($('#screen-meta-links').length && $('body').hasClass('duplicator-page')) {
+        $('#wpcontent').css('position', 'relative');
+    }
+
+    $('#screen-meta-links, #screen-meta').prependTo('#dup-meta-screen');
+    $('#screen-meta-links').show();
+
+    /**
+    * Header tabs scroll
+    */
+    if($('.dup-nav-item:last-child').length > 0) {
+        let $header  = $('.dup-body-header').first();
+        let $lastTab = $header.find('.dup-nav-item:last-child');
+        if (!DupliJs.isInViewport($lastTab)) {
+            $header.addClass('dup-scrollable-header');
+        }
+
+        $header.on('scroll', function() {
+            $header.toggleClass('dup-scrollable-header', !DupliJs.isInViewport($lastTab));
+        });
+    }
+
+    /**
+     * When a form is submitting, we want to clear the unsaved changes flag.
+     * Otherwise, the user will be prompted to save changes when they are not actually leaving the page.
+     */
+    window.addEventListener('submit', function (e) {
+        DupliJs.UI.hasUnsavedChanges = false;
+    });
+
+    /**
+     * Check if we have unsaved changes, and if so, prevent the user from navigating away from the page.
+     */
+    window.addEventListener('beforeunload', function (e) {
+        if (DupliJs.UI.hasUnsavedChanges) {
+            e.preventDefault();
+            // Most browsers ignore the value, but historically some browsers are known to honor this value. So it's here as a backup
+            e.returnValue = '<?php echo esc_js(__('Changes you made may not be saved.', 'duplicator')) ?>';
+        }
+    });
+});
 </script>

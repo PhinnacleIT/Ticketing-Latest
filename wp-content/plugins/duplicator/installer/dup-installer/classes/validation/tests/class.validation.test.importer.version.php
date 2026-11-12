@@ -7,9 +7,9 @@
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
  *
- * @package SC\DUPX\U
  */
 
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
 use Duplicator\Libs\Snap\SnapUtil;
 
@@ -19,10 +19,10 @@ class DUPX_Validation_test_importer_version extends DUPX_Validation_abstract_ite
      *
      * @return int
      */
-    protected function runTest()
+    protected function runTest(): int
     {
 
-        if (!DUPX_InstallerState::isImportFromBackendMode()) {
+        if (!InstState::isImportFromBackendMode()) {
             return self::LV_SKIP;
         }
 
@@ -39,7 +39,7 @@ class DUPX_Validation_test_importer_version extends DUPX_Validation_abstract_ite
      *
      * @return string
      */
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'Duplicator importer version';
     }
@@ -48,10 +48,10 @@ class DUPX_Validation_test_importer_version extends DUPX_Validation_abstract_ite
     {
         $overwriteData = PrmMng::getInstance()->getValue(PrmMng::PARAM_OVERWRITE_SITE_DATA);
 
-        return dupxTplRender('parts/validation/tests/importer-version', array(
+        return dupxTplRender('parts/validation/tests/importer-version', [
             'testResult'  => $this->testResult,
-            'importerVer' => ($overwriteData['dupVersion'] == '0' ? 'Unknown' : $overwriteData['dupVersion'])
-        ), false);
+            'importerVer' => ($overwriteData['dupVersion'] == '0' ? 'Unknown' : $overwriteData['dupVersion']),
+        ], false);
     }
 
     protected function passContent()

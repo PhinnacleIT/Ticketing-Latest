@@ -1,3 +1,254 @@
-/*! For license information please see wp-media.js.LICENSE.txt */
-!function(){"use strict";var e={"./packages/packages/libs/wp-media/src/errors.ts":function(e,t,a){a.r(t),a.d(t,{WpMediaNotAvailableError:function(){return n},WpPluploadSettingsNotAvailableError:function(){return i}});var r=a("@elementor/utils");const n=(0,r.createError)({code:"wp_media_not_available",message:"`wp.media` is not available, make sure the `media-models` handle is set in the dependencies array"}),i=(0,r.createError)({code:"wp_plupload_settings_not_available",message:"`_wpPluploadSettings` is not available, make sure a wp media uploader is open"})},"./packages/packages/libs/wp-media/src/get-media-attachment.ts":function(e,t,a){a.r(t),a.d(t,{fetchAttachmentFromWP:function(){return fetchAttachmentFromWP},getMediaAttachment:function(){return getMediaAttachment}});var r=a("@elementor/query"),n=a("./packages/packages/libs/wp-media/src/media.ts"),i=a("./packages/packages/libs/wp-media/src/normalize.ts");async function fetchAttachmentFromWP(e){const t=(0,n.default)().attachment(e),a=t.toJSON();if("url"in a)return(0,i.default)(a);try{return(0,i.default)(await t.fetch())}catch{return null}}async function getMediaAttachment({id:e}){if(!e)return null;return(0,r.getQueryClient)().ensureQueryData({queryKey:["wp-attachment",e],queryFn:()=>fetchAttachmentFromWP(e)})}},"./packages/packages/libs/wp-media/src/hooks/use-wp-media-attachment.ts":function(e,t,a){a.r(t),a.d(t,{default:function(){return useWpMediaAttachment}});var r=a("@elementor/query"),n=a("./packages/packages/libs/wp-media/src/get-media-attachment.ts");function useWpMediaAttachment(e){return(0,r.useQuery)({queryKey:["wp-attachment",e],queryFn:()=>(0,n.fetchAttachmentFromWP)(e),enabled:!!e})}},"./packages/packages/libs/wp-media/src/hooks/use-wp-media-frame.ts":function(e,t,a){a.r(t),a.d(t,{default:function(){return useWpMediaFrame}});var r=a("react"),n=a("./packages/packages/libs/wp-media/src/media.ts"),i=a("./packages/packages/libs/wp-media/src/normalize.ts"),s=a("./packages/packages/libs/wp-media/src/wp-plupload-settings.ts");function useWpMediaFrame(e){const t=(0,r.useRef)();return(0,r.useEffect)(()=>()=>{cleanupFrame(t.current)},[]),{open:(a={})=>{cleanupFrame(t.current),t.current=function createFrame({onSelect:e,onSelectUrl:t,allowUrlImport:a,multiple:r,mediaTypes:c,selected:u,title:p,mode:l="browse",currentUrl:m,currentAlt:d}){const f=(0,n.default)()({title:p,multiple:r,library:{type:getMimeTypes(c)},...a?{frame:"post"}:{}}).on("open",()=>{!function setTypeCaller(e){e.uploader.uploader.param("uploadTypeCaller","elementor-wp-media-upload")}(f),function applyMode(e,t="browse",a,r){"url"===t?(e.setState("embed"),(a||r)&&setTimeout(()=>{a&&e.state()?.props?.set("url",a),r&&e.state()?.props?.set("alt",r)},0)):e.content.mode(t)}(f,l,m,d),"url"!==l&&function applySelection(e,t){const a=("number"==typeof t?[t]:t)?.filter(e=>!!e).map(e=>(0,n.default)().attachment(e));e.state().get("selection").set(a||[])}(f,u)}).on("insert select",()=>function select(e,t,a,r){const n=e.state();if("embed"===n.get("id")){if(r){const e=n.props?.get("url"),t=n.props?.get("alt");e&&r(e,t)}return}const s=n.get("selection").toJSON().map(i.default),o=a;o(t?s:s[0])}(f,r,e,t));a&&f.on("ready open",()=>function restrictFrameMenu(e){e.$el?.find(o)?.remove()}(f));return function handleExtensions(e,t){const a=(0,s.default)().defaults.filters.mime_types?.[0]?.extensions;e.on("ready",()=>{(0,s.default)().defaults.filters.mime_types=[{extensions:getExtensions(t)}]}),e.on("close",()=>{(0,s.default)().defaults.filters.mime_types=a?[{extensions:a}]:[]})}(f,c),f}({...e,...a}),t.current?.open()}}}function cleanupFrame(e){e?.detach(),e?.remove()}const o=["#menu-item-gallery","#menu-item-featured-image","#menu-item-playlist","#menu-item-video-playlist"].join(",");const c=["avif","bmp","gif","ico","jpe","jpeg","jpg","png","webp"],u=["mp4","webm","ogg","mov","m4v","avi","wmv","mpg","mpeg","3gp","3g2"];function getMimeTypes(e){const t={image:c.map(e=>`image/${e}`),svg:["image/svg+xml"],video:["video/mp4","video/webm","video/ogg","video/quicktime","video/x-m4v","video/avi","video/x-ms-wmv","video/mpeg","video/3gpp","video/3gpp2"]};return e.reduce((e,a)=>e.concat(t[a]),[])}function getExtensions(e){const t={image:c,svg:["svg"],video:u};return e.reduce((e,a)=>e.concat(t[a]),[]).join(",")}},"./packages/packages/libs/wp-media/src/media.ts":function(e,t,a){a.r(t);var r=a("./packages/packages/libs/wp-media/src/errors.ts");const n=window;t.default=()=>{if(!n.wp?.media)throw new r.WpMediaNotAvailableError;return n.wp.media}},"./packages/packages/libs/wp-media/src/normalize.ts":function(e,t,a){function normalize(e){const{filesizeInBytes:t,filesizeHumanReadable:a,author:r,authorName:n,...i}=e;return{...i,filesize:{inBytes:t,humanReadable:a},author:{id:parseInt(r),name:n}}}a.r(t),a.d(t,{default:function(){return normalize}})},"./packages/packages/libs/wp-media/src/wp-plupload-settings.ts":function(e,t,a){a.r(t);var r=a("./packages/packages/libs/wp-media/src/errors.ts");const n=window;t.default=()=>{if(!n._wpPluploadSettings)throw new r.WpPluploadSettingsNotAvailableError;return n._wpPluploadSettings}},"@elementor/query":function(e){e.exports=window.elementorV2.query},"@elementor/utils":function(e){e.exports=window.elementorV2.utils},react:function(e){e.exports=window.React}},t={};function __webpack_require__(a){var r=t[a];if(void 0!==r)return r.exports;var n=t[a]={exports:{}};return e[a](n,n.exports,__webpack_require__),n.exports}__webpack_require__.n=function(e){var t=e&&e.__esModule?function(){return e.default}:function(){return e};return __webpack_require__.d(t,{a:t}),t},__webpack_require__.d=function(e,t){for(var a in t)__webpack_require__.o(t,a)&&!__webpack_require__.o(e,a)&&Object.defineProperty(e,a,{enumerable:!0,get:t[a]})},__webpack_require__.o=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)},__webpack_require__.r=function(e){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})};var a={};!function(){__webpack_require__.r(a),__webpack_require__.d(a,{getMediaAttachment:function(){return r.getMediaAttachment},useWpMediaAttachment:function(){return e.default},useWpMediaFrame:function(){return t.default}});var e=__webpack_require__("./packages/packages/libs/wp-media/src/hooks/use-wp-media-attachment.ts"),t=__webpack_require__("./packages/packages/libs/wp-media/src/hooks/use-wp-media-frame.ts"),r=__webpack_require__("./packages/packages/libs/wp-media/src/get-media-attachment.ts")}(),(window.elementorV2=window.elementorV2||{}).wpMedia=a}(),window.elementorV2.wpMedia?.init?.();
+(function(_elementor_query, _elementor_utils, react) {
+
+//#region \0rolldown/runtime.js
+	var __defProp = Object.defineProperty;
+	var __name = (target, value) => __defProp(target, "name", {
+		value,
+		configurable: true
+	});
+	var __exportAll = (all, no_symbols) => {
+		let target = {};
+		for (var name in all) {
+			__defProp(target, name, {
+				get: all[name],
+				enumerable: true
+			});
+		}
+		if (!no_symbols) {
+			__defProp(target, Symbol.toStringTag, { value: "Module" });
+		}
+		return target;
+	};
+
+//#endregion
+
+//#region packages/packages/libs/wp-media/src/errors.ts
+	var WpMediaNotAvailableError = (0, _elementor_utils.createError)({
+		code: "wp_media_not_available",
+		message: "`wp.media` is not available, make sure the `media-models` handle is set in the dependencies array"
+	});
+	var WpPluploadSettingsNotAvailableError = (0, _elementor_utils.createError)({
+		code: "wp_plupload_settings_not_available",
+		message: "`_wpPluploadSettings` is not available, make sure a wp media uploader is open"
+	});
+
+//#endregion
+//#region packages/packages/libs/wp-media/src/media.ts
+	var wpMediaWindow = window;
+	var media_default = /* @__PURE__ */ __name(() => {
+		if (!wpMediaWindow.wp?.media) throw new WpMediaNotAvailableError();
+		return wpMediaWindow.wp.media;
+	}, "default");
+
+//#endregion
+//#region packages/packages/libs/wp-media/src/normalize.ts
+	function normalize(attachment) {
+		const { filesizeInBytes, filesizeHumanReadable, author, authorName, ...rest } = attachment;
+		return {
+			...rest,
+			filesize: {
+				inBytes: filesizeInBytes,
+				humanReadable: filesizeHumanReadable
+			},
+			author: {
+				id: parseInt(author),
+				name: authorName
+			}
+		};
+	}
+
+//#endregion
+//#region packages/packages/libs/wp-media/src/get-media-attachment.ts
+	async function fetchAttachmentFromWP(id) {
+		const model = media_default().attachment(id);
+		const wpAttachment = model.toJSON();
+		if ("url" in wpAttachment) return normalize(wpAttachment);
+		try {
+			return normalize(await model.fetch());
+		} catch {
+			return null;
+		}
+	}
+	async function getMediaAttachment({ id }) {
+		if (!id) return null;
+		return (0, _elementor_query.getQueryClient)().ensureQueryData({
+			queryKey: ["wp-attachment", id],
+			queryFn: () => fetchAttachmentFromWP(id)
+		});
+	}
+
+//#endregion
+//#region packages/packages/libs/wp-media/src/hooks/use-wp-media-attachment.ts
+	function useWpMediaAttachment(id) {
+		return (0, _elementor_query.useQuery)({
+			queryKey: ["wp-attachment", id],
+			queryFn: () => fetchAttachmentFromWP(id),
+			enabled: !!id
+		});
+	}
+
+//#endregion
+//#region packages/packages/libs/wp-media/src/wp-plupload-settings.ts
+	var wpPluploadSettingsWindow = window;
+	var wp_plupload_settings_default = /* @__PURE__ */ __name(() => {
+		if (!wpPluploadSettingsWindow._wpPluploadSettings) throw new WpPluploadSettingsNotAvailableError();
+		return wpPluploadSettingsWindow._wpPluploadSettings;
+	}, "default");
+
+//#endregion
+//#region packages/packages/libs/wp-media/src/hooks/use-wp-media-frame.ts
+	function useWpMediaFrame(options) {
+		const frame = (0, react.useRef)();
+		const open = (openOptions = {}) => {
+			cleanupFrame(frame.current);
+			frame.current = createFrame({
+				...options,
+				...openOptions
+			});
+			frame.current?.open();
+		};
+		(0, react.useEffect)(() => {
+			return () => {
+				cleanupFrame(frame.current);
+			};
+		}, []);
+		return { open };
+	}
+	function createFrame({ onSelect, onSelectUrl, allowUrlImport, multiple, mediaTypes, selected, title, mode = "browse", currentUrl, currentAlt }) {
+		const frame = media_default()({
+			title,
+			multiple,
+			library: { type: getMimeTypes(mediaTypes) },
+			...allowUrlImport ? { frame: "post" } : {}
+		}).on("open", () => {
+			setTypeCaller(frame);
+			applyMode(frame, mode, currentUrl, currentAlt);
+			if (mode !== "url") applySelection(frame, selected);
+		}).on("insert select", () => select(frame, multiple, onSelect, onSelectUrl));
+		if (allowUrlImport) frame.on("ready open", () => restrictFrameMenu(frame));
+		handleExtensions(frame, mediaTypes);
+		return frame;
+	}
+	function cleanupFrame(frame) {
+		frame?.detach();
+		frame?.remove();
+	}
+	function applyMode(frame, mode = "browse", currentUrl, currentAlt) {
+		if (mode === "url") {
+			frame.setState("embed");
+			if (currentUrl || currentAlt) setTimeout(() => {
+				if (currentUrl) frame.state()?.props?.set("url", currentUrl);
+				if (currentAlt) frame.state()?.props?.set("alt", currentAlt);
+			}, 0);
+		} else frame.content.mode(mode);
+	}
+	function applySelection(frame, selected) {
+		const selectedAttachments = (typeof selected === "number" ? [selected] : selected)?.filter((id) => !!id).map((id) => media_default().attachment(id));
+		frame.state().get("selection").set(selectedAttachments || []);
+	}
+	function select(frame, multiple, onSelect, onSelectUrl) {
+		const state = frame.state();
+		if (state.get("id") === "embed") {
+			if (onSelectUrl) {
+				const url = state.props?.get("url");
+				const alt = state.props?.get("alt");
+				if (url) onSelectUrl(url, alt);
+			}
+			return;
+		}
+		const attachments = state.get("selection").toJSON().map(normalize);
+		onSelect(multiple ? attachments : attachments[0]);
+	}
+	var FRAME_MENU_ITEMS_TO_REMOVE = [
+		"#menu-item-gallery",
+		"#menu-item-featured-image",
+		"#menu-item-playlist",
+		"#menu-item-video-playlist"
+	].join(",");
+	function restrictFrameMenu(frame) {
+		frame.$el?.find(FRAME_MENU_ITEMS_TO_REMOVE)?.remove();
+	}
+	function setTypeCaller(frame) {
+		frame.uploader.uploader.param("uploadTypeCaller", "elementor-wp-media-upload");
+	}
+	function handleExtensions(frame, mediaTypes) {
+		const defaultExtensions = wp_plupload_settings_default().defaults.filters.mime_types?.[0]?.extensions;
+		frame.on("ready", () => {
+			wp_plupload_settings_default().defaults.filters.mime_types = [{ extensions: getExtensions(mediaTypes) }];
+		});
+		frame.on("close", () => {
+			wp_plupload_settings_default().defaults.filters.mime_types = defaultExtensions ? [{ extensions: defaultExtensions }] : [];
+		});
+	}
+	var imageExtensions = [
+		"avif",
+		"bmp",
+		"gif",
+		"ico",
+		"jpe",
+		"jpeg",
+		"jpg",
+		"png",
+		"webp"
+	];
+	var videoExtensions = [
+		"mp4",
+		"webm",
+		"ogg",
+		"mov",
+		"m4v",
+		"avi",
+		"wmv",
+		"mpg",
+		"mpeg",
+		"3gp",
+		"3g2"
+	];
+	function getMimeTypes(mediaTypes) {
+		const mimeTypesPerType = {
+			image: imageExtensions.map((extension) => `image/${extension}`),
+			svg: ["image/svg+xml"],
+			video: [
+				"video/mp4",
+				"video/webm",
+				"video/ogg",
+				"video/quicktime",
+				"video/x-m4v",
+				"video/avi",
+				"video/x-ms-wmv",
+				"video/mpeg",
+				"video/3gpp",
+				"video/3gpp2"
+			]
+		};
+		return mediaTypes.reduce((prev, currentType) => {
+			return prev.concat(mimeTypesPerType[currentType]);
+		}, []);
+	}
+	function getExtensions(mediaTypes) {
+		const extensionsPerType = {
+			image: imageExtensions,
+			svg: ["svg"],
+			video: videoExtensions
+		};
+		return mediaTypes.reduce((prev, currentType) => {
+			return prev.concat(extensionsPerType[currentType]);
+		}, []).join(",");
+	}
+
+//#endregion
+//#region packages/packages/libs/wp-media/src/index.ts
+	var src_exports = /* @__PURE__ */ __exportAll({
+		getMediaAttachment: () => getMediaAttachment,
+		useWpMediaAttachment: () => useWpMediaAttachment,
+		useWpMediaFrame: () => useWpMediaFrame
+	});
+
+//#endregion
+//#region \0elementor-package-library-entry
+	(window.elementorV2 = window.elementorV2 || {}).wpMedia = src_exports;
+
+//#endregion
+})(elementorV2.query, elementorV2.utils, React);
+window.elementorV2.wpMedia?.init?.();
 //# sourceMappingURL=wp-media.js.map

@@ -1,3 +1,941 @@
-/*! For license information please see editor-design-system.js.LICENSE.txt */
-!function(){"use strict";var e={"./packages/packages/core/editor-design-system/src/components/design-system-entrypoints.tsx":function(e,t,n){n.r(t),n.d(t,{DesignSystemEntrypoints:function(){return DesignSystemEntrypoints}});var s=n("react"),r=n("@elementor/editor-v1-adapters"),o=n("./packages/packages/core/editor-design-system/src/design-system-panel.tsx"),i=n("./packages/packages/core/editor-design-system/src/initial-tab.ts");const a="panel/elements/categories",c="elementor/open-variables-manager",l="elementor/open-global-classes-manager",m="elementor/toggle-design-system",d="elementor/design-system/set-tab",p="active-panel",u="design-system",g="global-classes-manager",y="variables-manager";function DesignSystemEntrypoints(){const{open:e,close:t}=(0,o.usePanelActions)(),{isOpen:n}=(0,o.usePanelStatus)(),f=(0,s.useRef)(n);f.current=n,(0,s.useEffect)(()=>{const handler=e=>{const n=e.detail?.tab;"variables"!==n&&"classes"!==n||(f.current&&(0,i.getActiveDesignSystemTab)()===n?t():f.current?window.dispatchEvent(new CustomEvent(d,{detail:{tab:n}})):window.dispatchEvent(new CustomEvent("variables"===n?c:l)))};return window.addEventListener(m,handler),()=>{window.removeEventListener(m,handler)}},[t]);const _=(0,s.useRef)(null),[E,S]=(0,s.useState)(!1);(0,s.useEffect)(()=>{E&&(S(!1),e())},[E,e]),(0,s.useEffect)(()=>(0,r.__privateListenTo)((0,r.routeOpenEvent)(a),()=>{const e=_.current;e&&(_.current=null,(0,i.setPendingDesignSystemTab)(e),S(!0))}),[]),(0,s.useEffect)(()=>{const bind=(e,t)=>{const handler=()=>{_.current=t,(0,r.__privateOpenRoute)(a)};return window.addEventListener(e,handler),()=>window.removeEventListener(e,handler)},e=bind(c,"variables"),t=bind(l,"classes");return()=>{e(),t()}},[]);const b=(0,s.useRef)(!1);return(0,s.useEffect)(()=>{const t=new URLSearchParams(window.location.search),n=t.get(p);if(!n)return;let s=null;if(n===u){const e=t.get("design-system-tab");s="classes"===e?"classes":"variables"}else if(n===g)s="classes";else{if(n!==y)return;s="variables"}return(0,r.__privateListenTo)((0,r.routeOpenEvent)(a),()=>{b.current||(b.current=!0,requestAnimationFrame(()=>{s&&(0,i.setPendingDesignSystemTab)(s),e()}))})},[e]),null}},"./packages/packages/core/editor-design-system/src/components/design-system-header-menu.tsx":function(e,t,n){n.r(t),n.d(t,{DesignSystemHeaderMenu:function(){return DesignSystemHeaderMenu}});var s=n("react"),r=n("@elementor/editor-current-user"),o=n("@elementor/editor-ui"),i=n("@elementor/icons"),a=n("@elementor/query"),c=n("@elementor/ui"),l=n("@wordpress/i18n"),m=n("./packages/packages/core/editor-design-system/src/export/download.ts"),d=n("./packages/packages/core/editor-design-system/src/export/export-notifications.ts"),p=n("./packages/packages/core/editor-design-system/src/export/hooks/use-export-request.ts"),u=n("./packages/packages/core/editor-design-system/src/import/hooks/use-import-request.ts"),g=n("./packages/packages/core/editor-design-system/src/import/import-design-system-dialog.tsx"),y=n("./packages/packages/core/editor-design-system/src/import/tracking.ts");function _extends(){return _extends=Object.assign?Object.assign.bind():function(e){for(var t=1;t<arguments.length;t++){var n=arguments[t];for(var s in n)({}).hasOwnProperty.call(n,s)&&(e[s]=n[s])}return e},_extends.apply(null,arguments)}const DesignSystemHeaderMenu=()=>{const{isAdmin:e}=(0,r.useCurrentUserCapabilities)(),t=(0,c.usePopupState)({variant:"popover",popupId:"design-system-header-menu"}),n=(0,p.useExportRequest)(),f=(0,a.useIsMutating)({mutationKey:[u.IMPORT_DESIGN_SYSTEM_MUTATION_KEY]})>0,_=(0,a.useIsMutating)({mutationKey:[p.EXPORT_DESIGN_SYSTEM_MUTATION_KEY]})>0,E=f||_,S=(0,c.bindTrigger)(t),runExport=async()=>{(0,d.notifyExportInProgress)();try{const{blob:e,fileName:t}=await n.mutateAsync();(0,m.downloadBlob)(e,t),(0,d.notifyExportSuccess)()}catch{(0,d.notifyExportFailure)(runExport)}},b=(0,l.__)("Design system actions","elementor"),w=(0,l.__)("Export is in progress. The file will be downloaded when it's complete.","elementor"),k=(0,l.__)("Import is in progress. You will receive a notification when it's complete.","elementor");let v=b;return E&&(v=_?w:k),s.createElement(s.Fragment,null,e&&s.createElement(c.Tooltip,{title:v,placement:"top"},s.createElement("span",null,s.createElement(c.IconButton,_extends({},S,{size:"small","aria-label":b,disabled:E}),s.createElement(i.DotsVerticalIcon,{fontSize:"small"})))),s.createElement(c.Menu,_extends({},(0,c.bindMenu)(t),{MenuListProps:{dense:!0},PaperProps:{elevation:6},anchorOrigin:{vertical:"bottom",horizontal:"right"},transformOrigin:{vertical:"top",horizontal:"right"}}),s.createElement(c.MenuItem,{onClick:()=>{t.close(),(0,y.trackDesignSystem)({event:"importOpened"}),(0,o.openDialog)({component:s.createElement(g.ImportDesignSystemDialog,{onClose:o.closeDialog})})},disabled:f},s.createElement(c.ListItemIcon,null,s.createElement(i.UploadIcon,{fontSize:"tiny"})),s.createElement(c.ListItemText,null,(0,l.__)("Import","elementor"))),s.createElement(c.MenuItem,{onClick:()=>{t.close(),runExport()},disabled:_},s.createElement(c.ListItemIcon,null,s.createElement(i.DownloadIcon,{fontSize:"tiny"})),s.createElement(c.ListItemText,null,(0,l.__)("Export","elementor")))))}},"./packages/packages/core/editor-design-system/src/components/design-system-panel-content.tsx":function(e,t,n){n.r(t),n.d(t,{DesignSystemPanelContent:function(){return DesignSystemPanelContent}});var s=n("react"),r=n("@elementor/editor-global-classes"),o=n("@elementor/editor-panels"),i=n("@elementor/editor-ui"),a=n("@elementor/editor-variables"),c=n("@elementor/icons"),l=n("@elementor/ui"),m=n("@wordpress/i18n"),d=n("./packages/packages/core/editor-design-system/src/initial-tab.ts"),p=n("./packages/packages/core/editor-design-system/src/components/design-system-header-menu.tsx");function _extends(){return _extends=Object.assign?Object.assign.bind():function(e){for(var t=1;t<arguments.length;t++){var n=arguments[t];for(var s in n)({}).hasOwnProperty.call(n,s)&&(e[s]=n[s])}return e},_extends.apply(null,arguments)}const u={position:"sticky",zIndex:1100,opacity:1,backgroundColor:"background.default",transition:"top 300ms ease"};function DesignSystemPanelContent({onRequestClose:e}){const[t,n]=(0,s.useState)(()=>(0,d.getInitialDesignSystemTab)()),g=(0,s.useRef)(null),y=(0,s.useRef)(null),{getTabProps:f,getTabPanelProps:_,getTabsProps:E}=(0,l.useTabs)(t);(0,s.useEffect)(()=>{(0,d.notifyDesignSystemTabChange)(t)},[t]),(0,s.useEffect)(()=>{const handler=e=>{const t=e.detail?.tab;t&&(n(t),(0,d.persistDesignSystemTab)(t),(0,d.notifyDesignSystemTabChange)(t))};return window.addEventListener("elementor/design-system/set-tab",handler),()=>{window.removeEventListener("elementor/design-system/set-tab",handler)}},[]);return s.createElement(i.ThemeProvider,null,s.createElement(o.Panel,null,s.createElement(o.PanelHeader,null,s.createElement(l.Stack,{p:1,pl:2,width:"100%",direction:"row",alignItems:"center",spacing:.5},s.createElement(o.PanelHeaderTitle,{sx:{flex:1,minWidth:0}},(0,m.__)("Design system","elementor")),s.createElement(p.DesignSystemHeaderMenu,null),s.createElement(l.CloseButton,{"aria-label":(0,m.__)("Close","elementor"),sx:{flexShrink:0},onClick:()=>{"variables"===t&&g.current?g.current():"classes"===t&&y.current?y.current():e()}}))),s.createElement(o.PanelBody,{sx:{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",minHeight:0}},s.createElement(l.Stack,{direction:"column",sx:{width:"100%",flex:1,minHeight:0,overflow:"hidden"}},s.createElement(l.Stack,{sx:{...u,top:0,flexShrink:0}},s.createElement(l.Tabs,_extends({variant:"fullWidth",size:"small",sx:{mt:.5}},E(),{onChange:(e,t)=>{E().onChange(e,t),n(t),(0,d.persistDesignSystemTab)(t),(0,d.notifyDesignSystemTabChange)(t)}}),s.createElement(l.Tab,_extends({label:(0,m.__)("Variables","elementor"),icon:s.createElement(c.ColorFilterIcon,{fontSize:"small"}),iconPosition:"start"},f("variables"))),s.createElement(l.Tab,_extends({label:(0,m.__)("Classes","elementor"),icon:s.createElement(c.ColorSwatchIcon,{fontSize:"small"}),iconPosition:"start"},f("classes")))),s.createElement(l.Divider,null)),s.createElement(l.Box,_extends({role:"tabpanel"},_(t),{sx:{flex:1,minHeight:0,display:"flex",flexDirection:"column",overflow:"hidden",pt:1}}),"variables"===t&&s.createElement(a.VariablesManagerPanelEmbedded,{onRequestClose:e,onExposeCloseAttempt:e=>{g.current=e}}),"classes"===t&&s.createElement(r.ClassManagerPanelEmbedded,{onRequestClose:e,onExposeCloseAttempt:e=>{y.current=e}}))))))}},"./packages/packages/core/editor-design-system/src/design-system-panel.tsx":function(e,t,n){n.r(t),n.d(t,{panel:function(){return l},usePanelActions:function(){return d},usePanelStatus:function(){return m}});var s=n("react"),r=n("@elementor/editor-documents"),o=n("@elementor/editor-panels"),i=n("@elementor/editor-v1-adapters"),a=n("./packages/packages/core/editor-design-system/src/components/design-system-panel-content.tsx");const c="design-system",{panel:l,usePanelStatus:m,usePanelActions:d}=(0,o.__createPanel)({id:c,component:function DesignSystemPanelRoot(){const{close:e}=d();return s.createElement(a.DesignSystemPanelContent,{onRequestClose:e})},allowedEditModes:["edit",c],onOpen:()=>{(0,i.changeEditMode)(c)},onClose:async()=>{(0,i.changeEditMode)("edit"),await(0,r.reloadCurrentDocument)()},isOpenPreviousElement:!0})},"./packages/packages/core/editor-design-system/src/experiment/init-design-system-experiment.ts":function(e,t,n){n.r(t),n.d(t,{initDesignSystemExperiment:function(){return initDesignSystemExperiment}});var s=n("@elementor/editor"),r=n("@elementor/editor-app-bar"),o=n("@elementor/editor-panels"),i=n("./packages/packages/core/editor-design-system/src/components/design-system-entrypoints.tsx"),a=n("./packages/packages/core/editor-design-system/src/design-system-panel.tsx"),c=n("./packages/packages/core/editor-design-system/src/use-open-design-system-toolbar.ts");function initDesignSystemExperiment(){(0,o.__registerPanel)(a.panel),(0,s.injectIntoLogic)({id:"design-system-entrypoints",component:i.DesignSystemEntrypoints}),r.toolsMenu.registerToggleAction({id:"open-design-system-toolbar",priority:21,useProps:c.useOpenDesignSystemToolbar})}},"./packages/packages/core/editor-design-system/src/export/download.ts":function(e,t,n){n.r(t),n.d(t,{downloadBlob:function(){return downloadBlob}});const downloadBlob=(e,t)=>{const n=URL.createObjectURL(e),s=document.createElement("a");s.href=n,s.download=t,s.rel="noopener",document.body.appendChild(s),s.click(),document.body.removeChild(s),URL.revokeObjectURL(n)}},"./packages/packages/core/editor-design-system/src/export/export-notifications.ts":function(e,t,n){n.r(t),n.d(t,{notifyExportFailure:function(){return notifyExportFailure},notifyExportInProgress:function(){return notifyExportInProgress},notifyExportSuccess:function(){return notifyExportSuccess}});var s=n("@elementor/editor-notifications"),r=n("@wordpress/i18n");const o="design-system-export-started",i="design-system-export-failed",notifyExportInProgress=()=>{(0,s.notify)({id:o,type:"info",message:(0,r.__)("Export in progress. Your file will download when it’s ready.","elementor")})},notifyExportSuccess=()=>{(0,s.dismissNotification)(o),(0,s.notify)({id:"design-system-export-succeeded",type:"success",message:(0,r.__)("Design system exported","elementor")})},notifyExportFailure=e=>{(0,s.dismissNotification)(o),(0,s.notify)({id:i,type:"error",message:(0,r.__)("Your design system export failed","elementor"),additionalActionProps:[{size:"small",variant:"outlined",color:"error",children:(0,r.__)("Try again","elementor"),onClick:()=>{(0,s.dismissNotification)(i),e()}}]})}},"./packages/packages/core/editor-design-system/src/export/hooks/use-export-request.ts":function(e,t,n){n.r(t),n.d(t,{DEFAULT_EXPORT_FILE_NAME:function(){return i},DesignSystemExportError:function(){return DesignSystemExportError},EXPORT_DESIGN_SYSTEM_MUTATION_KEY:function(){return o},useExportRequest:function(){return useExportRequest}});var s=n("@elementor/http-client"),r=n("@elementor/query");const o="design-system-export",i="design-system-export.zip",a={include:["settings"],kitInfo:{title:"design-system",description:"",source:"local"},customization:{settings:{theme:!1,classes:!0,variables:!0}}};class DesignSystemExportError extends Error{constructor(e){super("Design system export failed"),this.name="DesignSystemExportError",this.cause=e}}const useExportRequest=()=>(0,r.useMutation)({mutationKey:[o],mutationFn:async()=>{try{const{data:e}=await(0,s.httpService)().post("elementor/v1/import-export-customization/export",a,{timeout:12e4});return{fileName:i,blob:base64ToZipBlob(e.data.file)}}catch(e){throw new DesignSystemExportError(e)}}}),base64ToZipBlob=e=>{const t=atob(e),n=new Uint8Array(t.length);for(let e=0;e<t.length;e++)n[e]=t.charCodeAt(e);return new Blob([n],{type:"application/zip"})}},"./packages/packages/core/editor-design-system/src/import/components/conflict-options.tsx":function(e,t,n){n.r(t),n.d(t,{ConflictOptions:function(){return ConflictOptions}});var s=n("react"),r=n("@elementor/ui"),o=n("@wordpress/i18n");const ConflictOptions=({value:e,onChange:t})=>{const n=[{value:"replace",title:(0,o.__)("Replace existing values","elementor"),description:(0,o.__)("Imported design system values will overwrite existing variables and classes.","elementor")},{value:"keep",title:(0,o.__)("Keep existing values","elementor"),description:(0,o.__)("Existing variables and classes will not change.","elementor")}];return s.createElement(r.Stack,{spacing:1},s.createElement(r.Typography,{variant:"body1"},(0,o.__)("How to handle conflicts with existing variables or classes?","elementor")),s.createElement(r.RadioGroup,{value:e??"",onChange:(e,n)=>t(n)},s.createElement(r.Stack,{spacing:1},n.map(n=>s.createElement(r.Card,{key:n.value,variant:"outlined"},s.createElement(r.CardActionArea,{onClick:()=>t(n.value)},s.createElement(r.Stack,{direction:"row",alignItems:"center",spacing:2,padding:2},s.createElement(r.Radio,{value:n.value,checked:e===n.value,inputProps:{"aria-label":n.title}}),s.createElement(r.Stack,{direction:"column",spacing:.5},s.createElement(r.Typography,{variant:"subtitle2"},n.title),s.createElement(r.Typography,{variant:"caption",color:"text.secondary"},n.description)))))))))}},"./packages/packages/core/editor-design-system/src/import/hooks/use-dialog-state.ts":function(e,t,n){n.r(t),n.d(t,{useDialogState:function(){return useDialogState}});var s=n("react");const r={file:null,conflictStrategy:null},useDialogState=()=>{const[e,t]=(0,s.useState)(r);return{...e,setFile:e=>t(t=>({...t,file:e})),setConflictStrategy:e=>t(t=>({...t,conflictStrategy:e}))}}},"./packages/packages/core/editor-design-system/src/import/hooks/use-import-request.ts":function(e,t,n){n.r(t),n.d(t,{DesignSystemUploadValidationError:function(){return DesignSystemUploadValidationError},IMPORT_DESIGN_SYSTEM_MUTATION_KEY:function(){return m},useImportRequest:function(){return useImportRequest}});var s=n("@elementor/editor-canvas"),r=n("@elementor/editor-v1-adapters"),o=n("@elementor/http-client"),i=n("@elementor/query");const a="elementor/v1/import-export-customization",c=12e4,l=["global-classes","global-variables"],m="design-system-import",useImportRequest=()=>(0,i.useMutation)({mutationKey:[m],mutationFn:async({file:e,conflictStrategy:t})=>{await(0,r.__privateRunCommand)("document/save/auto",{force:!0});const n=await uploadKit(e),o=await startImport(n,t);await runRunners(n,o),window.dispatchEvent(new CustomEvent(s.GLOBAL_STYLES_IMPORTED_EVENT))}});class DesignSystemUploadValidationError extends Error{constructor(e){super("Design system upload validation failed"),this.name="DesignSystemUploadValidationError",this.cause=e}}const uploadKit=async e=>{const t=new FormData;t.append("e_import_file",e);try{const{data:e}=await(0,o.httpService)().post(`${a}/upload`,t,{headers:{"Content-Type":"multipart/form-data"},timeout:c});return e.data.session}catch(e){throw new DesignSystemUploadValidationError(e)}},startImport=async(e,t)=>{const n={"design-system":{conflict_resolution:"keep"===t?"skip":"replace"}},{data:s}=await(0,o.httpService)().post(`${a}/import`,{session:e,include:["design-system"],customization:n},{timeout:c});return(s.data.runners??[]).filter(e=>l.includes(e))},runRunners=async(e,t)=>{for(const n of t)await(0,o.httpService)().post(`${a}/import-runner`,{session:e,runner:n},{timeout:c})}},"./packages/packages/core/editor-design-system/src/import/import-design-system-dialog.tsx":function(e,t,n){n.r(t),n.d(t,{ImportDesignSystemDialog:function(){return ImportDesignSystemDialog}});var s=n("react"),r=n("@elementor/editor-ui"),o=n("@elementor/icons"),i=n("@elementor/ui"),a=n("@wordpress/i18n"),c=n("./packages/packages/core/editor-design-system/src/import/components/conflict-options.tsx"),l=n("./packages/packages/core/editor-design-system/src/import/hooks/use-dialog-state.ts"),m=n("./packages/packages/core/editor-design-system/src/import/hooks/use-import-request.ts"),d=n("./packages/packages/core/editor-design-system/src/import/import-notifications.tsx"),p=n("./packages/packages/core/editor-design-system/src/import/tracking.ts");const u=["application/zip"],reopenSelf=()=>{(0,p.trackDesignSystem)({event:"importOpened"}),(0,r.openDialog)({component:s.createElement(ImportDesignSystemDialog,{onClose:r.closeDialog})})},ImportDesignSystemDialog=({onClose:e})=>{const{file:t,conflictStrategy:n,setFile:g,setConflictStrategy:y}=(0,l.useDialogState)(),f=(0,m.useImportRequest)(),_=Boolean(t&&n);return s.createElement(s.Fragment,null,s.createElement(i.DialogHeader,{logo:!1},s.createElement(i.DialogTitle,null,(0,a.__)("Import Design System","elementor"))),s.createElement(i.DialogContent,null,s.createElement(i.Stack,{spacing:3},t?s.createElement(r.FileUploadRow,{file:t,onRemove:()=>g(null)}):s.createElement(r.FileUploadDropzone,{onFileSelected:e=>{g(e),(0,p.trackDesignSystem)({event:"fileSelected",file_type:p.FILE_TYPE_DESIGN_SYSTEM})},allowedFileTypes:u,accept:"application/zip,.zip",regionLabel:(0,a.__)("Design system file dropzone","elementor"),helperText:(0,a.sprintf)((0,a.__)("zip (max. %dMB)","elementor"),3)}),s.createElement(c.ConflictOptions,{value:n,onChange:e=>{y(e),(0,p.trackDesignSystem)({event:"conflictChoice",choice:e})}}),s.createElement(i.Stack,{direction:"row",spacing:.5,alignItems:"center",justifyContent:"flex-start"},s.createElement(o.HelpIcon,{sx:{fontSize:16,color:"text.tertiary"}}),s.createElement(i.Link,{href:"https://go.elementor.com/wp-dash-import-export-design-system/",target:"_blank",rel:"noopener noreferrer",underline:"always",variant:"caption",color:"text.tertiary"},(0,a.__)("Learn how design system imports work","elementor"))))),s.createElement(i.DialogActions,null,s.createElement(i.Button,{size:"medium",color:"secondary",onClick:e},(0,a.__)("Cancel","elementor")),s.createElement(i.Button,{size:"medium",variant:"contained",color:"primary",disabled:!_,onClick:async()=>{if(t&&n){(0,p.trackDesignSystem)({event:"confirmed",conflict_choice:n}),(0,d.notifyImportInProgress)(),e();try{await f.mutateAsync({file:t,conflictStrategy:n}),(0,p.trackDesignSystem)({event:"imported"}),(0,d.notifyImportSuccess)()}catch(e){e instanceof m.DesignSystemUploadValidationError?(0,p.trackDesignSystem)({event:"validationFailed",file_type:p.FILE_TYPE_DESIGN_SYSTEM}):(0,p.trackDesignSystem)({event:"importFailed"}),(0,d.notifyImportFailure)(reopenSelf)}}}},(0,a.__)("Import","elementor"))))}},"./packages/packages/core/editor-design-system/src/import/import-notifications.tsx":function(e,t,n){n.r(t),n.d(t,{notifyImportFailure:function(){return notifyImportFailure},notifyImportInProgress:function(){return notifyImportInProgress},notifyImportSuccess:function(){return notifyImportSuccess}});var s=n("@elementor/editor-notifications"),r=n("@elementor/query"),o=n("@wordpress/i18n"),i=n("./packages/packages/core/editor-design-system/src/import/hooks/use-import-request.ts");const a="design-system-import-started",c="design-system-import-failed",notifyImportInProgress=()=>{(0,s.notify)({id:a,type:"info",message:(0,o.__)("Import in Progress. You will be notified when the import is complete.","elementor")})},notifyImportSuccess=()=>{(0,s.dismissNotification)(a),(0,s.notify)({id:"design-system-import-succeeded",type:"success",message:(0,o.__)("Design system imported","elementor")})},notifyImportFailure=e=>{(0,s.dismissNotification)(a),(0,s.notify)({id:c,type:"error",message:(0,o.__)("Your design system import failed","elementor"),additionalActionProps:[{size:"small",variant:"outlined",color:"error",children:(0,o.__)("Try again","elementor"),onClick:()=>{(0,s.dismissNotification)(c);(0,r.getQueryClient)().isMutating({mutationKey:[i.IMPORT_DESIGN_SYSTEM_MUTATION_KEY]})>0||e()}}]})}},"./packages/packages/core/editor-design-system/src/import/tracking.ts":function(e,t,n){n.r(t),n.d(t,{FILE_TYPE_DESIGN_SYSTEM:function(){return r},trackDesignSystem:function(){return trackDesignSystem}});var s=n("@elementor/events");const r="design_system",trackDesignSystem=e=>{const{dispatchEvent:t,config:n}=(0,s.getMixpanel)(),r=n?.names?.design_system?.[e.event];if(!r)return;const{event:o,...i}=e;try{t?.(r,{event:o,...i})}catch{}}},"./packages/packages/core/editor-design-system/src/init.ts":function(e,t,n){n.r(t),n.d(t,{init:function(){return init}});var s=n("@elementor/editor-v1-adapters"),r=n("./packages/packages/core/editor-design-system/src/experiment/init-design-system-experiment.ts");function init(){(0,s.isExperimentActive)("e_editor_design_system_panel")&&(0,r.initDesignSystemExperiment)()}},"./packages/packages/core/editor-design-system/src/initial-tab.ts":function(e,t,n){n.r(t),n.d(t,{getActiveDesignSystemTab:function(){return getActiveDesignSystemTab},getInitialDesignSystemTab:function(){return getInitialDesignSystemTab},notifyDesignSystemTabChange:function(){return notifyDesignSystemTabChange},persistDesignSystemTab:function(){return persistDesignSystemTab},setPendingDesignSystemTab:function(){return setPendingDesignSystemTab}});const s="elementor_editor_design_system_active_tab";function readStoredTab(){if("undefined"==typeof window)return"variables";try{const e=window.localStorage.getItem(s);if("classes"===e||"variables"===e)return e}catch{}return"variables"}let r=null,o=readStoredTab();function setPendingDesignSystemTab(e){r=e}function getInitialDesignSystemTab(){if(r){const e=r;return r=null,o=e,persistDesignSystemTab(e),e}const e=readStoredTab();return o=e,e}function notifyDesignSystemTabChange(e){o=e}function getActiveDesignSystemTab(){return o}function persistDesignSystemTab(e){if("undefined"!=typeof window)try{window.localStorage.setItem(s,e)}catch{}}},"./packages/packages/core/editor-design-system/src/use-open-design-system-toolbar.ts":function(e,t,n){n.r(t),n.d(t,{useOpenDesignSystemToolbar:function(){return useOpenDesignSystemToolbar}});var s=n("react"),r=n("@elementor/icons"),o=n("@wordpress/i18n"),i=n("./packages/packages/core/editor-design-system/src/design-system-panel.tsx");function useOpenDesignSystemToolbar(){const{isOpen:e}=(0,i.usePanelStatus)(),{open:t,close:n}=(0,i.usePanelActions)(),a=(0,s.useCallback)(()=>{e?n():t()},[e,t,n]);return{title:(0,o.__)("Design System","elementor"),icon:r.DropletHalfFilledIcon,onClick:a,selected:e}}},"@elementor/editor":function(e){e.exports=window.elementorV2.editor},"@elementor/editor-app-bar":function(e){e.exports=window.elementorV2.editorAppBar},"@elementor/editor-canvas":function(e){e.exports=window.elementorV2.editorCanvas},"@elementor/editor-current-user":function(e){e.exports=window.elementorV2.editorCurrentUser},"@elementor/editor-documents":function(e){e.exports=window.elementorV2.editorDocuments},"@elementor/editor-global-classes":function(e){e.exports=window.elementorV2.editorGlobalClasses},"@elementor/editor-notifications":function(e){e.exports=window.elementorV2.editorNotifications},"@elementor/editor-panels":function(e){e.exports=window.elementorV2.editorPanels},"@elementor/editor-ui":function(e){e.exports=window.elementorV2.editorUi},"@elementor/editor-v1-adapters":function(e){e.exports=window.elementorV2.editorV1Adapters},"@elementor/editor-variables":function(e){e.exports=window.elementorV2.editorVariables},"@elementor/events":function(e){e.exports=window.elementorV2.events},"@elementor/http-client":function(e){e.exports=window.elementorV2.httpClient},"@elementor/icons":function(e){e.exports=window.elementorV2.icons},"@elementor/query":function(e){e.exports=window.elementorV2.query},"@elementor/ui":function(e){e.exports=window.elementorV2.ui},"@wordpress/i18n":function(e){e.exports=window.wp.i18n},react:function(e){e.exports=window.React}},t={};function __webpack_require__(n){var s=t[n];if(void 0!==s)return s.exports;var r=t[n]={exports:{}};return e[n](r,r.exports,__webpack_require__),r.exports}__webpack_require__.n=function(e){var t=e&&e.__esModule?function(){return e.default}:function(){return e};return __webpack_require__.d(t,{a:t}),t},__webpack_require__.d=function(e,t){for(var n in t)__webpack_require__.o(t,n)&&!__webpack_require__.o(e,n)&&Object.defineProperty(e,n,{enumerable:!0,get:t[n]})},__webpack_require__.o=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)},__webpack_require__.r=function(e){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})};var n={};!function(){__webpack_require__.r(n),__webpack_require__.d(n,{getInitialDesignSystemTab:function(){return t.getInitialDesignSystemTab},init:function(){return e.init},panel:function(){return s.panel},persistDesignSystemTab:function(){return t.persistDesignSystemTab},usePanelActions:function(){return s.usePanelActions},usePanelStatus:function(){return s.usePanelStatus}});var e=__webpack_require__("./packages/packages/core/editor-design-system/src/init.ts"),t=__webpack_require__("./packages/packages/core/editor-design-system/src/initial-tab.ts"),s=__webpack_require__("./packages/packages/core/editor-design-system/src/design-system-panel.tsx")}(),(window.elementorV2=window.elementorV2||{}).editorDesignSystem=n}(),window.elementorV2.editorDesignSystem?.init?.();
+(function(_elementor_editor, _elementor_editor_app_bar, _elementor_editor_panels, react, _elementor_editor_documents, _elementor_editor_ui, _elementor_editor_v1_adapters, _wordpress_i18n, _elementor_editor_default_styles, _elementor_editor_global_classes, _elementor_editor_variables, _elementor_icons, _elementor_ui, _elementor_editor_current_user, _elementor_query, _elementor_editor_notifications, _elementor_http_client, _elementor_editor_canvas, _elementor_events) {
+
+//#region \0rolldown/runtime.js
+	var __create = Object.create;
+	var __defProp = Object.defineProperty;
+	var __name = (target, value) => __defProp(target, "name", {
+		value,
+		configurable: true
+	});
+	var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+	var __getOwnPropNames = Object.getOwnPropertyNames;
+	var __getProtoOf = Object.getPrototypeOf;
+	var __hasOwnProp = Object.prototype.hasOwnProperty;
+	var __exportAll = (all, no_symbols) => {
+		let target = {};
+		for (var name in all) {
+			__defProp(target, name, {
+				get: all[name],
+				enumerable: true
+			});
+		}
+		if (!no_symbols) {
+			__defProp(target, Symbol.toStringTag, { value: "Module" });
+		}
+		return target;
+	};
+	var __copyProps = (to, from, except, desc) => {
+		if (from && typeof from === "object" || typeof from === "function") {
+			for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
+				key = keys[i];
+				if (!__hasOwnProp.call(to, key) && key !== except) {
+					__defProp(to, key, {
+						get: ((k) => from[k]).bind(null, key),
+						enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+					});
+				}
+			}
+		}
+		return to;
+	};
+	var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", {
+		value: mod,
+		enumerable: true
+	}) : target, mod));
+
+//#endregion
+react = __toESM(react);
+
+//#region packages/packages/core/editor-design-system/src/initial-tab.ts
+	var STORAGE_KEY = "elementor_editor_design_system_active_tab";
+	function readStoredTab() {
+		if (typeof window === "undefined") return "defaults";
+		try {
+			const raw = window.localStorage.getItem(STORAGE_KEY);
+			if (raw === "defaults" || raw === "classes" || raw === "variables") return raw;
+		} catch {}
+		return "defaults";
+	}
+	var pendingTabForOpen = null;
+	var activeTabInMemory = readStoredTab();
+	function normalizeDesignSystemTab(tab) {
+		return tab;
+	}
+	function setPendingDesignSystemTab(tab) {
+		pendingTabForOpen = tab;
+	}
+	function getInitialDesignSystemTab() {
+		if (pendingTabForOpen) {
+			const t2 = pendingTabForOpen;
+			pendingTabForOpen = null;
+			activeTabInMemory = t2;
+			persistDesignSystemTab(t2);
+			return t2;
+		}
+		const t = readStoredTab();
+		activeTabInMemory = t;
+		return t;
+	}
+	function notifyDesignSystemTabChange(tab) {
+		activeTabInMemory = tab;
+	}
+	function getActiveDesignSystemTab() {
+		return activeTabInMemory;
+	}
+	function persistDesignSystemTab(tab) {
+		if (typeof window === "undefined") return;
+		try {
+			window.localStorage.setItem(STORAGE_KEY, tab);
+		} catch {}
+	}
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/export/download.ts
+	var downloadBlob = (blob, fileName) => {
+		const url = URL.createObjectURL(blob);
+		const anchor = document.createElement("a");
+		anchor.href = url;
+		anchor.download = fileName;
+		anchor.rel = "noopener";
+		document.body.appendChild(anchor);
+		anchor.click();
+		document.body.removeChild(anchor);
+		URL.revokeObjectURL(url);
+	};
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/export/export-notifications.ts
+	var EXPORT_STARTED_NOTIFICATION_ID = "design-system-export-started";
+	var SUCCESS_NOTIFICATION_ID$1 = "design-system-export-succeeded";
+	var FAILURE_NOTIFICATION_ID$1 = "design-system-export-failed";
+	var notifyExportInProgress = () => {
+		(0, _elementor_editor_notifications.notify)({
+			id: EXPORT_STARTED_NOTIFICATION_ID,
+			type: "info",
+			message: (0, _wordpress_i18n.__)("Export in progress. Your file will download when it’s ready.", "elementor")
+		});
+	};
+	var notifyExportSuccess = () => {
+		(0, _elementor_editor_notifications.dismissNotification)(EXPORT_STARTED_NOTIFICATION_ID);
+		(0, _elementor_editor_notifications.notify)({
+			id: SUCCESS_NOTIFICATION_ID$1,
+			type: "success",
+			message: (0, _wordpress_i18n.__)("Design system exported", "elementor")
+		});
+	};
+	var notifyExportFailure = (onRetry) => {
+		(0, _elementor_editor_notifications.dismissNotification)(EXPORT_STARTED_NOTIFICATION_ID);
+		(0, _elementor_editor_notifications.notify)({
+			id: FAILURE_NOTIFICATION_ID$1,
+			type: "error",
+			message: (0, _wordpress_i18n.__)("Your design system export failed", "elementor"),
+			additionalActionProps: [{
+				size: "small",
+				variant: "outlined",
+				color: "error",
+				children: (0, _wordpress_i18n.__)("Try again", "elementor"),
+				onClick: () => {
+					(0, _elementor_editor_notifications.dismissNotification)(FAILURE_NOTIFICATION_ID$1);
+					onRetry();
+				}
+			}]
+		});
+	};
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/export/hooks/use-export-request.ts
+	var EXPORT_BASE_PATH = "elementor/v1/import-export-customization";
+	var EXPORT_DESIGN_SYSTEM_MUTATION_KEY = "design-system-export";
+	var DEFAULT_EXPORT_FILE_NAME = "design-system-export.zip";
+	var EXPORT_REQUEST_TIMEOUT_MS = 12e4;
+	var EXPORT_REQUEST_BODY = {
+		include: ["settings"],
+		kitInfo: {
+			title: "design-system",
+			description: "",
+			source: "local"
+		},
+		customization: { settings: {
+			theme: false,
+			classes: true,
+			variables: true
+		} }
+	};
+	var DesignSystemExportError = class extends Error {
+		constructor(cause) {
+			super("Design system export failed");
+			this.name = "DesignSystemExportError";
+			this.cause = cause;
+		}
+	};
+	var useExportRequest = () => {
+		return (0, _elementor_query.useMutation)({
+			mutationKey: [EXPORT_DESIGN_SYSTEM_MUTATION_KEY],
+			mutationFn: async () => {
+				try {
+					const { data } = await (0, _elementor_http_client.httpService)().post(`${EXPORT_BASE_PATH}/export`, EXPORT_REQUEST_BODY, { timeout: EXPORT_REQUEST_TIMEOUT_MS });
+					return {
+						fileName: DEFAULT_EXPORT_FILE_NAME,
+						blob: base64ToZipBlob(data.data.file)
+					};
+				} catch (error) {
+					throw new DesignSystemExportError(error);
+				}
+			}
+		});
+	};
+	var base64ToZipBlob = (base64) => {
+		const binary = atob(base64);
+		const bytes = new Uint8Array(binary.length);
+		for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+		return new Blob([bytes], { type: "application/zip" });
+	};
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/import/hooks/use-import-request.ts
+	var IMPORT_BASE_PATH = "elementor/v1/import-export-customization";
+	var IMPORT_REQUEST_TIMEOUT_MS = 12e4;
+	var SUPPORTED_RUNNERS = ["global-classes", "global-variables"];
+	var IMPORT_DESIGN_SYSTEM_MUTATION_KEY = "design-system-import";
+	var useImportRequest = () => {
+		return (0, _elementor_query.useMutation)({
+			mutationKey: [IMPORT_DESIGN_SYSTEM_MUTATION_KEY],
+			mutationFn: async ({ file, conflictStrategy }) => {
+				await (0, _elementor_editor_v1_adapters.__privateRunCommand)("document/save/auto", { force: true });
+				const session = await uploadKit(file);
+				const runners = await startImport(session, conflictStrategy);
+				await runRunners(session, runners);
+				window.dispatchEvent(new CustomEvent(_elementor_editor_canvas.GLOBAL_STYLES_IMPORTED_EVENT));
+			}
+		});
+	};
+	var DesignSystemUploadValidationError = class extends Error {
+		constructor(cause) {
+			super("Design system upload validation failed");
+			this.name = "DesignSystemUploadValidationError";
+			this.cause = cause;
+		}
+	};
+	var uploadKit = async (file) => {
+		const formData = new FormData();
+		formData.append("e_import_file", file);
+		try {
+			const { data } = await (0, _elementor_http_client.httpService)().post(`${IMPORT_BASE_PATH}/upload`, formData, {
+				headers: { "Content-Type": "multipart/form-data" },
+				timeout: IMPORT_REQUEST_TIMEOUT_MS
+			});
+			return data.data.session;
+		} catch (error) {
+			throw new DesignSystemUploadValidationError(error);
+		}
+	};
+	var startImport = async (session, conflictStrategy) => {
+		const customization = { "design-system": { conflict_resolution: conflictStrategy === "keep" ? "skip" : "replace" } };
+		const { data } = await (0, _elementor_http_client.httpService)().post(`${IMPORT_BASE_PATH}/import`, {
+			session,
+			include: ["design-system"],
+			customization
+		}, { timeout: IMPORT_REQUEST_TIMEOUT_MS });
+		return (data.data.runners ?? []).filter((runner) => SUPPORTED_RUNNERS.includes(runner));
+	};
+	var runRunners = async (session, runners) => {
+		for (const runner of runners) await (0, _elementor_http_client.httpService)().post(`${IMPORT_BASE_PATH}/import-runner`, {
+			session,
+			runner
+		}, { timeout: IMPORT_REQUEST_TIMEOUT_MS });
+	};
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/import/components/conflict-options.tsx
+	var getOptions = () => [{
+		value: "replace",
+		title: (0, _wordpress_i18n.__)("Replace existing values", "elementor"),
+		description: (0, _wordpress_i18n.__)("Imported design system values will overwrite existing variables and classes.", "elementor")
+	}, {
+		value: "keep",
+		title: (0, _wordpress_i18n.__)("Keep existing values", "elementor"),
+		description: (0, _wordpress_i18n.__)("Existing variables and classes will not change.", "elementor")
+	}];
+	var ConflictOptions = ({ value, onChange }) => {
+		const options = getOptions();
+		return /* @__PURE__ */ react.createElement(_elementor_ui.Stack, { spacing: 1 }, /* @__PURE__ */ react.createElement(_elementor_ui.Typography, { variant: "body1" }, (0, _wordpress_i18n.__)("How to handle conflicts with existing variables or classes?", "elementor")), /* @__PURE__ */ react.createElement(_elementor_ui.RadioGroup, {
+			value: value ?? "",
+			onChange: (_, next) => onChange(next)
+		}, /* @__PURE__ */ react.createElement(_elementor_ui.Stack, { spacing: 1 }, options.map((option) => /* @__PURE__ */ react.createElement(_elementor_ui.Card, {
+			key: option.value,
+			variant: "outlined"
+		}, /* @__PURE__ */ react.createElement(_elementor_ui.CardActionArea, { onClick: () => onChange(option.value) }, /* @__PURE__ */ react.createElement(_elementor_ui.Stack, {
+			direction: "row",
+			alignItems: "center",
+			spacing: 2,
+			padding: 2
+		}, /* @__PURE__ */ react.createElement(_elementor_ui.Radio, {
+			value: option.value,
+			checked: value === option.value,
+			inputProps: { "aria-label": option.title }
+		}), /* @__PURE__ */ react.createElement(_elementor_ui.Stack, {
+			direction: "column",
+			spacing: .5
+		}, /* @__PURE__ */ react.createElement(_elementor_ui.Typography, { variant: "subtitle2" }, option.title), /* @__PURE__ */ react.createElement(_elementor_ui.Typography, {
+			variant: "caption",
+			color: "text.secondary"
+		}, option.description)))))))));
+	};
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/import/hooks/use-dialog-state.ts
+	var initialState = {
+		file: null,
+		conflictStrategy: null
+	};
+	var useDialogState = () => {
+		const [state, setState] = (0, react.useState)(initialState);
+		const setFile = (file) => setState((prev) => ({
+			...prev,
+			file
+		}));
+		const setConflictStrategy = (conflictStrategy) => setState((prev) => ({
+			...prev,
+			conflictStrategy
+		}));
+		return {
+			...state,
+			setFile,
+			setConflictStrategy
+		};
+	};
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/import/import-notifications.tsx
+	var IMPORT_STARTED_NOTIFICATION_ID = "design-system-import-started";
+	var SUCCESS_NOTIFICATION_ID = "design-system-import-succeeded";
+	var FAILURE_NOTIFICATION_ID = "design-system-import-failed";
+	var notifyImportInProgress = () => {
+		(0, _elementor_editor_notifications.notify)({
+			id: IMPORT_STARTED_NOTIFICATION_ID,
+			type: "info",
+			message: (0, _wordpress_i18n.__)("Import in Progress. You will be notified when the import is complete.", "elementor")
+		});
+	};
+	var notifyImportSuccess = () => {
+		(0, _elementor_editor_notifications.dismissNotification)(IMPORT_STARTED_NOTIFICATION_ID);
+		(0, _elementor_editor_notifications.notify)({
+			id: SUCCESS_NOTIFICATION_ID,
+			type: "success",
+			message: (0, _wordpress_i18n.__)("Design system imported", "elementor")
+		});
+	};
+	var notifyImportFailure = (onRetry) => {
+		(0, _elementor_editor_notifications.dismissNotification)(IMPORT_STARTED_NOTIFICATION_ID);
+		(0, _elementor_editor_notifications.notify)({
+			id: FAILURE_NOTIFICATION_ID,
+			type: "error",
+			message: (0, _wordpress_i18n.__)("Your design system import failed", "elementor"),
+			additionalActionProps: [{
+				size: "small",
+				variant: "outlined",
+				color: "error",
+				children: (0, _wordpress_i18n.__)("Try again", "elementor"),
+				onClick: () => {
+					(0, _elementor_editor_notifications.dismissNotification)(FAILURE_NOTIFICATION_ID);
+					if ((0, _elementor_query.getQueryClient)().isMutating({ mutationKey: ["design-system-import"] }) > 0) return;
+					onRetry();
+				}
+			}]
+		});
+	};
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/import/tracking.ts
+	var FILE_TYPE_DESIGN_SYSTEM = "design_system";
+	var trackDesignSystem = (payload) => {
+		const { dispatchEvent, config } = (0, _elementor_events.getMixpanel)();
+		const name = config?.names?.design_system?.[payload.event];
+		if (!name) return;
+		const { event, ...eventData } = payload;
+		try {
+			dispatchEvent?.(name, {
+				event,
+				...eventData
+			});
+		} catch {}
+	};
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/import/import-design-system-dialog.tsx
+	var ALLOWED_FILE_TYPES = ["application/zip"];
+	var FILE_INPUT_ACCEPT = "application/zip,.zip";
+	var MAX_FILE_SIZE_MB = 3;
+	var LEARN_MORE_URL = "https://go.elementor.com/wp-dash-import-export-design-system/";
+	var reopenSelf = () => {
+		trackDesignSystem({ event: "importOpened" });
+		(0, _elementor_editor_ui.openDialog)({ component: /* @__PURE__ */ react.createElement(ImportDesignSystemDialog, { onClose: _elementor_editor_ui.closeDialog }) });
+	};
+	var ImportDesignSystemDialog = ({ onClose }) => {
+		const { file, conflictStrategy, setFile, setConflictStrategy } = useDialogState();
+		const importMutation = useImportRequest();
+		const isImportEnabled = Boolean(file && conflictStrategy);
+		const handleFileSelected = (selected) => {
+			setFile(selected);
+			trackDesignSystem({
+				event: "fileSelected",
+				file_type: FILE_TYPE_DESIGN_SYSTEM
+			});
+		};
+		const handleConflictChange = (choice) => {
+			setConflictStrategy(choice);
+			trackDesignSystem({
+				event: "conflictChoice",
+				choice
+			});
+		};
+		const handleImport = async () => {
+			if (!file || !conflictStrategy) return;
+			trackDesignSystem({
+				event: "confirmed",
+				conflict_choice: conflictStrategy
+			});
+			notifyImportInProgress();
+			onClose();
+			try {
+				await importMutation.mutateAsync({
+					file,
+					conflictStrategy
+				});
+				trackDesignSystem({ event: "imported" });
+				notifyImportSuccess();
+			} catch (error) {
+				if (error instanceof DesignSystemUploadValidationError) trackDesignSystem({
+					event: "validationFailed",
+					file_type: FILE_TYPE_DESIGN_SYSTEM
+				});
+				else trackDesignSystem({ event: "importFailed" });
+				notifyImportFailure(reopenSelf);
+			}
+		};
+		return /* @__PURE__ */ react.createElement(react.Fragment, null, /* @__PURE__ */ react.createElement(_elementor_ui.DialogHeader, { logo: false }, /* @__PURE__ */ react.createElement(_elementor_ui.DialogTitle, null, (0, _wordpress_i18n.__)("Import Design System", "elementor"))), /* @__PURE__ */ react.createElement(_elementor_ui.DialogContent, null, /* @__PURE__ */ react.createElement(_elementor_ui.Stack, { spacing: 3 }, file ? /* @__PURE__ */ react.createElement(_elementor_editor_ui.FileUploadRow, {
+			file,
+			onRemove: () => setFile(null)
+		}) : /* @__PURE__ */ react.createElement(_elementor_editor_ui.FileUploadDropzone, {
+			onFileSelected: handleFileSelected,
+			allowedFileTypes: ALLOWED_FILE_TYPES,
+			accept: FILE_INPUT_ACCEPT,
+			regionLabel: (0, _wordpress_i18n.__)("Design system file dropzone", "elementor"),
+			helperText: (0, _wordpress_i18n.sprintf)((0, _wordpress_i18n.__)("zip (max. %dMB)", "elementor"), MAX_FILE_SIZE_MB)
+		}), /* @__PURE__ */ react.createElement(ConflictOptions, {
+			value: conflictStrategy,
+			onChange: handleConflictChange
+		}), /* @__PURE__ */ react.createElement(_elementor_ui.Stack, {
+			direction: "row",
+			spacing: .5,
+			alignItems: "center",
+			justifyContent: "flex-start"
+		}, /* @__PURE__ */ react.createElement(_elementor_icons.HelpIcon, { sx: {
+			fontSize: 16,
+			color: "text.tertiary"
+		} }), /* @__PURE__ */ react.createElement(_elementor_ui.Link, {
+			href: LEARN_MORE_URL,
+			target: "_blank",
+			rel: "noopener noreferrer",
+			underline: "always",
+			variant: "caption",
+			color: "text.tertiary"
+		}, (0, _wordpress_i18n.__)("Learn how design system imports work", "elementor"))))), /* @__PURE__ */ react.createElement(_elementor_ui.DialogActions, null, /* @__PURE__ */ react.createElement(_elementor_ui.Button, {
+			size: "medium",
+			color: "secondary",
+			onClick: onClose
+		}, (0, _wordpress_i18n.__)("Cancel", "elementor")), /* @__PURE__ */ react.createElement(_elementor_ui.Button, {
+			size: "medium",
+			variant: "contained",
+			color: "primary",
+			disabled: !isImportEnabled,
+			onClick: handleImport
+		}, (0, _wordpress_i18n.__)("Import", "elementor"))));
+	};
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/components/design-system-header-menu.tsx
+	var POPUP_STATE_ID = "design-system-header-menu";
+	var DesignSystemHeaderMenu = () => {
+		const { isAdmin } = (0, _elementor_editor_current_user.useCurrentUserCapabilities)();
+		const popupState = (0, _elementor_ui.usePopupState)({
+			variant: "popover",
+			popupId: POPUP_STATE_ID
+		});
+		const exportMutation = useExportRequest();
+		const isImporting = (0, _elementor_query.useIsMutating)({ mutationKey: [IMPORT_DESIGN_SYSTEM_MUTATION_KEY] }) > 0;
+		const isExporting = (0, _elementor_query.useIsMutating)({ mutationKey: [EXPORT_DESIGN_SYSTEM_MUTATION_KEY] }) > 0;
+		const isInProgress = isImporting || isExporting;
+		const triggerProps = (0, _elementor_ui.bindTrigger)(popupState);
+		const handleImport = () => {
+			popupState.close();
+			trackDesignSystem({ event: "importOpened" });
+			(0, _elementor_editor_ui.openDialog)({ component: /* @__PURE__ */ react.createElement(ImportDesignSystemDialog, { onClose: _elementor_editor_ui.closeDialog }) });
+		};
+		const runExport = async () => {
+			notifyExportInProgress();
+			try {
+				const { blob, fileName } = await exportMutation.mutateAsync();
+				downloadBlob(blob, fileName);
+				notifyExportSuccess();
+			} catch {
+				notifyExportFailure(runExport);
+			}
+		};
+		const handleExport = () => {
+			popupState.close();
+			trackDesignSystem({ event: "export" });
+			runExport();
+		};
+		const triggerLabel = (0, _wordpress_i18n.__)("Design system actions", "elementor");
+		const currentlyExportingLabel = (0, _wordpress_i18n.__)(`Export is in progress. The file will be downloaded when it's complete.`, "elementor");
+		const currentlyImportingLabel = (0, _wordpress_i18n.__)(`Import is in progress. You will receive a notification when it's complete.`, "elementor");
+		let tooltipLabel = triggerLabel;
+		if (isInProgress) tooltipLabel = isExporting ? currentlyExportingLabel : currentlyImportingLabel;
+		return /* @__PURE__ */ react.createElement(react.Fragment, null, isAdmin && /* @__PURE__ */ react.createElement(_elementor_ui.Tooltip, {
+			title: tooltipLabel,
+			placement: "top"
+		}, /* @__PURE__ */ react.createElement("span", null, /* @__PURE__ */ react.createElement(_elementor_ui.IconButton, {
+			...triggerProps,
+			size: "small",
+			"aria-label": triggerLabel,
+			disabled: isInProgress
+		}, /* @__PURE__ */ react.createElement(_elementor_icons.DotsVerticalIcon, { fontSize: "small" })))), /* @__PURE__ */ react.createElement(_elementor_ui.Menu, {
+			...(0, _elementor_ui.bindMenu)(popupState),
+			MenuListProps: { dense: true },
+			PaperProps: { elevation: 6 },
+			anchorOrigin: {
+				vertical: "bottom",
+				horizontal: "right"
+			},
+			transformOrigin: {
+				vertical: "top",
+				horizontal: "right"
+			}
+		}, /* @__PURE__ */ react.createElement(_elementor_ui.MenuItem, {
+			onClick: handleImport,
+			disabled: isImporting
+		}, /* @__PURE__ */ react.createElement(_elementor_ui.ListItemIcon, null, /* @__PURE__ */ react.createElement(_elementor_icons.DownloadIcon, { fontSize: "tiny" })), /* @__PURE__ */ react.createElement(_elementor_ui.ListItemText, null, (0, _wordpress_i18n.__)("Import", "elementor"))), /* @__PURE__ */ react.createElement(_elementor_ui.MenuItem, {
+			onClick: handleExport,
+			disabled: isExporting
+		}, /* @__PURE__ */ react.createElement(_elementor_ui.ListItemIcon, null, /* @__PURE__ */ react.createElement(_elementor_icons.UploadIcon, { fontSize: "tiny" })), /* @__PURE__ */ react.createElement(_elementor_ui.ListItemText, null, (0, _wordpress_i18n.__)("Export", "elementor")))));
+	};
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/components/design-system-panel-content.tsx
+	var stickyTabRowStyles = {
+		position: "sticky",
+		zIndex: 1100,
+		opacity: 1,
+		backgroundColor: "background.default",
+		transition: "top 300ms ease"
+	};
+	var EVENT_SET_TAB$1 = "elementor/design-system/set-tab";
+	var trackDesignSystemTabOpened = (tab) => {
+		switch (tab) {
+			case "classes":
+				(0, _elementor_editor_global_classes.trackGlobalClasses)({
+					event: "classManagerOpened",
+					source: "system-panel"
+				});
+				break;
+			case "variables":
+				(0, _elementor_editor_variables.trackVariablesManagerEvent)({
+					action: "openManager",
+					source: "system-panel"
+				});
+				break;
+		}
+	};
+	function DesignSystemPanelContent({ onRequestClose }) {
+		const [currentTab, setCurrentTab] = (0, react.useState)(() => getInitialDesignSystemTab());
+		const defaultsCloseAttemptRef = (0, react.useRef)(null);
+		const variablesCloseAttemptRef = (0, react.useRef)(null);
+		const classesCloseAttemptRef = (0, react.useRef)(null);
+		const isChainingRef = (0, react.useRef)(false);
+		const { getTabProps, getTabPanelProps, getTabsProps } = (0, _elementor_ui.useTabs)(currentTab);
+		const chainedThroughClasses = (0, react.useCallback)(() => {
+			if (!isChainingRef.current && classesCloseAttemptRef.current) {
+				isChainingRef.current = true;
+				classesCloseAttemptRef.current();
+				isChainingRef.current = false;
+				return;
+			}
+			onRequestClose();
+		}, [onRequestClose]);
+		const chainedThroughVariables = (0, react.useCallback)(() => {
+			if (!isChainingRef.current && variablesCloseAttemptRef.current) {
+				isChainingRef.current = true;
+				variablesCloseAttemptRef.current();
+				isChainingRef.current = false;
+				return;
+			}
+			onRequestClose();
+		}, [onRequestClose]);
+		const chainedThroughDefaults = (0, react.useCallback)(() => {
+			if (!isChainingRef.current && defaultsCloseAttemptRef.current) {
+				isChainingRef.current = true;
+				defaultsCloseAttemptRef.current();
+				isChainingRef.current = false;
+				return;
+			}
+			onRequestClose();
+		}, [onRequestClose]);
+		(0, react.useEffect)(() => {
+			notifyDesignSystemTabChange(currentTab);
+		}, [currentTab]);
+		(0, react.useEffect)(() => {
+			const handler = (event) => {
+				const tab = event.detail?.tab;
+				if (!tab) return;
+				const normalizedTab = normalizeDesignSystemTab(tab);
+				setCurrentTab(normalizedTab);
+				persistDesignSystemTab(normalizedTab);
+				notifyDesignSystemTabChange(normalizedTab);
+				trackDesignSystemTabOpened(normalizedTab);
+			};
+			window.addEventListener(EVENT_SET_TAB$1, handler);
+			return () => {
+				window.removeEventListener(EVENT_SET_TAB$1, handler);
+			};
+		}, []);
+		const handleHeaderClose = () => {
+			if (currentTab === "defaults" && defaultsCloseAttemptRef.current) {
+				defaultsCloseAttemptRef.current();
+				return;
+			}
+			if (currentTab === "variables" && variablesCloseAttemptRef.current) {
+				variablesCloseAttemptRef.current();
+				return;
+			}
+			if (currentTab === "classes" && classesCloseAttemptRef.current) {
+				classesCloseAttemptRef.current();
+				return;
+			}
+			onRequestClose();
+		};
+		return /* @__PURE__ */ react.createElement(_elementor_editor_ui.ThemeProvider, null, /* @__PURE__ */ react.createElement(_elementor_editor_panels.Panel, null, /* @__PURE__ */ react.createElement(_elementor_editor_panels.PanelHeader, null, /* @__PURE__ */ react.createElement(_elementor_ui.Stack, {
+			p: 1,
+			pl: 2,
+			width: "100%",
+			direction: "row",
+			alignItems: "center",
+			spacing: .5
+		}, /* @__PURE__ */ react.createElement(_elementor_editor_panels.PanelHeaderTitle, { sx: {
+			flex: 1,
+			minWidth: 0
+		} }, (0, _wordpress_i18n.__)("Design system", "elementor")), /* @__PURE__ */ react.createElement(DesignSystemHeaderMenu, null), /* @__PURE__ */ react.createElement(_elementor_ui.CloseButton, {
+			"aria-label": (0, _wordpress_i18n.__)("Close", "elementor"),
+			sx: { flexShrink: 0 },
+			onClick: () => void handleHeaderClose()
+		}))), /* @__PURE__ */ react.createElement(_elementor_editor_panels.PanelBody, { sx: {
+			display: "flex",
+			flexDirection: "column",
+			height: "100%",
+			overflow: "hidden",
+			minHeight: 0
+		} }, /* @__PURE__ */ react.createElement(_elementor_ui.Stack, {
+			direction: "column",
+			sx: {
+				width: "100%",
+				flex: 1,
+				minHeight: 0,
+				overflow: "hidden"
+			}
+		}, /* @__PURE__ */ react.createElement(_elementor_ui.Stack, { sx: {
+			...stickyTabRowStyles,
+			top: 0,
+			flexShrink: 0
+		} }, /* @__PURE__ */ react.createElement(_elementor_ui.Tabs, {
+			variant: "fullWidth",
+			size: "small",
+			sx: { mt: .5 },
+			...getTabsProps(),
+			onChange: (e, newValue) => {
+				getTabsProps().onChange(e, newValue);
+				setCurrentTab(newValue);
+				persistDesignSystemTab(newValue);
+				notifyDesignSystemTabChange(newValue);
+				trackDesignSystemTabOpened(newValue);
+			}
+		}, /* @__PURE__ */ react.createElement(_elementor_ui.Tab, {
+			label: (0, _wordpress_i18n.__)("Defaults", "elementor"),
+			icon: /* @__PURE__ */ react.createElement(_elementor_icons.TextIcon, { fontSize: "small" }),
+			iconPosition: "start",
+			...getTabProps("defaults")
+		}), /* @__PURE__ */ react.createElement(_elementor_ui.Tab, {
+			label: (0, _wordpress_i18n.__)("Variables", "elementor"),
+			icon: /* @__PURE__ */ react.createElement(_elementor_icons.ColorFilterIcon, { fontSize: "small" }),
+			iconPosition: "start",
+			...getTabProps("variables")
+		}), /* @__PURE__ */ react.createElement(_elementor_ui.Tab, {
+			label: (0, _wordpress_i18n.__)("Classes", "elementor"),
+			icon: /* @__PURE__ */ react.createElement(_elementor_icons.ColorSwatchIcon, { fontSize: "small" }),
+			iconPosition: "start",
+			...getTabProps("classes")
+		})), /* @__PURE__ */ react.createElement(_elementor_ui.Divider, null)), /* @__PURE__ */ react.createElement(_elementor_ui.Box, {
+			role: "tabpanel",
+			...getTabPanelProps("defaults"),
+			sx: {
+				flex: 1,
+				minHeight: 0,
+				display: currentTab === "defaults" ? "flex" : "none",
+				flexDirection: "column",
+				overflow: "hidden",
+				pt: 1
+			}
+		}, /* @__PURE__ */ react.createElement(_elementor_editor_default_styles.DefaultStylesTabEmbedded, {
+			onRequestClose: chainedThroughVariables,
+			onExposeCloseAttempt: (fn) => {
+				defaultsCloseAttemptRef.current = fn;
+			}
+		})), /* @__PURE__ */ react.createElement(_elementor_ui.Box, {
+			role: "tabpanel",
+			...getTabPanelProps("variables"),
+			sx: {
+				flex: 1,
+				minHeight: 0,
+				display: currentTab === "variables" ? "flex" : "none",
+				flexDirection: "column",
+				overflow: "hidden",
+				pt: 1
+			}
+		}, /* @__PURE__ */ react.createElement(_elementor_editor_variables.VariablesManagerPanelEmbedded, {
+			onRequestClose: chainedThroughClasses,
+			onExposeCloseAttempt: (fn) => {
+				variablesCloseAttemptRef.current = fn;
+			}
+		})), /* @__PURE__ */ react.createElement(_elementor_ui.Box, {
+			role: "tabpanel",
+			...getTabPanelProps("classes"),
+			sx: {
+				flex: 1,
+				minHeight: 0,
+				display: currentTab === "classes" ? "flex" : "none",
+				flexDirection: "column",
+				overflow: "hidden",
+				pt: 1
+			}
+		}, /* @__PURE__ */ react.createElement(_elementor_editor_global_classes.ClassManagerPanelEmbedded, {
+			onRequestClose: chainedThroughDefaults,
+			onExposeCloseAttempt: (fn) => {
+				classesCloseAttemptRef.current = fn;
+			},
+			isActive: currentTab === "classes"
+		}))))));
+	}
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/design-system-panel.tsx
+	var PANEL_ID$1 = "design-system";
+	var { panel, usePanelStatus, usePanelActions } = (0, _elementor_editor_panels.createPanel)({
+		id: PANEL_ID$1,
+		component: DesignSystemPanelRoot,
+		allowedEditModes: ["edit", PANEL_ID$1],
+		onOpen: () => {
+			(0, _elementor_editor_v1_adapters.changeEditMode)(PANEL_ID$1);
+		},
+		onClose: async () => {
+			(0, _elementor_editor_v1_adapters.changeEditMode)("edit");
+			await (0, _elementor_editor_documents.reloadCurrentDocument)();
+		},
+		isOpenPreviousElement: true
+	});
+	function DesignSystemPanelRoot() {
+		const { close: closePanel } = usePanelActions();
+		return /* @__PURE__ */ react.createElement(DesignSystemPanelContent, { onRequestClose: closePanel });
+	}
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/components/design-system-entrypoints.tsx
+	var V1_ELEMENTS_PANEL_ROUTE = "panel/elements/categories";
+	var EVENT_OPEN_DEFAULTS = "elementor/open-default-styles";
+	var EVENT_OPEN_VARIABLES = "elementor/open-variables-manager";
+	var EVENT_OPEN_CLASSES = "elementor/open-global-classes-manager";
+	var EVENT_TOGGLE$1 = "elementor/toggle-design-system";
+	var EVENT_SET_TAB = "elementor/design-system/set-tab";
+	var ACTIVE_PANEL_PARAM = "active-panel";
+	var PANEL_ID = "design-system";
+	var LEGACY_DEFAULT_STYLES_PANEL = "default-styles";
+	var LEGACY_GLOBAL_CLASSES_PANEL = "global-classes-manager";
+	var LEGACY_VARIABLES_PANEL = "variables-manager";
+	var OPEN_EVENT_BY_TAB = {
+		defaults: EVENT_OPEN_DEFAULTS,
+		variables: EVENT_OPEN_VARIABLES,
+		classes: EVENT_OPEN_CLASSES
+	};
+	function DesignSystemEntrypoints() {
+		const { open, close } = usePanelActions();
+		const { isOpen } = usePanelStatus();
+		const document = (0, _elementor_editor_documents.__useActiveDocument)();
+		const { save: saveDocument } = (0, _elementor_editor_documents.__useActiveDocumentActions)();
+		const { open: openSaveDialog, close: closeSaveDialog, isOpen: isSaveDialogOpen } = (0, _elementor_editor_ui.useDialog)();
+		const documentRef = (0, react.useRef)(document);
+		documentRef.current = document;
+		const pendingOpenRef = (0, react.useRef)(null);
+		const gatedOpen = (0, react.useCallback)((onClean) => {
+			if (documentRef.current?.isDirty) {
+				pendingOpenRef.current = onClean;
+				openSaveDialog();
+				return;
+			}
+			onClean();
+		}, [openSaveDialog]);
+		const handleSaveAndContinue = (0, react.useCallback)(async () => {
+			try {
+				await saveDocument();
+				closeSaveDialog();
+				pendingOpenRef.current?.();
+				pendingOpenRef.current = null;
+			} catch {}
+		}, [saveDocument, closeSaveDialog]);
+		const handleStayHere = (0, react.useCallback)(() => {
+			closeSaveDialog();
+			pendingOpenRef.current = null;
+		}, [closeSaveDialog]);
+		const isOpenRef = (0, react.useRef)(isOpen);
+		isOpenRef.current = isOpen;
+		(0, react.useEffect)(() => {
+			const handler = (event) => {
+				const tab = event.detail?.tab;
+				if (tab !== "defaults" && tab !== "variables" && tab !== "classes") return;
+				if (isOpenRef.current && getActiveDesignSystemTab() === tab) {
+					close();
+					return;
+				}
+				if (isOpenRef.current) {
+					window.dispatchEvent(new CustomEvent(EVENT_SET_TAB, { detail: { tab } }));
+					return;
+				}
+				gatedOpen(() => {
+					window.dispatchEvent(new CustomEvent(OPEN_EVENT_BY_TAB[tab]));
+				});
+			};
+			window.addEventListener(EVENT_TOGGLE$1, handler);
+			return () => {
+				window.removeEventListener(EVENT_TOGGLE$1, handler);
+			};
+		}, [close, gatedOpen]);
+		const pendingTabRef = (0, react.useRef)(null);
+		const [readyToOpenFromEvent, setReadyToOpenFromEvent] = (0, react.useState)(false);
+		(0, react.useEffect)(() => {
+			if (readyToOpenFromEvent) {
+				setReadyToOpenFromEvent(false);
+				open();
+			}
+		}, [readyToOpenFromEvent, open]);
+		(0, react.useEffect)(() => {
+			return (0, _elementor_editor_v1_adapters.__privateListenTo)((0, _elementor_editor_v1_adapters.routeOpenEvent)(V1_ELEMENTS_PANEL_ROUTE), () => {
+				const tab = pendingTabRef.current;
+				if (tab) {
+					pendingTabRef.current = null;
+					setPendingDesignSystemTab(tab);
+					setReadyToOpenFromEvent(true);
+				}
+			});
+		}, []);
+		(0, react.useEffect)(() => {
+			const bind = (eventName, tab) => {
+				const handler = () => {
+					pendingTabRef.current = tab;
+					(0, _elementor_editor_v1_adapters.__privateOpenRoute)(V1_ELEMENTS_PANEL_ROUTE);
+				};
+				window.addEventListener(eventName, handler);
+				return () => window.removeEventListener(eventName, handler);
+			};
+			const unlistenDefaults = bind(EVENT_OPEN_DEFAULTS, "defaults");
+			const unlistenVariables = bind(EVENT_OPEN_VARIABLES, "variables");
+			const unlistenClasses = bind(EVENT_OPEN_CLASSES, "classes");
+			return () => {
+				unlistenDefaults();
+				unlistenVariables();
+				unlistenClasses();
+			};
+		}, []);
+		const hasOpenedFromUrl = (0, react.useRef)(false);
+		(0, react.useEffect)(() => {
+			const urlParams = new URLSearchParams(window.location.search);
+			const activePanel = urlParams.get(ACTIVE_PANEL_PARAM);
+			if (!activePanel) return;
+			let targetTab = null;
+			if (activePanel === PANEL_ID) {
+				const tab = urlParams.get("design-system-tab");
+				if (tab === "classes") targetTab = "classes";
+				else if (tab === "variables") targetTab = "variables";
+				else targetTab = "defaults";
+			} else if (activePanel === LEGACY_DEFAULT_STYLES_PANEL) targetTab = "defaults";
+			else if (activePanel === LEGACY_GLOBAL_CLASSES_PANEL) targetTab = "classes";
+			else if (activePanel === LEGACY_VARIABLES_PANEL) targetTab = "variables";
+			else return;
+			return (0, _elementor_editor_v1_adapters.__privateListenTo)((0, _elementor_editor_v1_adapters.routeOpenEvent)(V1_ELEMENTS_PANEL_ROUTE), () => {
+				if (hasOpenedFromUrl.current) return;
+				hasOpenedFromUrl.current = true;
+				requestAnimationFrame(() => {
+					if (targetTab) setPendingDesignSystemTab(targetTab);
+					gatedOpen(() => void open());
+				});
+			});
+		}, [open, gatedOpen]);
+		return isSaveDialogOpen ? /* @__PURE__ */ react.createElement(_elementor_editor_ui.ThemeProvider, null, /* @__PURE__ */ react.createElement(_elementor_editor_ui.SaveChangesDialog, null, /* @__PURE__ */ react.createElement(_elementor_editor_ui.SaveChangesDialog.Title, null, (0, _wordpress_i18n.__)("You have unsaved changes", "elementor")), /* @__PURE__ */ react.createElement(_elementor_editor_ui.SaveChangesDialog.Content, null, /* @__PURE__ */ react.createElement(_elementor_editor_ui.SaveChangesDialog.ContentText, { sx: { mb: 2 } }, (0, _wordpress_i18n.__)("To open the Design System, save your page first. You can't continue without saving.", "elementor"))), /* @__PURE__ */ react.createElement(_elementor_editor_ui.SaveChangesDialog.Actions, { actions: {
+			cancel: {
+				label: (0, _wordpress_i18n.__)("Stay here", "elementor"),
+				action: handleStayHere
+			},
+			confirm: {
+				label: (0, _wordpress_i18n.__)("Save & Continue", "elementor"),
+				action: handleSaveAndContinue
+			}
+		} }))) : null;
+	}
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/use-open-design-system-toolbar.ts
+	var EVENT_TOGGLE = "elementor/toggle-design-system";
+	function useOpenDesignSystemToolbar() {
+		const { isOpen } = usePanelStatus();
+		return {
+			title: (0, _wordpress_i18n.__)("Design System", "elementor"),
+			icon: _elementor_icons.DropletHalfFilledIcon,
+			onClick: () => {
+				if (!isOpen) trackDesignSystem({ event: "opened" });
+				const tab = getActiveDesignSystemTab();
+				window.dispatchEvent(new CustomEvent(EVENT_TOGGLE, { detail: { tab } }));
+			},
+			selected: isOpen
+		};
+	}
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/init.ts
+	function init() {
+		(0, _elementor_editor_panels.registerPanel)(panel);
+		(0, _elementor_editor.injectIntoLogic)({
+			id: "design-system-entrypoints",
+			component: DesignSystemEntrypoints
+		});
+		_elementor_editor_app_bar.toolsMenu.registerToggleAction({
+			id: "open-design-system-toolbar",
+			priority: 4,
+			useProps: useOpenDesignSystemToolbar
+		});
+	}
+
+//#endregion
+//#region packages/packages/core/editor-design-system/src/index.ts
+	var src_exports = /* @__PURE__ */ __exportAll({
+		getInitialDesignSystemTab: () => getInitialDesignSystemTab,
+		init: () => init,
+		panel: () => panel,
+		persistDesignSystemTab: () => persistDesignSystemTab,
+		usePanelActions: () => usePanelActions,
+		usePanelStatus: () => usePanelStatus
+	});
+
+//#endregion
+//#region \0elementor-package-library-entry
+	(window.elementorV2 = window.elementorV2 || {}).editorDesignSystem = src_exports;
+
+//#endregion
+})(elementorV2.editor, elementorV2.editorAppBar, elementorV2.editorPanels, React, elementorV2.editorDocuments, elementorV2.editorUi, elementorV2.editorV1Adapters, wp.i18n, elementorV2.editorDefaultStyles, elementorV2.editorGlobalClasses, elementorV2.editorVariables, elementorV2.icons, elementorV2.ui, elementorV2.editorCurrentUser, elementorV2.query, elementorV2.editorNotifications, elementorV2.httpClient, elementorV2.editorCanvas, elementorV2.events);
+window.elementorV2.editorDesignSystem?.init?.();
 //# sourceMappingURL=editor-design-system.js.map

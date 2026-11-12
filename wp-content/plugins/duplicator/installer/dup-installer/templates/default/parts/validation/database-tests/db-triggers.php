@@ -1,14 +1,15 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
-/* Variables */
-/* @var $isOk bool */
-/* @var $triggers array */
+
+/**
+ * Variables
+ *
+ * @var bool $isOk
+ * @var array<string, object> $triggers
+ */
 
 $statusClass = $isOk ? 'green' : 'red';
 ?>

@@ -7,7 +7,6 @@
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
  *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -18,37 +17,63 @@ use Duplicator\Libs\Snap\SnapIO;
 
 class DUPX_Validation_test_wordfence extends DUPX_Validation_abstract_item
 {
+    /** @var string */
     private $wordFencePath = "";
 
-    protected function runTest()
+    protected function runTest(): int
     {
         return $this->parentHasWordfence() ? self::LV_HARD_WARNING : self::LV_GOOD;
     }
 
-    public function getTitle()
+    /**
+     * Get test title
+     *
+     * @return string
+     */
+    public function getTitle(): string
     {
         return 'Wordfence';
     }
 
+    /**
+     * Return content for test status
+     *
+     * @return string
+     */
     protected function swarnContent()
     {
-        return dupxTplRender('parts/validation/tests/wordfence/wordfence-detected', array(
-            'wordFencePath' => $this->wordFencePath
-            ), false);
+        return dupxTplRender('parts/validation/tests/wordfence/wordfence-detected', [
+            'wordFencePath' => $this->wordFencePath,
+        ], false);
     }
 
+    /**
+     * Return content for test status
+     *
+     * @return string
+     */
     protected function hwarnContent()
     {
-        return dupxTplRender('parts/validation/tests/wordfence/wordfence-detected', array(
-            'wordFencePath' => $this->wordFencePath
-            ), false);
+        return dupxTplRender('parts/validation/tests/wordfence/wordfence-detected', [
+            'wordFencePath' => $this->wordFencePath,
+        ], false);
     }
 
+    /**
+     * Return content for test status
+     *
+     * @return string
+     */
     protected function goodContent()
     {
-        return dupxTplRender('parts/validation/tests/wordfence/wordfence-not-detected', array(), false);
+        return dupxTplRender('parts/validation/tests/wordfence/wordfence-not-detected', [], false);
     }
 
+    /**
+     * Check if the Wordfence firewall is enabled in the parent path
+     *
+     * @return bool
+     */
     protected function parentHasWordfence()
     {
         $scanPath = PrmMng::getInstance()->getValue(PrmMng::PARAM_PATH_NEW);
@@ -76,13 +101,20 @@ class DUPX_Validation_test_wordfence extends DUPX_Validation_abstract_item
         return $result;
     }
 
-    protected function wordFenceFirewallEnabled($path)
+    /**
+     * Check if the Wordfence firewall is enabled in the given path
+     *
+     * @param string $path The path to check
+     *
+     * @return bool
+     */
+    protected function wordFenceFirewallEnabled($path): bool
     {
-        $configFiles = array(
+        $configFiles = [
             'php.ini',
             '.user.ini',
-            '.htaccess'
-        );
+            '.htaccess',
+        ];
 
         foreach ($configFiles as $configFile) {
             $file = $path . '/' . $configFile;

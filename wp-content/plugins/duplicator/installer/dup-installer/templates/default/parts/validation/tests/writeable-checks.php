@@ -1,21 +1,18 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 use Duplicator\Installer\Core\Params\PrmMng;
-use Duplicator\Installer\Utils\InstallerLinkManager;
+use Duplicator\Libs\Shell\Shell;
 
 /**
  * Variables
  *
  * @var int      $testResult    DUPX_Validation_abstract_item::[LV_FAIL|LV_HARD_WARNING|...]
  * @var string[] $faildDirPerms
- * @var array    $phpPerms
+ * @var array<int, array{pass: bool, message: string, dir: string}> $phpPerms
  */
 ?>
 <div class="sub-title">STATUS</div>
@@ -72,7 +69,7 @@ use Duplicator\Installer\Utils\InstallerLinkManager;
         </td>
         <td>    
             <?php
-            if (!extension_loaded('suhosin')) {
+            if (!Shell::isSuhosinEnabled()) {
                 ?><i class='green'>Disabled</i><?php
             } else {
                 ?><i class='red'>Enabled</i><?php
@@ -113,26 +110,22 @@ use Duplicator\Installer\Utils\InstallerLinkManager;
 <ul>
     <li>
         If there are problems with permissions (not writable files or folders) try to change the permissions to 755 for folders or 644 for files.
-        <a href="https://en.wikipedia.org/wiki/File-system_permissions" target="_blank">Here you can find general information about File-system permissions.</a>
+        <a href="https://en.wikipedia.org/wiki/File-system_permissions" target="_blank">
+            Here you can find general information about File-system permissions.
+        </a>
     </li>
     <li>
         Generally if the folders have write permissions but it is not possible to extract the PHP files, 
         the cause could be an external security service like "Imunify 360".
-        If this is the case 
-        <a 
-            href="<?php echo InstallerLinkManager::getDocUrl(
-                'how-to-fix-installer-archive-extraction-issues',
-                'install',
-                'validation writable deactivate checks'
-            ); ?>" 
-            target="_blank"
-        >
+        If this is the case <a href="<?php echo DUPX_Constants::FAQ_URL; ?>how-to-fix-installer-archive-extraction-issues" target="_blank">
             deactivate the checks
         </a> 
         temporarily, and run the installation again.
     </li>
-    <?php $faqUrl = InstallerLinkManager::getDocUrl('how-to-fix-installer-archive-extraction-issues', 'install', 'validation writable documentation'); ?>
     <li>
-        Check <a href="<?php echo $faqUrl; ?>" target="_blank">our online documentation</a>
+        Check 
+        <a href="<?php echo DUPX_Constants::FAQ_URL; ?>how-to-fix-installer-archive-extraction-issues" target="_blank">
+            our online documentation
+        </a>
     </li>
 </ul>

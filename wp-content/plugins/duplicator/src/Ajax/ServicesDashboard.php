@@ -1,14 +1,11 @@
 <?php
 
-/**
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
- */
-
 namespace Duplicator\Ajax;
 
-use DUP_Package;
+use Duplicator\Package\PackageUtils;
 use Duplicator\Ajax\AjaxWrapper;
+use Duplicator\Core\CapMng;
+use Duplicator\Libs\Snap\SnapUtil;
 use Duplicator\Views\DashboardWidget;
 
 class ServicesDashboard extends AbstractAjaxService
@@ -18,10 +15,9 @@ class ServicesDashboard extends AbstractAjaxService
      *
      * @return void
      */
-    public function init()
+    public function init(): void
     {
         $this->addAjaxCall('wp_ajax_duplicator_dashboad_widget_info', 'dashboardWidgetInfo');
-        $this->addAjaxCall('wp_ajax_duplicator_dismiss_recommended_plugin', 'dismissRecommendedPlugin');
     }
 
     /**
@@ -29,13 +25,12 @@ class ServicesDashboard extends AbstractAjaxService
      *
      * @return array<string, mixed>
      */
-    public static function dashboardWidgetInfoCallback()
+    public static function dashboardWidgetInfoCallback(): array
     {
-        $result = array(
-            'isRunning' => DUP_Package::isPackageRunning(),
-            'lastBackupInfo' => DashboardWidget::getLastBackupString()
-        );
-        return $result;
+        return [
+            'isBackupCreationBlocked' => PackageUtils::isBackupCreationBlocked(),
+            'lastBackupInfo'          => DashboardWidget::getLastBackupString(),
+        ];
     }
 
     /**
@@ -43,38 +38,16 @@ class ServicesDashboard extends AbstractAjaxService
      *
      * @return void
      */
-    public function dashboardWidgetInfo()
+    public function dashboardWidgetInfo(): void
     {
         AjaxWrapper::json(
-            array(__CLASS__, 'dashboardWidgetInfoCallback'),
+            [
+                self::class,
+                'dashboardWidgetInfoCallback',
+            ],
             'duplicator_dashboad_widget_info',
-            $_POST['nonce'],
-            'export'
-        );
-    }
-
-    /**
-     * Set dismiss recommended callback
-     *
-     * @return bool
-     */
-    public static function dismissRecommendedPluginCallback()
-    {
-        return (update_user_meta(get_current_user_id(), DashboardWidget::RECOMMENDED_PLUGIN_DISMISSED_OPT_KEY, true) !== false);
-    }
-
-    /**
-     * Set recovery action
-     *
-     * @return void
-     */
-    public function dismissRecommendedPlugin()
-    {
-        AjaxWrapper::json(
-            array(__CLASS__, 'dismissRecommendedPluginCallback'),
-            'duplicator_dashboad_widget_dismiss_recommended',
-            $_POST['nonce'],
-            'export'
+            SnapUtil::sanitizeTextInput(INPUT_POST, 'nonce'),
+            CapMng::CAP_BASIC
         );
     }
 }

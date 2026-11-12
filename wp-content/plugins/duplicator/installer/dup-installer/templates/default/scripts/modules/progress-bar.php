@@ -1,30 +1,19 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
-
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 ?>
 <script>
     DUPX.progress = {
         progressObj: null,
-        didYouKnowObj: null,
         data: {},
         init: function () {
             if (this.progressObj === null) {
                 this.progressObj = $('#progress-area');
             }
-
-            if (this.didYouKnowObj === null) {
-                this.didYouKnowObj = $('#duplicator-did-you-know');
-            }
         },
         hide: function () {
             this.init();
             this.progressObj.addClass('no-display');
-            this.didYouKnowObj.addClass('no-display');
         },
         show: function (options) {
             $("html, body").animate({scrollTop: 0}, "slow");
@@ -36,9 +25,6 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
             this.update(this.data);
 
             this.progressObj.removeClass('no-display');
-            if (this.data.showUpsell) {
-                this.didYouKnowObj.removeClass('no-display');
-            }
         },
         update: function (options) {
             this.init();
@@ -111,7 +97,6 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
             'perc': '',
             'secondary': '',
             'notice': '',
-            'showUpsell': true,
             'progressBar': false,
             'bottomText': ''
         }

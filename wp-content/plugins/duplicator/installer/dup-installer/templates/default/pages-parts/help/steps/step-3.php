@@ -1,12 +1,15 @@
 <?php
 
+
+
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-?>
-<!-- ============================================
-STEP 3
-============================================== -->
-<?php
+/**
+ * Variables
+ *
+ * @var bool $open_section;
+ */
+
 $sectionId   = 'section-step-3';
 $expandClass = $sectionId == $open_section ? 'open' : 'close';
 ?>
@@ -38,7 +41,6 @@ $expandClass = $sectionId == $open_section ? 'open' : 'close';
             <tr>
                 <td class="col-opt"><i>Overview</i></td>
                 <td>
-                    <sup class="hlp-pro-lbl">Pro</sup>
                     Permits adding as many custom search and replace items as needed.  Use extreme caution when using this feature as it can have
                     unintended consequences as it will search the entire database.  It is recommended to only use highly unique items such as full URL or
                     file paths with this option.
@@ -50,7 +52,6 @@ $expandClass = $sectionId == $open_section ? 'open' : 'close';
             <tr>
                 <td class="col-opt">Cleanup</td>
                 <td>
-                    <sup class="hlp-pro-lbl">Pro</sup>
                     The checkbox labeled "Remove schedules &amp; storage endpoints" will empty the Duplicator schedule and storage settings.
                     It is recommended that this remain enabled so that you do not have unwanted schedules and storage options.
                 </td>
@@ -86,10 +87,9 @@ $expandClass = $sectionId == $open_section ? 'open' : 'close';
             <tr>
                 <td class="col-opt">Cross<br/>Search</td>
                 <td>
-                    <sup class="hlp-pro-lbl">Pro</sup>
                     This option enables the searching and replacing of subsite domains and paths that link to each other within a Multisite network.
                     Check this option if hyperlinks of at least one subsite point to another subsite.  Uncheck this option there if there are at least
-                    <?php echo 10; ?>  subsites and no subsites hyperlinking to each other.
+                    <?php echo MAX_SITES_TO_DEFAULT_ENABLE_CORSS_SEARCH ?>  subsites and no subsites hyperlinking to each other.
                     <br/>
                     <i>
                         Note: Checking this option in this scenario would unnecessarily load your server.  Check this option if you are unsure if
@@ -210,7 +210,6 @@ $expandClass = $sectionId == $open_section ? 'open' : 'close';
             <tr>
                 <td class="col-opt">Add/Remove<br/> Switch</td>
                 <td>
-                    <sup class="hlp-pro-lbl">Pro</sup>
                     Each wp-config value has an associated switch that controls the insertion and removal of the constant.<br>
                     If the switch is deactivated, the constant will be removed from wp-config.php
                 </td>

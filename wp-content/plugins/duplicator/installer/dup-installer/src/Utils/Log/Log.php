@@ -6,18 +6,21 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\Log
  */
 
 namespace Duplicator\Installer\Utils\Log;
 
+use Duplicator\Installer\Core\Security;
 use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Installer\ViewHelpers\Resources;
 use Duplicator\Libs\Snap\SnapIO;
+use Error;
+use Exception;
 
 /**
  * Log
- * Class used to log information  */
+ * Class used to log information
+ */
 class Log
 {
     /**
@@ -61,25 +64,25 @@ class Log
      *
      * @var callable
      */
-    private static $postprocessCallback = null;
+    private static $postprocessCallback;
 
     /**
      * @var callable
      */
-    private static $afterFatalErrorCallback = null;
+    private static $afterFatalErrorCallback;
 
     /**
      *
      * @var null|resource
      */
-    private static $logHandle = null;
+    private static $logHandle;
 
     /**
      * set log level from param manager
      *
      * @return void
      */
-    public static function setLogLevel()
+    public static function setLogLevel(): void
     {
         self::$logLevel = PrmMng::getInstance()->getValue(PrmMng::PARAM_LOGGING);
     }
@@ -93,7 +96,7 @@ class Log
      *
      * @return void
      */
-    public static function info($msg, $logging = self::LV_DEFAULT, $flush = false)
+    public static function info($msg, $logging = self::LV_DEFAULT, $flush = false): void
     {
         if ($logging > self::$logLevel) {
             return;
@@ -119,7 +122,7 @@ class Log
 
     /**
      *
-     * @return bool <p>Returns <b><code>true</code></b> on success or <b><code>false</code></b> on failure.</p>
+     * @return bool Returns true on success or false on failure.
      */
     public static function clearLog()
     {
@@ -135,16 +138,16 @@ class Log
      *
      * @return string
      */
-    protected static function getLogFileName()
+    protected static function getLogFileName(): string
     {
-        return 'dup-installer-log__' . \DUPX_Security::getInstance()->getSecondaryPackageHash() . '.txt';
+        return 'dup-installer-log__' . Security::getInstance()->getSecondaryPackageHash() . '.txt';
     }
 
     /**
      *
      * @return string
      */
-    public static function getLogFilePath()
+    public static function getLogFilePath(): string
     {
         return DUPX_INIT . '/' . self::getLogFileName();
     }
@@ -153,24 +156,26 @@ class Log
      *
      * @return string
      */
-    public static function getLogFileUrl()
+    public static function getLogFileUrl(): string
     {
-        return DUPX_INIT_URL . '/' . self::getLogFileName() . '?now=' . $GLOBALS['NOW_TIME'];
+        return Resources::getAssetsBaseUrl() . '/' . self::getLogFileName() . '?now=' . $GLOBALS['NOW_TIME'];
     }
 
     /**
      * Get trace string
      *
-     * @param array $callers   result of debug_backtrace
-     * @param int   $fromLevel level to start
+     * @param array<int, mixed> $callers   result of debug_backtrace
+     * @param int               $fromLevel level to start
+     * @param int<0,max>        $tabs      num tabs on each line
      *
      * @return string
      */
-    public static function traceToString($callers, $fromLevel = 0)
+    public static function traceToString($callers, $fromLevel = 0, $tabs = 0): string
     {
         $result = '';
         for ($i = $fromLevel; $i < count($callers); $i++) {
-            $trace = $callers[$i];
+            $trace   = $callers[$i];
+            $result .= str_repeat("\t", $tabs);
             if (!empty($trace['class'])) {
                 $result .= str_pad('TRACE[' . $i . '] CLASS___: ' . $trace['class'] . $trace['type'] . $trace['function'], 45, ' ');
             } else {
@@ -193,7 +198,7 @@ class Log
      *
      * @return void
      */
-    public static function setPostProcessCallback($callback)
+    public static function setPostProcessCallback($callback): void
     {
         self::$postprocessCallback = is_callable($callback) ? $callback : null;
     }
@@ -205,7 +210,7 @@ class Log
      *
      * @return void
      */
-    public static function setAfterFatalErrorCallback($callback)
+    public static function setAfterFatalErrorCallback($callback): void
     {
         self::$afterFatalErrorCallback = is_callable($callback) ? $callback : null;
     }
@@ -218,12 +223,13 @@ class Log
      *
      * @return void
      */
-    public static function resetTime($logging = self::LV_DEFAULT, $fileInfo = true)
+    public static function resetTime($logging = self::LV_DEFAULT, $fileInfo = true): void
     {
         self::$microtimeStart = microtime(true);
         if ($logging > self::$logLevel) {
             return;
         }
+        // phpcs:ignore PHPCompatibility.FunctionUse.ArgumentFunctionsReportCurrentValue.NeedsInspection
         $callers = debug_backtrace();
         $file    = $callers[0]['file'];
         $line    = $callers[0]['line'];
@@ -239,11 +245,12 @@ class Log
      *
      * @return void
      */
-    public static function logTime($msg = '', $logging = self::LV_DEFAULT, $fileInfo = true)
+    public static function logTime($msg = '', $logging = self::LV_DEFAULT, $fileInfo = true): void
     {
         if ($logging > self::$logLevel) {
             return;
         }
+        // phpcs:ignore PHPCompatibility.FunctionUse.ArgumentFunctionsReportCurrentValue.NeedsInspection
         $callers = debug_backtrace();
         $file    = $callers[0]['file'];
         $line    = $callers[0]['line'];
@@ -263,7 +270,7 @@ class Log
      *
      * @return void
      */
-    public static function incIndent()
+    public static function incIndent(): void
     {
         self::$indentation++;
     }
@@ -273,7 +280,7 @@ class Log
      *
      * @return void
      */
-    public static function decIndent()
+    public static function decIndent(): void
     {
         if (self::$indentation > 0) {
             self::$indentation--;
@@ -285,7 +292,7 @@ class Log
      *
      * @return void
      */
-    public static function resetIndent()
+    public static function resetIndent(): void
     {
         self::$indentation = 0;
     }
@@ -297,7 +304,7 @@ class Log
      *
      * @return boolean
      */
-    public static function isLevel($logging)
+    public static function isLevel($logging): bool
     {
         return $logging <= self::$logLevel;
     }
@@ -311,7 +318,7 @@ class Log
      *
      * @return void
      */
-    public static function infoObject($msg, &$object, $logging = self::LV_DEFAULT)
+    public static function infoObject($msg, $object, $logging = self::LV_DEFAULT): void
     {
         $msg = $msg . "\n" . print_r($object, true);
         self::info($msg, $logging);
@@ -322,7 +329,7 @@ class Log
      *
      * @return void
      */
-    public static function flush()
+    public static function flush(): void
     {
         if (is_resource(self::$logHandle)) {
             fflush(self::$logHandle);
@@ -332,14 +339,10 @@ class Log
     /**
      * Close log file
      *
-     * @return void
+     * @return bool
      */
-    public static function close()
+    public static function close(): bool
     {
-        if (is_null(self::$logHandle)) {
-            return true;
-        }
-
         if (is_resource(self::$logHandle)) {
             fclose(self::$logHandle);
         }
@@ -383,10 +386,14 @@ class Log
      *
      * @return void
      */
-    public static function error($errorMessage)
+    public static function error($errorMessage): void
     {
-        $breaks  = array("<br />", "<br>", "<br/>");
-        $spaces  = array("&nbsp;");
+        $breaks  = [
+            "<br />",
+            "<br>",
+            "<br/>",
+        ];
+        $spaces  = ["&nbsp;"];
         $log_msg = str_ireplace($breaks, "\r\n", $errorMessage);
         $log_msg = str_ireplace($spaces, " ", $log_msg);
         $log_msg = strip_tags($log_msg);
@@ -413,9 +420,9 @@ class Log
      *
      * @return string
      */
-    public static function getLogException($e, $title = 'EXCEPTION ERROR: ')
+    public static function getLogException($e, $title = 'EXCEPTION ERROR: '): string
     {
-        return $title . ' ' . $e->getMessage() . "\n" .
+        return $title . ' ' . $e->getMessage() . "[CODE:" . $e->getCode() . "]\n" .
             "\tFILE:" . $e->getFile() . '[' . $e->getLIne() . "]\n" .
             "\tTRACE:\n" . $e->getTraceAsString();
     }
@@ -423,13 +430,13 @@ class Log
     /**
      * Log exception
      *
-     * @param Exception $e       exception object
-     * @param int       $logging log level
-     * @param string    $title   log message
+     * @param Error|Exception $e       exception object
+     * @param int             $logging log level
+     * @param string          $title   log message
      *
      * @return void
      */
-    public static function logException($e, $logging = self::LV_DEFAULT, $title = 'EXCEPTION ERROR: ')
+    public static function logException($e, $logging = self::LV_DEFAULT, $title = 'EXCEPTION ERROR: '): void
     {
         if ($logging <= self::$logLevel) {
             Log::info("\n" . self::getLogException($e, $title) . "\n");
@@ -443,7 +450,7 @@ class Log
      *
      * @return void
      */
-    public static function setThrowExceptionOnError($set)
+    public static function setThrowExceptionOnError($set): void
     {
         self::$thowExceptionOnError = (bool) $set;
     }
@@ -456,7 +463,7 @@ class Log
      *
      * @return string
      */
-    public static function v2str($var, $checkCallable = false)
+    public static function v2str($var, $checkCallable = false): string
     {
         if ($checkCallable && is_callable($var)) {
             return '(callable) ' . print_r($var, true);

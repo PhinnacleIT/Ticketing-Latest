@@ -3,28 +3,35 @@
 namespace Duplicator\Views;
 
 use Closure;
-use DUP_Server;
-use Duplicator\Core\MigrationMng;
-use Duplicator\Utils\LinkManager;
-use Duplicator\Libs\Snap\SnapUtil;
+use Duplicator\Controllers\ActivityLogPageController;
+use Duplicator\Controllers\ToolsPageController;
+use Duplicator\Core\CapMng;
 use Duplicator\Core\Controllers\ControllersManager;
-use Duplicator\Core\Notifications\Notice;
+use Duplicator\Core\MigrationMng;
 use Duplicator\Core\Views\TplMng;
+use Duplicator\Libs\Snap\SnapString;
+use Duplicator\Models\ActivityLog\AbstractLogEvent;
+use Duplicator\Models\FixesEntity;
+use Duplicator\Models\Storages\AbstractStorageEntity;
+use Duplicator\Package\AutoTune\AutoTuneSessionEntity;
+use Duplicator\Package\PackageUtils;
 use Duplicator\Utils\Autoloader;
 use Exception;
 
 /**
- * Admin Notices
+ * Admin notices class, Used to display notices in the WordPress Admin area
  */
 class AdminNotices
 {
-    const OPTION_KEY_MIGRATION_SUCCESS_NOTICE       = 'duplicator_migration_success';
-    const OPTION_KEY_ACTIVATE_PLUGINS_AFTER_INSTALL = 'duplicator_activate_plugins_after_installation';
-
-    //TEMPLATE VALUE: This is a just a simple example for setting up quick notices
-    const OPTION_KEY_NEW_NOTICE_TEMPLATE        = 'duplicator_new_template_notice';
-    const OPTION_KEY_IS_ENABLE_NOTICE_DISMISSED = 'duplicator_is_enable_notice_dismissed';
-    const OPTION_KEY_IS_MU_NOTICE_DISMISSED     = 'duplicator_is_mu_notice_dismissed';
+    const OPTION_KEY_INSTALLER_HASH_NOTICE          = 'dupli_opt_inst_hash_notice';
+    const OPTION_KEY_ACTIVATE_PLUGINS_AFTER_INSTALL = 'dupli_opt_activate_plugins_after_installation';
+    const OPTION_KEY_MIGRATION_SUCCESS_NOTICE       = 'dupli_opt_migration_success';
+    const OPTION_KEY_S3_CONTENTS_FETCH_FAIL_NOTICE  = 'dupli_opt_s3_contents_fetch_fail';
+    const OPTION_KEY_BACKUP_INVALID_STORAGES        = 'dupli_opt_backup_invalid_storages';
+    const QUICK_FIX_NOTICE                          = 'dupli_opt_quick_fix_notice';
+    const ACTIVITY_LOG_UPGRADE_NOTICE               = 'dupli_opt_activity_log_upgrade_notice';
+    const ENCRYPTED_RESET_NOTICE                    = 'dupli_opt_encrypted_reset_notice';
+    const AUTOTUNE_SUGGEST_DISMISSED                = 'dupli_opt_autotune_suggest_dismissed';
 
     const GEN_INFO_NOTICE    = 0;
     const GEN_SUCCESS_NOTICE = 1;
@@ -36,49 +43,103 @@ class AdminNotices
      *
      * @return void
      */
-    public static function init()
+    public static function init(): void
     {
-        add_action('admin_init', array(__CLASS__, 'adminInit'));
-        add_action('admin_enqueue_scripts', array(__CLASS__, 'unhookThirdPartyNotices'), 99999, 1);
+        add_action('admin_init', [self::class, 'adminInit'], 20);
+        add_action('admin_enqueue_scripts', [self::class, 'unhookThirdPartyNotices'], 99999, 1);
     }
 
     /**
-     * init notice actions
+     * HOOK admin_init
      *
      * @return void
      */
-    public static function adminInit()
+    public static function adminInit(): void
     {
-        $notices = array();
-        if (is_multisite()) {
-            $noCapabilitiesNotice = is_super_admin() && !current_user_can('export');
-            $notices[]            = array(__CLASS__, 'multisiteNotice');
-        } else {
-            $noCapabilitiesNotice = in_array('administrator', $GLOBALS['current_user']->roles) && !current_user_can('export');
-        }
+        $notices   = [];
+        $notices[] = [
+            self::class,
+            'migrationSuccessNotice',
+        ]; // BEFORE MIGRATION SUCCESS NOTICE
+        $notices[] = [
+            self::class,
+            's3ContentsFetchFailNotice',
+        ];
+        $notices[] = [
+            self::class,
+            'addonInitFailNotice',
+        ];
+        $notices[] = [
+            self::class,
+            'activatePluginsAfterInstall',
+        ];
+        $notices[] = [
+            self::class,
+            'orphanedPackagesNotice',
+        ];
+        $notices[] = [
+            self::class,
+            'backupInvalidStoragesNotice',
+        ];
+        $notices[] = [
+            self::class,
+            'activityLogUpgradeNotice',
+        ];
+        $notices[] = [
+            self::class,
+            'multisiteUnsupportedNotice',
+        ];
+        $notices[] = [
+            self::class,
+            'encryptedResetNotice',
+        ];
+        $notices[] = [
+            self::class,
+            'autoTuneSuggestionNotice',
+        ];
 
-        if ($noCapabilitiesNotice) {
-            $notices[] = array(__CLASS__, 'showNoExportCapabilityNotice');
+        if (FixesEntity::getInstance()->hasFixes()) {
+            $notices[] = [
+                self::class,
+                'showQuickFixNotice',
+            ];
         }
-
-        if (is_multisite()) {
-            $displayNotices = is_super_admin() && current_user_can('export');
-        } else {
-            $displayNotices = current_user_can('export');
-        }
-
-        if ($displayNotices) {
-            $notices[] = array(__CLASS__, 'clearInstallerFilesAction'); // BEFORE MIGRATION SUCCESS NOTICE
-            $notices[] = array(__CLASS__, 'migrationSuccessNotice');
-            $notices[] = array(__CLASS__, 'installAutoDeactivatePlugins');
-            $notices[] = array(__CLASS__, 'failedOneClickUpgradeNotice');
-        }
-
-        $action = is_multisite() ? 'network_admin_notices' : 'admin_notices';
+        $notices = apply_filters('duplicator_admin_notices', $notices);
+        $action  = is_multisite() ? 'network_admin_notices' : 'admin_notices';
         foreach ($notices as $notice) {
             add_action($action, $notice);
         }
     }
+
+    /**
+     * Addon init fail notice
+     *
+     * @return void
+     */
+    public static function addonInitFailNotice(): void
+    {
+        if (\Duplicator\Core\Addons\AddonsManager::getInstance()->isAddonsReady()) {
+            return;
+        }
+
+        if (!CapMng::can(CapMng::CAP_BASIC, false)) {
+            return;
+        }
+        ob_start();
+        ?>
+        <strong><?php echo esc_html(DUPLICATOR____NAME); ?></strong>
+        <hr>
+        <p>
+            <?php _e(
+                'The plugin cannot be activated due to problems during initialization. Please reinstall the plugin deleting the current installation',
+                'duplicator'
+            ); ?>
+        </p>
+        <?php
+        $content = (string) ob_get_clean();
+        self::displayGeneralAdminNotice($content, self::GEN_ERROR_NOTICE, false);
+    }
+
 
     /**
      * Remove all notices coming from other plugins
@@ -87,14 +148,19 @@ class AdminNotices
      *
      * @return void
      */
-    public static function unhookThirdPartyNotices($hook)
+    public static function unhookThirdPartyNotices($hook): void
     {
-        if (!ControllersManager::isDuplicatorPage()) {
+        if (!ControllersManager::getInstance()->isDuplicatorPage()) {
             return;
         }
 
         global $wp_filter;
-        $filterHooks = array('user_admin_notices', 'admin_notices', 'all_admin_notices', 'network_admin_notices');
+        $filterHooks = [
+            'user_admin_notices',
+            'admin_notices',
+            'all_admin_notices',
+            'network_admin_notices',
+        ];
         foreach ($filterHooks as $filterHook) {
             if (empty($wp_filter[$filterHook]->callbacks) || !is_array($wp_filter[$filterHook]->callbacks)) {
                 continue;
@@ -122,30 +188,309 @@ class AdminNotices
     }
 
     /**
-     * Clear installer file action
+     * Shows notice in case we were enable to fetch contents of S3 bucket
      *
+     * @throws Exception
      * @return void
      */
-    public static function clearInstallerFilesAction()
+    public static function s3ContentsFetchFailNotice(): void
     {
-
-        if (!\DUP_CTRL_Tools::isDiagnosticPage() || get_option(self::OPTION_KEY_MIGRATION_SUCCESS_NOTICE) == true) {
+        if (
+            get_option(self::OPTION_KEY_S3_CONTENTS_FETCH_FAIL_NOTICE, false) != true ||
+            !ControllersManager::isCurrentPage(ControllersManager::PACKAGES_SUBMENU_SLUG)
+        ) {
             return;
         }
 
-
-        if (sanitize_text_field(SnapUtil::filterInputRequest('action')) === 'installer') {
-            if (! wp_verify_nonce($_REQUEST['_wpnonce'], 'duplicator_cleanup_page')) {
-                echo '<p>' . __('Security issue', 'duplicator') . '</p>';
-                exit; // Get out of here bad nounce!
-            }
-
-            ?>
-            <div id="message" class="notice notice-success">
-                <?php require DUPLICATOR_LITE_PATH . '/views/parts/migration-clean-installation-files.php'; ?>
-            </div>
-            <?php
+        if (!CapMng::can(CapMng::CAP_CREATE, false)) {
+            return;
         }
+
+        $errorMessage = sprintf(
+            /* translators: %s: plugin name wrapped in strong tags */
+            __('<strong>%s</strong> was unable to fetch the contents of the S3 bucket to remove old Backups.', 'duplicator'),
+            esc_html(DUPLICATOR____NAME)
+        ) . "<hr><br>" .
+            sprintf(
+                __(
+                    '<strong>RECOMMENDATION:</strong> Please make sure your S3 bucket settings are aligned with our
+                %1$sStep-by-Step guide%2$s and %3$sUser Bucket Policy%4$s.',
+                    'duplicator'
+                ),
+                '<a target="_blank" href="' . DUPLICATOR_DUPLICATOR_DOCS_URL . 'amazon-s3-step-by-step">',
+                '</a>',
+                '<a target="_blank" href="' . DUPLICATOR_DUPLICATOR_DOCS_URL . 'amazon-s3-step-by-step">',
+                '</a>'
+            );
+
+        self::displayGeneralAdminNotice(
+            $errorMessage,
+            self::GEN_ERROR_NOTICE,
+            true,
+            ['dupli-quick-fix-notice'],
+            [
+                'data-to-dismiss' => self::OPTION_KEY_S3_CONTENTS_FETCH_FAIL_NOTICE,
+            ]
+        );
+    }
+
+    /**
+     * Notice shown when one or more backups started with invalid storages,
+     * skipped at build start. The option value is the list of invalid storage ids.
+     *
+     * @return void
+     */
+    public static function backupInvalidStoragesNotice(): void
+    {
+        if (
+            ($storageIds = get_option(self::OPTION_KEY_BACKUP_INVALID_STORAGES, [])) === [] ||
+            !ControllersManager::isCurrentPage(ControllersManager::PACKAGES_SUBMENU_SLUG)
+        ) {
+            return;
+        }
+
+        if (!CapMng::can(CapMng::CAP_CREATE, false)) {
+            return;
+        }
+
+        $storages   = [];
+        $cleanedIds = [];
+        foreach ($storageIds as $storageId) {
+            if (($storage = AbstractStorageEntity::getById($storageId)) === false) {
+                continue;
+            }
+            $storages[]   = $storage;
+            $cleanedIds[] = $storageId;
+        }
+
+        if ($cleanedIds !== $storageIds) {
+            if (count($cleanedIds) === 0) {
+                delete_option(self::OPTION_KEY_BACKUP_INVALID_STORAGES);
+            } else {
+                update_option(self::OPTION_KEY_BACKUP_INVALID_STORAGES, $cleanedIds);
+            }
+        }
+
+        if (count($storages) === 0) {
+            return;
+        }
+
+        $message = TplMng::getInstance()->render(
+            'admin_pages/storages/storage_invalid_skipped_notice',
+            [
+                'storages'        => $storages,
+                'storagesPageUrl' => ControllersManager::getMenuLink(ControllersManager::STORAGE_SUBMENU_SLUG),
+            ],
+            false
+        );
+
+        self::displayGeneralAdminNotice(
+            $message,
+            self::GEN_WARNING_NOTICE,
+            true,
+            [],
+            [
+                'data-to-dismiss' => self::OPTION_KEY_BACKUP_INVALID_STORAGES,
+            ],
+            true
+        );
+    }
+
+    /**
+     * Orphaned packages notice
+     *
+     * @throws Exception
+     * @return void
+     */
+    public static function orphanedPackagesNotice(): void
+    {
+        $orphan_info = PackageUtils::getOrphanedPackageInfo();
+        if (
+            $orphan_info['count'] < 1 ||
+            !ControllersManager::isCurrentPage(ControllersManager::PACKAGES_SUBMENU_SLUG)
+        ) {
+            return;
+        }
+
+        self::displayGeneralAdminNotice(
+            TplMng::getInstance()->render('parts/packages/notices/orphaned_packages', [
+                'count' => $orphan_info['count'],
+                'size'  => SnapString::byteSize($orphan_info['size']),
+                'url'   => ToolsPageController::getInstance()->getPurgeOrphanActionUrl(),
+            ], false),
+            self::GEN_ERROR_NOTICE,
+            true,
+            ['dupli-quick-fix-notice'],
+            [
+                'data-to-dismiss' => self::OPTION_KEY_S3_CONTENTS_FETCH_FAIL_NOTICE,
+            ]
+        );
+    }
+
+    /**
+     * Notice shown when an encrypted entity could not be decrypted on load and was
+     * reset to defaults. Dismissible; dismissing clears the wp_option flag.
+     *
+     * @return void
+     */
+    public static function encryptedResetNotice(): void
+    {
+        if (!get_option(self::ENCRYPTED_RESET_NOTICE)) {
+            return;
+        }
+
+        if (!CapMng::can(CapMng::CAP_BASIC, false)) {
+            return;
+        }
+
+        $html = TplMng::getInstance()->render('parts/notices/encrypted_reset', [
+            'storageUrl'  => ControllersManager::getMenuLink(ControllersManager::STORAGE_SUBMENU_SLUG),
+            'settingsUrl' => ControllersManager::getMenuLink(ControllersManager::SETTINGS_SUBMENU_SLUG),
+        ], false);
+
+        self::displayGeneralAdminNotice(
+            $html,
+            self::GEN_WARNING_NOTICE,
+            true,
+            ['dupli-notice-icon-warning-wrapper'],
+            ['data-to-dismiss' => self::ENCRYPTED_RESET_NOTICE],
+            true
+        );
+    }
+
+    /**
+     * Suggestion to run AutoTune, shown on plugin pages while no AutoTune
+     * session has ever been started. Dismissing hides it permanently.
+     *
+     * @return void
+     */
+    public static function autoTuneSuggestionNotice(): void
+    {
+        if (get_option(self::AUTOTUNE_SUGGEST_DISMISSED, false)) {
+            return;
+        }
+
+        if (
+            !ControllersManager::isCurrentPage(ControllersManager::PACKAGES_SUBMENU_SLUG) &&
+            !ControllersManager::isCurrentPage(ControllersManager::SETTINGS_SUBMENU_SLUG)
+        ) {
+            return;
+        }
+
+        if (!CapMng::can(CapMng::CAP_SETTINGS, false)) {
+            return;
+        }
+
+        // AutoTune runs real test Backups: don't suggest it where backup creation is not allowed.
+        if (!CapMng::can(CapMng::CAP_CREATE, false)) {
+            return;
+        }
+
+        if (AutoTuneSessionEntity::getInstance()->getStatus() !== AutoTuneSessionEntity::STATUS_NONE) {
+            return;
+        }
+
+        self::displayGeneralAdminNotice(
+            TplMng::getInstance()->render('parts/notices/autotune_suggestion', [
+                'autoTuneUrl' => ControllersManager::getMenuLink(
+                    ControllersManager::TOOLS_SUBMENU_SLUG,
+                    ToolsPageController::L2_SLUG_AUTOTUNE
+                ),
+            ], false),
+            self::GEN_INFO_NOTICE,
+            true,
+            ['dupli-notice-icon-warning-wrapper'],
+            ['data-to-dismiss' => self::AUTOTUNE_SUGGEST_DISMISSED],
+            true
+        );
+    }
+
+    /**
+     * Activity Log integration upgrade notice
+     *
+     * @return void
+     */
+    public static function activityLogUpgradeNotice(): void
+    {
+        $count = get_transient(self::ACTIVITY_LOG_UPGRADE_NOTICE);
+        if ($count === false) {
+            return;
+        }
+
+        if (!CapMng::can(CapMng::CAP_BASIC, false)) {
+            return;
+        }
+
+        self::displayGeneralAdminNotice(
+            TplMng::getInstance()->render('parts/packages/notices/activity_log_upgrade', [
+                'count'          => $count,
+                'activityLogUrl' => ActivityLogPageController::getInstance()->getMenuLink(),
+            ], false),
+            self::GEN_INFO_NOTICE,
+            true,
+            ['dupli-activity-log-upgrade-notice'],
+            [
+                'data-to-dismiss' => self::ACTIVITY_LOG_UPGRADE_NOTICE,
+            ],
+            true
+        );
+    }
+
+    /**
+     * Notice shown when WordPress Multisite is not supported.
+     *
+     * @return void
+     */
+    public static function multisiteUnsupportedNotice(): void
+    {
+        if (!is_multisite()) {
+            return;
+        }
+        /**
+         * Whether WordPress Multisite is supported.
+         *
+         * @param bool $supported
+         */
+        if (apply_filters('duplicator_multisite_supported', false)) {
+            return;
+        }
+        if (!CapMng::can(CapMng::CAP_BASIC, false)) {
+            return;
+        }
+
+        $defaults = [
+            'title'       => sprintf(
+                /* translators: %s: plugin name (e.g. Duplicator) */
+                __('%s does not support WordPress Multisite', 'duplicator'),
+                DUPLICATOR____NAME
+            ),
+            'message'     => __(
+                'Backup creation is not available on multisite installations.',
+                'duplicator'
+            ),
+            'buttonUrl'   => '',
+            'buttonLabel' => '',
+        ];
+        /**
+         * Filters the data passed to the multisite-unsupported notice template.
+         * The button is rendered only when both buttonUrl and buttonLabel are
+         * non-empty.
+         *
+         * @param array{title:string, message:string, buttonUrl:string, buttonLabel:string} $data
+         */
+        $data = apply_filters('duplicator_multisite_unsupported_notice', $defaults);
+        $data = array_merge($defaults, is_array($data) ? $data : []);
+
+        $html = TplMng::getInstance()->render('parts/notices/multisite_unsupported', $data, false);
+
+        self::displayGeneralAdminNotice(
+            $html,
+            self::GEN_ERROR_NOTICE,
+            false,
+            ['dupli-notice-icon-warning-wrapper'],
+            [],
+            true
+        );
     }
 
     /**
@@ -153,359 +498,140 @@ class AdminNotices
      *
      * @return void
      */
-    public static function migrationSuccessNotice()
+    public static function migrationSuccessNotice(): void
     {
         if (get_option(self::OPTION_KEY_MIGRATION_SUCCESS_NOTICE) != true) {
             return;
         }
 
-        if (\DUP_CTRL_Tools::isDiagnosticPage()) {
-            require DUPLICATOR_LITE_PATH . '/views/parts/migration-message.php';
-        } else {
-            require DUPLICATOR_LITE_PATH . '/views/parts/migration-almost-complete.php';
-        }
-    }
-
-    /**
-     * Shows a display message in the wp-admin if any reserved files are found
-     *
-     * @return string   Html formatted text notice warnings
-     */
-    public static function showReservedFilesNotice()
-    {
-        //Show only on Duplicator pages and Dashboard when plugin is active
-        $dup_active = is_plugin_active('duplicator/duplicator.php');
-        $dup_perm   = current_user_can('manage_options');
-        if (!$dup_active || !$dup_perm) {
+        if (!CapMng::can(CapMng::CAP_BASIC, false)) {
             return;
         }
 
-        $screen = get_current_screen();
-        if (!isset($screen)) {
-            return;
-        }
-
-        $is_installer_cleanup_req = ($screen->id == 'duplicator_page_duplicator-tools' && isset($_GET['action']) && $_GET['action'] == 'installer');
-        if (DUP_Server::hasInstallerFiles() && !$is_installer_cleanup_req) {
-            MigrationMng::renameInstallersPhpFiles();
-
-            $on_active_tab = isset($_GET['section']) ? $_GET['section'] : '';
-            echo '<div class="dup-updated notice notice-success dup-global-error-reserved-files" id="message"><p>';
-
-            //Safe Mode Notice
-            $safe_html = '';
-            if (get_option("duplicator_exe_safe_mode", 0) > 0) {
-                $safe_msg1 = __('Safe Mode:', 'duplicator');
-                $safe_msg2 = __('During the install safe mode was enabled deactivating all plugins.<br/> Please be sure to ', 'duplicator');
-                $safe_msg3 = __('re-activate the plugins', 'duplicator');
-                $safe_html = "<div class='notice-safemode'><b>{$safe_msg1}</b><br/>{$safe_msg2} <a href='plugins.php'>{$safe_msg3}</a>!</div><br/>";
-            }
-
-            //On Tools > Cleanup Page
-            if ($screen->id == 'duplicator_page_duplicator-tools' && ($on_active_tab == "info" || $on_active_tab == '')) {
-                $title = __('This site has been successfully migrated!', 'duplicator');
-                $msg1  = __('Final step(s):', 'duplicator');
-                $msg2  = __('This message will be removed after all installer files are removed.  Installer files must be removed to maintain a secure site.  '
-                    . 'Click the link above or button below to remove all installer files and complete the migration.', 'duplicator');
-
-                echo "<b class='pass-msg'><i class='fa fa-check-circle'></i> " . esc_html($title) .
-                    "</b> <br/> {$safe_html} <b>" . esc_html($msg1) . "</b> <br/>";
-                printf(
-                    "1. <a href='javascript:void(0)' onclick='jQuery(\"#dup-remove-installer-files-btn\").click()'>%s</a><br/>",
-                    esc_html__('Remove Installation Files Now!', 'duplicator')
-                );
-                printf(
-                    "2. <a href='https://wordpress.org/support/plugin/duplicator/reviews/#new-post' target='wporg'>%s</a> <br/> ",
-                    esc_html__('Optionally, Review Duplicator at WordPress.org...', 'duplicator')
-                );
-                echo "<div class='pass-msg'>" . esc_html($msg2) . "</div>";
-
-                //All other Pages
-            } else {
-                $title = __('Migration Almost Complete!', 'duplicator');
-                $msg   = __(
-                    'Reserved Duplicator installation files have been detected in the root directory.  Please delete these installation files to '
-                    . 'avoid security issues. <br/> Go to: Duplicator > Tools > General > Information > Utils and click the "Remove Installation Files" button',
-                    'duplicator'
-                );
-
-                $nonce = wp_create_nonce('duplicator_cleanup_page');
-                $url   = ControllersManager::getMenuLink(
-                    ControllersManager::TOOLS_SUBMENU_SLUG,
-                    'diagnostics',
-                    null,
-                    array(
-                        'section'   => 'info',
-                        '_wpnonce' => $nonce,
-                    ),
-                    true
-                );
-                echo "<b>{$title}</b><br/> {$safe_html} {$msg}";
-                @printf("<br/><a href='{$url}'>%s</a>", __('Take me there now!', 'duplicator'));
-            }
-            echo "</p></div>";
+        if (!ToolsPageController::isGeneralPage()) {
+            TplMng::getInstance()->render('parts/migration/almost-complete', [
+                'safeMsg'           => MigrationMng::getSaveModeWarning(),
+                'isRestoreMode'     => MigrationMng::getMigrationData()->restoreBackupMode,
+                'bottomMessageHtml' => apply_filters(MigrationMng::HOOK_BOTTOM_MIGRATION_MESSAGE, ''),
+            ]);
         }
     }
 
     /**
-     * Shows a message for redirecting a page
-     *
-     * @param string $location The location to redirect to
-     *
-     * @return never
-     */
-    public static function redirect($location)
-    {
-        echo '<div class="dup-redirect"><i class="fas fa-circle-notch fa-spin fa-fw"></i>';
-        esc_html__('Redirecting Please Wait...', 'duplicator');
-        echo '</div>';
-        echo "<script>window.location = '{$location}';</script>";
-        die(esc_html__('Invalid token permissions to perform this request.', 'duplicator'));
-    }
-
-    /**
-     * Shows install deactivated function
+     * Shows the unified failure-message notices: one box per fix title.
      *
      * @return void
      */
-    public static function installAutoDeactivatePlugins()
+    public static function showQuickFixNotice(): void
     {
-        $reactivatePluginsAfterInstallation = get_option(self::OPTION_KEY_ACTIVATE_PLUGINS_AFTER_INSTALL, false);
-
-        $pluginsToActive = get_option(self::OPTION_KEY_ACTIVATE_PLUGINS_AFTER_INSTALL, false);
-        if (!is_array($pluginsToActive) || empty($pluginsToActive)) {
-            return false;
+        if (!CapMng::can(CapMng::CAP_CREATE, false)) {
+            return;
         }
 
-        $shouldBeActivated = array();
-        $allPlugins        = get_plugins();
-        foreach ($pluginsToActive as $index => $pluginSlug) {
-            if (!isset($allPlugins[$pluginSlug])) {
-                unset($pluginsToActive[$index]);
-                continue;
+        $groups = FixesEntity::getInstance()->getViewDataGroupedByTitle();
+        if (count($groups) === 0) {
+            return;
+        }
+
+        foreach ($groups as $title => $groupFixes) {
+            if ($title === '') {
+                $title = sprintf(
+                    /* translators: %s: plugin name */
+                    __('%s Errors Detected', 'duplicator'),
+                    DUPLICATOR____NAME
+                );
             }
 
-            $isActive = is_plugin_active($pluginSlug);
+            $showLogLink      = count(array_filter(
+                $groupFixes,
+                static fn(array $fix): bool => $fix['activityLogLink']
+            )) > 0;
+            $suggestsAutoTune = count(array_filter(
+                $groupFixes,
+                static fn(array $fix): bool => $fix['autoTuneSuggestion']
+            )) > 0;
 
-            if (!$isActive && isset($allPlugins[$pluginSlug])) {
-                $shouldBeActivated[$pluginSlug] = $allPlugins[$pluginSlug]['Name'];
-            } else {
-                unset($pluginsToActive[$index]);
-            }
-        }
-
-        if (empty($shouldBeActivated)) {
-            delete_option(self::OPTION_KEY_ACTIVATE_PLUGINS_AFTER_INSTALL);
-            return;
-        } else {
-            update_option(self::OPTION_KEY_ACTIVATE_PLUGINS_AFTER_INSTALL, $pluginsToActive);
-        }
-
-        $activatePluginsAnchors = array();
-        foreach ($shouldBeActivated as $slug => $title) {
-            $activateURL              = wp_nonce_url(admin_url('plugins.php?action=activate&plugin=' . $slug), 'activate-plugin_' . $slug);
-            $anchorTitle              = sprintf(esc_html__('Activate %s', 'duplicator'), $title);
-            $activatePluginsAnchors[] = '<a href="' . $activateURL . '"
-                                            title="' . esc_attr($anchorTitle) . '">' .
-                $title . '</a>';
-        }
-        ?>
-        <div class="update-nag duplicator-plugin-activation-admin-notice notice notice-warning duplicator-admin-notice is-dismissible"
-                data-to-dismiss="<?php echo esc_attr(self::OPTION_KEY_ACTIVATE_PLUGINS_AFTER_INSTALL); ?>" >
-            <p>
-                <?php
-                echo "<b>" . esc_html__("Warning!", "duplicator") . "</b> " . esc_html__("Migration Almost Complete!", "duplicator") . " <br/>";
-                echo esc_html__(
-                    "Plugin(s) listed here have been deactivated during installation to help prevent issues. Please activate them to finish this migration: ",
-                    "duplicator"
-                ) . "<br/>";
-                echo implode(' ,', $activatePluginsAnchors);
-                ?>
-            </p>
-        </div>
-        <?php
-    }
-
-    /**
-     * Shows install deactivated function
-     *
-     * @return void
-     */
-    public static function failedOneClickUpgradeNotice()
-    {
-        if (SnapUtil::sanitizeTextInput(SnapUtil::INPUT_REQUEST, 'action') !== 'upgrade_finalize_fail') {
-            return;
-        }
-
-        Notice::error(__('Upgrade failed. Please check if you have the necessary permissions to activate plugins.', 'duplicator'), 'upgrade_finalize_fail');
-    }
-
-    /**
-     * Shows feedback notices after certain no. of packages successfully created.
-     *
-     * @return void
-     */
-    public static function showFeedBackNotice()
-    {
-        $notice_id = 'rate_us_feedback';
-
-        if (!current_user_can('manage_options')) {
-            return;
-        }
-
-        $notices = get_user_meta(get_current_user_id(), DUPLICATOR_ADMIN_NOTICES_USER_META_KEY, true);
-        if (empty($notices)) {
-            $notices = array();
-        }
-
-        $duplicator_pages = array(
-            'toplevel_page_duplicator',
-            'duplicator_page_duplicator-tools',
-            'duplicator_page_duplicator-settings',
-            'duplicator_page_duplicator-gopro',
-        );
-
-        if (!in_array(get_current_screen()->id, $duplicator_pages) || (isset($notices[$notice_id]) && 'true' === $notices[$notice_id])) {
-            return;
-        }
-
-        global $wpdb;
-        // not using DUP_Util::getTablePrefix() in place of $tablePrefix because AdminNotices included initially (Duplicator\Lite\Requirement
-        // is depended on the AdminNotices)
-        $tablePrefix   = (is_multisite() && is_plugin_active_for_network('duplicator/duplicator.php')) ?
-            $wpdb->base_prefix :
-            $wpdb->prefix;
-        $tableName     = esc_sql($tablePrefix . 'duplicator_packages');
-        $packagesCount = $wpdb->get_var("SELECT count(id) FROM `{$tableName}` WHERE status=100");
-
-        if ($packagesCount < DUPLICATOR_FEEDBACK_NOTICE_SHOW_AFTER_NO_PACKAGE) {
-            return;
-        }
-
-        $notices[$notice_id] = 'false';
-        update_user_meta(get_current_user_id(), DUPLICATOR_ADMIN_NOTICES_USER_META_KEY, $notices);
-        $dismiss_url = wp_nonce_url(
-            add_query_arg(array(
-            'action'    => 'duplicator_set_admin_notice_viewed',
-            'notice_id' => esc_attr($notice_id),
-                ), admin_url('admin-post.php')),
-            'duplicator_set_admin_notice_viewed',
-            'nonce'
-        );
-        ?>
-        <div class="notice updated duplicator-message duplicator-message-dismissed" data-notice_id="<?php echo esc_attr($notice_id); ?>">
-            <div class="duplicator-message-inner">
-                <div class="duplicator-message-icon">
-                    <img
-                        src="<?php echo esc_url(DUPLICATOR_PLUGIN_URL . "assets/img/logo.png"); ?>"
-                        style="text-align:top; margin:0; height:60px; width:60px;" alt="Duplicator">
-                </div>
-                <div class="duplicator-message-content">
-                    <p>
-                        <strong>
-                            <?php echo __('Congrats!', 'duplicator'); ?>
-                        </strong>
-                        <?php
-                        printf(
-                            esc_html__(
-                                'You created over %d backups with Duplicator. Great job! If you can spare a minute,
-                                please help us by leaving a five star review on WordPress.org.',
-                                'duplicator'
-                            ),
-                            DUPLICATOR_FEEDBACK_NOTICE_SHOW_AFTER_NO_PACKAGE
-                        ); ?>
-                    </p>
-                    <p class="duplicator-message-actions">
-                        <a
-                            href="https://wordpress.org/support/plugin/duplicator/reviews/#new-post"
-                            target="_blank" class="button button-primary duplicator-notice-rate-now"
-                        >
-                            <?php esc_html_e("Sure! I'd love to help", 'duplicator'); ?>
-                        </a>
-                        <a href="<?php echo esc_url($dismiss_url); ?>" class="button duplicator-notice-dismiss">
-                            <?php esc_html_e('Hide Notification', 'duplicator'); ?>
-                        </a>
-                    </p>
-                </div>
-            </div>
-        </div>
-        <?php
-    }
-
-    /**
-     * Shows a display message in the wp-admin if the logged in user role has not export capability
-     *
-     * @return void
-     */
-    public static function showNoExportCapabilityNotice()
-    {
-        if (is_admin() && in_array('administrator', $GLOBALS['current_user']->roles) && !current_user_can('export')) {
-            $faqUrl       = esc_url(LinkManager::getDocUrl(
-                'how-to-resolve-duplicator-plugin-user-interface-ui-issues',
-                'admin_notice',
-                'duplicator menu missing'
-            ));
-            $errorMessage = __(
-                '<strong>Duplicator</strong><hr> Your logged-in user role does not have export
-                capability so you don\'t have access to Duplicator functionality.',
-                'duplicator'
-            ) .
-            "<br>" .
-            sprintf(
-                _x(
-                    '<strong>RECOMMENDATION:</strong> Add export capability to your role. See FAQ: ' .
-                    '%1$sWhy is the Duplicator/Packages menu missing from my admin menu?%2$s',
-                    '%1$s and %2$s are <a> tags',
-                    'duplicator'
-                ),
-                '<a target="_blank" href="' . $faqUrl . '">',
-                '</a>'
+            $html = TplMng::getInstance()->render(
+                'parts/notices/fix_group',
+                [
+                    'title'          => $title,
+                    'fixes'          => $groupFixes,
+                    'activityLogUrl' => $showLogLink ? self::getFixGroupActivityLogUrl($groupFixes) : '',
+                    'autoTuneUrl'    => $suggestsAutoTune ? ControllersManager::getMenuLink(
+                        ControllersManager::TOOLS_SUBMENU_SLUG,
+                        ToolsPageController::L2_SLUG_AUTOTUNE
+                    ) : '',
+                ],
+                false
             );
-            self::displayGeneralAdminNotice($errorMessage, self::GEN_ERROR_NOTICE, true);
+
+            self::displayGeneralAdminNotice(
+                $html,
+                self::GEN_ERROR_NOTICE,
+                true,
+                [
+                    'dupli-quick-fix-notice',
+                    'dupli-notice-icon-warning-wrapper',
+                ],
+                [
+                    'data-to-dismiss' => self::QUICK_FIX_NOTICE,
+                    'data-fix-keys'   => implode(',', array_keys($groupFixes)),
+                ],
+                true
+            );
         }
     }
 
     /**
-     * Display multisite notice
+     * Activity Log link for a fix group: when a fix carries the related log
+     * event id, the link opens its detail directly.
      *
-     * @return void
+     * @param array<string, array{activityLogId:int}> $groupFixes Group display data
+     *
+     * @return string
      */
-    public static function multisiteNotice()
+    private static function getFixGroupActivityLogUrl(array $groupFixes): string
     {
-        if (
-            !ControllersManager::isDuplicatorPage() ||
-            ControllersManager::isCurrentPage(ControllersManager::ABOUT_US_SUBMENU_SLUG) ||
-            ControllersManager::isCurrentPage(ControllersManager::SETTINGS_SUBMENU_SLUG, 'general')
-        ) {
-            return;
+        $params = ['filter_severity' => AbstractLogEvent::SEVERITY_ERROR];
+
+        foreach (array_reverse($groupFixes) as $fix) {
+            if ($fix['activityLogId'] > 0) {
+                return ActivityLogPageController::getOpenLogUrl($fix['activityLogId'], $params);
+            }
         }
 
-        $message = TplMng::getInstance()->render('parts/notices/drm_multisite_msg', array(), false);
-        self::displayGeneralAdminNotice($message, self::GEN_ERROR_NOTICE, false, ['duplicator-multisite-notice']);
+        return ActivityLogPageController::getInstance()->getMenuLink(null, null, $params);
     }
 
     /**
      * display genral admin notice by printing it
      *
-     * @param string       $htmlMsg       html code to be printed
-     * @param integer      $noticeType    constant value of SELF::GEN_
-     * @param boolean      $isDismissible whether the notice is dismissable or not. Default is true
-     * @param array|string $extraClasses  add more classes to the notice div
+     * @param string              $htmlMsg       html code to be printed
+     * @param integer             $noticeType    constant value of SELF::GEN_
+     * @param boolean             $isDismissible whether the notice is dismissable or not. Default is true
+     * @param string|string[]     $extraClasses  add more classes to the notice div
+     * @param array<string,mixed> $extraAtts     assosiate array in which key as attr and value as value of the attr
+     * @param bool                $blockContent  if false wraps htmlMsg in <p> otherwise allows to use block tags e.g. <div>
      *
      * @return void
      */
-    public static function displayGeneralAdminNotice($htmlMsg, $noticeType, $isDismissible = true, $extraClasses = array())
-    {
+    public static function displayGeneralAdminNotice(
+        $htmlMsg,
+        $noticeType,
+        $isDismissible = true,
+        $extraClasses = [],
+        $extraAtts = [],
+        $blockContent = false
+    ): void {
         if (empty($extraClasses)) {
-            $classes = array();
+            $classes = [];
         } elseif (is_array($extraClasses)) {
             $classes = $extraClasses;
         } else {
-            $classes = array($extraClasses);
+            $classes = [$extraClasses];
         }
 
         $classes[] = 'notice';
-
         switch ($noticeType) {
             case self::GEN_INFO_NOTICE:
                 $classes[] = 'notice-info';
@@ -522,27 +648,121 @@ class AdminNotices
             default:
                 throw new Exception('Invalid Admin notice type!');
         }
+        $classes[] = 'dupli-admin-notice';
 
         if ($isDismissible) {
             $classes[] = 'is-dismissible';
         }
 
         $classesStr = implode(' ', $classes);
+        $attsStr    = '';
+        if (!empty($extraAtts)) {
+            $attsStrArr = [];
+            foreach ($extraAtts as $att => $attVal) {
+                $attsStrArr[] = esc_attr($att) . '="' . esc_attr($attVal) . '"';
+            }
+            $attsStr = implode(' ', $attsStrArr);
+        }
+
+        // $htmlMsg = self::GEN_ERROR_NOTICE == $noticeType ? "<i class='fa fa-exclamation-triangle'></i>&nbsp;" . $htmlMsg : $htmlMsg;
+        $htmlMsg = !$blockContent ? "<p>" . $htmlMsg . "</p>" : $htmlMsg;
         ?>
-        <div class="<?php echo esc_attr($classesStr); ?>">
-            <p>
-                <?php
-                if (self::GEN_ERROR_NOTICE == $noticeType) {
-                    ?>
-                    <i class='fa fa-exclamation-triangle'></i>
-                    <?php
-                }
-                ?>
-                <?php
-                echo $htmlMsg;
-                ?>
-            </p>
+        <div class="<?php echo esc_attr($classesStr); ?>" <?php echo $attsStr; ?>>
+            <?php echo $htmlMsg; ?>
         </div>
         <?php
+    }
+
+    /**
+     * Enable a persistent admin notice
+     *
+     * @param string $noticeKey One of the notice constants defined in this class
+     *
+     * @return bool
+     */
+    public static function enableNotice(string $noticeKey): bool
+    {
+        return update_option($noticeKey, true);
+    }
+
+    /**
+     * Disable a persistent admin notice
+     *
+     * @param string $noticeKey One of the notice constants defined in this class
+     *
+     * @return bool
+     */
+    public static function disableNotice(string $noticeKey): bool
+    {
+        return delete_option($noticeKey);
+    }
+
+    /**
+     * Displays notice for plugins deactivated during install,
+     * and removes already activated from DB
+     *
+     * @return void
+     */
+    public static function activatePluginsAfterInstall(): void
+    {
+        if (!CapMng::can(CapMng::CAP_BASIC, false)) {
+            return;
+        }
+        $pluginsToActive = get_option(AdminNotices::OPTION_KEY_ACTIVATE_PLUGINS_AFTER_INSTALL, false);
+        if (!is_array($pluginsToActive) || empty($pluginsToActive)) {
+            return;
+        }
+
+        $shouldBeActivated = [];
+        $allPlugins        = get_plugins();
+        foreach ($pluginsToActive as $index => $pluginSlug) {
+            if (!isset($allPlugins[$pluginSlug])) {
+                unset($pluginsToActive[$index]);
+                continue;
+            }
+
+            $isActive = is_multisite() ? is_plugin_active_for_network($pluginSlug) : is_plugin_active($pluginSlug);
+
+            if (!$isActive) {
+                $shouldBeActivated[$pluginSlug] = $allPlugins[$pluginSlug]['Name'];
+            } else {
+                unset($pluginsToActive[$index]);
+            }
+        }
+
+        if (empty($shouldBeActivated)) {
+            delete_option(AdminNotices::OPTION_KEY_ACTIVATE_PLUGINS_AFTER_INSTALL);
+            return;
+        } else {
+            update_option(AdminNotices::OPTION_KEY_ACTIVATE_PLUGINS_AFTER_INSTALL, $pluginsToActive);
+        }
+
+        $html = "<img src='" . esc_url(plugins_url('duplicator-pro/assets/img/warning.png')) . "' style='float:left; padding:0 10px 0 5px' />" .
+            "<div style='margin-left: 70px;'><p><b>" .
+            __('Warning!', 'duplicator') . "</b> " . __('Migration Almost Complete!', 'duplicator') . "<br/>" .
+            __('Plugin(s) listed here must be activated. Please activate them:', 'duplicator') . "</p><ul>";
+        foreach ($shouldBeActivated as $slug => $title) {
+            if (is_multisite()) {
+                $activateURL = network_admin_url('plugins.php?action=activate&plugin=' . $slug);
+            } else {
+                $activateURL = admin_url('plugins.php?action=activate&plugin=' . $slug);
+            }
+            $activateURL = wp_nonce_url($activateURL, 'activate-plugin_' . $slug);
+            $anchorTitle = sprintf(__('Activate %s', 'duplicator'), $title);
+            $html       .= '<li><a href="' . esc_attr($activateURL) . '" title="' . esc_attr($anchorTitle) . '">' .
+                esc_attr($title) . '</a></li>';
+        }
+
+        $html .= "</ul></div>";
+        AdminNotices::displayGeneralAdminNotice(
+            $html,
+            AdminNotices::GEN_WARNING_NOTICE,
+            true,
+            ['dupli-yellow-border'],
+            [
+                'data-to-dismiss' => AdminNotices::OPTION_KEY_ACTIVATE_PLUGINS_AFTER_INSTALL,
+            ],
+            true
+        );
     }
 }

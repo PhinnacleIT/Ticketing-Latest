@@ -1,10 +1,5 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
-
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 ?>
 <div id="validate_action" class="bottom-step-action margin-top-2" >

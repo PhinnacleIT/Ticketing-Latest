@@ -3,7 +3,7 @@ namespace Elementor\Modules\GlobalClasses;
 
 use Elementor\Core\Kits\Documents\Kit;
 use Elementor\Modules\DesignSystemSync\Classes\Global_Classes_Sync_Map;
-use Elementor\Modules\GlobalClasses\Concerns\Has_Kit_Dependency;
+use Elementor\Core\Kits\Concerns\Has_Kit_Dependency;
 use Elementor\Modules\GlobalClasses\Concerns\Has_Preview_Context;
 use Elementor\Modules\GlobalClasses\Utils\Global_Class_Data_Normalizer;
 
@@ -28,10 +28,6 @@ class Global_Classes_Repository {
 		'event' => [
 			'frontend' => self::CONTEXT_FRONTEND,
 			'preview' => self::CONTEXT_PREVIEW,
-		],
-		'meta_key' => [
-			'frontend' => self::META_KEY_FRONTEND,
-			'preview' => self::META_KEY_PREVIEW,
 		],
 	];
 
@@ -88,14 +84,6 @@ class Global_Classes_Repository {
 
 		$labels->set_labels( $existing_labels );
 
-		if ( ! $this->is_preview() ) {
-			Global_Classes_Order::make( $this->get_kit() )
-				->set_preview( true )
-				->set_order( $order );
-
-			$this->clear_preview_labels_for_ids( array_keys( $new_labels ) );
-		}
-
 		$this->cache = null;
 	}
 
@@ -104,7 +92,7 @@ class Global_Classes_Repository {
 	}
 
 	public function get( string $class_id ): ?array {
-		$post = Global_Class_Post::find_by_class_id( $class_id, $this->is_preview() );
+		$post = Global_Class_Post::find_by_class_id( $class_id, $this->is_preview(), $this->get_kit() );
 
 		return $post ? $post->to_array() : null;
 	}
@@ -156,9 +144,7 @@ class Global_Classes_Repository {
 
 		if ( ! $is_preview ) {
 			Global_Classes_Sync_Map::make( $this->get_kit() )->apply_changes( $touched_items, $to_delete );
-			Global_Classes_Order::make( $this->get_kit() )
-				->set_preview( true )
-				->set_order( $order );
+			$this->propagate_order_to_preview( $order, $to_delete );
 
 			$this->bulk_clear_preview_meta( array_values( $to_update ) );
 			$this->clear_preview_labels_for_ids( array_merge(
@@ -186,6 +172,21 @@ class Global_Classes_Repository {
 				$affected_post_ids
 			);
 		}
+	}
+
+	private function propagate_order_to_preview( array $published_order, array $deleted_ids ): void {
+		$preview_order = Global_Classes_Order::make( $this->get_kit() )->set_preview( true );
+		$existing_order = $preview_order->get_order();
+		$unpublished_ids = array_flip( array_diff( $existing_order, $published_order, $deleted_ids ) );
+		$merged_order = $published_order;
+
+		foreach ( $existing_order as $position => $id ) {
+			if ( isset( $unpublished_ids[ $id ] ) ) {
+				array_splice( $merged_order, min( $position, count( $merged_order ) ), 0, [ $id ] );
+			}
+		}
+
+		$preview_order->set_order( $merged_order );
 	}
 
 	public function each_item( callable $cb, bool $skip_migration = false, int $batch_size = self::READ_BATCH_SIZE ): void {
@@ -443,7 +444,7 @@ class Global_Classes_Repository {
 		$order = $this->get_order();
 
 		$this->each_class_id_batch( $order, function ( string $class_id ) {
-			$post = Global_Class_Post::find_by_class_id( $class_id );
+			$post = Global_Class_Post::find_by_class_id( $class_id, false, $this->get_kit() );
 
 			if ( $post ) {
 				$post->delete();

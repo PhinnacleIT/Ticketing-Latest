@@ -1,10 +1,5 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
-
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 ?>
 <div class="box warning margin-bottom-1" >

@@ -1,58 +1,49 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+use Duplicator\Installer\Core\InstState;
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-if (DUPX_InstallerState::instTypeAvaiable(DUPX_InstallerState::INSTALL_RBACKUP_SINGLE_SITE)) {
-    $instTypeClass = 'install-type-' . DUPX_InstallerState::INSTALL_RBACKUP_SINGLE_SITE;
+if (InstState::instTypeAvailable(InstState::TYPE_RBACKUP_SINGLE)) {
+    $instTypeClass = 'install-type-' . InstState::TYPE_RBACKUP_SINGLE;
+    $title         = 'Restore - Single Site Backup';
+} elseif (InstState::instTypeAvailable(InstState::TYPE_RBACKUP_MSUBDOMAIN)) {
+    $instTypeClass = 'install-type-' . InstState::TYPE_RBACKUP_MSUBDOMAIN;
+    $title         = 'Restore - Multisite-Subdomain Backup';
+} elseif (InstState::instTypeAvailable(InstState::TYPE_RBACKUP_MSUBFOLDER)) {
+    $instTypeClass = 'install-type-' . InstState::TYPE_RBACKUP_MSUBFOLDER;
+    $title         = 'Restore - Multisite-Subdomain Backup';
 } else {
     return;
 }
 
-$overwriteMode = (DUPX_InstallerState::getInstance()->getMode() === DUPX_InstallerState::MODE_OVR_INSTALL);
-$display       = DUPX_InstallerState::getInstance()->isInstType(
-    array(
-        DUPX_InstallerState::INSTALL_RBACKUP_SINGLE_SITE
-    )
+$overwriteMode = (InstState::getInstance()->getMode() === InstState::MODE_OVR_INSTALL);
+$display       = InstState::getInstance()->isInstType(
+    [
+        InstState::TYPE_RBACKUP_SINGLE,
+        InstState::TYPE_RBACKUP_MSUBDOMAIN,
+        InstState::TYPE_RBACKUP_MSUBFOLDER,
+    ]
 );
 ?>
 <div class="overview-description <?php echo $instTypeClass . ($display ? '' : ' no-display'); ?>">
     <div class="details">
-        <div class="help-icon">
-            <i><?php DUPX_View_Funcs::helpLink('step1', '<i class="far fa-question-circle"></i>'); ?></i>
-        </div>
         <table>
             <tr>
-                <td>Views:</td>
-                <td>
-                    Try
-                    <span class="link-style" onclick="DUPX.blinkAnimation('s1-switch-template-btn-basic', 400, 3)">Basic</span>
-                    <sup class="hlp-new-lbl">new</sup> or
-                    <span class="link-style" onclick="DUPX.blinkAnimation('s1-switch-template-btn-advanced', 400, 3)">Advanced</span> views
-                    
-                </td>
-            </tr>
-            <tr>
                 <td>Status:</td>
-                <td>Restore Single Site Backup</td>
+                <td>
+                    <b><?php echo $title; ?></b>
+
+                    <div class="overview-subtxt-1">
+                        The restore backup mode restores the original site by not performing any processing on the database or tables.
+                        This ensures that the exact copy of the original site is restored.
+                    </div>
+                    <?php dupxTplRender('pages-parts/step1/info-tabs/overviews/overwrite-message'); ?>
+                </td>
             </tr>
             <tr>
                 <td>Mode:</td>
-                <td>
-                    <?php
-                        echo $overwriteMode ? '<i class="fas fa-exclamation-triangle"></i>&nbsp;' : '';
-                        echo DUPX_InstallerState::getInstance()->getHtmlModeHeader();
-                    if ($overwriteMode) {
-                        echo '<div class="overwrite">
-                                     This will clear all site data and the current archive will be installed. This process cannot be undone!
-                                  </div>';
-                    }
-                    ?>
-                </td>
+                <td>Custom <i>(Restore Install)</i></td>
             </tr>
         </table>
     </div>

@@ -306,6 +306,20 @@ $tableChartsCount = (int)WDTTools::getTablesCount('chart');
                                     <i class="wpdt-icon-times-circle-full"></i>
                                 <?php } ?>
                             </li>
+                            <li>
+                                <span>
+                                    <?php esc_html_e('Usage tracking', 'wpdatatables'); ?>
+                                </span>
+                                <?php
+                                $wdtUsageTrackingEnabled = \Melograno\UsageTracker\Core\UsageTracker::isConsentEnabled(
+                                    new \Melograno\UsageTracker\Collectors\Plugin\WpDataTablesCollector()
+                                );
+                                if ($wdtUsageTrackingEnabled) { ?>
+                                    <i class="wpdt-icon-check-circle-full"></i>
+                                <?php } else { ?>
+                                    <i class="wpdt-icon-times-circle-full"></i>
+                                <?php } ?>
+                            </li>
                         </ul>
                         <p class="wdt-link pull-right m-b-0">
                             <a href="<?php echo admin_url('admin.php?page=wpdatatables-system-info'); ?>">
@@ -338,13 +352,16 @@ $tableChartsCount = (int)WDTTools::getTablesCount('chart');
                                  </span>
                         </p>
                         <p class="wpdt-text wpdt-font m-b-18">
-                            New update:
+                            New update with new features:
                         </p>
                         <div class="alert alert-info m-b-0" role="alert">
                             <i class="wpdt-icon-info-circle-full"></i>
                             <ul>
-                                <li><strong>Security:</strong> Fixed a reflected Cross-Site Scripting (XSS) vulnerability via the <code>wdt_search</code> URL parameter.</li>
-                                <li><strong>Security:</strong> Hardened input sanitization for additional URL parameters and fixed a potential SQL injection in the Browse Tables and Browse Charts search.</li>
+                                <li><strong>Feature:</strong> Role- and user-based permissions are now available in Lite.</li>
+                                <li><strong>Feature:</strong> Angie AI can use wpDataTables tools when the Angie plugin is active.</li>
+                                <li><strong>Feature:</strong> AI chart suggester in the chart wizard recommends a render engine, chart type, title, and axis columns.</li>
+                                <li><strong>Feature:</strong> Setting to enable or disable MCP for AI assistants.</li>
+                                <li>Compatibility with WordPress 7.1.3 approved.</li>
                                 <li>Other small bug fixes and stability improvements.</li>
                             </ul>
                         </div>

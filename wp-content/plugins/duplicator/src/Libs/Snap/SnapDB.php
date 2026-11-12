@@ -1,11 +1,5 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2022, Snap Creek LLC
- */
-
 namespace Duplicator\Libs\Snap;
 
 use Exception;
@@ -22,80 +16,138 @@ class SnapDB
     const DB_ENGINE_PERCONA               = 'Percona';
 
     /** @var array<string, mixed> */
-    private static $cache = array();
+    private static $cache = [];
 
     /**
-     * Return array if primary key is composite key
+     * Return the columns of the unique index the rows are paged on
+     *
+     * Only full column not nullable indexes on primary-key or numeric columns qualify, so the
+     * same key works for dumps and installer replacement. Prefer visible indexes, then the
+     * fewest columns and the primary key on a tie.
      *
      * @param mysqli|resource $dbh         database connection
      * @param string          $tableName   table name
      * @param null|callable   $logCallback log callback
      *
-     * @return false|string|string[] return unique index column ky or false if don't exists
+     * @return false|string|string[] index column, the columns in index order if composite, false if none
      */
     public static function getUniqueIndexColumn($dbh, $tableName, $logCallback = null)
     {
         $cacheKey = self::CACHE_PREFIX_PRIMARY_KEY_COLUMN . $tableName;
 
         if (!isset(self::$cache[$cacheKey])) {
-            $query = 'SHOW COLUMNS FROM `' . self::realEscapeString($dbh, $tableName) . '` WHERE `Key` IN ("PRI","UNI")';
-            if (($result = self::query($dbh, $query)) === false) {
-                if (is_callable($logCallback)) {
-                    call_user_func($logCallback, $dbh, $result, $query);
+            $escapedTable = self::realEscapeString($dbh, $tableName);
+
+            $tableColumns = [];
+            foreach (self::getShowQueryRows($dbh, 'SHOW COLUMNS FROM `' . $escapedTable . '`', $logCallback) as $row) {
+                $tableColumns[$row['Field']] = $row;
+            }
+
+            $indexes = [];
+            foreach (self::getShowQueryRows($dbh, 'SHOW INDEX FROM `' . $escapedTable . '`', $logCallback) as $row) {
+                $indexes[$row['Key_name']][(int) $row['Seq_in_index']] = $row;
+            }
+
+            $best     = null;
+            $bestRank = null;
+            foreach ($indexes as $keyName => $parts) {
+                if (($candidate = self::getPageableIndex($parts, $tableColumns)) === null) {
+                    continue;
                 }
-                throw new \Exception('SHOW KEYS QUERY ERROR: ' . self::error($dbh));
+                $rank = [
+                    $candidate['tier'],
+                    count($candidate['columns']),
+                    $keyName === 'PRIMARY' ? 0 : 1,
+                ];
+                if ($bestRank === null || $rank < $bestRank) {
+                    $best     = $candidate['columns'];
+                    $bestRank = $rank;
+                }
             }
 
-            if (is_callable($logCallback)) {
-                call_user_func($logCallback, $dbh, $result, $query);
-            }
-
-            if (self::numRows($result) == 0) {
+            if ($best === null) {
                 self::$cache[$cacheKey] = false;
             } else {
-                $primary        = false;
-                $excludePrimary = false;
-                $unique         = false;
-
-                while ($row = self::fetchAssoc($result)) {
-                    switch ($row['Key']) {
-                        case 'PRI':
-                            if ($primary === false) {
-                                $primary = $row['Field'];
-                            } else {
-                                if (is_scalar($primary)) {
-                                    $primary = array($primary);
-                                }
-                                $primary[] = $row['Field'];
-                            }
-
-                            if (preg_match('/^(?:var)?binary/i', $row['Type'])) {
-                                // exclude binary or varbynary columns
-                                $excludePrimary = true;
-                            }
-                            break;
-                        case 'UNI':
-                            if (!preg_match('/^(?:var)?binary/i', $row['Type'])) {
-                                // exclude binary or varbynary columns
-                                $unique = $row['Field'];
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                if ($primary !== false && $excludePrimary === false) {
-                    self::$cache[$cacheKey] = $primary;
-                } elseif ($unique !== false) {
-                    self::$cache[$cacheKey] = $unique;
-                } else {
-                    self::$cache[$cacheKey] = false;
-                }
+                self::$cache[$cacheKey] = count($best) === 1 ? $best[0] : $best;
             }
-            self::freeResult($result);
         }
 
         return self::$cache[$cacheKey];
+    }
+
+    /**
+     * Return the columns of an index in index order and its preference tier, null if the rows can't be paged on it
+     *
+     * Invisible (MySQL) and ignored (MariaDB) indexes rank after indexes the optimizer can use.
+     *
+     * @param array<int, array<string, mixed>>      $parts        SHOW INDEX rows of the index by Seq_in_index
+     * @param array<string, array<string, ?string>> $tableColumns SHOW COLUMNS rows by column name
+     *
+     * @return ?array{columns: string[], tier: int}
+     */
+    private static function getPageableIndex(array $parts, array $tableColumns): ?array
+    {
+        ksort($parts);
+        $columns  = [];
+        $unusable = false;
+        foreach ($parts as $part) {
+            $column = $part['Column_name'];
+            if (
+                (int) $part['Non_unique'] !== 0 ||
+                $column === null ||
+                !isset($tableColumns[$column]) ||
+                $part['Null'] === 'YES' ||
+                $part['Sub_part'] !== null ||
+                preg_match('/^(?:var)?binary/i', (string) $tableColumns[$column]['Type']) ||
+                stripos((string) $tableColumns[$column]['Extra'], 'INVISIBLE') !== false
+            ) {
+                return null;
+            }
+            // Installer replacement leaves primary-key columns and numeric values unchanged.
+            if (
+                $tableColumns[$column]['Key'] !== 'PRI' &&
+                !preg_match('/^(?:tinyint|smallint|mediumint|int|bigint|decimal|float|double)\b/i', (string) $tableColumns[$column]['Type'])
+            ) {
+                return null;
+            }
+            $unusable  = $unusable ||
+                ($part['Visible'] ?? 'YES') === 'NO' ||
+                ($part['Ignored'] ?? 'NO') === 'YES';
+            $columns[] = $column;
+        }
+
+        return [
+            'columns' => $columns,
+            'tier'    => $unusable ? 1 : 0,
+        ];
+    }
+
+    /**
+     * Run a SHOW query and return all its rows
+     *
+     * @param mysqli|resource $dbh         database connection
+     * @param string          $query       query
+     * @param null|callable   $logCallback log callback
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private static function getShowQueryRows($dbh, string $query, $logCallback): array
+    {
+        $result = self::query($dbh, $query);
+        if (is_callable($logCallback)) {
+            call_user_func($logCallback, $dbh, $result, $query);
+        }
+        if ($result === false) {
+            throw new \Exception('SHOW KEYS QUERY ERROR: ' . self::error($dbh));
+        }
+
+        $rows = [];
+        while ($row = self::fetchAssoc($result)) {
+            $rows[] = $row;
+        }
+        self::freeResult($result);
+
+        return $rows;
     }
 
     /**
@@ -105,13 +157,13 @@ class SnapDB
      *
      * @return string Escaped regex
      */
-    public static function quoteRegex($regex)
+    public static function quoteRegex($regex): string
     {
         // preg_quote takes a string and escapes special characters with a backslash.
         // It is meant for PHP regexes, not MySQL regexes, and it does not escape &,
         // which is needed for MySQL. So we only need to modify it like so:
         // https://stackoverflow.com/questions/3782379/whats-the-best-way-to-escape-user-input-for-regular-expressions-in-mysql
-        return preg_replace('/&/', '\\&', preg_quote($regex, null /* no delimiter */));
+        return (string) preg_replace('/&/', '\\&', preg_quote($regex, null /* no delimiter */));
     }
 
     /**
@@ -126,13 +178,13 @@ class SnapDB
     public static function getOffsetFromRowAssoc($row, $indexColumns, $lastOffset)
     {
         if (is_array($indexColumns)) {
-            $result = array();
+            $result = [];
             foreach ($indexColumns as $col) {
-                $result[$col] = isset($row[$col]) ? $row[$col] : 0;
+                $result[$col] = $row[$col] ?? 0;
             }
             return $result;
         } elseif (strlen($indexColumns) > 0) {
-            return isset($row[$indexColumns]) ? $row[$indexColumns] : 0;
+            return $row[$indexColumns] ?? 0;
         } else {
             if (is_scalar($lastOffset)) {
                 return $lastOffset + 1;
@@ -140,6 +192,93 @@ class SnapDB
                 return $lastOffset;
             }
         }
+    }
+
+    /**
+     * Encode an index offset for JSON storage without losing bytes or types
+     *
+     * Strings, which may hold bytes that are not valid UTF-8, are stored in base64. A composite
+     * offset becomes an ordered list of column/value pairs, encoded the same way.
+     *
+     * @param mixed $offset Index offset: a scalar, or column => value for a composite key
+     *
+     * @return mixed JSON-safe value
+     */
+    public static function encodeIndexOffset($offset)
+    {
+        if (!is_array($offset)) {
+            return self::encodeOffsetValue($offset);
+        }
+
+        $pairs = [];
+        foreach ($offset as $column => $value) {
+            $pairs[] = [
+                self::encodeOffsetValue((string) $column),
+                self::encodeOffsetValue($value),
+            ];
+        }
+        return ['columns' => $pairs];
+    }
+
+    /**
+     * Restore an index offset encoded by encodeIndexOffset()
+     *
+     * @param mixed $encoded Decoded JSON value
+     *
+     * @return mixed
+     *
+     * @throws Exception When the value is not a valid encoded offset
+     */
+    public static function decodeIndexOffset($encoded)
+    {
+        if (!is_array($encoded) || !array_key_exists('columns', $encoded)) {
+            return self::decodeOffsetValue($encoded);
+        }
+        if (!is_array($encoded['columns'])) {
+            throw new Exception('invalid composite offset');
+        }
+
+        $offset = [];
+        foreach ($encoded['columns'] as $pair) {
+            if (!is_array($pair) || count($pair) !== 2) {
+                throw new Exception('invalid composite offset pair');
+            }
+            $offset[self::decodeOffsetValue($pair[0])] = self::decodeOffsetValue($pair[1]);
+        }
+        return $offset;
+    }
+
+    /**
+     * Encode one offset value: strings in base64, other scalars as they are
+     *
+     * @param mixed $value Offset value
+     *
+     * @return mixed
+     */
+    private static function encodeOffsetValue($value)
+    {
+        return is_string($value) ? ['base64' => base64_encode($value)] : $value;
+    }
+
+    /**
+     * Restore one offset value encoded by encodeOffsetValue()
+     *
+     * @param mixed $value Decoded JSON value
+     *
+     * @return mixed
+     *
+     * @throws Exception When the value is not a valid encoded value
+     */
+    private static function decodeOffsetValue($value)
+    {
+        if (!is_array($value)) {
+            return $value;
+        }
+        $decoded = isset($value['base64']) && is_string($value['base64']) ? base64_decode($value['base64'], true) : false;
+        if ($decoded === false) {
+            throw new Exception('invalid offset value');
+        }
+        return $decoded;
     }
 
     /**
@@ -170,7 +309,7 @@ class SnapDB
         } else {
             if (is_array($primaryColumn)) {
                 // COMPOSITE KEY
-                $orderByCols = array();
+                $orderByCols = [];
                 foreach ($primaryColumn as $colIndex => $col) {
                     $orderByCols[] = '`' . $col . '` ASC';
                 }
@@ -186,7 +325,7 @@ class SnapDB
             if (is_callable($logCallback)) {
                 call_user_func($logCallback, $dbh, $result, $query);
             }
-            throw new \Exception('SELECT ERROR: ' . self::error($dbh) . ' QUERY: ' . $query);
+            throw new \Exception('SELECT ERROR: ' . self::error($dbh) . "\n QUERY: " . $query);
         }
 
         if (is_callable($logCallback)) {
@@ -203,7 +342,7 @@ class SnapDB
                     $result->data_seek(($result->num_rows - 1));
                     $row = $result->fetch_assoc();
                     if (is_array($primaryColumn)) {
-                        $lastRowOffset = array();
+                        $lastRowOffset = [];
                         foreach ($primaryColumn as $col) {
                             $lastRowOffset[$col] = $row[$col];
                         }
@@ -223,7 +362,7 @@ class SnapDB
                     mysql_data_seek($result, (mysql_num_rows($result) - 1));  // @phpstan-ignore-line
                     $row = mysql_fetch_assoc($result);  // @phpstan-ignore-line
                     if (is_array($primaryColumn)) {
-                        $lastRowOffset = array();
+                        $lastRowOffset = [];
                         foreach ($primaryColumn as $col) {
                             $lastRowOffset[$col] = $row[$col];
                         }
@@ -247,7 +386,7 @@ class SnapDB
      *
      * @return string
      */
-    protected static function getOffsetKeyCondition($dbh, $primaryColumn, $offset)
+    protected static function getOffsetKeyCondition($dbh, $primaryColumn, $offset): string
     {
         $condition = '';
 
@@ -289,21 +428,21 @@ class SnapDB
      *
      * @return string
      */
-    public static function getDBEngine($dbh)
+    public static function getDBEngine($dbh): string
     {
         if (($result = self::query($dbh, "SHOW VARIABLES LIKE 'version%'")) === false) {
             // on query error assume is mysql.
             return self::DB_ENGINE_MYSQL;
         }
 
-        $rows = array();
+        $rows = [];
         while ($row  = self::fetchRow($result)) {
             $rows[] = $row;
         }
         self::freeResult($result);
 
-        $version        = isset($rows[0][1]) ? $rows[0][1] : false;
-        $versionComment = isset($rows[1][1]) ? $rows[1][1] : false;
+        $version        = $rows[0][1] ?? false;
+        $versionComment = $rows[1][1] ?? false;
 
         //Default is mysql
         if ($version === false && $versionComment === false) {
@@ -436,7 +575,7 @@ class SnapDB
      *
      * @return string
      */
-    public static function error($dbh)
+    public static function error($dbh): string
     {
         if (self::dbConnType($dbh) === self::CONN_MYSQLI) {
             if ($dbh instanceof mysqli) {
@@ -459,7 +598,7 @@ class SnapDB
      *
      * @return string // self::CONN_MYSQLI|self::CONN_MYSQL
      */
-    public static function dbConnType($dbh)
+    public static function dbConnType($dbh): string
     {
         return (is_object($dbh) && get_class($dbh) == 'mysqli') ? self::CONN_MYSQLI : self::CONN_MYSQL;
     }
@@ -470,7 +609,7 @@ class SnapDB
      *
      * @return string Enum self::CONN_MYSQLI|self::CONN_MYSQL
      */
-    public static function dbConnTypeByResult($result)
+    public static function dbConnTypeByResult($result): string
     {
         return (is_object($result) && get_class($result) == 'mysqli_result') ? self::CONN_MYSQLI : self::CONN_MYSQL;
     }
@@ -491,55 +630,60 @@ class SnapDB
      *
      * @return array<array<scalar>>
      */
-    public static function getValuesFromQueryInsert($query)
+    public static function getValuesFromQueryInsert($query): array
     {
-        $result       = array();
+        $result       = [];
         $isItemOpen   = false;
         $isStringOpen = false;
-        $char         = '';
-        $pChar        = '';
+        $queryLen     = strlen($query);
 
-        $currentItem  = array();
+        $currentItem  = [];
         $currentValue = '';
 
-        for ($i = 0; $i < strlen($query); $i++) {
-            $pChar = $char;
-            $char  = $query[$i];
+        for ($i = 0; $i < $queryLen; $i++) {
+            $char = $query[$i];
+
+            if ($isStringOpen !== false) {
+                if ($char === '\\' && $i + 1 < $queryLen) {
+                    // The escaped byte is copied as is and never closes the string
+                    $char .= $query[++$i];
+                } elseif ($char === $isStringOpen) {
+                    $isStringOpen = false;
+                }
+                if ($isItemOpen) {
+                    $currentValue .= $char;
+                }
+                continue;
+            }
 
             switch ($char) {
                 case '(':
-                    if ($isItemOpen == false && !$isStringOpen) {
+                    if ($isItemOpen == false) {
                         $isItemOpen = true;
                         continue 2;
                     }
                     break;
                 case ')':
-                    if ($isItemOpen && !$isStringOpen) {
+                    if ($isItemOpen) {
                         $isItemOpen    = false;
                         $currentItem[] = trim($currentValue);
                         $currentValue  = '';
                         $result[]      = $currentItem;
-                        $currentItem   = array();
+                        $currentItem   = [];
                         continue 2;
                     }
                     break;
                 case '\'':
                 case '"':
-                    if ($isStringOpen === false && $pChar !== '\\') {
-                        $isStringOpen = $char;
-                    } elseif ($isStringOpen === $char && $pChar !== '\\') {
-                        $isStringOpen = false;
-                    }
+                    $isStringOpen = $char;
                     break;
                 case ',':
                     if ($isItemOpen == false) {
                         continue 2;
-                    } elseif ($isStringOpen === false) {
-                        $currentItem[] = trim($currentValue);
-                        $currentValue  = '';
-                        continue 2;
                     }
-                    break;
+                    $currentItem[] = trim($currentValue);
+                    $currentValue  = '';
+                    continue 2;
                 default:
                     break;
             }
@@ -560,15 +704,13 @@ class SnapDB
      *
      * @return string
      */
-    public static function getQueryInsertValuesFromArray(array $values)
+    public static function getQueryInsertValuesFromArray(array $values): string
     {
 
         return implode(
             ',',
             array_map(
-                function ($rowVals) {
-                    return '(' . implode(',', $rowVals) . ')';
-                },
+                fn($rowVals): string => '(' . implode(',', $rowVals) . ')',
                 $values
             )
         );
@@ -583,7 +725,7 @@ class SnapDB
      *
      * @return string
      */
-    public static function parsedQueryValueToString($value)
+    public static function parsedQueryValueToString($value): string
     {
         $result = preg_replace('/^[\'"]?(.*?)[\'"]?$/s', '$1', $value);
         return stripslashes($result);
@@ -598,7 +740,7 @@ class SnapDB
      *
      * @return int
      */
-    public static function parsedQueryValueToInt($value)
+    public static function parsedQueryValueToInt($value): int
     {
         return (int) preg_replace('/^[\'"]?(.*?)[\'"]?$/s', '$1', $value);
     }
@@ -613,12 +755,12 @@ class SnapDB
      *
      * @return int[]|string[]
      */
-    public static function getMysqlConnectFlagsList($returnStr = true, $filter = null)
+    public static function getMysqlConnectFlagsList($returnStr = true, $filter = null): array
     {
         static $flagsList = null;
 
         if (is_null($flagsList)) {
-            $flagsList = array();
+            $flagsList = [];
 
             if (defined('MYSQLI_CLIENT_COMPRESS')) {
                 $flagsList[MYSQLI_CLIENT_COMPRESS] = 'MYSQLI_CLIENT_COMPRESS';
@@ -644,7 +786,7 @@ class SnapDB
         if (is_null($filter)) {
             $result = $flagsList;
         } else {
-            $result = array();
+            $result = [];
             foreach ($flagsList as $flagVal => $flag) {
                 if (!in_array($flagVal, $filter)) {
                     continue;
@@ -669,7 +811,7 @@ class SnapDB
      *
      * @return int[]
      */
-    public static function getMysqlConnectFlagsFromMaskVal($value)
+    public static function getMysqlConnectFlagsFromMaskVal($value): array
     {
         /*
         MYSQLI_CLIENT_COMPRESS 32
@@ -680,7 +822,7 @@ class SnapDB
         MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT 64
         */
 
-        $result = array();
+        $result = [];
 
         foreach (self::getMysqlConnectFlagsList(false) as $flagVal) {
             if (($value & $flagVal) > 0) {
@@ -699,7 +841,7 @@ class SnapDB
      *
      * @return string[]
      */
-    public static function getRedundantDuplicateTables($prefix, $duplicates)
+    public static function getRedundantDuplicateTables($prefix, $duplicates): array
     {
         //core tables are not redundant, check with priority
         foreach (SnapWP::getSiteCoreTables() as $coreTable) {

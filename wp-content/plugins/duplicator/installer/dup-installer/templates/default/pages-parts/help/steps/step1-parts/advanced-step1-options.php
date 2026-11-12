@@ -77,12 +77,10 @@ These are the advanced options for advanced users.
             The existing site files will be overwritten with the contents of the archive.zip/daf.
             <br/><br/>
 
-            <sup class="hlp-pro-lbl">Pro</sup>
             <b>Remove WordPress core and content and extract</b><br/>
             The existing WordPress core files and WordPress content directory will be removed, and then the archive will be extracted.
             <br/><br/>
 
-            <sup class="hlp-pro-lbl">Pro</sup>
             <b>Remove all files except add-on sites and extract</b><br/>
             All files except an add-on site will be removed, and then the archive will be extracted.  An add-on site is a site/domain that is stored in a
             directory off of your main site that has been "added on" to your main hosting account.  For instance, when you purchased a hosting account it
@@ -106,18 +104,15 @@ These are the advanced options for advanced users.
             Extract all files from the package archive.  This option is selected by default.
             <br/><br/>
 
-            <sup class="hlp-pro-lbl">Pro</sup>
             <b>Skip extraction of WordPress core files</b><br/>
             Extract all files except WordPress core files. Choose this option to extract only the wp-content folder and other non-core WordPress
             files and directories.
             <br/><br/>
 
-            <sup class="hlp-pro-lbl">Pro</sup>
             <b>Skip extraction of WordPress core files and plugins/themes existing on host</b><br/>
             Extract all files except WordPress core files and existing plugins/themes on the current host.
             <br/><br/>
 
-            <sup class="hlp-pro-lbl">Pro</sup>
             <b>Extract only media files and new plugins and themes</b><br/>
             Extract all media files, new plugins, and new themes. The installer will not extract plugins and themes that already exist on the destination site.
         </td>
@@ -200,7 +195,7 @@ These are the advanced options for advanced users.
                 <b>Notes:</b>  Inside the archive.zip or archive.daf will be a copy of the original .htaccess (Apache) file that was set up with your 
                 packaged site.  The .htaccess file is copied to /dup-installer/original_files_[HASH]/source_site_htaccess. When using either "Create New"
                 or "Retain original from Archive.zip/daf" an existing .htaccess file will be backed up to a
-                /wp-content/backups-dup-lite/installer/original_files_[HASH]/source_site_htaccess.
+                /wp-content/duplicator-backups/installer/original_files_[HASH]/source_site_htaccess.
                 <i>This change will not made until the final step is completed, to avoid any issues the .htaccess might cause during the install</i>
             </small>
         </td>
@@ -244,8 +239,8 @@ These are the advanced options for advanced users.
                     </code>
                 </li>
                 <li>
-                    The installer last step copies all "Config Files" from the archive backups to the correct location on the new host. 
-                    They are copied from this location:<br/>
+                    The installer last step copies all "Config Files" from the archive backups to the correct location on the new host. They are copied
+                    from this location:<br/>
                     <code>
                         /dup-installer/original_files_[HASH]/<b>source_site</b>_[CONFIG-TYPE]
                     </code>
@@ -283,12 +278,10 @@ These are the advanced options for advanced users.
     <tr>
         <td class="col-opt">Cleanup</td>
         <td>
-            <sup class="hlp-pro-lbl">Pro</sup>
             <b>Remove disabled plugins/themes</b><br/>
             Remove all inactive plugins and themes when installing site.  Inactive users will also be removed during subsite to standalone migrations.
             <br/><br/>
 
-            <sup class="hlp-pro-lbl">Pro</sup>
             <b>Remove users without permissions</b><br/>
             Removes users that currently do not have any permissions associated with their accounts.
         </td>
@@ -330,7 +323,6 @@ These are the advanced options for database configuration.
     <tr>
         <td class="col-opt">Table Prefix</td>
         <td>
-            <sup class="hlp-pro-lbl">Pro</sup>
             This option allows changing the table prefix to other than the package creation site's table prefix.  The table prefix is the value placed in the
             front of your database tables.  It is possible to have multiple installations in one database if you give each WordPress site a unique prefix.
         </td>
@@ -390,10 +382,9 @@ URL/PATH TAB
 <h4>
     <i class="far fa-folder fa-fw"></i>
     URLs &amp; Paths Tab
-    <sup class="hlp-pro-lbl">Pro</sup>
 </h4>
 In the tab "URLs &amp; Paths," you can read the current path of all the various path configurations for the WordPress site.   These are advanced options
-that should only be edited if you know the correct path.   These options are editable in the Pro version.
+that should only be edited if you know the correct path.
 <ul>
     <li>
         WordPress core path

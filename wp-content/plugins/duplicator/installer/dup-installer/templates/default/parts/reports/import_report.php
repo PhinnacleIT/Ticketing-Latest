@@ -1,15 +1,16 @@
 <?php
 
-/**
- *
- * @package Duplicator/Installer
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/** @var int $numAdded */
-/** @var int $numChanged */
-/** @var string $csvUrl */
+/**
+ * Variables
+ *
+ * @var int $numAdded
+ * @var int $numChanged/**
+ * @var string $csvUrl
+ */
 
 ?>
 <p>

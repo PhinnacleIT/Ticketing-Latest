@@ -1,21 +1,14 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
- */
-
 namespace Duplicator\Libs\DupArchive\Utils;
 
 use Duplicator\Libs\Snap\SnapJson;
+use Duplicator\Libs\Scan\ScanIterator;
 use Exception;
 use stdClass;
 
 /**
  * Description of class
- *
- * @author Robert
  */
 class DupArchiveScanUtil
 {
@@ -24,7 +17,7 @@ class DupArchiveScanUtil
      *
      * @param string $scanFilepath scan file path
      *
-     * @return void
+     * @return stdClass
      */
     public static function getScan($scanFilepath)
     {
@@ -58,10 +51,13 @@ class DupArchiveScanUtil
      *
      * @return stdClass
      */
-    public static function createScanObject($sourceDirectory)
+    public static function createScanObject($sourceDirectory): stdClass
     {
-        $scan = new stdClass();
+        $scan         = new stdClass();
+        $scanIterator = new ScanIterator($sourceDirectory, [], ScanIterator::SORT_ASC);
 
+        foreach ($scanIterator as $nodeInfo) {
+        }
         $scan->Dirs  = DupArchiveUtil::expandDirectories($sourceDirectory, true);
         $scan->Files = DupArchiveUtil::expandFiles($sourceDirectory, true);
 
@@ -74,7 +70,7 @@ class DupArchiveScanUtil
      * @param string $scanFilepath    scan file
      * @param string $sourceDirectory folder to scan
      *
-     * @return void
+     * @return stdClass
      */
     public static function createScan($scanFilepath, $sourceDirectory)
     {

@@ -1,24 +1,22 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
+use Duplicator\Installer\Core\Security;
 use Duplicator\Installer\Core\Params\PrmMng;
 
 $paramsManager = PrmMng::getInstance();
 
-switch (DUPX_Security::getInstance()->getSecurityType()) {
-    case DUPX_Security::SECURITY_PASSWORD:
+switch (Security::getInstance()->getSecurityType()) {
+    case Security::SECURITY_PASSWORD:
         $errorMsg = 'Invalid Password! Please try again...';
         break;
-    case DUPX_Security::SECURITY_ARCHIVE:
+    case Security::SECURITY_ARCHIVE:
         $errorMsg = 'Invalid Archive name! Please try again...';
         break;
-    case DUPX_Security::SECURITY_NONE:
+    case Security::SECURITY_NONE:
     default:
         $errorMsg = '';
         break;
@@ -34,26 +32,22 @@ switch (DUPX_Security::getInstance()->getSecurityType()) {
     <div class="margin-top-0 margin-bottom-2">
         <div class="text-right" >
             <span id="pass-quick-link" class="link-style" onclick="jQuery('#pass-quick-help-info').toggleClass('no-display');" >
-                <i>Why do I see this screen?</i>
+                Why do I see this screen?
             </span>
         </div>
-        <div id="pass-quick-help-info" class="box info no-display">
+        <div id="pass-quick-help-info" class="box info">
             This screen will show under the following conditions:
-            <br/><br/>
-
-            <b><i class="fas fa-lock"></i> Password:</b> 
-            If the installer was password protected when created then the password input below should be enabled. <br/>
-            <small>If the input is disabled then no password was set during the build process.</small>
-            <br/><br/>
-
-            <b><i class="fas fa-shield-alt"></i> Secure-File:</b>
-            If the archive file is on a public server under these conditions:
             <ul>
-                <li>Running a basic installer name <i>(installer.php)</i> with no installer password.</li>
-                <li>Running with the <i class="maroon">"Overwrite Install"</i>  method active and no installer password.</li>
+                <li>
+                    <b>Password Protection:</b> If the file was password protected when it was created then the password input below should
+                    be enabled.  If the input is disabled then no password was set. 
+                </li>
+                <li>
+                    <b>Simple Installer Name:</b> If no password has been set and you are performing an <i class="maroon">"Overwrite Install"</i>
+                    without a secure installer.php file name (i.e. [hash]_installer.php). Then users will need to enter the Backup file for a valid
+                    security check. If the Backup File Name input is disabled then it can be ignored.
+                </li>
             </ul>
-            Validate the 'Archive File Name' input with the secure-file name it was created with <i>([name]_[hash]_[time]_archive.zip)</i>. <br/>
-            <small>If the archive file name input is disabled or hidden then it can be ignored.</small>
         </div>
     </div>
 

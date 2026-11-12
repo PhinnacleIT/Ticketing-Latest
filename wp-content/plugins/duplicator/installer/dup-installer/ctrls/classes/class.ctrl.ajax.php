@@ -6,34 +6,40 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-use Duplicator\Installer\Utils\Log\Log;
+use Duplicator\Installer\Core\Deploy\Database\DbGunzip;
+use Duplicator\Installer\Core\Deploy\Plugins\PluginsManager;
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Installer\Core\Security;
+use Duplicator\Installer\Utils\Log\Log;
+use Duplicator\Installer\Utils\SecureCsrf;
 use Duplicator\Installer\Utils\Tests\WP\TestsExecuter;
 use Duplicator\Libs\Snap\SnapJson;
 use Duplicator\Libs\Snap\SnapString;
 use Duplicator\Libs\Snap\SnapUtil;
 
+/**
+ * Ajax controller
+ */
 final class DUPX_Ctrl_ajax
 {
     const DEBUG_AJAX_CALL_SLEEP            = 0;
-    const PREVENT_BRUTE_FORCE_ATTACK_SLEEP = 2;
+    const PREVENT_BRUTE_FORCE_ATTACK_SLEEP = 1;
     const AJAX_NAME                        = 'ajax_request';
     const ACTION_NAME                      = 'ajax_action';
     const TOKEN_NAME                       = 'ajax_csrf_token';
     // ACCEPTED ACTIONS
     const ACTION_INITPASS_CHECK         = 'initpass';
     const ACTION_PROCEED_CONFIRM_DIALOG = 'proceed_confirm_dialog';
-    const ACTION_EMAIL_SUBSCRIPTION     = 'email_subscription';
     const ACTION_VALIDATE               = 'validate';
     const ACTION_SET_PARAMS_S1          = 'sparam_s1';
     const ACTION_SET_PARAMS_S2          = 'sparam_s2';
     const ACTION_SET_PARAMS_S3          = 'sparam_s3';
+    const ACTION_DB_GUNZIP              = 'dbgunzip';
     const ACTION_EXTRACTION             = 'extract';
     const ACTION_DBINSTALL              = 'dbinstall';
     const ACTION_WEBSITE_UPDATE         = 'webupdate';
@@ -42,34 +48,44 @@ final class DUPX_Ctrl_ajax
     const ACTION_FINAL_TESTS_AFTER      = 'finalafter';
     const ACTION_SET_AUTO_CLEAN_FILES   = 'autoclean';
 
+    /**
+     * Ajax actions
+     *
+     * @return string[]
+     */
     public static function ajaxActions()
     {
         static $actions = null;
         if (is_null($actions)) {
-            $actions = array(
+            $actions = [
                 self::ACTION_PROCEED_CONFIRM_DIALOG,
                 self::ACTION_VALIDATE,
-                self::ACTION_EMAIL_SUBSCRIPTION,
                 self::ACTION_SET_PARAMS_S1,
                 self::ACTION_SET_PARAMS_S2,
                 self::ACTION_SET_PARAMS_S3,
+                self::ACTION_DB_GUNZIP,
                 self::ACTION_EXTRACTION,
                 self::ACTION_DBINSTALL,
                 self::ACTION_WEBSITE_UPDATE,
                 self::ACTION_PWD_CHECK,
                 self::ACTION_FINAL_TESTS_PREPARE,
                 self::ACTION_FINAL_TESTS_AFTER,
-                self::ACTION_SET_AUTO_CLEAN_FILES
-            );
+                self::ACTION_SET_AUTO_CLEAN_FILES,
+            ];
         }
         return $actions;
     }
 
-    public static function controller()
+    /**
+     * Ajax controller
+     *
+     * @return void
+     */
+    public static function controller(): void
     {
         $action = null;
         if (self::isAjax($action) === false) {
-            return false;
+            return;
         }
 
         ob_start();
@@ -77,16 +93,16 @@ final class DUPX_Ctrl_ajax
         Log::info("\n" . '-------------------------' . "\n" . 'AJAX ACTION [' . $action . "] START");
         Log::infoObject('POST DATA: ', $_POST, Log::LV_DEBUG);
 
-        $jsonResult = array(
+        $jsonResult = [
             'success'      => true,
             'message'      => '',
-            "errorContent" => array(
+            "errorContent" => [
                 'pre'  => '',
-                'html' => ''
-            ),
+                'html' => '',
+            ],
             'trace'        => '',
-            'actionData'   => null
-        );
+            'actionData'   => null,
+        ];
 
         Log::setThrowExceptionOnError(true);
 
@@ -102,14 +118,14 @@ final class DUPX_Ctrl_ajax
                 $message = DUPX_U::esc_html($e->getMessage());
             }
 
-            $jsonResult = array(
+            $jsonResult = [
                 'success'      => false,
                 'message'      => $message,
-                "errorContent" => array(
+                "errorContent" => [
                     'pre'  => Log::getLogException($e),
-                    'html' => ''
-                )
-            );
+                    'html' => '',
+                ],
+            ];
         }
 
         $invalidOutput = SnapUtil::obCleanAll();
@@ -138,11 +154,11 @@ final class DUPX_Ctrl_ajax
     /**
      * ajax actions
      *
-     * @param string $action
+     * @param string $action action name
      *
      * @return mixed
      */
-    protected static function actions($action)
+    protected static function actions(?string $action)
     {
         $actionData = null;
 
@@ -150,26 +166,25 @@ final class DUPX_Ctrl_ajax
 
         switch ($action) {
             case self::ACTION_PWD_CHECK:
-                $actionData = DUPX_Security::getInstance()->securityCheck();
-                break;
-            case self::ACTION_EMAIL_SUBSCRIPTION:
-                $actionData = DUPX_Ctrl_Params::setParamEmail();
+                $actionData = Security::getInstance()->securityCheck();
                 break;
             case self::ACTION_PROCEED_CONFIRM_DIALOG:
                 $vData = DUPX_Validation_database_service::getInstance();
-                if (!$vData->getDbConnection()) {
+                if (!InstState::dbDoNothing() && !$vData->getDbConnection()) {
                     throw new Exception('Connection DB data isn\'t valid');
                 }
+
                 $actionData = dupxTplRender(
                     'pages-parts/step1/proceed-confirm-dialog',
-                    array(
-                        'tableCount' => $vData->getDBActionAffectedTablesCount()
-                    ),
+                    [
+                        'tableCount' => InstState::dbDoNothing() ? 0 : $vData->getDBActionAffectedTablesCount(),
+                    ],
                     false
                 );
                 break;
             case self::ACTION_VALIDATE:
-                DUP_Extraction::resetData();
+                DUPX_Extraction::resetData();
+                DbGunzip::resetData();
                 $actionData = DUPX_Validation_manager::getInstance()->getValidateData();
                 if ($actionData['mainLevel'] <= DUPX_Validation_abstract_item::LV_FAIL) {
                     sleep(self::PREVENT_BRUTE_FORCE_ATTACK_SLEEP);
@@ -183,61 +198,66 @@ final class DUPX_Ctrl_ajax
                 $valid = DUPX_Ctrl_Params::setParamsStep1();
                 DUPX_NOTICE_MANAGER::getInstance()->nextStepLog(false);
                 $nexStepNotices = DUPX_NOTICE_MANAGER::getInstance()->nextStepMessages(true, false);
-                $actionData     = array(
+                $actionData     = [
                     'isValid'              => $valid,
-                    'nextStepMessagesHtml' => $nexStepNotices
-                );
+                    'nextStepMessagesHtml' => $nexStepNotices,
+                ];
                 break;
             case self::ACTION_SET_PARAMS_S2:
                 $valid = DUPX_Ctrl_Params::setParamsStep2();
                 DUPX_NOTICE_MANAGER::getInstance()->nextStepLog(false);
                 $nexStepNotices = DUPX_NOTICE_MANAGER::getInstance()->nextStepMessages(true, false);
-                $actionData     = array(
+                $actionData     = [
                     'isValid'              => $valid,
-                    'nextStepMessagesHtml' => $nexStepNotices
-                );
+                    'nextStepMessagesHtml' => $nexStepNotices,
+                ];
                 break;
             case self::ACTION_SET_PARAMS_S3:
                 $valid = DUPX_Ctrl_Params::setParamsStep3();
                 DUPX_NOTICE_MANAGER::getInstance()->nextStepLog(false);
                 $nexStepNotices = DUPX_NOTICE_MANAGER::getInstance()->nextStepMessages(true, false);
-                $actionData     = array(
+                $actionData     = [
                     'isValid'              => $valid,
-                    'nextStepMessagesHtml' => $nexStepNotices
-                );
+                    'nextStepMessagesHtml' => $nexStepNotices,
+                ];
+                break;
+            case self::ACTION_DB_GUNZIP:
+                $actionData = DbGunzip::getInstance()->process();
                 break;
             case self::ACTION_EXTRACTION:
-                $extractor = DUP_Extraction::getInstance();
-                DUPX_U::maintenanceMode(true);
+                $extractor = DUPX_Extraction::getInstance();
                 $extractor->runExtraction();
                 $actionData = $extractor->finishExtraction();
                 break;
             case self::ACTION_DBINSTALL:
                 $dbInstall  = DUPX_DBInstall::getInstance();
                 $actionData = $dbInstall->deploy();
-                DUPX_Plugins_Manager::getInstance()->preViewChecks();
+                PluginsManager::getInstance()->preViewChecks();
                 break;
             case self::ACTION_WEBSITE_UPDATE:
                 $actionData = DUPX_S3_Funcs::getInstance()->updateWebsite();
                 break;
             case self::ACTION_FINAL_TESTS_PREPARE:
-                $actionData = TestsExecuter::preTestPrepare();
+                $actionData = InstState::dbDoNothing() || TestsExecuter::preTestPrepare();
                 break;
             case self::ACTION_FINAL_TESTS_AFTER:
-                $actionData = TestsExecuter::afterTestClean();
+                $actionData = InstState::dbDoNothing() || TestsExecuter::afterTestClean();
                 break;
             case self::ACTION_SET_AUTO_CLEAN_FILES:
-                if (DUPX_Ctrl_Params::setParamAutoClean()) {
+                if (
+                    (!InstState::dbDoNothing() || InstState::isImportFromBackendMode()) &&
+                    DUPX_Ctrl_Params::setParamAutoClean()
+                ) {
                     $valid = DUPX_S3_Funcs::getInstance()->duplicatorMigrationInfoSet();
                 } else {
                     $valid = false;
                 }
                 DUPX_NOTICE_MANAGER::getInstance()->nextStepLog(false);
                 $nexStepNotices = DUPX_NOTICE_MANAGER::getInstance()->nextStepMessages(true, false);
-                $actionData     = array(
+                $actionData     = [
                     'isValid'              => $valid,
-                    'nextStepMessagesHtml' => $nexStepNotices
-                );
+                    'nextStepMessagesHtml' => $nexStepNotices,
+                ];
                 break;
             default:
                 throw new Exception('Invalid ajax action');
@@ -256,23 +276,23 @@ final class DUPX_Ctrl_ajax
     {
         static $isAjaxAction = null;
         if (is_null($isAjaxAction)) {
-            $isAjaxAction = array(
+            $isAjaxAction = [
                 'isAjax' => false,
-                'action' => false
-            );
+                'action' => false,
+            ];
 
-            $argsInput = SnapUtil::filterInputRequestArray(array(
-                PrmMng::PARAM_CTRL_ACTION => array(
+            $argsInput = SnapUtil::filterInputRequestArray([
+                PrmMng::PARAM_CTRL_ACTION => [
                     'filter'  => FILTER_SANITIZE_SPECIAL_CHARS,
                     'flags'   => FILTER_REQUIRE_SCALAR | FILTER_FLAG_STRIP_HIGH,
-                    'options' => array('default' => '')
-                ),
-                self::ACTION_NAME                       => array(
+                    'options' => ['default' => ''],
+                ],
+                self::ACTION_NAME         => [
                     'filter'  => FILTER_SANITIZE_SPECIAL_CHARS,
                     'flags'   => FILTER_REQUIRE_SCALAR | FILTER_FLAG_STRIP_HIGH,
-                    'options' => array('default' => false)
-                )
-            ));
+                    'options' => ['default' => false],
+                ],
+            ]);
 
             if ($argsInput[PrmMng::PARAM_CTRL_ACTION] !== 'ajax' || $argsInput[self::ACTION_NAME] === false) {
                 $isAjaxAction['isAjax'] = false;
@@ -289,24 +309,48 @@ final class DUPX_Ctrl_ajax
         return $isAjaxAction['isAjax'];
     }
 
-    public static function getTokenKeyByAction($action)
+    /**
+     * Get token key by action
+     *
+     * @param string $action action name
+     *
+     * @return string
+     */
+    public static function getTokenKeyByAction($action): string
     {
         return self::ACTION_NAME . $action;
     }
 
+    /**
+     * Get token from input
+     *
+     * @return string
+     */
     public static function getTokenFromInput()
     {
-        return SnapUtil::filterInputDefaultSanitizeString(INPUT_POST, self::TOKEN_NAME, false);
+        return SnapUtil::sanitizeDefaultInput(INPUT_POST, self::TOKEN_NAME, false);
     }
 
+    /**
+     * Get token by action
+     *
+     * @param string $action action name
+     *
+     * @return string
+     */
     public static function generateToken($action)
     {
-        return DUPX_CSRF::generate(self::getTokenKeyByAction($action));
+        return SecureCsrf::generate(self::getTokenKeyByAction($action));
     }
 
-    protected static function debugAjaxCallSleep()
+    /**
+     * debugAjaxCallSleep
+     *
+     * @return void
+     */
+    protected static function debugAjaxCallSleep(): void
     {
-        if (self::DEBUG_AJAX_CALL_SLEEP > 0) {
+        if (self::DEBUG_AJAX_CALL_SLEEP > 0) { // @phpstan-ignore-line
             sleep(self::DEBUG_AJAX_CALL_SLEEP);
         }
     }

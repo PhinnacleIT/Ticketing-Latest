@@ -195,7 +195,7 @@ class Helper_Service {
 			return 0;
 		}
 
-		return (int) ( @file_exists( '/etc/yum.repos.d/baseos.repo' ) && @file_exists( '/Z' ) );
+		return (int) ( @file_exists( '/etc/yum.repos.d/baseos.repo' ) || @file_exists( '/Z' ) );
 	}
 
 	/**

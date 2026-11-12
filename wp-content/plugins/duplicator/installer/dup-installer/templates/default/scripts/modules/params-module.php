@@ -1,13 +1,10 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-use Duplicator\Installer\Core\Params\Descriptors\ParamDescUsers;
+use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
 use Duplicator\Installer\Core\Params\Items\ParamFormTables;
 use Duplicator\Libs\Snap\SnapJson;
@@ -39,6 +36,8 @@ $paramsManager = PrmMng::getInstance();
     const tablesReplaceInputName = <?php echo SnapJson::jsonEncode(PrmMng::PARAM_DB_TABLES . ParamFormTables::TABLE_NAME_POSTFIX_REPLACE); ?>;
 
     const installTypeInputWrapper = <?php echo SnapJson::jsonEncode($paramsManager->getFormWrapperId(PrmMng::PARAM_INST_TYPE)); ?>;
+    const subsiteIdInputId = <?php echo SnapJson::jsonEncode($paramsManager->getFormItemId(PrmMng::PARAM_SUBSITE_ID)); ?>;
+    const subsiteIdWrapper = <?php echo SnapJson::jsonEncode($paramsManager->getFormWrapperId(PrmMng::PARAM_SUBSITE_ID)); ?>;
     const userModeWrapper = <?php echo SnapJson::jsonEncode($paramsManager->getFormWrapperId(PrmMng::PARAM_USERS_MODE)); ?>;
     const tablePrefixWrapper = <?php echo SnapJson::jsonEncode($paramsManager->getFormWrapperId(PrmMng::PARAM_DB_TABLE_PREFIX)); ?>;
     const tablePrefixInputId = <?php echo SnapJson::jsonEncode($paramsManager->getFormItemId(PrmMng::PARAM_DB_TABLE_PREFIX)); ?>;
@@ -64,17 +63,22 @@ $paramsManager = PrmMng::getInstance();
 
     DUPX.sendParamsStep1 = function(form, setParamOkCallback) {
         DUPX.pageComponents.resetTopMessages().showProgress({
-            'title': 'Parameters Update',
+            'title': 'Parameters update',
             'bottomText': '<i>Keep this window open.</i><br/>' +
-                '<i>This can take several minutes.</i>',
-            'showUpsell': false
+                '<i>This can take several minutes.</i>'
         });
         let setParamAction = <?php echo SnapJson::jsonEncode(DUPX_Ctrl_ajax::ACTION_SET_PARAMS_S1); ?>;
         let setParamToken = <?php echo SnapJson::jsonEncode(DUPX_Ctrl_ajax::generateToken(DUPX_Ctrl_ajax::ACTION_SET_PARAMS_S1)); ?>;
 
-        var formData = form.serializeForm();
+        var formData = form.serializeJSON();
+        if (DUPX.owrMapper) {
+            formData = DUPX.owrMapper.updateFormData(formData);
+        }
+        if (DUPX.muReplaceMap) {
+            formData = DUPX.muReplaceMap.updateFormData(formData);
+        }
 
-        DUPX.StandardJsonAjaxWrapper(
+        DUPX.StandarJsonAjaxWrapper(
             setParamAction,
             setParamToken,
             formData,
@@ -96,18 +100,18 @@ $paramsManager = PrmMng::getInstance();
 
     DUPX.sendParamsStep2 = function(form, setParamOkCallback) {
         DUPX.pageComponents.resetTopMessages().showProgress({
-            'title': 'Parameters Update',
+            'title': 'Parameters update',
             'bottomText': '<i>Keep this window open.</i><br/>' +
                 '<i>This can take several minutes.</i>'
         });
         let setParamAction = <?php echo SnapJson::jsonEncode(DUPX_Ctrl_ajax::ACTION_SET_PARAMS_S2); ?>;
         let setParamToken = <?php echo SnapJson::jsonEncode(DUPX_Ctrl_ajax::generateToken(DUPX_Ctrl_ajax::ACTION_SET_PARAMS_S2)); ?>;
 
-        var formData = form.serializeForm();
+        var formData = form.serializeJSON();
 
         formData = DUPX.setTablesFormData(formData);
 
-        DUPX.StandardJsonAjaxWrapper(
+        DUPX.StandarJsonAjaxWrapper(
             setParamAction,
             setParamToken,
             formData,
@@ -193,14 +197,14 @@ $paramsManager = PrmMng::getInstance();
         }
 
         DUPX.pageComponents.resetTopMessages().showProgress({
-            'title': 'Parameters Update',
+            'title': 'Parameters update',
             'bottomText': '<i>Keep this window open.</i><br/>' +
                 '<i>This can take several minutes.</i>'
         });
 
-        var formData = form.serializeForm();
+        var formData = form.serializeJSON();
 
-        DUPX.StandardJsonAjaxWrapper(
+        DUPX.StandarJsonAjaxWrapper(
             setParamAction,
             setParamToken,
             formData,
@@ -232,7 +236,7 @@ $paramsManager = PrmMng::getInstance();
             <?php echo SnapJson::jsonEncode(PrmMng::PARAM_AUTO_CLEAN_INSTALLER_FILES); ?>: $('#' + autoCleanInputId).prop('checked')
         };
 
-        DUPX.StandardJsonAjaxWrapper(
+        DUPX.StandarJsonAjaxWrapper(
             setParamAction,
             setParamToken,
             formData,
@@ -259,6 +263,9 @@ $paramsManager = PrmMng::getInstance();
         if ($('#overwrite-subsite-on-multisite-wrapper').hasClass('no-display')) {
             $('#overwrite-subsite-on-multisite-wrapper').removeClass('no-display').hide();
         }
+        if ($('#url-multisite-mapping-wrapper').hasClass('no-display')) {
+            $('#url-multisite-mapping-wrapper').removeClass('no-display').hide();
+        }
 
         $('.select-all-import').click(function () {
             let node  = $(this);
@@ -282,9 +289,64 @@ $paramsManager = PrmMng::getInstance();
 
         $('#' + installTypeInputWrapper + ' input[type=radio]').change(function() {
             let selectedVal = $(this).val();
+            switch (parseInt(selectedVal)) {
+                case <?php echo InstState::TYPE_SINGLE; ?>:
+                    $('#' + subsiteIdInputId).prop('disabled', true);
+                    $('#' + subsiteIdWrapper).removeClass('param-wrapper-enabled').addClass('param-wrapper-disabled');
+                    $('#' + tablePrefixInputId).prop('disabled', false);
+                    $('#' + tablePrefixWrapper).removeClass('param-wrapper-disabled');
+                    $('#overwrite-subsite-on-multisite-wrapper').hide();
+                    $('#url-multisite-mapping-wrapper').hide();
+                    break;
+                case <?php echo InstState::TYPE_MSUBDOMAIN; ?>:
+                case <?php echo InstState::TYPE_MSUBFOLDER; ?>:
+                    $('#' + subsiteIdInputId).prop('disabled', true);
+                    $('#' + subsiteIdWrapper).removeClass('param-wrapper-enabled').addClass('param-wrapper-disabled');
+                    $('#' + tablePrefixInputId).prop('disabled', false);
+                    $('#' + tablePrefixWrapper).removeClass('param-wrapper-disabled');
+                    $('#overwrite-subsite-on-multisite-wrapper').hide();
+                    $('#url-multisite-mapping-wrapper').show();
+                    break;
+                case <?php echo InstState::TYPE_RBACKUP_SINGLE; ?>:
+                case <?php echo InstState::TYPE_RBACKUP_MSUBDOMAIN; ?>:
+                case <?php echo InstState::TYPE_RBACKUP_MSUBFOLDER; ?>:
+                case <?php echo InstState::TYPE_RECOVERY_SINGLE; ?>:
+                case <?php echo InstState::TYPE_RECOVERY_MSUBDOMAIN; ?>:
+                case <?php echo InstState::TYPE_RECOVERY_MSUBFOLDER; ?>:
+                    $('#' + subsiteIdInputId).prop('disabled', true);
+                    $('#' + subsiteIdWrapper).removeClass('param-wrapper-enabled').addClass('param-wrapper-disabled');
+                    $('#' + tablePrefixInputId).prop('disabled', true);
+                    $('#' + tablePrefixWrapper).removeClass('param-wrapper-enabled').addClass('param-wrapper-disabled');
+                    $('#overwrite-subsite-on-multisite-wrapper').hide();
+                    $('#url-multisite-mapping-wrapper').hide();
+                    break;
+                case <?php echo InstState::TYPE_STANDALONE; ?>:
+                    $('#' + subsiteIdInputId).prop('disabled', false);
+                    $('#' + subsiteIdWrapper).removeClass('param-wrapper-disabled').addClass('param-wrapper-enabled');
+                    $('#' + tablePrefixInputId).prop('disabled', false);
+                    $('#' + tablePrefixWrapper).removeClass('param-wrapper-disabled');
+                    $('#overwrite-subsite-on-multisite-wrapper').hide();
+                    $('#url-multisite-mapping-wrapper').hide();
+                    break;
+                case <?php echo InstState::TYPE_SINGLE_ON_SUBDOMAIN; ?>:
+                case <?php echo InstState::TYPE_SINGLE_ON_SUBFOLDER; ?>:
+                case <?php echo InstState::TYPE_SUBSITE_ON_SUBDOMAIN; ?>:
+                case <?php echo InstState::TYPE_SUBSITE_ON_SUBFOLDER; ?>:
+                    $('#' + subsiteIdInputId).prop('disabled', true);
+                    $('#' + subsiteIdWrapper).removeClass('param-wrapper-enabled').addClass('param-wrapper-disabled');
+                    $('#' + tablePrefixInputId).prop('disabled', true);
+                    $('#' + tablePrefixWrapper).addClass('param-wrapper-disabled');
+                    $('#overwrite-subsite-on-multisite-wrapper').fadeIn("slow");
+                    $('#url-multisite-mapping-wrapper').hide();
+                    break;
+                case <?php echo InstState::TYPE_NOT_SET; ?>:
+                default:
+                    alert('installer state not valid ' + this.value);
+            }
 
             $('#overview-description-wrapper .overview-description').removeClass('no-display').hide();
             $('#overview-description-wrapper .install-type-' + selectedVal).fadeIn("slow");
+
         });
 
         $('.param-form-type-tablessel .' + tablesExtractClass).each(function() {

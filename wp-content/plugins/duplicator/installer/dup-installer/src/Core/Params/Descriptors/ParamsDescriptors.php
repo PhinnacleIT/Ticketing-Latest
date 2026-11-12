@@ -2,17 +2,12 @@
 
 /**
  * Main params descriptions
- *
- * @category  Duplicator
- * @package   Installer
- * @author    Snapcreek <admin@snapcreek.com>
- * @copyright 2011-2021  Snapcreek LLC
- * @license   https://www.gnu.org/licenses/gpl-3.0.html GPLv3
  */
 
 namespace Duplicator\Installer\Core\Params\Descriptors;
 
 use Duplicator\Installer\Core\Hooks\HooksMng;
+use Duplicator\Installer\Core\Params\Items\ParamForm;
 use Duplicator\Installer\Core\Params\Items\ParamItem;
 use Duplicator\Installer\Utils\Log\Log;
 use Duplicator\Libs\Snap\SnapUtil;
@@ -28,19 +23,19 @@ final class ParamsDescriptors
      *
      * @return void
      */
-    public static function init()
+    public static function init(): void
     {
-        HooksMng::getInstance()->addAction('after_params_overwrite', array(__CLASS__, 'updateParamsAfterOverwrite'));
+        HooksMng::getInstance()->addAction('after_params_overwrite', [self::class, 'updateParamsAfterOverwrite']);
     }
 
     /**
      * Init params
      *
-     * @param ParamItem[]|ParamForm[] $params params list
+     * @param array<ParamItem|ParamForm> $params params list
      *
      * @return void
      */
-    public static function initParams(&$params)
+    public static function initParams(&$params): void
     {
         ParamDescUrlsPaths::init($params);
         ParamDescController::init($params);
@@ -50,7 +45,9 @@ final class ParamsDescriptors
         ParamDescEngines::init($params);
         ParamDescValidation::init($params);
         ParamDescDatabase::init($params);
+        ParamDescCPanel::init($params);
         ParamDescReplace::init($params);
+        ParamDescMultisite::init($params);
         ParamDescPlugins::init($params);
         ParamDescUsers::init($params);
         ParamDescNewAdmin::init($params);
@@ -64,7 +61,7 @@ final class ParamsDescriptors
      *
      * @return void
      */
-    public static function updateParamsAfterOverwrite($params)
+    public static function updateParamsAfterOverwrite($params): void
     {
         Log::info('UPDATE PARAMS AFTER OVERWRITE', Log::LV_DETAILED);
         ParamDescUrlsPaths::updateParamsAfterOverwrite($params);
@@ -75,7 +72,9 @@ final class ParamsDescriptors
         ParamDescEngines::updateParamsAfterOverwrite($params);
         ParamDescValidation::updateParamsAfterOverwrite($params);
         ParamDescDatabase::updateParamsAfterOverwrite($params);
+        ParamDescCPanel::updateParamsAfterOverwrite($params);
         ParamDescReplace::updateParamsAfterOverwrite($params);
+        ParamDescMultisite::updateParamsAfterOverwrite($params);
         ParamDescPlugins::updateParamsAfterOverwrite($params);
         ParamDescUsers::updateParamsAfterOverwrite($params);
         ParamDescNewAdmin::updateParamsAfterOverwrite($params);
@@ -90,13 +89,9 @@ final class ParamsDescriptors
      *
      * @return boolean
      */
-    public static function validateNotEmpty($value, ParamItem $paramObj)
+    public static function validateNotEmpty($value, ParamItem $paramObj): bool
     {
-        if (is_string($value)) {
-            $result = strlen($value) > 0;
-        } else {
-            $result = !empty($value);
-        }
+        $result = is_string($value) ? strlen($value) > 0 : !empty($value);
 
         if ($result == false) {
             $paramObj->setInvalidMessage('Can\'t be empty');
@@ -112,7 +107,7 @@ final class ParamsDescriptors
      *
      * @return string
      */
-    public static function sanitizePath($value)
+    public static function sanitizePath($value): string
     {
         $result = SnapUtil::sanitizeNSCharsNewlineTrim($value);
         return SnapIO::safePathUntrailingslashit($result);
@@ -126,7 +121,7 @@ final class ParamsDescriptors
      *
      * @return bool
      */
-    public static function validatePath($value, ParamItem $paramObj)
+    public static function validatePath($value, ParamItem $paramObj): bool
     {
         if (strlen($value) > 1) {
             return true;
@@ -143,7 +138,7 @@ final class ParamsDescriptors
      *
      * @return string
      */
-    public static function sanitizeUrl($value)
+    public static function sanitizeUrl($value): string
     {
         $result = SnapUtil::sanitizeNSCharsNewlineTrim($value);
         if (empty($value)) {
@@ -164,7 +159,7 @@ final class ParamsDescriptors
      *
      * @return bool
      */
-    public static function validateUrlWithScheme($value, ParamItem $paramObj)
+    public static function validateUrlWithScheme($value, ParamItem $paramObj): bool
     {
         if (strlen($value) == 0) {
             $paramObj->setInvalidMessage('URL can\'t be empty');

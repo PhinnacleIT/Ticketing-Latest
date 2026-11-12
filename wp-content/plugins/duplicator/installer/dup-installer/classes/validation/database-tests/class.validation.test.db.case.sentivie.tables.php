@@ -6,8 +6,6 @@
  * Standard: PSR-2
  *
  * @link http://www.php-fig.org/psr/psr-2 Full Documentation
- *
- * @package SC\DUPX\U
  */
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
@@ -24,12 +22,12 @@ class DUPX_Validation_test_db_case_sensitive_tables extends DUPX_Validation_abst
     protected $lowerCaseTableNamesSource = 0;
 
     /** @var array<string[]> */
-    protected $duplicateTables = array();
+    protected $duplicateTables = [];
 
     /** @var string[] */
-    protected $redundantTables = array();
+    protected $redundantTables = [];
 
-    protected function runTest()
+    protected function runTest(): int
     {
         $archiveConfig             = DUPX_ArchiveConfig::getInstance();
         $caseSensitiveTablePresent = $archiveConfig->isTablesCaseSensitive();
@@ -55,35 +53,35 @@ class DUPX_Validation_test_db_case_sensitive_tables extends DUPX_Validation_abst
         return self::LV_PASS;
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return 'Tables Case Sensitivity';
     }
 
     protected function swarnContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-case-sensitive-tables', array(
+        return dupxTplRender('parts/validation/database-tests/db-case-sensitive-tables', [
             'isOk'                => false,
             'errorMessage'        => $this->errorMessage,
-            'lowerCaseTableNames' => $this->lowerCaseTableNames
-            ), false);
+            'lowerCaseTableNames' => $this->lowerCaseTableNames,
+        ], false);
     }
 
     protected function hwarnContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-case-sensitive-duplicates', array(
+        return dupxTplRender('parts/validation/database-tests/db-case-sensitive-duplicates', [
             'lowerCaseTableNames' => $this->lowerCaseTableNames,
             'duplicateTableNames' => $this->duplicateTables,
-            'reduntantTableNames' => $this->redundantTables
-            ), false);
+            'reduntantTableNames' => $this->redundantTables,
+        ], false);
     }
 
     protected function passContent()
     {
-        return dupxTplRender('parts/validation/database-tests/db-case-sensitive-tables', array(
+        return dupxTplRender('parts/validation/database-tests/db-case-sensitive-tables', [
             'isOk'                => true,
             'errorMessage'        => $this->errorMessage,
-            'lowerCaseTableNames' => $this->lowerCaseTableNames
-            ), false);
+            'lowerCaseTableNames' => $this->lowerCaseTableNames,
+        ], false);
     }
 }

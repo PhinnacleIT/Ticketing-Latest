@@ -2,41 +2,43 @@
 # This file is distributed under the GPL-3.0.
 msgid ""
 msgstr ""
-"Project-Id-Version: Nav Menu Roles 2.1.3\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/nav-menu-roles\n"
+"Project-Id-Version: Nav Menu Roles 3.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/helgatheviking/Nav-Menu-Roles/issues/\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-03-26T19:21:53+00:00\n"
+"POT-Creation-Date: 2026-10-26T19:55:28+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: nav-menu-roles\n"
 
 #. Plugin Name of the plugin
-#: nav-menu-roles.php:3
-#: inc/class-nav-menu-roles.php:149
+#: nav-menu-roles.php
+#: inc/class-nav-menu-roles.php:148
+#: assets/js/blocks/settings.js:1
+#: src/blocks/editor/index.js:42
 msgid "Nav Menu Roles"
 msgstr ""
 
 #. Plugin URI of the plugin
-#: nav-menu-roles.php:4
+#: nav-menu-roles.php
 msgid "http://www.kathyisawesome.com/449/nav-menu-roles/"
 msgstr ""
 
 #. Description of the plugin
-#: nav-menu-roles.php:5
+#: nav-menu-roles.php
 msgid "Hide custom menu items based on user roles."
 msgstr ""
 
 #. Author of the plugin
-#: nav-menu-roles.php:7
+#: nav-menu-roles.php
 msgid "Kathy Darling"
 msgstr ""
 
 #. Author URI of the plugin
-#: nav-menu-roles.php:8
+#: nav-menu-roles.php
 msgid "http://www.kathyisawesome.com"
 msgstr ""
 
@@ -98,173 +100,70 @@ msgstr ""
 msgid "Unserializing instances of this class is forbidden."
 msgstr ""
 
-#: inc/class-nav-menu-roles.php:149
+#: inc/class-nav-menu-roles.php:148
 msgid "Import <strong>nav menu roles</strong> and other menu item meta skipped by the default importer"
 msgstr ""
 
-#: inc/class-nav-menu-roles.php:281
+#: inc/class-nav-menu-roles.php:279
 msgid "FAQ"
 msgstr ""
 
-#: inc/class-nav-menu-roles.php:282
+#: inc/class-nav-menu-roles.php:280
 msgid "Donate"
 msgstr ""
 
-#: inc/class-nav-menu-roles.php:369
+#: inc/class-nav-menu-roles.php:363
 #: inc/customizer.php:57
+#: assets/js/blocks/settings.js:1
+#: src/blocks/editor/index.js:46
 msgid "Display Mode"
 msgstr ""
 
-#: inc/class-nav-menu-roles.php:375
+#: inc/class-nav-menu-roles.php:369
 #: inc/customizer.php:61
+#: assets/js/blocks/settings.js:1
+#: src/blocks/editor/index.js:49
 msgid "Show"
 msgstr ""
 
-#: inc/class-nav-menu-roles.php:380
+#: inc/class-nav-menu-roles.php:374
 #: inc/customizer.php:66
+#: assets/js/blocks/settings.js:1
+#: src/blocks/editor/index.js:50
 msgid "Hide"
 msgstr ""
 
-#: inc/class-nav-menu-roles.php:386
+#: inc/class-nav-menu-roles.php:380
+#: assets/js/blocks/settings.js:1
+#: src/blocks/editor/index.js:58
 msgid "Target audience"
 msgstr ""
 
-#: inc/class-nav-menu-roles.php:392
+#: inc/class-nav-menu-roles.php:386
+#: inc/customizer.php:84
+#: assets/js/blocks/settings.js:1
+#: src/blocks/editor/index.js:61
+msgid "Everyone"
+msgstr ""
+
+#: inc/class-nav-menu-roles.php:391
 #: inc/customizer.php:76
+#: assets/js/blocks/settings.js:1
+#: src/blocks/editor/index.js:63
 msgid "Logged In Users"
 msgstr ""
 
-#: inc/class-nav-menu-roles.php:397
+#: inc/class-nav-menu-roles.php:396
 #: inc/customizer.php:80
+#: assets/js/blocks/settings.js:1
+#: src/blocks/editor/index.js:67
 msgid "Logged Out Users"
 msgstr ""
 
 #: inc/class-nav-menu-roles.php:402
-#: inc/customizer.php:84
-msgid "Everyone"
-msgstr ""
-
-#: inc/class-nav-menu-roles.php:408
+#: assets/js/blocks/settings.js:1
+#: src/blocks/editor/index.js:83
 msgid "Target role"
-msgstr ""
-
-#. translators: %s: title of menu item which is invalid
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:101
-#: inc/class-walker-nav-menu-edit-roles.php:109
-#, php-format
-msgid "%s (Invalid)"
-msgstr ""
-
-#. translators: %s: title of menu item in draft status
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:105
-#: inc/class-walker-nav-menu-edit-roles.php:113
-#, php-format
-msgid "%s (Pending)"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:119
-#: inc/class-walker-nav-menu-edit-roles.php:128
-msgid "sub item"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:136
-#: inc/class-walker-nav-menu-edit-roles.php:143
-msgid "Move up"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:151
-#: inc/class-walker-nav-menu-edit-roles.php:156
-msgid "Move down"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:157
-msgid "Edit menu item"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:157
-msgid "Edit"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:166
-#: inc/class-walker-nav-menu-edit-roles.php:169
-msgid "URL"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:173
-#: inc/class-walker-nav-menu-edit-roles.php:176
-msgid "Navigation Label"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:179
-#: inc/class-walker-nav-menu-edit-roles.php:182
-msgid "Title Attribute"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:186
-#: inc/class-walker-nav-menu-edit-roles.php:189
-msgid "Open link in a new tab"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:191
-#: inc/class-walker-nav-menu-edit-roles.php:194
-msgid "CSS Classes (optional)"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:197
-#: inc/class-walker-nav-menu-edit-roles.php:200
-msgid "Link Relationship (XFN)"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:203
-#: inc/class-walker-nav-menu-edit-roles.php:206
-msgid "Description"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:205
-#: inc/class-walker-nav-menu-edit-roles.php:208
-msgid "The description will be displayed in the menu if the current theme supports it."
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:217
-#: inc/class-walker-nav-menu-edit-roles.php:220
-msgid "Move"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:218
-#: inc/class-walker-nav-menu-edit-roles.php:221
-msgid "Up one"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:219
-#: inc/class-walker-nav-menu-edit-roles.php:222
-msgid "Down one"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:222
-#: inc/class-walker-nav-menu-edit-roles.php:225
-msgid "To the top"
-msgstr ""
-
-#. translators: %s is original menu item title.
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:229
-#: inc/class-walker-nav-menu-edit-roles.php:234
-#, php-format
-msgid "Original: %s"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:245
-#: inc/class-walker-nav-menu-edit-roles.php:249
-msgid "Remove"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles-4.5.php:252
-#: inc/class-walker-nav-menu-edit-roles.php:261
-msgid "Cancel"
-msgstr ""
-
-#: inc/class-walker-nav-menu-edit-roles.php:158
-#: inc/class-walker-nav-menu-edit-roles.php:160
-msgid "Edit Menu Item"
 msgstr ""
 
 #: inc/customizer.php:72
@@ -273,4 +172,9 @@ msgstr ""
 
 #: inc/customizer.php:89
 msgid "Target Roles"
+msgstr ""
+
+#: assets/js/blocks/settings.js:1
+#: src/blocks/editor/index.js:84
+msgid "Leave unchecked to target all logged in users."
 msgstr ""

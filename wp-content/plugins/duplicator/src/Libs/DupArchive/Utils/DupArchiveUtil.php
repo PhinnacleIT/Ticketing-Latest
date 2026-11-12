@@ -1,19 +1,20 @@
 <?php
 
-/**
- *
- * @package   Duplicator
- * @copyright (c) 2021, Snapcreek LLC
- */
-
 namespace Duplicator\Libs\DupArchive\Utils;
 
+use Duplicator\Libs\DupArchive\DupArchiveLoggerBase;
 use Duplicator\Libs\Snap\SnapUtil;
 
 class DupArchiveUtil
 {
-    public static $TRACE_ON = false;    //rodo rework this
-    public static $logger   = null;
+    /**
+     * @var bool
+     *
+     * @todo rework this
+     */
+    public static $TRACE_ON = false;
+    /** @var ?DupArchiveLoggerBase */
+    public static $logger;
 
     /**
      * get file list
@@ -23,9 +24,9 @@ class DupArchiveUtil
      *
      * @return string[]
      */
-    public static function expandFiles($base_dir, $recurse)
+    public static function expandFiles($base_dir, $recurse): array
     {
-        $files = array();
+        $files = [];
 
         foreach (scandir($base_dir) as $file) {
             if (($file == '.') || ($file == '..')) {
@@ -35,7 +36,7 @@ class DupArchiveUtil
             $file = "{$base_dir}/{$file}";
 
             if (is_file($file)) {
-                $files [] = $file;
+                $files[] = $file;
             } elseif (is_dir($file) && $recurse) {
                 $files = array_merge($files, self::expandFiles($file, $recurse));
             }
@@ -52,9 +53,9 @@ class DupArchiveUtil
      *
      * @return string[]
      */
-    public static function expandDirectories($base_dir, $recurse)
+    public static function expandDirectories($base_dir, $recurse): array
     {
-        $directories = array();
+        $directories = [];
 
         foreach (scandir($base_dir) as $candidate) {
             if (($candidate == '.') || ($candidate == '..')) {
@@ -76,56 +77,45 @@ class DupArchiveUtil
     /**
      * Write $s in log
      *
-     * @param string  $s                   log string
-     * @param boolean $flush               if true flosh name
-     * @param string  $callingFunctionName function has called log
+     * @param string  $s     log string
+     * @param boolean $flush if true flosh name
      *
      * @return void
      */
-    public static function log($s, $flush = false, $callingFunctionName = null)
+    public static function log($s, $flush = false): void
     {
         if (self::$logger != null) {
-            if ($callingFunctionName === null) {
-                $callingFunctionName = SnapUtil::getCallingFunctionName();
-            }
-
-            self::$logger->log($s, $flush, $callingFunctionName);
+            self::$logger->log($s, $flush);
         } else {
-         //   throw new Exception('Logging object not initialized');
+            //   throw new Exception('Logging object not initialized');
         }
     }
 
     /**
      * Write trace log
      *
-     * @param string  $s                   log string
-     * @param boolean $flush               if true flosh name
-     * @param string  $callingFunctionName function has called log
+     * @param string  $s     log string
+     * @param boolean $flush if true flosh name
      *
      * @return void
      */
-    public static function tlog($s, $flush = false, $callingFunctionName = null)
+    public static function tlog($s, $flush = false): void
     {
         if (self::$TRACE_ON) {
-            if ($callingFunctionName === null) {
-                $callingFunctionName = SnapUtil::getCallingFunctionName();
-            }
-
-            self::log("####{$s}", $flush, $callingFunctionName);
+            self::log("####{$s}", $flush);
         }
     }
 
     /**
      * Write object in trace log
      *
-     * @param string  $s                   log string
-     * @param mixed   $o                   value to write in log
-     * @param boolean $flush               if true flosh name
-     * @param string  $callingFunctionName function has called log
+     * @param string  $s     log string
+     * @param mixed   $o     value to write in log
+     * @param boolean $flush if true flosh name
      *
      * @return void
      */
-    public static function tlogObject($s, $o, $flush = false, $callingFunctionName = null)
+    public static function tlogObject($s, $o, $flush = false): void
     {
         if (is_object($o)) {
             $o = get_object_vars($o);
@@ -133,33 +123,25 @@ class DupArchiveUtil
 
         $ostring = print_r($o, true);
 
-        if ($callingFunctionName === null) {
-            $callingFunctionName = SnapUtil::getCallingFunctionName();
-        }
 
-        self::tlog($s, $flush, $callingFunctionName);
-        self::tlog($ostring, $flush, $callingFunctionName);
+        self::tlog($s, $flush);
+        self::tlog($ostring, $flush);
     }
 
     /**
      * Write object in log
      *
-     * @param string  $s                   log string
-     * @param mixed   $o                   value to write in log
-     * @param boolean $flush               if true flosh name
-     * @param string  $callingFunctionName function has called log
+     * @param string  $s     log string
+     * @param mixed   $o     value to write in log
+     * @param boolean $flush if true flosh name
      *
      * @return void
      */
-    public static function logObject($s, $o, $flush = false, $callingFunctionName = null)
+    public static function logObject($s, $o, $flush = false): void
     {
         $ostring = print_r($o, true);
 
-        if ($callingFunctionName === null) {
-            $callingFunctionName = SnapUtil::getCallingFunctionName();
-        }
-
-        self::log($s, $flush, $callingFunctionName);
-        self::log($ostring, $flush, $callingFunctionName);
+        self::log($s, $flush);
+        self::log($ostring, $flush);
     }
 }

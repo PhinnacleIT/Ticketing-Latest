@@ -1,18 +1,18 @@
 <?php
 
-/**
- *
- * @package templates/default
- */
+
 
 defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-/* Variables */
-/* @var $testResult int */
-/* @var $importPage string|false */
-/* @var $recoveryPage string|false */
-/* @var $recoveryIsOutToDate bool */
-/* @var $recoveryPackageLife int */
+/**
+ * Variables
+ *
+ * @var int $testResult
+ * @var string|false $importPage
+ * @var string|false $recoveryPage
+ * @var bool $recoveryIsOutToDate
+ * @var int $recoveryPackageLife
+ */
 
 switch ($testResult) {
     case DUPX_Validation_test_recovery::LV_GOOD:
