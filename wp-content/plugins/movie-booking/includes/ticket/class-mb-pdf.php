@@ -12,6 +12,7 @@ if ( ! class_exists( 'MB_PDF' ) ) {
 
 			$ticket = array();
 
+			$movie_id 				= get_post_meta( $ticket_id, $prefix . 'movie_id', true );
 			$movie_name 			= get_post_meta( $ticket_id, $prefix . 'movie_name', true );
 			$room_id 				= get_post_meta( $ticket_id, $prefix . 'room_id', true );
 			$qr_code 				= get_post_meta( $ticket_id, $prefix . 'qr_code', true );
@@ -85,7 +86,26 @@ if ( ! class_exists( 'MB_PDF' ) ) {
 			$attach_file = '';
 
 			ob_start();
-				mb_get_template( 'pdf/template.php', array( 'ticket' => $ticket ) );
+
+				$template_name = 'pdf/template.php';
+				$template_candidates = array();
+
+				if ( absint( $movie_id ) && absint( $room_id ) ) {
+					$template_candidates[] = 'template' . absint( $movie_id ) . '_' . absint( $room_id ) . '.php';
+				}
+
+				if ( absint( $room_id ) ) {
+					$template_candidates[] = 'template' . absint( $room_id ) . '.php';
+				}
+
+				foreach ( $template_candidates as $template_candidate ) {
+					if ( locate_template( array( 'ovamb-templates/pdf/' . $template_candidate ) ) ) {
+						$template_name = 'pdf/' . $template_candidate;
+						break;
+					}
+				}
+
+				mb_get_template( $template_name, array( 'ticket' => $ticket ) );
 				$html = ob_get_contents();
 			ob_get_clean();
 
