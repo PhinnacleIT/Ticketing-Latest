@@ -21,7 +21,7 @@ if ( ! class_exists( 'MB_Assets' ) ) {
             }
             
             /* Frontend JS */
-            wp_enqueue_script( 'mb_frontend', MB_PLUGIN_URI.'assets/js/frontend/script.min.js', array('jquery'), false, true );
+            wp_enqueue_script( 'mb_frontend', MB_PLUGIN_URI.'assets/js/frontend/script.min.js', array('jquery'), filemtime( MB_PLUGIN_PATH.'assets/js/frontend/script.min.js' ), true );
             wp_localize_script( 'mb_frontend', 'ajax_object', array(
                 'ajax_url'      => admin_url('admin-ajax.php'),
                 'ajax_nonce'    => wp_create_nonce( apply_filters( 'mb_frontend_ajax_security', 'ajax_nonce_mb' ) ),
