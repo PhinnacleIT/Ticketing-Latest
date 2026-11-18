@@ -52,12 +52,14 @@ class PackInstaller extends AbstractJsonSerializable
     const INSTALLER_SERVER_EXTENSION                      = '.php.bak';
     const DEFAULT_INSTALLER_FILE_NAME_WITHOUT_HASH        = 'installer.php';
     const DEFAULT_INSTALLER_BACKUP_FILE_NAME_WITHOUT_HASH = 'installer-backup.php';
-    const CONFIG_ORIG_FILE_FOLDER_PREFIX                  = 'source_site_';
-    const CONFIG_ORIG_FILE_USERINI_ID                     = 'userini';
-    const CONFIG_ORIG_FILE_HTACCESS_ID                    = 'htaccess';
-    const CONFIG_ORIG_FILE_WPCONFIG_ID                    = 'wpconfig';
-    const CONFIG_ORIG_FILE_PHPINI_ID                      = 'phpini';
-    const CONFIG_ORIG_FILE_WEBCONFIG_ID                   = 'webconfig';
+    /** @var string Suffix of the per-build temporary folder of the shell zip installer files, after the name hash */
+    const EXTRAS_FOLDER_SUFFIX           = '_extras';
+    const CONFIG_ORIG_FILE_FOLDER_PREFIX = 'source_site_';
+    const CONFIG_ORIG_FILE_USERINI_ID    = 'userini';
+    const CONFIG_ORIG_FILE_HTACCESS_ID   = 'htaccess';
+    const CONFIG_ORIG_FILE_WPCONFIG_ID   = 'wpconfig';
+    const CONFIG_ORIG_FILE_PHPINI_ID     = 'phpini';
+    const CONFIG_ORIG_FILE_WEBCONFIG_ID  = 'webconfig';
     /**
      * Extra file id of the per table dump folder: it selects the uncompressed
      * storage and the per file integrity expansion of the folder entry
@@ -167,7 +169,7 @@ class PackInstaller extends AbstractJsonSerializable
      *
      * @return array<string,mixed>
      */
-    public function __serialize() // phpcs:ignore PHPCompatibility.FunctionNameRestrictions.NewMagicMethods.__serializeFound
+    public function __serialize()
     {
         $data = get_object_vars($this);
         foreach (['origFileManger', 'Package', 'configTransformer'] as $removeProp) {
@@ -304,6 +306,10 @@ HEADER;
         $dupExpanderCoder .= SnapCode::getSrcClassCode($bootPath . 'BootstrapUtils.php') . "\n";
         $dupExpanderCoder .= SnapCode::getSrcClassCode($bootPath . 'BootstrapView.php') . "\n";
         $dupExpanderCoder .= SnapCode::getSrcClassCode($bootPath . 'LogHandler.php') . "\n";
+        $cliPath           = DUPLICATOR____PATH . '/installer/dup-installer/src/Cli/';
+        $dupExpanderCoder .= SnapCode::getSrcClassCode($cliPath . 'CliInstallation.php') . "\n";
+        $dupExpanderCoder .= SnapCode::getSrcClassCode($cliPath . 'CliEnvironment.php') . "\n";
+        $dupExpanderCoder .= SnapCode::getSrcClassCode($cliPath . 'CliBootstrap.php') . "\n";
         $dupExpanderCoder .= SnapCode::getSrcClassCode(DUPLICATOR____PATH . '/installer/dup-installer/src/Utils/SecureCsrf.php') . "\n";
 
         if ($this->Package->requireBuildOptions()->getArchiveEngine() == PackageArchive::BUILD_MODE_DUP_ARCHIVE) {
@@ -340,14 +346,10 @@ HEADER;
         $installer_contents = str_replace($search_array, $replace_array, $installer_contents);
         $expectedLen        = strlen($installer_contents);
 
-        error_clear_last();
-        $written = file_put_contents($installer_filepath, $installer_contents);
+        $written = SnapIO::callWithPhpErrorCapture(static fn() => file_put_contents($installer_filepath, $installer_contents));
 
         if ($written === false || $written < $expectedLen) {
-            $error  = error_get_last();
-            $reason = $error !== null ? $error['message'] : 'unknown';
-            DupLog::error("Installer file write failed", "Path: {$installer_filepath}, reason: {$reason}");
-            self::throwWriteException('installer file', $reason);
+            self::throwWriteException('installer file', $installer_filepath);
         }
 
         $this->Size = SnapIO::filesize($installer_filepath);
@@ -443,14 +445,10 @@ HEADER;
             $json = JsonSerialize::serialize($ac, JSON_PRETTY_PRINT);
 
             $expectedLen = strlen($json);
-            error_clear_last();
-            $written = file_put_contents($archive_config_filepath, $json);
+            $written     = SnapIO::callWithPhpErrorCapture(static fn() => file_put_contents($archive_config_filepath, $json));
 
             if ($written === false || $written < $expectedLen) {
-                $error  = error_get_last();
-                $reason = $error !== null ? $error['message'] : 'unknown';
-                DupLog::error("Archive config write failed", "Path: {$archive_config_filepath}, reason: {$reason}");
-                self::throwWriteException('archive config file', $reason);
+                self::throwWriteException('archive config file', $archive_config_filepath);
             }
         } finally {
             if ($switched) {
@@ -629,6 +627,13 @@ HEADER;
             'sourcePath'  => DUPLICATOR____PATH . '/src/Libs/WpConfig',
             'archivePath' => 'dup-installer/libs/WpConfig',
             'id'          => 'lib-wpconfig',
+            'isArtifact'  => false,
+        ];
+
+        $result[] = [
+            'sourcePath'  => DUPLICATOR____PATH . '/src/Libs/SearchReplace',
+            'archivePath' => 'dup-installer/libs/SearchReplace',
+            'id'          => 'lib-searchreplace',
             'isArtifact'  => false,
         ];
 
@@ -1223,13 +1228,18 @@ HEADER;
     }
 
     /**
-     * Add extra files in shell zip
+     * Create the temporary folder of this build with the installer files to add through shell zip
      *
-     * @return void
+     * Each build has its own folder, so it never depends on what another build left behind. It is named like the
+     * other temporary files of the Backup, so the cleanup of a failed or deleted Backup removes it too.
+     *
+     * @return string The folder path, with a trailing slash
+     *
+     * @throws DupliException When the folder can't be prepared
      */
-    private function shellZipAddExtra(): void
+    private function prepareShellZipExtrasFolder(): string
     {
-        $tmpExtraFolder = SnapIO::safePath(DUPLICATOR_SSDIR_PATH_TMP) . '/extras/';
+        $tmpExtraFolder = SnapIO::safePath(DUPLICATOR_SSDIR_PATH_TMP) . '/' . $this->Package->getNameHash() . self::EXTRAS_FOLDER_SUFFIX . '/';
 
         if (file_exists($tmpExtraFolder)) {
             if (SnapIO::rrmdir($tmpExtraFolder) === false) {
@@ -1261,10 +1271,6 @@ HEADER;
             }
 
             if (!SnapIO::rcopy($extraItem['sourcePath'], $destPath)) {
-                $error = error_get_last();
-                if (SnapIO::isDiskFullError($error !== null ? $error['message'] : '')) {
-                    throw DupliException::diskFull();
-                }
                 throw DupliException::fromLastError(
                     "Error copying an installer file to the temporary folder.\n" .
                     'From ' . $extraItem['sourcePath'] . ' to ' . $destPath,
@@ -1273,6 +1279,18 @@ HEADER;
                 );
             }
         }
+
+        return $tmpExtraFolder;
+    }
+
+    /**
+     * Add extra files in shell zip
+     *
+     * @return void
+     */
+    private function shellZipAddExtra(): void
+    {
+        $tmpExtraFolder = $this->prepareShellZipExtrasFolder();
 
         //-- STAGE 1 ADD
         $params = Shell::getCompressionParam($this->Package->requireBuildOptions()->isCompressionEnabled());
@@ -1306,6 +1324,9 @@ HEADER;
 
             if (SnapIO::isDiskFullError($output)) {
                 throw DupliException::diskFull();
+            }
+            if (SnapIO::isFileTooLargeError($output)) {
+                throw DupliException::fileTooLarge();
             }
 
             throw new DupliException(
@@ -1482,18 +1503,18 @@ HEADER;
     }
 
     /**
+     * Logs and throws the write failure with the reason of the last PHP error. Call it right after the failed write:
+     * the failure is built before the log write, which could replace that error.
+     *
      * @param string $fileLabel Short label for the file that failed
-     * @param string $reason    The error message from error_get_last()
+     * @param string $path      Path of the file that failed
      *
      * @return never
      */
-    private static function throwWriteException(string $fileLabel, string $reason): void
+    private static function throwWriteException(string $fileLabel, string $path): void
     {
-        if (SnapIO::isDiskFullError($reason)) {
-            throw DupliException::diskFull();
-        }
-
-        throw new DupliException(
+        $error     = error_get_last();
+        $exception = DupliException::fromLastError(
             "Installer file creation failed: couldn't write the " . $fileLabel . '.',
             DupliException::CODE_INSTALLER_BUILD_FAILED,
             __(
@@ -1501,5 +1522,10 @@ HEADER;
                 'duplicator'
             )
         );
+        DupLog::error(
+            "Installer file write failed",
+            "File: {$fileLabel}, path: {$path}, reason: " . ($error !== null ? $error['message'] : 'unknown')
+        );
+        throw $exception;
     }
 }

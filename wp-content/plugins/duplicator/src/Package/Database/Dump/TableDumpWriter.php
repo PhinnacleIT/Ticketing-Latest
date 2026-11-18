@@ -29,7 +29,7 @@ class TableDumpWriter
     private TableDumpCheckpoint $checkpoint;
     /** @var ?callable called after every written row, any rate limiting belongs to the caller */
     private $onProgress;
-    /** @var mysqli|resource */
+    /** @var mysqli */
     private $dbConn;
     private int $querySizeLimit;
     private int $throttleDelayInUs;
@@ -41,7 +41,7 @@ class TableDumpWriter
      *
      * @param TableDumpCheckpoint $checkpoint        position inside the table being written
      * @param ?callable           $onProgress        called after every written row, null for none; any rate limiting belongs to the caller
-     * @param mysqli|resource     $dbConn            database connection used to read the rows
+     * @param mysqli              $dbConn            database connection used to read the rows
      * @param int                 $querySizeLimit    max size in bytes of a single INSERT statement
      * @param int                 $throttleDelayInUs per row load reduction delay in microseconds, waited once per read page, 0 to disable
      */
@@ -116,11 +116,11 @@ class TableDumpWriter
     /**
      * Write the rows of one read page
      *
-     * @param resource               $handle       open file handle the rows are appended to
-     * @param mysqli_result|resource $result       result set of the page
-     * @param string                 $table        table name
-     * @param string|string[]|false  $indexColumns unique index columns of the table, false if it has none
-     * @param ?float                 $deadline     microtime at which the page is abandoned, null for no deadline
+     * @param resource              $handle       open file handle the rows are appended to
+     * @param mysqli_result         $result       result set of the page
+     * @param string                $table        table name
+     * @param string|string[]|false $indexColumns unique index columns of the table, false if it has none
+     * @param ?float                $deadline     microtime at which the page is abandoned, null for no deadline
      *
      * @return bool true if the deadline stopped the page before its last row
      */

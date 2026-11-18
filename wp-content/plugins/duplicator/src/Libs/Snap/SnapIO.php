@@ -344,7 +344,7 @@ class SnapIO
 
         if (!is_resource($file_handle)) {
             if ($throwOnError) {
-                throw new Exception("Error opening $filepath");
+                throw SnapException::fromLastError("Error opening $filepath");
             } else {
                 return false;
             }
@@ -493,12 +493,12 @@ class SnapIO
                 throw SnapException::fromLastError('Error writing to file.');
             }
             $written += $fwResult;
-        }
-
-        if ($written != strlen($content)) {
-            throw SnapException::fromLastError(
-                'Error writing all bytes to file. Written ' . $written . ' of ' . strlen($content) . ' bytes.'
-            );
+            // Throw on the short piece itself: the next write would clear its PHP error
+            if ($fwResult < strlen($piece)) {
+                throw SnapException::fromLastError(
+                    'Error writing all bytes to file. Written ' . $written . ' of ' . strlen($content) . ' bytes.'
+                );
+            }
         }
 
         return $written;
@@ -549,10 +549,26 @@ class SnapIO
      */
     public static function atomicWrite(array $files): bool
     {
-        if (empty($files)) {
+        try {
+            self::atomicWriteOrThrow($files);
             return true;
+        } catch (Throwable $e) {
+            return false;
         }
+    }
 
+    /**
+     * Same as atomicWrite(), but a failure throws with the PHP error that explains it
+     * instead of returning false. A rename failure is thrown after the remaining renames.
+     *
+     * @param array<string, string> $files Map of destination path => contents
+     *
+     * @return void
+     *
+     * @throws Exception The first failure, with its PHP error as reason
+     */
+    public static function atomicWriteOrThrow(array $files): void
+    {
         $tmpByDest = [];
         try {
             foreach ($files as $dest => $content) {
@@ -560,32 +576,34 @@ class SnapIO
 
                 $handle = self::fopen($tmpPath, 'w', false);
                 if ($handle === false) {
-                    throw new Exception('Could not open temp file for atomic write: ' . $tmpPath);
+                    throw SnapException::fromLastError('Could not open temp file for atomic write: ' . $tmpPath);
                 }
                 $tmpByDest[$dest] = $tmpPath;
 
                 self::fwriteChunked($handle, $content);
 
-                if (self::closeSync($handle) === false) {
-                    throw new Exception('Could not sync temp file for atomic write: ' . $tmpPath);
+                if (self::callWithPhpErrorCapture(static fn(): bool => self::closeSync($handle)) === false) {
+                    throw SnapException::fromLastError('Could not sync temp file for atomic write: ' . $tmpPath);
                 }
             }
         } catch (Throwable $e) {
             foreach ($tmpByDest as $tmpPath) {
                 unlink($tmpPath);
             }
-            return false;
+            throw $e;
         }
 
-        $allRenamed = true;
+        $renameFailure = null;
         foreach ($tmpByDest as $dest => $tmpPath) {
-            if (rename($tmpPath, $dest) === false) {
+            if (self::callWithPhpErrorCapture(static fn(): bool => rename($tmpPath, $dest)) === false) {
+                $renameFailure = $renameFailure ?? SnapException::fromLastError('Could not rename temp file for atomic write: ' . $tmpPath);
                 unlink($tmpPath);
-                $allRenamed = false;
             }
         }
 
-        return $allRenamed;
+        if ($renameFailure !== null) {
+            throw $renameFailure;
+        }
     }
 
     /**
@@ -849,6 +867,8 @@ class SnapIO
 
     /**
      * File put content, thorw exception on failure
+     * The write is attempted without an is_writable() check, which can report a writable
+     * folder as not writable: a failed write throws with the PHP error that explains it.
      *
      * @param string $filename file path
      * @param mixed  $data     The data to write. Can be either a string, an array or a stream resource.
@@ -863,15 +883,11 @@ class SnapIO
         if (!is_dir($dirFile)) {
             throw new Exception('FILE ERROR: put_content for file ' . $filename . ' failed [dir ' . $dirFile . ' doesn\'t exist]');
         }
-        if (!is_writable($dirFile)) {
-            throw new Exception('FILE ERROR: put_content for file ' . $filename . ' failed [dir ' . $dirFile . ' exists but isn\'t writable]');
-        }
-        $realFileName = $dirFile . basename($filename);
-        if (file_exists($realFileName) && !is_writable($realFileName)) {
-            throw new Exception('FILE ERROR: put_content for file ' . $filename . ' failed [file exist ' . $realFileName . ' but isn\'t writable');
-        }
-        if (file_put_contents($filename, $data) === false) {
-            throw new Exception('FILE ERROR: put_content for file ' . $filename . ' failed [Couldn\'t write data to ' . $realFileName . ']');
+        $result = self::callWithPhpErrorCapture(static function () use ($filename, $data) {
+            return file_put_contents($filename, $data);
+        });
+        if ($result === false) {
+            throw SnapException::fromLastError("FILE ERROR: put_content failed.\nFile: " . $filename);
         }
         return true;
     }
@@ -901,6 +917,21 @@ class SnapIO
 
         // ENOSPC and EDQUOT: the errno is matched too because the description can be localized
         return preg_match('/errno=(28|122)\b/', $errorMessage) === 1;
+    }
+
+    /**
+     * Check whether an error message indicates a write beyond the maximum file size allowed by the system.
+     *
+     * Works with both PHP error strings and shell command output. The errno is matched too because
+     * the description can be localized.
+     *
+     * @param string $errorMessage The error text to inspect
+     *
+     * @return bool
+     */
+    public static function isFileTooLargeError(string $errorMessage): bool
+    {
+        return stripos($errorMessage, 'File too large') !== false || preg_match('/errno=27\b/', $errorMessage) === 1;
     }
 
     /**
@@ -1110,7 +1141,8 @@ class SnapIO
             if (!function_exists('mkdir')) {
                 return false;
             }
-            if (!@mkdir($path, 0777, $recursive)) {
+            // Captured so a caller can read the reason with fromLastError()
+            if (!self::callWithPhpErrorCapture(static fn(): bool => mkdir($path, 0777, $recursive))) {
                 return false;
             }
         }

@@ -53,11 +53,12 @@ class DUPX_CTRL
     }
 
     /**
-     * Main controller
+     * Log the request actions, set the template and, on the first request of an installation, the parameters of the
+     * first step and the log header; the command line installer runs it too
      *
      * @return void
      */
-    public function mainController(): void
+    public static function initRequest(): void
     {
         $paramsManager = PrmMng::getInstance();
         $ctrlAction    = $paramsManager->getValue(PrmMng::PARAM_CTRL_ACTION);
@@ -68,7 +69,7 @@ class DUPX_CTRL
             Log::info('STEP ACTION: ' . Log::v2str($stepAction));
         }
         Log::info('---------------' . "\n", Log::LV_DETAILED);
-        DUPX_Template::getInstance()->setTemplate(PrmMng::getInstance()->getValue(PrmMng::PARAM_TEMPLATE));
+        DUPX_Template::getInstance()->setTemplate($paramsManager->getValue(PrmMng::PARAM_TEMPLATE));
         if (Bootstrap::isInit()) {
             if (!DUPX_Ctrl_Params::setParamsStep0()) {
                 Log::info('PARAMS AREN\'T VALID', Log::LV_DETAILED);
@@ -76,6 +77,19 @@ class DUPX_CTRL
             }
             DUPX_Ctrl_S0::stepHeaderLog();
         }
+    }
+
+    /**
+     * Main controller
+     *
+     * @return void
+     */
+    public function mainController(): void
+    {
+        $paramsManager = PrmMng::getInstance();
+        $ctrlAction    = $paramsManager->getValue(PrmMng::PARAM_CTRL_ACTION);
+        $stepAction    = $paramsManager->getValue(PrmMng::PARAM_STEP_ACTION);
+        self::initRequest();
 
         if (
             $ctrlAction !== 'help' &&

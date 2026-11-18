@@ -53,14 +53,10 @@ final class TableDumpCheckpoint
             return;
         }
 
+        // No is_writable() check on the folder: it can report a writable folder as not writable,
+        // so the first save() creates the file and fails with the PHP error that explains it
         if (file_exists($storeFile)) {
             $this->load();
-        } elseif (!is_writable(dirname($storeFile))) {
-            throw new DupliException(
-                'Can\'t set database progress file',
-                DupliException::CODE_DB_PROGRESS_FILE_FAILED,
-                __('Could not create the database export progress file. Check the backup log for details.', 'duplicator')
-            );
         }
     }
 
@@ -359,10 +355,6 @@ final class TableDumpCheckpoint
 
         $writeResult = SnapIO::callWithPhpErrorCapture(fn () => file_put_contents($this->storeFile, $encoded));
         if ($writeResult !== strlen($encoded)) {
-            $error = error_get_last();
-            if (SnapIO::isDiskFullError($error !== null ? $error['message'] : '')) {
-                throw DupliException::diskFull();
-            }
             throw DupliException::fromLastError(
                 'Can\'t write database store progress file',
                 DupliException::CODE_DB_PROGRESS_FILE_FAILED,

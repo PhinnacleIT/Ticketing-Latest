@@ -7,6 +7,7 @@ use Duplicator\Core\Exceptions\DupliException;
 use Duplicator\Core\Views\TplMng;
 use Duplicator\Package\AbstractPackage;
 use Duplicator\Package\PackageUtils;
+use Duplicator\Package\Storage\UploadInfo;
 use Duplicator\Package\Archive\PackageArchive;
 use Duplicator\Package\Create\BuildComponents;
 use Duplicator\Package\DupPackage;
@@ -127,6 +128,18 @@ class LogEventBackupCreate extends AbstractLogEvent
         $this->data['execType']          = PackageUtils::getTypeString($package);
         $this->data['storageNames']      = $this->getStorageNames($package);
         $this->data['clientSideKickoff'] = $package->isClientSideKickoff();
+        if ($this->subType === self::SUB_TYPE_END) {
+            $this->data['failedTransfers'] = array_map(
+                fn(UploadInfo $uploadInfo): array => [
+                    'storage' => $uploadInfo->getStorage()->getName(),
+                    'reason'  => $uploadInfo->getFailureReason(),
+                ],
+                $package->getInterruptedTransfers()
+            );
+            if ($this->data['failedTransfers'] !== []) {
+                $this->severity = self::SEVERITY_WARNING;
+            }
+        }
 
         $requester = $this->getRequesterName($package);
         if ($requester !== null) {
@@ -370,16 +383,10 @@ class LogEventBackupCreate extends AbstractLogEvent
             'total'     => 0,
         ];
 
-        if (is_array($package->upload_infos)) {
-            foreach ($package->upload_infos as $uInfo) {
-                // Count only uploads (skip downloads)
-                if ($uInfo->isDownloadFromRemote()) {
-                    continue;
-                }
-                $result['total']++;
-                if ($uInfo->hasCompleted(true)) {
-                    $result['completed']++;
-                }
+        foreach ($package->getLatestUploadInfos(true) as $uInfo) {
+            $result['total']++;
+            if ($uInfo->hasCompleted(true)) {
+                $result['completed']++;
             }
         }
 
@@ -408,7 +415,7 @@ class LogEventBackupCreate extends AbstractLogEvent
     }
 
     /**
-     * Get storage names
+     * Get storage names: the storages that hold a copy on the end event, the storages the Backup is sent to otherwise
      *
      * @param AbstractPackage $package Package
      *
@@ -416,8 +423,22 @@ class LogEventBackupCreate extends AbstractLogEvent
      */
     private function getStorageNames(AbstractPackage $package): array
     {
-        $storages = $package->getStorages();
+        $storages = $this->subType === self::SUB_TYPE_END ? $package->getValidStorages() : $package->getStorages();
         return array_map(fn($storage): string => $storage->getName(), $storages);
+    }
+
+    /**
+     * Get the failed transfers of the end event as one line
+     *
+     * @return string Empty when no transfer failed
+     */
+    private function getFailedTransfersText(): string
+    {
+        $items = array_map(
+            fn(array $failed): string => $failed['storage'] . ' (' . $failed['reason'] . ')',
+            $this->data['failedTransfers'] ?? []
+        );
+        return implode('; ', $items);
     }
 
     /**
@@ -553,6 +574,16 @@ class LogEventBackupCreate extends AbstractLogEvent
     }
 
     /**
+     * Backup steps are logged by whichever request runs them, so the requester comes from the Backup instead
+     *
+     * @return bool
+     */
+    protected static function recordsVia(): bool
+    {
+        return false;
+    }
+
+    /**
      * Return short description
      *
      * @return string
@@ -618,7 +649,7 @@ class LogEventBackupCreate extends AbstractLogEvent
                 $storages = count($this->data['storageNames'] ?? []);
 
                 if ($sizeText && $storages > 0) {
-                    return sprintf(
+                    $text = sprintf(
                         _n(
                             'Backup Completed (%1$s, %2$d storage)',
                             'Backup Completed (%1$s, %2$d storages)',
@@ -629,9 +660,19 @@ class LogEventBackupCreate extends AbstractLogEvent
                         $storages
                     );
                 } elseif ($sizeText) {
-                    return sprintf(__('Backup Completed (%s)', 'duplicator'), $sizeText);
+                    $text = sprintf(__('Backup Completed (%s)', 'duplicator'), $sizeText);
+                } else {
+                    $text = __('Backup Completed', 'duplicator');
                 }
-                return __('Backup Completed', 'duplicator');
+
+                if (($failedText = $this->getFailedTransfersText()) === '') {
+                    return $text;
+                }
+                return sprintf(
+                    _x('%1$s. Transfer failed: %2$s', '1: backup completed text, 2: storage names with the reasons', 'duplicator'),
+                    $text,
+                    SnapString::truncateString($failedText, self::ERROR_SHORT_DESC_LENGTH)
+                );
             default:
                 return __('Backup Creation', 'duplicator');
         }
@@ -769,6 +810,14 @@ class LogEventBackupCreate extends AbstractLogEvent
                 <strong><?php esc_html_e('Storages:', 'duplicator'); ?></strong>
                 <span class="dup-log-type">
                     <?php echo esc_html(implode(', ', $this->data['storageNames'] ?? [])); ?>
+                </span>
+            </div>
+            <?php endif; ?>
+            <?php if (($failedTransfersText = $this->getFailedTransfersText()) !== '') : ?>
+            <div class="dup-log-type-wrapper">
+                <strong><?php esc_html_e('Failed transfers:', 'duplicator'); ?></strong>
+                <span class="dup-log-type">
+                    <?php echo esc_html($failedTransfersText); ?>
                 </span>
             </div>
             <?php endif; ?>

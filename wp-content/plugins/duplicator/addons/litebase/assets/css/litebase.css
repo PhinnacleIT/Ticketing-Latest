@@ -1704,3 +1704,13 @@ button styles.
 .dup-styles #dupli-litebase-media-cleanup-scan .dupli-dismissable-dismiss:hover {
   color: #1d2327;
 }
+.dup-styles .dupli-tool-ai .dupli-tool-ai-abilities .dupli-litebase-pro-label {
+  background: rgb(231.5, 245.4, 238.9);
+  border-radius: 3px;
+  color: #178a52;
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 6px;
+  padding: 0.15rem 0.5rem;
+}

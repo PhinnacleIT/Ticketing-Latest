@@ -7,6 +7,7 @@
 namespace Duplicator\Installer\Core;
 
 use Duplicator\Installer\Bootstrap\BootstrapRunner;
+use Duplicator\Installer\Cli\CliInstaller;
 use Duplicator\Installer\Utils\Log\Log;
 use Duplicator\Installer\Core\Bootstrap;
 use Duplicator\Installer\Core\Descriptors\ArchiveConfig;
@@ -189,6 +190,11 @@ class Security
      */
     public function check(): bool
     {
+        // From the command line the shell access is the authorization: there is no request token to check
+        if (CliInstaller::isActive()) {
+            return true;
+        }
+
         try {
             // check if current package hash is equal at bootloader package hash
             if ($this->packageHash !== Bootstrap::getPackageHash()) {
@@ -261,10 +267,8 @@ class Security
                 throw new Exception('Security Check Validation - No Token Found');
             }
         } catch (Exception $e) {
-            if (function_exists('error_clear_last')) {
-                // comment error_clear_last if you want see te exception html on shutdown
-                error_clear_last(); // phpcs:ignore PHPCompatibility.FunctionUse.NewFunctions.error_clear_lastFound
-            }
+            // comment error_clear_last if you want see te exception html on shutdown
+            error_clear_last();
 
             Log::logException($e, Log::LV_DEFAULT, 'SECURITY CHECK: ');
             dupxTplRender('page-security-error', [
@@ -306,6 +310,10 @@ class Security
      */
     public function getSecurityType(): string
     {
+        if (CliInstaller::isActive()) {
+            return self::SECURITY_NONE;
+        }
+
         if (PrmMng::getInstance()->getValue(PrmMng::PARAM_SECURE_OK) == true) {
             return self::SECURITY_NONE;
         }

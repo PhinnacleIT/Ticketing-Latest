@@ -116,7 +116,6 @@ class DUPX_Validation_manager
         $this->tests[] = new DUPX_Validation_test_managed_supported(self::CAT_GENERAL);
         $this->tests[] = new DUPX_Validation_test_siteground(self::CAT_GENERAL);
         $this->tests[] = new DUPX_Validation_test_multisite_subfolder(self::CAT_GENERAL);
-        $this->tests[] = new DUPX_Validation_test_staging_sites(self::CAT_GENERAL);
         $this->tests[] = new DUPX_Validation_test_addon_sites(self::CAT_GENERAL);
         $this->tests[] = new DUPX_Validation_test_wordfence(self::CAT_GENERAL);
         $this->tests[] = new DUPX_Validation_test_managed_tprefix(self::CAT_GENERAL);
@@ -142,6 +141,9 @@ class DUPX_Validation_manager
         $this->tests[] = new DUPX_Validation_test_cpnl_new_user(self::CAT_DATABASE);
         $this->tests[] = new DUPX_Validation_test_db_host_name(self::CAT_DATABASE);
         $this->tests[] = new DUPX_Validation_test_db_connection(self::CAT_DATABASE);
+        // A general test, run after the connection test: it reads the destination tables, so it is skipped
+        // with the other database tests when the connection fails
+        $this->tests[] = new DUPX_Validation_test_staging_sites(self::CAT_GENERAL);
         $this->tests[] = new DUPX_Validation_test_db_version(self::CAT_DATABASE);
         $this->tests[] = new DUPX_Validation_test_db_create(self::CAT_DATABASE);
         $this->tests[] = new DUPX_Validation_test_db_supported_engine(self::CAT_DATABASE);

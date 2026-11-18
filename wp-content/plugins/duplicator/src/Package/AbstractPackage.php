@@ -902,18 +902,14 @@ abstract class AbstractPackage
             );
         }
 
-        //FILTER_VALIDATE_DOMAIN throws notice message on PHP 5.6
-        if (defined('FILTER_VALIDATE_DOMAIN')) {
-            // phpcs:ignore PHPCompatibility.Constants.NewConstants.filter_validate_domainFound
-            $validator->filterVar($this->Installer->OptsDBHost, FILTER_VALIDATE_DOMAIN, [
-                'valkey'   => 'OptsDBHost',
-                'errmsg'   => __('MySQL Server Host: <b>%1$s</b> isn\'t a valid host', 'duplicator'),
-                'acc_vals' => [
-                    '',
-                    'localhost',
-                ],
-            ]);
-        }
+        $validator->filterVar($this->Installer->OptsDBHost, FILTER_VALIDATE_DOMAIN, [
+            'valkey'   => 'OptsDBHost',
+            'errmsg'   => __('MySQL Server Host: <b>%1$s</b> isn\'t a valid host', 'duplicator'),
+            'acc_vals' => [
+                '',
+                'localhost',
+            ],
+        ]);
 
         return $validator;
     }

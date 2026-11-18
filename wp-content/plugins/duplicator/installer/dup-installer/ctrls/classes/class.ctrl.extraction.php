@@ -341,6 +341,8 @@ class DUPX_Extraction extends AbstractJsonSerializable
      */
     public function runExtraction(): void
     {
+        // Each call is one chunk, also when the instance lives across calls as in the command line installer
+        $this->chunkStart = DUPX_U::getMicrotime();
         $this->beforeExtraction();
 
         switch ($this->archive_engine) {

@@ -20,6 +20,8 @@
  * [archive] to set the custom folder that contains the archive
  * the archive file name always comes from the embedded package hash, not from this value
  *      installer.php?archive=[archive folder]
+ *
+ * From the command line it installs in one run, asking the missing values only on a terminal: php installer.php --help
  */
 
 #@@DUP_INSTALLER_CLASSES_EXPANDER@@#
@@ -30,6 +32,7 @@ namespace {
     use Duplicator\Installer\Bootstrap\BootstrapUtils;
     use Duplicator\Installer\Bootstrap\BootstrapView;
     use Duplicator\Installer\Bootstrap\LogHandler;
+    use Duplicator\Installer\Cli\CliBootstrap;
 
     class InstallerBootstrapData {
         const ARCHIVE_FILENAME       = '@@ARCHIVE@@';
@@ -42,6 +45,11 @@ namespace {
 
     BootstrapUtils::phpVersionCheck(BootstrapRunner::MINIMUM_PHP_VERSION);
     BootstrapRunner::initSetValues();
+
+    // A shell run, never a web request served by the CLI binary
+    if (PHP_SAPI === 'cli' && !isset($_SERVER['REQUEST_METHOD'])) {
+        exit(CliBootstrap::run($_SERVER['argv'], InstallerBootstrapData::PACKAGE_HASH));
+    }
 
     $bootError = null;
     $view = '';

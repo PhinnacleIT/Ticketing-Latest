@@ -38,6 +38,9 @@ final class ParamDescMultisite implements DescriptorInterface
             ParamForm::TYPE_INT,
             ParamForm::FORM_TYPE_SELECT,
             [
+                'description'  => 'ID of the subsite to install as a single site, with install-type ' . InstState::TYPE_STANDALONE,
+                // A parameter of the command line for a multisite Backup only
+                'cliParam'     => fn(): bool => $archive_config->isNetwork(),
                 'default'      => -1,
                 'acceptValues' => [
                     self::class,

@@ -7,8 +7,6 @@
 namespace Duplicator\Controllers;
 
 use Duplicator\Models\GlobalEntity;
-use Duplicator\Utils\Logging\DupLog;
-use Duplicator\Utils\ActivityLog\SettingsChangeTracker;
 use Duplicator\Models\ActivityLog\LogEventSettingsChange;
 use Duplicator\Core\CapMng;
 use Duplicator\Core\Constants;
@@ -19,7 +17,6 @@ use Duplicator\Core\Controllers\SubMenuItem;
 use Duplicator\Core\Options\OptionsManager;
 use Duplicator\Core\Options\Rules\ArchiveEngineRule;
 use Duplicator\Core\Options\Rules\CompressionRule;
-use Duplicator\Core\Options\Rules\DbDumpEngineRule;
 use Duplicator\Core\Views\TplMng;
 use Duplicator\Libs\Shell\Shell;
 use Duplicator\Libs\Shell\ShellZipUtils;
@@ -30,11 +27,12 @@ use Duplicator\Package\ClientSideKick;
 use Duplicator\Utils\AsyncSetupActions;
 use Duplicator\Libs\WpUtils\WpDbUtils;
 use Duplicator\Models\DynamicGlobalEntity;
-use Duplicator\Models\StaticGlobal;
+use Duplicator\Models\Settings\BackupApiSettings;
+use Duplicator\Models\Settings\GeneralApiSettings;
+use Duplicator\Models\Settings\StorageApiSettings;
 use Duplicator\Utils\Logging\TraceLogMng;
 use Duplicator\Utils\Settings\MigrateSettings;
 use Duplicator\Utils\Settings\ServerThrottle;
-use Duplicator\Utils\UsageStatistics\StatsBootstrap;
 use Exception;
 
 class SettingsPageController extends AbstractMenuPageController
@@ -303,189 +301,42 @@ class SettingsPageController extends AbstractMenuPageController
      */
     public function saveGeneral(): array
     {
-        $result        = ['saveSuccess' => false];
-        $changesTraker = new SettingsChangeTracker();
-        $global        = GlobalEntity::getInstance();
-
-        // Track uninstall settings changes
-        $newUninstallSettings     = SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, 'uninstall_settings');
-        $currentUninstallSettings = StaticGlobal::getUninstallSettingsOption();
-        $changesTraker->addChange(
-            'uninstall_settings',
-            $currentUninstallSettings,
-            $newUninstallSettings,
-            $newUninstallSettings ? 'enabled' : 'disabled'
-        );
-        StaticGlobal::setUninstallSettingsOption($newUninstallSettings);
-
-        // Track uninstall packages changes
-        $newUninstallPackages     = SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, 'uninstall_packages');
-        $currentUninstallPackages = StaticGlobal::getUninstallPackageOption();
-        $changesTraker->addChange(
-            'uninstall_packages',
-            $currentUninstallPackages,
-            $newUninstallPackages,
-            $newUninstallPackages ? 'enabled' : 'disabled'
-        );
-        StaticGlobal::setUninstallPackageOption($newUninstallPackages);
-
-        // Track crypt option changes (persisted after saves succeed to keep hooks consistent)
-        $newCryptOption      = SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, 'crypt');
-        $currentCryptOption  = StaticGlobal::getCryptOption();
-        $cryptSettingChanged = ($newCryptOption !== $currentCryptOption);
-        $changesTraker->addChange(
-            'crypt_option',
-            $currentCryptOption,
-            $newCryptOption,
-            $newCryptOption ? 'enabled' : 'disabled'
-        );
-
-        // Track third party JS/CSS unhook changes
-        $newUnhookJs = SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, '_unhook_third_party_js');
-        $changesTraker->addChange(
-            GlobalEntity::UNHOOK_THIRD_PARTY_JS_KEY,
-            $global->shouldUnhookThirdPartyJs(),
-            $newUnhookJs,
-            $newUnhookJs ? 'enabled' : 'disabled'
-        );
-        $global->setUnhookThirdPartyJs($newUnhookJs, false);
-
-        $newUnhookCss = SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, '_unhook_third_party_css');
-        $changesTraker->addChange(
-            GlobalEntity::UNHOOK_THIRD_PARTY_CSS_KEY,
-            $global->shouldUnhookThirdPartyCss(),
-            $newUnhookCss,
-            $newUnhookCss ? 'enabled' : 'disabled'
-        );
-        $global->setUnhookThirdPartyCss($newUnhookCss);
-
-        // Track trace log mode changes
-        $newLoggingMode = SnapUtil::sanitizeStrictInput(SnapUtil::INPUT_REQUEST, '_logging_mode');
-        if (!empty($newLoggingMode)) {
-            // Determine current logging mode before changes
-            $currentLoggingMode = StaticGlobal::getTraceLogEnabledOption() ? 'on' : 'off';
-
-            $loggingModeOptions = [
-                'off' => __('Off', 'duplicator'),
-                'on'  => __('On', 'duplicator'),
-            ];
-            $changesTraker->addChange(
-                'logging_mode',
-                $currentLoggingMode,
-                $newLoggingMode,
-                'optionChanged',
-                $loggingModeOptions
-            );
-        }
-
-        $this->updateLoggingModeOptions();
-
-        // Track email summary frequency changes
-        $newEmailFrequency = SnapUtil::sanitizeTextInput(SnapUtil::INPUT_REQUEST, '_email_summary_frequency');
-        $changesTraker->addChange(
-            GlobalEntity::EMAIL_SUMMARY_FREQUENCY_KEY,
-            $global->getEmailSummaryFrequency(),
-            $newEmailFrequency,
-            'frequencyChanged'
-        );
-        $global->setEmailSummaryFrequency($newEmailFrequency);
-        // Track email recipients changes
-        $emailRecipients = filter_input(INPUT_POST, '_email_summary_recipients', FILTER_SANITIZE_EMAIL, [
+        $recipients  = filter_input(INPUT_POST, '_email_summary_recipients', FILTER_SANITIZE_EMAIL, [
             'flags'   => FILTER_REQUIRE_ARRAY,
-            'options' => [
-                'default' => [],
-            ],
+            'options' => ['default' => []],
         ]);
-        if ($emailRecipients !== []) {
-            $emailRecipients = array_map('sanitize_email', $emailRecipients);
+        $values      = [
+            'uninstall_settings'            => SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, 'uninstall_settings'),
+            'uninstall_packages'            => SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, 'uninstall_packages'),
+            'encrypt_settings'              => SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, 'crypt'),
+            'unload_third_party_scripts'    => SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, '_unhook_third_party_js'),
+            'unload_third_party_styles'     => SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, '_unhook_third_party_css'),
+            'email_summary_frequency'       => SnapUtil::sanitizeTextInput(SnapUtil::INPUT_REQUEST, '_email_summary_frequency'),
+            'email_summary_recipients'      => array_values(array_filter((array) $recipients, static fn($email): bool => $email !== '')),
+            'usage_tracking'                => SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, 'usage_tracking'),
+            // The form checkbox disables the notices
+            'product_notices'               => !SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, 'dup_am_notices'),
+            'trace_log_max_size_mb'         => SnapUtil::sanitizeIntInput(INPUT_POST, 'trace_max_size', TraceLogMng::DEFAULT_MAX_TOTAL_SIZE / MB_IN_BYTES),
+            'activity_log_retention_months' => SnapUtil::sanitizeIntInput(SnapUtil::INPUT_REQUEST, 'activity_log_retention_months', 0),
+        ];
+        $loggingMode = SnapUtil::sanitizeStrictInput(SnapUtil::INPUT_REQUEST, '_logging_mode');
+        if ($loggingMode === 'on' || $loggingMode === 'off') {
+            $values['trace_log'] = ($loggingMode === 'on');
         }
 
-
-
-        $changesTraker->addChange(
-            GlobalEntity::EMAIL_SUMMARY_RECIPIENTS_KEY,
-            $global->getEmailSummaryRecipients(),
-            $emailRecipients,
-            'emailListChanged'
-        );
-        $global->setEmailSummaryRecipients($emailRecipients);
-
-        // Track usage tracking changes (only if not hardcoded disabled)
-        if (!DUPLICATOR_USTATS_DISALLOW) { // @phpstan-ignore-line
-            $newUsageTracking = SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, 'usage_tracking');
-            $changesTraker->addChange(
-                'usage_tracking',
-                StatsBootstrap::isTrackingAllowed(),
-                $newUsageTracking,
-                $newUsageTracking ? 'enabled' : 'disabled'
-            );
-            StatsBootstrap::setTrackingAllowed($newUsageTracking);
+        try {
+            (new GeneralApiSettings())->setFromArray($values);
+        } catch (Exception $e) {
+            return [
+                'saveSuccess'  => false,
+                'errorMessage' => $e->getMessage(),
+            ];
         }
 
-        // Track AM notices changes
-        $newAmNotices = !SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, 'dup_am_notices');
-        $changesTraker->addChange(
-            'am_notices',
-            $global->isAmNoticesEnabled(),
-            $newAmNotices,
-            $newAmNotices ? 'enabled' : 'disabled'
-        );
-        $global->setAmNotices($newAmNotices);
-
-        // Track trace log max size changes
-        $newMaxSizeMB = SnapUtil::sanitizeIntInput(INPUT_POST, 'trace_max_size', TraceLogMng::DEFAULT_MAX_TOTAL_SIZE / MB_IN_BYTES);
-        $changesTraker->addChange(
-            'trace_max_size',
-            TraceLogMng::getInstance()->getMaxTotalSize() / MB_IN_BYTES,
-            $newMaxSizeMB,
-            'sizeChanged',
-            [
-                'fromUnit' => 'MB',
-                'toUnit'   => 'MB',
-            ]
-        );
-        TraceLogMng::getInstance()->setMaxTotalSize($newMaxSizeMB * MB_IN_BYTES);
-
-        if (($result['saveSuccess'] = $global->save()) == false) {
-            $result['errorMessage'] = __('Can\'t update general settings', 'duplicator');
-            return $result;
-        } else {
-            $result['successMessage'] = __("General settings updated.", 'duplicator');
-        }
-
-        // Save activity log retention setting in DynamicGlobalEntity
-        if ($result['saveSuccess']) {
-            $dGlobal                     = DynamicGlobalEntity::getInstance();
-            $activityLogRetentionMonths  = SnapUtil::sanitizeIntInput(SnapUtil::INPUT_REQUEST, 'activity_log_retention_months', 0);
-            $activityLogRetentionSeconds = $activityLogRetentionMonths * MONTH_IN_SECONDS;
-
-                    // Track activity log retention changes
-            $changesTraker->addChange(
-                'activity_log_retention',
-                $dGlobal->getValInt('activity_log_retention'),
-                $activityLogRetentionSeconds,
-                'timeChanged',
-                [
-                    'fromUnit' => 'sec',
-                    'toUnit'   => 'month',
-                ]
-            );
-            $dGlobal->setValInt('activity_log_retention', $activityLogRetentionSeconds);
-
-            if (($result['saveSuccess'] = $dGlobal->save()) == false) {
-                $result['errorMessage'] = __('Can\'t update activity log retention settings', 'duplicator');
-            } else {
-                $changesTraker->createLog(LogEventSettingsChange::SUB_TYPE_GENERAL);
-            }
-        }
-
-        if ($cryptSettingChanged && $result['saveSuccess']) {
-            do_action('duplicator_before_update_crypt_setting');
-            StaticGlobal::setCryptOption($newCryptOption);
-            do_action('duplicator_after_update_crypt_setting');
-        }
-
-        return $result;
+        return [
+            'saveSuccess'    => true,
+            'successMessage' => __("General settings updated.", 'duplicator'),
+        ];
     }
 
     /**
@@ -495,76 +346,26 @@ class SettingsPageController extends AbstractMenuPageController
      */
     public function saveStorageGeneral(): array
     {
-        $result        = ['saveSuccess' => false];
-        $changesTraker = new SettingsChangeTracker();
-        $global        = GlobalEntity::getInstance();
+        $purgeMode = SnapUtil::sanitizeIntInput(SnapUtil::INPUT_REQUEST, GlobalEntity::PURGE_BACKUP_RECORDS_KEY, 0);
+        try {
+            (new StorageApiSettings())->setFromArray([
+                'storage_htaccess_off'         => SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, '_storage_htaccess_off'),
+                'storage_ssl_use_server_certs' => SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, GlobalEntity::SSL_USE_SERVER_CERTS_KEY),
+                'storage_ssl_disable_verify'   => SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, GlobalEntity::SSL_DISABLE_VERIFY_KEY),
+                'storage_ipv4_only'            => SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, GlobalEntity::IPV4_ONLY_KEY),
+                'backup_records_purge'         => (string) (array_search($purgeMode, StorageApiSettings::PURGE_MODES, true) ?: 'archive_removed'),
+            ]);
+        } catch (Exception $e) {
+            return [
+                'saveSuccess'  => false,
+                'errorMessage' => __('Can\'t update storage settings.', 'duplicator') . ' ' . $e->getMessage(),
+            ];
+        }
 
-        // Track storage htaccess setting changes
-        $newHtaccessOff = SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, '_storage_htaccess_off');
-        $changesTraker->addChange(
-            GlobalEntity::STORAGE_HTACCESS_OFF_KEY,
-            $global->isStorageHtaccessOff(),
-            $newHtaccessOff,
-            $newHtaccessOff ? 'enabled' : 'disabled'
-        );
-        $global->setStorageHtaccessOff($newHtaccessOff, false);
-
-        // Track SSL server certificates setting
-        $newSslServerCerts = SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, GlobalEntity::SSL_USE_SERVER_CERTS_KEY);
-        $changesTraker->addChange(
-            GlobalEntity::SSL_USE_SERVER_CERTS_KEY,
-            $global->isUsingServerCerts(),
-            $newSslServerCerts,
-            $newSslServerCerts ? 'enabled' : 'disabled'
-        );
-        $global->setSslUseServerCerts($newSslServerCerts, false);
-
-        // Track SSL verify disable setting
-        $newSslDisableVerify = SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, GlobalEntity::SSL_DISABLE_VERIFY_KEY);
-        $changesTraker->addChange(
-            GlobalEntity::SSL_DISABLE_VERIFY_KEY,
-            !$global->isSslVerifyEnabled(),
-            $newSslDisableVerify,
-            $newSslDisableVerify ? 'enabled' : 'disabled'
-        );
-        $global->setSslDisableVerify($newSslDisableVerify, false);
-
-        // Track IPv4 only setting
-        $newIpv4Only = SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, GlobalEntity::IPV4_ONLY_KEY);
-        $changesTraker->addChange(
-            GlobalEntity::IPV4_ONLY_KEY,
-            $global->isIpv4Only(),
-            $newIpv4Only,
-            $newIpv4Only ? 'enabled' : 'disabled'
-        );
-        $global->setIpv4Only($newIpv4Only, false);
-
-        // Track purge backup records setting
-        $newPurgeRecords           = SnapUtil::sanitizeIntInput(SnapUtil::INPUT_REQUEST, GlobalEntity::PURGE_BACKUP_RECORDS_KEY, 0);
-        $purgeBackupRecordsOptions = [
-            0 => __('When the backup archive is removed from all storages', 'duplicator'),
-            1 => __('When maximum is reached for Default Local Storage', 'duplicator'),
-            2 => __('Never', 'duplicator'),
+        return [
+            'saveSuccess'    => true,
+            'successMessage' => __('Storage settings updated.', 'duplicator'),
         ];
-        $changesTraker->addChange(
-            GlobalEntity::PURGE_BACKUP_RECORDS_KEY,
-            $global->getPurgeBackupRecords(),
-            $newPurgeRecords,
-            'optionChanged',
-            $purgeBackupRecordsOptions
-        );
-        if (($result['saveSuccess'] = $global->setPurgeBackupRecords($newPurgeRecords)) == false) {
-            $result['errorMessage'] = __('Can\'t update storage settings.', 'duplicator');
-        } else {
-            $result['successMessage'] = __('Storage settings updated.', 'duplicator');
-        }
-
-        if ($result['saveSuccess']) {
-            do_action('duplicator_update_global_storage_settings');
-            $changesTraker->createLog(LogEventSettingsChange::SUB_TYPE_STORAGE);
-        }
-
-        return $result;
     }
 
     /**
@@ -655,54 +456,22 @@ class SettingsPageController extends AbstractMenuPageController
      */
     public function traceGeneral(): array
     {
-        $result = ['saveSuccess' => false];
-
-        switch (SnapUtil::sanitizeStrictInput(SnapUtil::INPUT_REQUEST, '_logging_mode')) {
-            case 'off':
-                $this->updateLoggingModeOptions();
-                $result = [
-                    'saveSuccess'    => true,
-                    'successMessage' => __("Trace settings have been turned off.", 'duplicator'),
-                ];
-                break;
-            case 'on':
-                $this->updateLoggingModeOptions();
-                $result = [
-                    'saveSuccess'    => true,
-                    'successMessage' => __("Trace settings have been turned on.", 'duplicator'),
-                ];
-                break;
-            default:
-                $result = [
-                    'saveSuccess'  => false,
-                    'errorMessage' => __("Trace mode not valid.", 'duplicator'),
-                ];
-                break;
+        $loggingMode = SnapUtil::sanitizeStrictInput(SnapUtil::INPUT_REQUEST, '_logging_mode');
+        if ($loggingMode !== 'on' && $loggingMode !== 'off') {
+            return [
+                'saveSuccess'  => false,
+                'errorMessage' => __("Trace mode not valid.", 'duplicator'),
+            ];
         }
 
-        return $result;
-    }
+        (new GeneralApiSettings())->setFromArray(['trace_log' => ($loggingMode === 'on')]);
 
-    /**
-     * Upate loggin modes options
-     *
-     * @return void
-     */
-    protected function updateLoggingModeOptions()
-    {
-        switch (SnapUtil::sanitizeStrictInput(SnapUtil::INPUT_REQUEST, '_logging_mode')) {
-            case 'off':
-                StaticGlobal::setTraceLogEnabledOption(false);
-                break;
-            case 'on':
-                if (StaticGlobal::getTraceLogEnabledOption() == false) {
-                    DupLog::deleteTraceLog();
-                }
-                StaticGlobal::setTraceLogEnabledOption(true);
-                break;
-            default:
-                break;
-        }
+        return [
+            'saveSuccess'    => true,
+            'successMessage' => ($loggingMode === 'on' ?
+                __("Trace settings have been turned on.", 'duplicator') :
+                __("Trace settings have been turned off.", 'duplicator')),
+        ];
     }
 
     /**
@@ -724,349 +493,108 @@ class SettingsPageController extends AbstractMenuPageController
     }
 
     /**
+     * Settings API name of a value the form posts in its stored form
+     *
+     * @param array<string,int|string> $map     Stored value by API name
+     * @param mixed                    $value   Posted value
+     * @param ?string                  $default API name when the value is not one of the map
+     *
+     * @return ?string
+     */
+    private static function formChoice(array $map, $value, ?string $default = null): ?string
+    {
+        foreach ($map as $name => $stored) {
+            if ($value !== null && $value !== false && (string) $stored === (string) $value) {
+                return $name;
+            }
+        }
+        return $default;
+    }
+
+    /**
      * Save Backup basic settings
      *
      * @return array<string, mixed>
      */
     public function savePackage(): array
     {
-        $result          = ['saveSuccess' => false];
-        $changesTraker   = new SettingsChangeTracker();
-        $global          = GlobalEntity::getInstance();
-        $dGlobal         = DynamicGlobalEntity::getInstance();
-        $packageBuild    = Constants::DEFAULT_MAX_PACKAGE_RUNTIME_IN_MIN;
-        $defaultTransfer = Constants::DEFAULT_MAX_PACKAGE_TRANSFER_TIME_IN_MIN;
+        $global   = GlobalEntity::getInstance();
+        $settings = new BackupApiSettings();
 
-        // Track database mode settings before they change
-        $optionsMng    = OptionsManager::getInstance();
-        $newDbMode     = SnapUtil::sanitizeDefaultInput(INPUT_POST, '_package_dbmode');
-        $currentDbMode = $global->isMysqldumpEnabled() ? 'mysql' : 'php';
-        $dbModeOptions = [
-            'mysql' => $optionsMng->getValueLabel(DbDumpEngineRule::OPTION_KEY, DbDumpEngineRule::VALUE_MYSQLDUMP),
-            'php'   => $optionsMng->getValueLabel(DbDumpEngineRule::OPTION_KEY, DbDumpEngineRule::VALUE_PHP),
+        $int  = static fn(string $name) => filter_input(INPUT_POST, $name, FILTER_VALIDATE_INT);
+        $bool = static fn(string $name): bool => (bool) filter_input(INPUT_POST, $name, FILTER_VALIDATE_BOOLEAN);
+
+        $values = [
+            'php_dump_mode'         => self::formChoice(BackupApiSettings::THREAD_MODES, $int('_phpdump_mode'), 'multi_threaded'),
+            'mysqldump_path'        => SnapUtil::sanitizeDefaultInput(INPUT_POST, '_package_mysqldump_path'),
+            'archive_compression'   => $bool(GlobalEntity::ARCHIVE_COMPRESSION_KEY),
+            'ziparchive_mode'       => self::formChoice(BackupApiSettings::THREAD_MODES, $int(GlobalEntity::ZIPARCHIVE_MODE_KEY), 'multi_threaded'),
+            'ziparchive_validate'   => $bool(GlobalEntity::ZIPARCHIVE_VALIDATION_KEY),
+            'ziparchive_buffer_mb'  => $int(GlobalEntity::ZIPARCHIVE_CHUNK_SIZE_IN_MB_KEY) ?? GlobalEntity::getDefaultZipArchiveChunkSize(),
+            'max_build_minutes'     => $int(GlobalEntity::MAX_PACKAGE_RUNTIME_IN_MIN_KEY) ?? Constants::DEFAULT_MAX_PACKAGE_RUNTIME_IN_MIN,
+            'max_transfer_minutes'  => $int(GlobalEntity::MAX_PACKAGE_TRANSFER_TIME_IN_MIN_KEY) ?? Constants::DEFAULT_MAX_PACKAGE_TRANSFER_TIME_IN_MIN,
+            'server_load_reduction' => self::formChoice(BackupApiSettings::SERVER_LOADS, $int(GlobalEntity::SERVER_LOAD_REDUCTION_KEY), 'off'),
+            'installer_name'        => self::formChoice(
+                BackupApiSettings::INSTALLER_NAMES,
+                self::resolveInstallerNameMode(SnapUtil::sanitizeDefaultInput(INPUT_POST, GlobalEntity::INSTALLER_NAME_MODE_KEY)),
+                'hashed'
+            ),
+            'client_side_kickoff'   => self::formChoice(
+                BackupApiSettings::KICKOFF_MODES,
+                SnapUtil::sanitizeTextInput(INPUT_POST, 'override_kickoff', 'auto'),
+                'auto'
+            ),
+            'ajax_protocol'         => SnapUtil::sanitizeTextInput(INPUT_POST, 'override_ajax_protocol', 'auto'),
+            'ajax_url'              => SnapUtil::sanitizeTextInput(INPUT_POST, 'override_ajax_url', ''),
+            'use_home_path_as_root' => $bool(GlobalEntity::HOMEPATH_AS_ABSPATH_KEY),
+            'skip_archive_scan'     => $bool('_skip_archive_scan'),
+            'basic_auth_mode'       => SnapUtil::sanitizeTextInput(INPUT_POST, DynamicGlobalEntity::BASIC_AUTH_MODE_KEY, 'auto'),
+            'cleanup_mode'          => self::formChoice(BackupApiSettings::CLEANUP_MODES, $int(GlobalEntity::CLEANUP_MODE_KEY), 'off'),
+            'cleanup_email'         => (string) filter_input(INPUT_POST, GlobalEntity::CLEANUP_EMAIL_KEY, FILTER_VALIDATE_EMAIL),
+            'cleanup_after_hours'   => max(1, (int) ($int(GlobalEntity::AUTO_CLEANUP_HOURS_KEY) ?? 24)),
         ];
-        $changesTraker->addChange(
-            'package_dbmode',
-            $currentDbMode,
-            $newDbMode,
-            'optionChanged',
-            $dbModeOptions
-        );
-
-        $newPhpDumpMode     = filter_input(INPUT_POST, '_phpdump_mode', FILTER_VALIDATE_INT, ['options' => ['default' => 0]]);
-        $phpDumpModeOptions = [
-            0 => __('Multi-Threaded', 'duplicator'),
-            1 => __('Single-Threaded', 'duplicator'),
-        ];
-        $changesTraker->addChange(
-            GlobalEntity::PACKAGE_PHPDUMP_MODE_KEY,
-            $global->getPhpDumpMode(),
-            $newPhpDumpMode,
-            'optionChanged',
-            $phpDumpModeOptions
-        );
-
-        $newMysqldumpPath = SnapUtil::sanitizeDefaultInput(INPUT_POST, '_package_mysqldump_path');
-        $changesTraker->addChange(
-            GlobalEntity::PACKAGE_MYSQLDUMP_PATH_KEY,
-            $global->getMysqldumpPath(),
-            $newMysqldumpPath,
-            'fieldChanged',
-            [
-                'truncate' => true,
-                'max'      => 80,
-            ]
-        );
-
-        $newMysqldumpQryLimit     = filter_input(
-            INPUT_POST,
-            '_package_mysqldump_qrylimit',
-            FILTER_VALIDATE_INT,
-            ['options' => ['default' => Constants::DEFAULT_MYSQL_DUMP_CHUNK_SIZE]]
-        );
-        $mysqldumpQryLimitOptions = Constants::MYSQL_DUMP_CHUNK_SIZES;
-        $changesTraker->addChange(
-            GlobalEntity::PACKAGE_MYSQLDUMP_QRYLIMIT_KEY,
-            $global->getMysqldumpQueryLimit(),
-            $newMysqldumpQryLimit,
-            'optionChanged',
-            $mysqldumpQryLimitOptions
-        );
-
-        // Track archive mode settings before they change
-        $newArchiveBuildMode     = filter_input(INPUT_POST, GlobalEntity::ARCHIVE_BUILD_MODE_KEY, FILTER_VALIDATE_INT);
-        $archiveBuildModeOptions = [];
-        foreach ($optionsMng->getOptionValues(ArchiveEngineRule::OPTION_KEY) as $engineValue) {
-            $archiveBuildModeOptions[(int) $engineValue] = $optionsMng->getValueLabel(ArchiveEngineRule::OPTION_KEY, $engineValue);
+        // A disabled radio doesn't submit: the stored engine is kept
+        $dbMode = SnapUtil::sanitizeDefaultInput(INPUT_POST, '_package_dbmode');
+        if ($dbMode === 'mysql' || $dbMode === 'php') {
+            $values['database_engine'] = ($dbMode === 'mysql' ? 'mysqldump' : 'php');
         }
-        $changesTraker->addChange(
-            GlobalEntity::ARCHIVE_BUILD_MODE_KEY,
-            $global->getBuildMode(),
-            $newArchiveBuildMode,
-            'optionChanged',
-            $archiveBuildModeOptions
-        );
-
-        $newZipArchiveMode     = filter_input(INPUT_POST, GlobalEntity::ZIPARCHIVE_MODE_KEY, FILTER_VALIDATE_INT, ['options' => ['default' => 0]]);
-        $zipArchiveModeOptions = [
-            0 => __('Multi-Threaded', 'duplicator'),
-            1 => __('Single-Threaded', 'duplicator'),
-        ];
-        $changesTraker->addChange(
-            GlobalEntity::ZIPARCHIVE_MODE_KEY,
-            $global->getZipArchiveMode(),
-            $newZipArchiveMode,
-            'optionChanged',
-            $zipArchiveModeOptions
-        );
-
-        $newArchiveCompression = filter_input(INPUT_POST, GlobalEntity::ARCHIVE_COMPRESSION_KEY, FILTER_VALIDATE_BOOLEAN);
-        $changesTraker->addChange(
-            GlobalEntity::ARCHIVE_COMPRESSION_KEY,
-            $global->isArchiveCompressionEnabled(),
-            $newArchiveCompression,
-            $newArchiveCompression ? 'enabled' : 'disabled'
-        );
-
-        $newZipValidation = filter_input(INPUT_POST, GlobalEntity::ZIPARCHIVE_VALIDATION_KEY, FILTER_VALIDATE_BOOLEAN);
-        $changesTraker->addChange(
-            GlobalEntity::ZIPARCHIVE_VALIDATION_KEY,
-            $global->isZipArchiveValidationEnabled(),
-            $newZipValidation,
-            $newZipValidation ? 'enabled' : 'disabled'
-        );
-
-        $newZipChunkSize = filter_input(
-            INPUT_POST,
-            GlobalEntity::ZIPARCHIVE_CHUNK_SIZE_IN_MB_KEY,
-            FILTER_VALIDATE_INT,
-            ['options' => ['default' => GlobalEntity::getDefaultZipArchiveChunkSize()]]
-        );
-        $changesTraker->addChange(
-            GlobalEntity::ZIPARCHIVE_CHUNK_SIZE_IN_MB_KEY,
-            $global->getZipArchiveChunkSize(),
-            $newZipChunkSize,
-            'sizeChanged',
-            [
-                'fromUnit' => 'MB',
-                'toUnit'   => 'MB',
-            ]
-        );
-
-        $rejectedOptions = array_merge($global->setDbMode(), $global->setArchiveMode());
-
-        // Track max package runtime changes
-        $newPackageRuntime = SnapUtil::sanitizeIntInput(SnapUtil::INPUT_REQUEST, GlobalEntity::MAX_PACKAGE_RUNTIME_IN_MIN_KEY, $packageBuild);
-        $changesTraker->addChange(
-            GlobalEntity::MAX_PACKAGE_RUNTIME_IN_MIN_KEY,
-            $global->getMaxPackageRuntime(),
-            $newPackageRuntime,
-            'timeChanged',
-            [
-                'fromUnit' => 'min',
-                'toUnit'   => 'min',
-            ]
-        );
-        $global->setMaxPackageRuntime($newPackageRuntime, false);
-
-        // Track server load reduction changes
-        $newServerLoad     = SnapUtil::sanitizeIntInput(SnapUtil::INPUT_REQUEST, GlobalEntity::SERVER_LOAD_REDUCTION_KEY, 0);
-        $serverLoadOptions = [
-            0 => __('Off', 'duplicator'),
-            1 => __('Low', 'duplicator'),
-            2 => __('Medium', 'duplicator'),
-            3 => __('High', 'duplicator'),
-        ];
-        $changesTraker->addChange(
-            GlobalEntity::SERVER_LOAD_REDUCTION_KEY,
-            $global->getServerLoadReduction(),
-            $newServerLoad,
-            'optionChanged',
-            $serverLoadOptions
-        );
-        $global->setServerLoadReduction($newServerLoad, false);
-
-        // Track max transfer time changes
-        $newTransferTime = SnapUtil::sanitizeIntInput(SnapUtil::INPUT_REQUEST, GlobalEntity::MAX_PACKAGE_TRANSFER_TIME_IN_MIN_KEY, $defaultTransfer);
-        $changesTraker->addChange(
-            GlobalEntity::MAX_PACKAGE_TRANSFER_TIME_IN_MIN_KEY,
-            $global->getMaxPackageTransferTime(),
-            $newTransferTime,
-            'timeChanged',
-            [
-                'fromUnit' => 'min',
-                'toUnit'   => 'min',
-            ]
-        );
-        $global->setMaxPackageTransferTime($newTransferTime, false);
-
-        // Handle installer name mode
-        $newInstallerMode         = SnapUtil::sanitizeDefaultInput(INPUT_POST, GlobalEntity::INSTALLER_NAME_MODE_KEY);
-        $installerNameMode        = self::resolveInstallerNameMode($newInstallerMode);
-        $installerNameModeOptions = [
-            'simple'    => __('Standard (installer.php)', 'duplicator'),
-            'with_hash' => __('Hashed (more secure)', 'duplicator'),
-        ];
-        $changesTraker->addChange(
-            GlobalEntity::INSTALLER_NAME_MODE_KEY,
-            $global->getInstallerNameMode(),
-            $installerNameMode,
-            'optionChanged',
-            $installerNameModeOptions
-        );
-        $global->setInstallerNameMode($installerNameMode, false);
-
-        $newKickoffOverride = SnapUtil::sanitizeTextInput(INPUT_POST, 'override_kickoff', 'auto');
-        if (!in_array($newKickoffOverride, ['auto', 'server', 'client'])) {
-            $newKickoffOverride = 'auto';
+        $buildMode = self::formChoice(BackupApiSettings::ARCHIVE_ENGINES, $int(GlobalEntity::ARCHIVE_BUILD_MODE_KEY));
+        if ($buildMode !== null) {
+            $values['archive_engine'] = $buildMode;
         }
-        $dGlobal->setValString(ClientSideKick::KICKOFF_OVERRIDE_KEY, $newKickoffOverride, false);
-
-        $newAjaxProtocol = SnapUtil::sanitizeTextInput(INPUT_POST, 'override_ajax_protocol', 'auto');
-        if (!in_array($newAjaxProtocol, ['auto', 'http', 'https', 'custom'])) {
-            $newAjaxProtocol = 'auto';
+        $queryLimit = $int('_package_mysqldump_qrylimit') ?? Constants::DEFAULT_MYSQL_DUMP_CHUNK_SIZE;
+        if (isset(Constants::MYSQL_DUMP_CHUNK_SIZES[$queryLimit])) {
+            $values['mysqldump_query_limit'] = Constants::MYSQL_DUMP_CHUNK_SIZES[$queryLimit];
         }
-        $dGlobal->setValString(ClientSideKick::AJAX_PROTOCOL_OVERRIDE_KEY, $newAjaxProtocol, false);
-
-        $newAjaxUrlOverride = SnapUtil::sanitizeTextInput(INPUT_POST, 'override_ajax_url', '');
-        $dGlobal->setValString(ClientSideKick::AJAX_URL_OVERRIDE_KEY, $newAjaxUrlOverride, false);
-
-        $newHomepathAsAbspath = SnapUtil::sanitizeBoolInput(INPUT_POST, GlobalEntity::HOMEPATH_AS_ABSPATH_KEY, false);
-        $changesTraker->addChange(
-            GlobalEntity::HOMEPATH_AS_ABSPATH_KEY,
-            $global->isHomePathAsAbsolute(),
-            $newHomepathAsAbspath,
-            $newHomepathAsAbspath ? 'enabled' : 'disabled'
-        );
-        $global->setHomePathAsAbsolute($newHomepathAsAbspath, false);
-
-        $newSkipArchiveScan = SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, '_skip_archive_scan', false);
-        $changesTraker->addChange(
-            GlobalEntity::SKIP_ARCHIVE_SCAN_KEY,
-            $global->isArchiveScanSkipped(),
-            $newSkipArchiveScan,
-            $newSkipArchiveScan ? 'enabled' : 'disabled'
-        );
-        $global->setSkipArchiveScan($newSkipArchiveScan, false);
-
-        // Basic auth mode ('auto': credentials synced by the server detection, 'custom': user-entered)
-        $newBasicAuthMode = SnapUtil::sanitizeTextInput(INPUT_POST, DynamicGlobalEntity::BASIC_AUTH_MODE_KEY, 'auto');
-        if (!in_array($newBasicAuthMode, ['auto', 'custom'])) {
-            $newBasicAuthMode = 'auto';
+        $values['mysqldump_options'] = [];
+        foreach ($global->getMysqldumpOptions() as $option) {
+            $values['mysqldump_options'][$option->getOptionName()] = (bool) filter_input(INPUT_POST, $option->getInputName(), FILTER_VALIDATE_BOOLEAN);
         }
-        $changesTraker->addChange(
-            DynamicGlobalEntity::BASIC_AUTH_MODE_KEY,
-            $dGlobal->getValString(DynamicGlobalEntity::BASIC_AUTH_MODE_KEY),
-            $newBasicAuthMode,
-            'optionChanged',
-            [
-                'auto'   => __('Auto', 'duplicator'),
-                'custom' => __('Custom', 'duplicator'),
-            ]
-        );
-
-        if ($newBasicAuthMode === 'custom') {
-            $basicAuthUser = SnapUtil::sanitizeTextInput(SnapUtil::INPUT_REQUEST, 'basic_auth_user', '');
-
-            $basicAuthPassword = SnapUtil::sanitizeTextInput(SnapUtil::INPUT_REQUEST, 'basic_auth_password', '');
-            $basicAuthPassword = stripslashes(SnapUtil::sanitizeNSCharsNewlineTrim($basicAuthPassword));
-
-            // Track basic auth user changes
-            $changesTraker->addChange(
-                'basic_auth_user',
-                $dGlobal->getValString(DynamicGlobalEntity::BASIC_AUTH_USER_KEY),
-                $basicAuthUser,
-                'optionChanged'
-            );
-
-            // Track basic auth password changes (show only that it changed, not the actual password)
-            $changesTraker->addChange(
-                'basic_auth_password',
-                false,
-                $dGlobal->getValString(DynamicGlobalEntity::BASIC_AUTH_PASSWORD_KEY) !== $basicAuthPassword,
-                'passwordChanged'
+        if ($values['basic_auth_mode'] === 'custom') {
+            $values['basic_auth_user']     = SnapUtil::sanitizeTextInput(SnapUtil::INPUT_REQUEST, 'basic_auth_user', '');
+            $values['basic_auth_password'] = stripslashes(
+                SnapUtil::sanitizeNSCharsNewlineTrim(SnapUtil::sanitizeTextInput(SnapUtil::INPUT_REQUEST, 'basic_auth_password', ''))
             );
         }
 
-        // CLEANUP - Track cleanup settings before they change
-        $newCleanupMode     = filter_input(
-            INPUT_POST,
-            GlobalEntity::CLEANUP_MODE_KEY,
-            FILTER_VALIDATE_INT,
-            ['options' => ['default' => GlobalEntity::CLEANUP_MODE_OFF]]
-        );
-        $cleanupModeOptions = [
-            GlobalEntity::CLEANUP_MODE_OFF  => __('Off', 'duplicator'),
-            GlobalEntity::CLEANUP_MODE_MAIL => __('Email notification', 'duplicator'),
-            GlobalEntity::CLEANUP_MODE_AUTO => __('Automatic cleanup', 'duplicator'),
+        try {
+            $rejectedOptions = $settings->setFromForm($values);
+        } catch (Exception $e) {
+            return [
+                'saveSuccess'  => false,
+                'errorMessage' => $e->getMessage(),
+            ];
+        }
+        $result = [
+            'saveSuccess'    => true,
+            'successMessage' => __("Backup Settings Saved.", 'duplicator'),
         ];
-        $changesTraker->addChange(
-            GlobalEntity::CLEANUP_MODE_KEY,
-            $global->getCleanupMode(),
-            $newCleanupMode,
-            'optionChanged',
-            $cleanupModeOptions
-        );
 
-        $newCleanupEmail = filter_input(
-            INPUT_POST,
-            GlobalEntity::CLEANUP_EMAIL_KEY,
-            FILTER_VALIDATE_EMAIL,
-            ['options' => ['default' => '']]
-        );
-        $newCleanupEmail = $newCleanupEmail === '' ? get_option('admin_email') : $newCleanupEmail;
-        $changesTraker->addChange(
-            GlobalEntity::CLEANUP_EMAIL_KEY,
-            $global->getCleanupEmail(),
-            $newCleanupEmail,
-            'fieldChanged'
-        );
+        $newKickoffOverride = BackupApiSettings::KICKOFF_MODES[$values['client_side_kickoff']];
+        $newAjaxProtocol    = DynamicGlobalEntity::getInstance()->getValString(ClientSideKick::AJAX_PROTOCOL_OVERRIDE_KEY) ?: 'auto';
+        $newBasicAuthMode   = ($values['basic_auth_mode'] === 'custom' ? 'custom' : 'auto');
 
-        $newAutoCleanupHours = filter_input(
-            INPUT_POST,
-            GlobalEntity::AUTO_CLEANUP_HOURS_KEY,
-            FILTER_VALIDATE_INT,
-            [
-                'options' => [
-                    'default'   => 24,
-                    'min_range' => 1,
-                ],
-            ]
-        );
-        $changesTraker->addChange(
-            GlobalEntity::AUTO_CLEANUP_HOURS_KEY,
-            $global->getAutoCleanupHours(),
-            $newAutoCleanupHours,
-            'timeChanged',
-            [
-                'fromUnit' => 'hour',
-                'toUnit'   => 'hour',
-            ]
-        );
-
-        // Log accumulated changes BEFORE attempting to save
-        $changesTraker->createLog(LogEventSettingsChange::SUB_TYPE_BACKUP);
-
-        $global->setCleanupFields();
-
-        if (($result['saveSuccess'] = $global->save()) == false) {
-            $result['errorMessage'] = __('Can\'t Save Backup Settings', 'duplicator');
-            return $result;
-        } else {
-            $result['successMessage'] = __("Backup Settings Saved.", 'duplicator');
-        }
-
-        $dGlobal->setValString(DynamicGlobalEntity::BASIC_AUTH_MODE_KEY, $newBasicAuthMode);
-        if ($newBasicAuthMode === 'custom') {
-            // Both empty means basic auth not set. In auto mode the credentials
-            // are refreshed by the detection run below.
-            $dGlobal->setValString(DynamicGlobalEntity::BASIC_AUTH_USER_KEY, $basicAuthUser);
-            $dGlobal->setValString(DynamicGlobalEntity::BASIC_AUTH_PASSWORD_KEY, $basicAuthPassword);
-        }
-
-        $dGlobal->save();
-
-        $detectionResult = AsyncSetupActions::runDetection(true);
+        $detectionResult = $settings->getDetection() ?? AsyncSetupActions::runDetection(true);
         $lockResult      = $detectionResult['lockResult'];
 
         $overrideLabels  = [

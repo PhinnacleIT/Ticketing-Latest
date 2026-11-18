@@ -17,29 +17,24 @@ use Duplicator\Package\Create\BuildComponents;
 use Exception;
 
 /**
- * Runtime copy of the default template with the full component set and the template's own
- * exclusions removed. The prefix filter keeps the default template's value, so a Backup
- * covers the tables carrying the site prefix.
+ * Runtime copy of a template, the default one unless another is given, with the full component set and the
+ * template's own exclusions removed. The prefix filter keeps the template's value, so a Backup covers the tables
+ * carrying the site prefix.
  */
 final class FullBackupTemplate extends TemplateEntity
 {
     /**
-     * Derive the template from the current default template, without its exclusions.
+     * Derive the template from the source template, without its exclusions.
+     *
+     * @param ?TemplateEntity $source Template to derive from, null for the default template
      *
      * @throws DupliException When the default template is missing
      */
-    public function __construct()
+    public function __construct(?TemplateEntity $source = null)
     {
         parent::__construct();
 
-        if (($default = TemplateEntity::getDefaultTemplate()) === null) {
-            throw new DupliException(
-                'Default backup template missing.',
-                DupliException::CODE_ERROR,
-                __('The default backup template is missing. Deactivate and reactivate Duplicator to restore it.', 'duplicator')
-            );
-        }
-        $this->copyFrom($default);
+        $this->copyFrom($source ?? TemplateEntity::getDefaultTemplateOrFail());
 
         $this->components              = BuildComponents::COMPONENTS_DEFAULT;
         $this->database_filter_on      = false;

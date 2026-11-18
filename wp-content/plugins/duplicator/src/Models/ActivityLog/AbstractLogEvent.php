@@ -20,6 +20,8 @@ abstract class AbstractLogEvent extends AbstractGenericModel
     const SEVERITY_INFO    = 10;
     const SEVERITY_WARNING = 20;
     const SEVERITY_ERROR   = 30;
+    /** @var int Max length of the stored channel client name */
+    const VIA_CLIENT_MAX_LENGTH = 64;
 
     /** @var int */
     protected int $severity = self::SEVERITY_INFO;
@@ -33,6 +35,35 @@ abstract class AbstractLogEvent extends AbstractGenericModel
     protected array $data = [];
     /** @var int */
     protected int $parentId = 0;
+
+    /** @var string Channel the current process performs actions through, such as an AI assistant, empty for none */
+    private static string $currentVia = '';
+    /** @var string Client of that channel, such as the application password name */
+    private static string $currentViaClient = '';
+
+    /**
+     * Set the channel recorded on the events created from now on in this process, an empty channel stops recording
+     *
+     * @param string $via    Channel label
+     * @param string $client Client name, optional
+     *
+     * @return void
+     */
+    public static function setCurrentVia(string $via, string $client = ''): void
+    {
+        self::$currentVia       = $via;
+        self::$currentViaClient = mb_substr(SnapUtil::sanitizeNSCharsNewlineTrim($client), 0, self::VIA_CLIENT_MAX_LENGTH);
+    }
+
+    /**
+     * Whether a new event records the current channel, false for events written by later requests on behalf of others
+     *
+     * @return bool
+     */
+    protected static function recordsVia(): bool
+    {
+        return true;
+    }
 
     /**
      * Return entity type identifier
@@ -154,6 +185,26 @@ abstract class AbstractLogEvent extends AbstractGenericModel
     }
 
     /**
+     * Channel the action was performed through, empty when none was recorded
+     *
+     * @return string
+     */
+    public function getVia(): string
+    {
+        return (string) ($this->data['via'] ?? '');
+    }
+
+    /**
+     * Client of the channel the action was performed through, empty when unknown
+     *
+     * @return string
+     */
+    public function getViaClient(): string
+    {
+        return (string) ($this->data['via_client'] ?? '');
+    }
+
+    /**
      * Display detailed information in html format
      *
      * @return void
@@ -178,6 +229,23 @@ abstract class AbstractLogEvent extends AbstractGenericModel
     public function getVersion(): string
     {
         return $this->version;
+    }
+
+    /**
+     * Record the current channel once, when the event is created, so later saves of an old event never change it
+     *
+     * @return void
+     */
+    protected function beforeInsert(): void
+    {
+        parent::beforeInsert();
+        if (self::$currentVia === '' || !static::recordsVia()) {
+            return;
+        }
+        $this->data['via'] = self::$currentVia;
+        if (self::$currentViaClient !== '') {
+            $this->data['via_client'] = self::$currentViaClient;
+        }
     }
 
     /**
@@ -366,7 +434,8 @@ SQL;
     }
 
     /**
-     * Get list of logs
+     * Get list of logs; with check_capability false the types the current user can't see are listed too,
+     * for callers without a user that authorize the request themselves
      *
      * @param array<string,mixed> $args Query arguments
      *
@@ -378,16 +447,17 @@ SQL;
         global $wpdb;
 
         $defaults = [
-            'page'      => 1,
-            'per_page'  => 50,
-            'type'      => '',
-            'severity'  => -1,
-            'date_from' => '',
-            'date_to'   => '',
-            'search'    => '',
-            'parent_id' => -1,
-            'orderby'   => 'created_at',
-            'order'     => 'DESC',
+            'page'             => 1,
+            'per_page'         => 50,
+            'type'             => '',
+            'severity'         => -1,
+            'date_from'        => '',
+            'date_to'          => '',
+            'search'           => '',
+            'parent_id'        => -1,
+            'orderby'          => 'created_at',
+            'order'            => 'DESC',
+            'check_capability' => true,
         ];
 
         $args = wp_parse_args($args, $defaults);
@@ -421,7 +491,7 @@ SQL;
         }
 
         // Add capability filtering at SQL level
-        $allowedTypes = self::getAllowedLogTypes();
+        $allowedTypes = ($args['check_capability'] ? self::getAllowedLogTypes() : array_keys(LogUtils::getAllLogTypes()));
         if (!empty($allowedTypes)) {
             $typePlaceholders = implode(',', array_fill(0, count($allowedTypes), '%s'));
             $where[]          = $wpdb->prepare("type IN ({$typePlaceholders})", ...$allowedTypes);

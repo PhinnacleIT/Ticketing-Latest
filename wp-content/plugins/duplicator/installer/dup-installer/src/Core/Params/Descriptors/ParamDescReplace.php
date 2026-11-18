@@ -31,6 +31,8 @@ final class ParamDescReplace implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
             [
+                'description'      => 'Title of the site; default: the title of the source site',
+                'cliParam'         => true,
                 'default'          => '',
                 'sanitizeCallback' => function ($value): string {
                     $value = SnapUtil::sanitizeNSCharsNewline($value);
@@ -57,6 +59,8 @@ final class ParamDescReplace implements DescriptorInterface
             PrmMng::PARAM_CUSTOM_SEARCH,
             ParamForm::TYPE_ARRAY_STRING,
             [
+                'description'      => 'Strings to replace in the database, besides URLs and paths; replace holds their replacements',
+                'cliParam'         => true,
                 'default'          => [],
                 'sanitizeCallback' => [
                     SnapUtil::class,
@@ -69,6 +73,8 @@ final class ParamDescReplace implements DescriptorInterface
             PrmMng::PARAM_CUSTOM_REPLACE,
             ParamForm::TYPE_ARRAY_STRING,
             [
+                'description'      => 'Replacements of the search strings, in the same order',
+                'cliParam'         => true,
                 'default'          => [],
                 'sanitizeCallback' => [
                     SnapUtil::class,
@@ -81,7 +87,11 @@ final class ParamDescReplace implements DescriptorInterface
             PrmMng::PARAM_EMPTY_SCHEDULE_STORAGE,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            ['default' => true],
+            [
+                'default'     => true,
+                'description' => 'Remove the Duplicator schedules and storages of the source site',
+                'cliParam'    => true,
+            ],
             [
                 'label'         => 'Cleanup:',
                 'checkboxLabel' => 'Remove schedules and storage endpoints',
@@ -92,7 +102,11 @@ final class ParamDescReplace implements DescriptorInterface
             PrmMng::PARAM_EMAIL_REPLACE,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            ['default' => false],
+            [
+                'default'     => false,
+                'description' => 'Replace the domain of the email addresses with the domain of the new URL',
+                'cliParam'    => true,
+            ],
             [
                 'label'         => 'Email Domains:',
                 'checkboxLabel' => 'Update',
@@ -103,7 +117,11 @@ final class ParamDescReplace implements DescriptorInterface
             PrmMng::PARAM_FULL_SEARCH,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            ['default' => false],
+            [
+                'default'     => false,
+                'description' => 'Search and replace in every column, not only in the text columns',
+                'cliParam'    => true,
+            ],
             [
                 'label'         => 'Database Search:',
                 'checkboxLabel' => 'Full Search Mode',
@@ -114,7 +132,11 @@ final class ParamDescReplace implements DescriptorInterface
             PrmMng::PARAM_POSTGUID,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            ['default' => false],
+            [
+                'default'     => false,
+                'description' => 'Keep the post GUIDs unchanged',
+                'cliParam'    => true,
+            ],
             [
                 'label'         => 'Post GUID:',
                 'checkboxLabel' => 'Keep Unchanged',

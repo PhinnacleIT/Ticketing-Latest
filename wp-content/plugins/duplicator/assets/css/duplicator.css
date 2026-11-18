@@ -8884,56 +8884,6 @@ p + .dup-styles .stat {
   padding-left: 25px;
   margin: 5px 0 0 0;
 }
-.dup-styles {
-  /* TOOLS > AI: centred product page */
-}
-.dup-styles .dupli-tool-ai {
-  max-width: 700px;
-  margin: 0 auto;
-  text-align: center;
-}
-.dup-styles .dupli-tool-ai p,
-.dup-styles .dupli-tool-ai div {
-  font-size: 15px;
-}
-.dup-styles .dupli-tool-ai .dupli-tool-ai-title {
-  margin: 20px 0;
-}
-.dup-styles .dupli-tool-ai .dupli-tool-ai-headline {
-  margin: 1.5rem 0 1rem;
-}
-.dup-styles .dupli-tool-ai .dupli-tool-ai-abilities {
-  display: flex;
-  flex-direction: column;
-  row-gap: 8px;
-  list-style: none;
-  margin: 0 0 1.5rem;
-  padding: 0;
-  text-align: left;
-}
-.dup-styles .dupli-tool-ai .dupli-tool-ai-abilities li {
-  color: #777;
-}
-.dup-styles .dupli-tool-ai .dupli-tool-ai-abilities li i.fa {
-  color: #fe4716;
-  margin-right: 6px;
-}
-.dup-styles .dupli-tool-ai .dupli-tool-ai-card {
-  margin: 0 0 1.5rem;
-  text-align: left;
-}
-.dup-styles .dupli-tool-ai .dupli-tool-ai-notes {
-  text-align: left;
-}
-.dup-styles .dupli-tool-ai .dupli-tool-ai-notes p {
-  color: #777;
-}
-.dup-styles .dupli-tool-ai .dupli-tool-ai-unavailable {
-  color: #d63638;
-}
-.dup-styles .dupli-tool-ai .dupli-tool-ai-unavailable i.fa {
-  margin-right: 6px;
-}
 .dup-styles .dupli-autotune-intro {
   color: #3C434A;
 }
@@ -9684,6 +9634,17 @@ p + .dup-styles .stat {
   text-align: center;
   padding: 20px !important;
   color: #666;
+}
+.dup-styles .dup-log-via {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #e8e8e8;
+  color: #3C434A;
+  font-size: 0.6875rem;
+  font-weight: normal;
+  vertical-align: middle;
 }
 .dup-styles .dup-log-severity {
   display: inline-block;

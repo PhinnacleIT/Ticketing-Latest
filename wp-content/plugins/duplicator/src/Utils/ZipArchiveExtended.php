@@ -271,8 +271,7 @@ class ZipArchiveExtended
     protected function getLastStatusString(): string
     {
         try {
-            $statusString = $this->zipArchive->getStatusString();
-            return is_string($statusString) ? $statusString : '';
+            return $this->zipArchive->getStatusString();
         } catch (Throwable $e) {
             return '';
         }

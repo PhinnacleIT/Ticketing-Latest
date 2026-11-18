@@ -178,12 +178,7 @@ trait TraitPackageStorage
     public function haveRemoteStorage(): bool
     {
         foreach ($this->upload_infos as $upload_info) {
-            if (
-                $upload_info->isRemote() &&
-                $upload_info->packageExists() &&
-                $upload_info->hasCompleted(true) &&
-                !$upload_info->isDownloadFromRemote()
-            ) {
+            if ($upload_info->isRemoteCopy()) {
                 return true;
             }
         }
@@ -377,7 +372,7 @@ trait TraitPackageStorage
                 $errorMsg = '';
                 if (!$storage->isValid($errorMsg)) {
                     DupLog::infoTrace("Storage id {$storage->getId()} is invalid, transfer not started: {$errorMsg}");
-                    throw new DupliException(
+                    $invalid = new DupliException(
                         'Storage type ' . $storage->getSType() . ' [' . $storage->getId() . '] isn\'t valid',
                         DupliException::CODE_STORAGE_INVALID,
                         sprintf(
@@ -388,6 +383,14 @@ trait TraitPackageStorage
                             $storage->getName()
                         )
                     );
+                    if ($this->hasFinishedCopy()) {
+                        // The Backup already has a copy: only this transfer fails, the Backup stays as it is
+                        $upload_info->uploadFailed($invalid);
+                        $error_present = true;
+                        $this->update();
+                        continue;
+                    }
+                    throw $invalid;
                 }
 
                 DupLog::trace("Upload Info hasn't started yet, starting it");
@@ -410,7 +413,7 @@ trait TraitPackageStorage
         if (!$error_present && $local_default_present) {
             $default_local_storage = StoragesUtil::getDefaultStorage();
             DupLog::trace('Purge old default local storage Backups');
-            $default_local_storage->purgeOldPackages();
+            $default_local_storage->purgeOldPackages([$this->Archive->getFileName()]);
         }
 
         if (!$local_default_present) {
@@ -418,8 +421,9 @@ trait TraitPackageStorage
             AbstractPackage::deleteDefaultLocalFiles($this->getNameHash(), true);
         }
 
+        // A failed transfer leaves a Backup that has a copy somewhere complete
         $this->setStatus(
-            $error_present && !$this->hasAnyCompletedUpload()
+            $error_present && !$this->hasFinishedCopy()
                 ? AbstractPackage::STATUS_STORAGE_FAILED
                 : AbstractPackage::STATUS_COMPLETE
         );
@@ -432,17 +436,35 @@ trait TraitPackageStorage
     /**
      * Get upload infos (latest per storage ID)
      *
+     * @param bool $uploadsOnly If true, skip the downloads: a download carries the id of the storage it reads from
+     *
      * @return array<int,UploadInfo>
      */
-    public function getLatestUploadInfos(): array
+    public function getLatestUploadInfos(bool $uploadsOnly = false): array
     {
         $upload_infos = [];
         // Just save off the latest per the storage id
         foreach ($this->upload_infos as $upload_info) {
+            if ($uploadsOnly && $upload_info->isDownloadFromRemote()) {
+                continue;
+            }
             $upload_infos[$upload_info->getStorageId()] = $upload_info;
         }
 
         return $upload_infos;
+    }
+
+    /**
+     * Get the latest transfer to or from each storage that failed or was cancelled
+     *
+     * @return UploadInfo[]
+     */
+    public function getInterruptedTransfers(): array
+    {
+        return array_values(array_filter(
+            $this->getLatestUploadInfos(),
+            fn(UploadInfo $uploadInfo): bool => $uploadInfo->isFailed() || $uploadInfo->isCancelled()
+        ));
     }
 
     /**
@@ -452,32 +474,7 @@ trait TraitPackageStorage
      */
     public function transferWasInterrupted(): bool
     {
-        $recentUploadInfos = $this->getRecentUploadInfos();
-        foreach ($recentUploadInfos as $recentUploadInfo) {
-            if ($recentUploadInfo->isFailed() || $recentUploadInfo->isCancelled()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Get recent unique uploadInfos with highest priority to the latest one
-     * if two or more uploadInfo of the same storage type exists
-     *
-     * @return UploadInfo[]
-     */
-    protected function getRecentUploadInfos(): array
-    {
-        $uploadInfos    = [];
-        $tempStorageIds = [];
-        foreach (array_reverse($this->upload_infos) as $upload_info) {
-            if (!in_array($upload_info->getStorageId(), $tempStorageIds)) {
-                $tempStorageIds[] = $upload_info->getStorageId();
-                $uploadInfos[]    = $upload_info;
-            }
-        }
-        return $uploadInfos;
+        return $this->getInterruptedTransfers() !== [];
     }
 
     /**
@@ -490,6 +487,22 @@ trait TraitPackageStorage
     {
         foreach ($this->getLatestUploadInfos() as $upload_info) {
             if ($upload_info->hasCompleted(true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether a copy of the Backup finished on some storage, looking at every transfer and not only the latest per
+     * storage, so a failed download from a storage does not hide the copy that storage holds; a download is not a copy
+     *
+     * @return bool
+     */
+    public function hasFinishedCopy(): bool
+    {
+        foreach ($this->upload_infos as $uploadInfo) {
+            if (!$uploadInfo->isDownloadFromRemote() && $uploadInfo->hasCompleted(true)) {
                 return true;
             }
         }

@@ -27,6 +27,10 @@ class PackageArchiveShellZip
      * Microseconds between archive visibility checks
      */
     const ARCHIVE_VISIBILITY_DELAY_US = 500000;
+    /**
+     * Info-ZIP exit status: some files could not be opened for reading, the archive holds the others
+     */
+    const ZIP_EXIT_FILES_NOT_READ = 18;
 
     /**
      * Creates the zip file and adds the SQL file to the archive
@@ -228,11 +232,12 @@ class PackageArchiveShellZip
             throw DupliException::diskFull();
         }
 
-        if (SnapString::contains($output, 'such file or')) {
-            // Files vanished between the scan and the zip read (typically cache or
-            // temp churn): zip archives everything else and exits non-zero. The
-            // post-build structural verification and the final file count check
-            // guard against real archive damage, so this is not a build failure.
+        if ($exitCode == self::ZIP_EXIT_FILES_NOT_READ || SnapString::contains($output, 'such file or')) {
+            // Files vanished or could not be read between the scan and the zip read
+            // (typically cache or temp churn): zip archives everything else and exits
+            // non-zero, with an output that may be localized. The post-build structural
+            // verification and the final file count check guard against real archive
+            // damage, so this is not a build failure.
             DupLog::infoTrace("SHELL ZIP: files vanished during compression, continuing with a build warning.");
             $package->addBuildWarning(
                 AbstractPackage::WARNING_ARCHIVE_VANISHED_FILES,
@@ -245,6 +250,10 @@ class PackageArchiveShellZip
                 )
             );
             return;
+        }
+
+        if (SnapIO::isFileTooLargeError($output)) {
+            throw DupliException::fileTooLarge();
         }
 
         throw new DupliException(

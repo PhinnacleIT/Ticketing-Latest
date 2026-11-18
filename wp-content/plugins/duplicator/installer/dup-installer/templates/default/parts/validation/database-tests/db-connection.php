@@ -25,7 +25,7 @@ $statusClass = $isOk ? 'green' : 'red';
         Unable to connect the user <b>[<?php echo htmlentities($dbuser); ?>]</b> to the host 
         <b>[<?php echo htmlentities($dbhost); ?>]</b>.<br>
         <?php if ($mysqlConnErr) { ?>
-            The server error response was: <i><?php echo htmlentities($mysqlConnErr); ?></i>'
+            The server error response was: <i><?php echo htmlentities($mysqlConnErr); ?></i>
         <?php } else { ?>
             Please contact your hosting provider or server administrator.
         <?php } ?>

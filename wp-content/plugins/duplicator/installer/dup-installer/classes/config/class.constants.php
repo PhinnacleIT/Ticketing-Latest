@@ -22,6 +22,7 @@ class DUPX_Constants
     const DEFAULT_MAX_STRLEN_SERIALIZED_CHECK_IN_M = 4; // 0 no limit
     const DUP_SITE_URL                             = 'https://duplicator.com/';
     const FAQ_URL                                  = 'https://duplicator.com/knowledge-base/';
+    const MIN_NEW_USERNAME_LEN                     = 4;
     const MIN_NEW_PASSWORD_LEN                     = 6;
     const BACKUP_RENAME_PREFIX                     = 'dp___bk_';
     const DEBUG_MODE                               = false;

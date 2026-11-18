@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Duplicator\Ajax;
 
 use Duplicator\Utils\Logging\DupLog;
+use Duplicator\Package\BackupRequestService;
 use Duplicator\Package\DupPackage;
-use Duplicator\Models\FixesEntity;
 use Duplicator\Models\TemplateEntity;
 use Duplicator\Package\Storage\UploadInfo;
 use Duplicator\Controllers\PackagesPageController;
@@ -16,6 +16,7 @@ use Duplicator\Core\Controllers\ControllersManager;
 use Duplicator\Core\Exceptions\DupliException;
 use Duplicator\Core\Views\TplMng;
 use Duplicator\Libs\Snap\SnapNet;
+use Duplicator\Libs\Snap\SnapServer;
 use Duplicator\Libs\Snap\SnapUtil;
 use Duplicator\Libs\Snap\SnapWP;
 use Duplicator\Models\Storages\AbstractStorageEntity;
@@ -206,7 +207,7 @@ class ServicesPackage extends AbstractAjaxService
                 AsyncSetupActions::runDetection();
             }
 
-            if (!LockUtil::lockProcessOrThrow()) {
+            if (!LockUtil::lockProcessOrThrowWaiting()) {
                 // A process lock is already held, indicating another build is running.
                 DupLog::trace("Already locked when attempting manual build - another process is running");
 
@@ -369,17 +370,17 @@ class ServicesPackage extends AbstractAjaxService
             throw new Exception(__("Invalid request.", 'duplicator'));
         }
 
+        $service  = new BackupRequestService();
         $packages = [];
         foreach ($packageIDList as $id) {
-            $package = DupPackage::getById($id);
-            if (!($package instanceof DupPackage)) {
-                throw new Exception("Invalid Backup ID.");
+            $package = $service->getDeletableBackup((int) $id);
+            if (is_wp_error($package)) {
+                throw new Exception($package->get_error_message());
             }
             if (!PackagesPageController::canDeleteBackup($package)) {
                 /* translators: %s: Backup name */
                 throw new Exception(sprintf(__('Backup %s cannot be deleted.', 'duplicator'), $package->getName()));
             }
-            AutoTuneManager::assertPackageDestructiveActionAllowed($package);
             $packages[] = $package;
         }
 
@@ -639,6 +640,14 @@ class ServicesPackage extends AbstractAjaxService
             exit();
         }
         DupLog::trace("Process worker request");
+        // LiteSpeed kills a worker some seconds after its loopback caller disconnects; an ended
+        // response avoids that. In client-side kickoff the browser waits, so nothing kills the worker.
+        if (!ClientSideKick::isClientSideKickoffMode() && SnapServer::canLiteSpeedEndResponseEarly()) {
+            SnapUtil::obCleanAll(false);
+            echo 'ok';
+            SnapServer::liteSpeedFinishRequest();
+            DupLog::trace("Worker response ended before processing");
+        }
         Runner::process();
         DupLog::trace("Exiting process worker request");
 
@@ -900,53 +909,10 @@ class ServicesPackage extends AbstractAjaxService
                 throw new Exception(__("Invalid request.", 'duplicator'));
             }
 
-            // A transfer counts as a running Backup, so it must respect the same
-            // guard as Backup creation (running build, cancellation, AutoTune session).
-            if (PackageUtils::isBackupCreationBlocked($blockMessage)) {
-                DupLog::trace("Transfer for Backup {$package_id} blocked: {$blockMessage}");
-                throw new Exception((string) $blockMessage);
+            $result = PackageUtils::startManualTransfer($package_id, $storage_ids, $isDownload);
+            if ($result instanceof WP_Error) {
+                throw new Exception($result->get_error_message());
             }
-
-            $package = DupPackage::getById($package_id);
-            DupLog::open($package->getNameHash());
-
-            if (!$package) {
-                throw new Exception(sprintf(esc_html__('Could not find Backup ID %d!', 'duplicator'), $package_id));
-            }
-
-            if (empty($storage_ids)) {
-                throw new Exception("Please select a storage.");
-            }
-
-            $info  = "\n";
-            $info .= "********************************************************************************\n";
-            $info .= "********************************************************************************\n";
-            $info .= "PACKAGE MANUAL TRANSFER REQUESTED: " . @date("Y-m-d H:i:s") . "\n";
-            $info .= "********************************************************************************\n";
-            $info .= "********************************************************************************\n\n";
-            DupLog::infoTrace($info);
-
-            $transferOffset = count($package->upload_infos);
-            foreach ($storage_ids as $storage_id) {
-                $result = $package->addUploadInfo($storage_id, $isDownload);
-                if ($result instanceof WP_Error && $result->has_errors()) {
-                    throw new Exception($result->get_error_message());
-                }
-
-                if (($storage = AbstractStorageEntity::getById($storage_id)) !== false) {
-                    DupLog::infoTrace(
-                        'Storage adding to the Backup "' . $package->getName() .
-                            ' [Package Id: ' . $package_id . ']":: Storage Id: "' . $storage_id .
-                            '" Storage Name: "' . esc_html($storage->getName()) .
-                            '" Storage Type: "' . esc_html($storage->getStypeName()) . '"'
-                    );
-                }
-            }
-
-            FixesEntity::getInstance()->clear();
-            do_action('duplicator_manual_transfer_start', $package, $transferOffset);
-            $package->timer_start = microtime(true);
-            $package->setStatus(AbstractPackage::STATUS_STORAGE_PROCESSING);
         } catch (Exception $ex) {
             DupLog::trace($ex->getMessage());
             throw $ex;

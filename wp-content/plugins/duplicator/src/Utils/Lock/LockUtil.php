@@ -11,6 +11,15 @@ use Throwable;
  */
 class LockUtil
 {
+    /** @var int Seconds a user-started operation waits for a busy process lock before giving up */
+    const BUSY_WAIT_SECONDS = 5;
+
+    /** @var int Microseconds between two acquisition attempts while waiting for a busy process lock */
+    const BUSY_RETRY_DELAY_US = 250000;
+
+    /** @var float Seconds lockProcessOrThrowWaiting() waits, BUSY_WAIT_SECONDS unless a test shortens it */
+    protected static float $busyWaitSeconds = self::BUSY_WAIT_SECONDS;
+
     /** @var AbstractLockEngine[] Lock engines used by the current process */
     protected static array $processLocks = [];
 
@@ -128,6 +137,30 @@ class LockUtil
 
             throw self::createAcquireException([$e->getMessage()], $e);
         }
+    }
+
+    /**
+     * Lock process, waiting a short time while another process holds it.
+     *
+     * For operations a user starts: every request runs the Runner tick, which holds the lock only briefly,
+     * so a busy lock is not a reason to refuse at once.
+     *
+     * @throws DupliException When every lock engine is unavailable
+     *
+     * @return bool true if lock acquired, false when another process still holds it after the wait
+     */
+    public static function lockProcessOrThrowWaiting(): bool
+    {
+        $deadline = microtime(true) + self::$busyWaitSeconds;
+        while (!self::lockProcessOrThrow()) {
+            if (microtime(true) >= $deadline) {
+                DupLog::trace('Process lock still busy after waiting, giving up');
+                return false;
+            }
+            usleep(self::BUSY_RETRY_DELAY_US);
+        }
+
+        return true;
     }
 
     /**

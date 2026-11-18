@@ -5,6 +5,8 @@ namespace Duplicator\Package\Create;
 use Duplicator\Core\Exceptions\DupliException;
 use Duplicator\Libs\WpUtils\WpDbUtils;
 use Duplicator\Package\Database\Dump\TableDumpResult;
+use Duplicator\Utils\Logging\DupLog;
+use Exception;
 
 /**
  * Database build progress class
@@ -37,7 +39,7 @@ class DbBuildProgress
     public $compressedOffset = 0;
     /** @var int Size of the gzipped file when compressedOffset was reached, saved together with it */
     public $compressedSize = 0;
-    /** @var bool Set to true once every dump file has been gzipped and its source unlinked */
+    /** @var bool Set to true once every dump file has been gzipped */
     public $compressionDone = false;
     /** @var float */
     public $startTime = 0.0;
@@ -49,12 +51,13 @@ class DbBuildProgress
      * Per table bookkeeping of the dump. For each table of tablesToProcess: the row
      * count when its dump started (null until then), the row count when it ended, the
      * rows the engine wrote (null when it can't count them), the data file size and
-     * the tagged checksum (empty when not tracked).
+     * the tagged checksum (empty when not tracked), and whether its dump started. A row
+     * count whose query failed is null.
      *
      * @var array{
      *     impreciseTotalRows: int,
      *     countTotal: int,
-     *     tables: array<string, array{start: ?int, end: int, count: ?int, size: int, checksum: string}>
+     *     tables: array<string, array{start: ?int, end: ?int, count: ?int, size: int, checksum: string, started?: bool}>
      * }
      */
     public $countCheckData = [
@@ -83,6 +86,7 @@ class DbBuildProgress
                 'count'    => null,
                 'size'     => 0,
                 'checksum' => '',
+                'started'  => false,
             ];
         }
     }
@@ -122,7 +126,7 @@ class DbBuildProgress
      * Record the row count of a table when its dump begins.
      *
      * Kept from the first call: a table resumed after an interruption keeps the
-     * count taken when its dump started.
+     * count taken when its dump started, or no count when that query failed.
      *
      * @param string $table table name
      *
@@ -133,11 +137,13 @@ class DbBuildProgress
         if (!isset($this->countCheckData['tables'][$table])) {
             throw new DupliException('Table ' . $table . ' no found in progress strunct');
         }
-        if ($this->countCheckData['tables'][$table]['start'] !== null) {
+        $tableData = $this->countCheckData['tables'][$table];
+        if (!empty($tableData['started']) || $tableData['start'] !== null) {
             return;
         }
 
-        $this->countCheckData['tables'][$table]['start'] = $this->getTableRows($table);
+        $this->countCheckData['tables'][$table]['started'] = true;
+        $this->countCheckData['tables'][$table]['start']   = $this->getTableRows($table);
     }
 
     /**
@@ -201,13 +207,19 @@ class DbBuildProgress
     /**
      * @param string $table table name
      *
-     * @return int
+     * @return ?int The row count, null when the count query failed
      *
      * @throws DupliException if the table isn't in the database
      */
-    private function getTableRows(string $table): int
+    private function getTableRows(string $table): ?int
     {
-        $tablesRows = WpDbUtils::getTablesRows($table);
+        try {
+            $tablesRows = WpDbUtils::getTablesRows($table);
+        } catch (Exception $e) {
+            // The count only feeds the drift check of the validation, which skips a missing count
+            DupLog::infoTrace("DB: row count of the table {$table} failed: " . $e->getMessage());
+            return null;
+        }
         if (!isset($tablesRows[$table])) {
             throw new DupliException(
                 'Table ' . $table . ' in database not found',

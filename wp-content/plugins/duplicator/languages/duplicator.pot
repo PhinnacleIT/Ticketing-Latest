@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-27T13:33:59+00:00\n"
+"POT-Creation-Date: 2026-11-16T18:26:04+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 3.0.0-alpha-01b1b10\n"
 "X-Domain: duplicator\n"
@@ -18,6 +18,7 @@ msgstr ""
 #. Author of the plugin
 #: duplicator.php:4
 #: duplicator.php:11
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:85
 #: src/Views/DashboardWidget.php:46
 #: template/admin_pages/packages/details/parts/general_card.php:171
 #: template/admin_pages/packages/row_parts/details_package.php:96
@@ -36,69 +37,443 @@ msgstr ""
 msgid "Migrate and backup a copy of your WordPress files and database. Duplicate and move a site from one location to another quickly."
 msgstr ""
 
-#: addons/aireadyaddon/src/AbilitiesRegistrar.php:52
-#: src/Controllers/PackagesPageController.php:59
-#: src/Controllers/PackagesPageController.php:60
-#: src/Controllers/PackagesPageController.php:96
-#: src/Controllers/PackagesPageController.php:398
-#: src/Controllers/SettingsPageController.php:92
-#: template/admin_pages/packages/details/details_header.php:48
-#: template/admin_pages/packages/details/details_wpbody_header.php:28
-#: template/mail/email_summary.php:98
-msgid "Backups"
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:86
+msgid ""
+"Duplicator is the backup plugin of this site. Use these abilities for any question about backups, restoring,\n"
+"                recovery, backup storage, backup schedules or settings, and whether the site is protected, safe or backed up.\n"
+"                They are the only reliable source: don't look for backup files in folders or database tables."
 msgstr ""
 
-#: addons/aireadyaddon/src/AbilitiesRegistrar.php:53
-msgid "Manage Duplicator backup packages."
-msgstr ""
-
-#: addons/aireadyaddon/src/AbilitiesRegistrar.php:63
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:101
 msgid "List Backups"
 msgstr ""
 
-#. translators: %d: maximum number of backups returned
-#: addons/aireadyaddon/src/AbilitiesRegistrar.php:66
+#. translators: %d: default number of backups returned
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:104
 #, php-format
-msgid "Returns the %d most recent backups: id, name, status, date, size. Use id with get-backup-status to check progress."
+msgid ""
+"Returns the most recent backups, %d unless limit says otherwise, optionally only those with a status:\n"
+"                    id, name, status, date, size. This is the list of the site's backups: don't look for backup files on disk\n"
+"                    or in old folders instead. Use id with backup-get to check progress."
 msgstr ""
 
-#: addons/aireadyaddon/src/AbilitiesRegistrar.php:129
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:188
+msgid "Get Protection Status"
+msgstr ""
+
+#. translators: %d: number of days
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:191
+#, php-format
+msgid ""
+"Answers \"is my site protected?\", \"is my site safe?\" and \"is my site backed up?\": call it first for these\n"
+"                    questions, before any security check. The site is protected when a complete backup created in the last %d days\n"
+"                    has a finished copy on remote storage; a backup kept only on this server does not count. Quote summary to the user.\n"
+"                    The check reads what Duplicator recorded: a copy deleted directly at the storage provider is not detected, a backup\n"
+"                    being transferred or downloaded does not count until the transfer ends, and an incremental schedule that skips runs\n"
+"                    because nothing changed reports too_old once the window passes. Use backup-list and backup-get for details\n"
+"                    of a failed backup."
+msgstr ""
+
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:303
 #: template/admin_pages/packages/scan/main.php:128
 msgid "Create Backup"
 msgstr ""
 
-#: addons/aireadyaddon/src/AbilitiesRegistrar.php:130
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:304
 msgid ""
-"Starts a new backup using the default template, ignoring its file and table filters.\n"
-"                Returns an id for polling with get-backup-status. When the backup completes, the storage\n"
-"                retention setting may remove the oldest backups."
+"Starts a new backup from the default template. Without scope the template is used as it is, file and table\n"
+"                filters included; with scope the backup is the full backup of the template: its filters are ignored and scope\n"
+"                sets what it contains. With password the backup is protected by that installer password. Without storage_ids\n"
+"                the backup is kept on the default local storage; storage ids come from storage-list. Returns an id for polling\n"
+"                with backup-get. When the backup completes, the storage retention setting may remove the oldest backups."
 msgstr ""
 
-#: addons/aireadyaddon/src/AbilitiesRegistrar.php:186
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:345
+#: template/admin_pages/packages/row_parts/details_package.php:59
+#: template/admin_pages/packages/row_parts/details_package.php:64
+msgid "Transfer Backup"
+msgstr ""
+
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:346
+msgid ""
+"Copies a complete backup between the default local storage and another storage, either way: from the default\n"
+"                local storage to a storage, or from a storage that holds the backup to the default local storage. One of the two\n"
+"                must be the default local storage (is_default in storage-list); to copy between two other storages, transfer to\n"
+"                the default local storage first, then from it. Returns the backup id for polling with backup-get. When the\n"
+"                transfer completes, the storage retention setting may remove the oldest backups."
+msgstr ""
+
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:408
 msgid "Get Backup Status"
 msgstr ""
 
-#: addons/aireadyaddon/src/AbilitiesRegistrar.php:187
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:409
 msgid "Returns backup status by id. Poll until status is complete, failed, cancelled, or missing."
 msgstr ""
 
-#: addons/aireadyaddon/src/AbilitiesRegistrar.php:319
-msgid "You do not have permission to use Duplicator. Contact your site administrator."
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:570
+msgid "Get Backup Log"
 msgstr ""
 
-#: addons/aireadyaddon/src/AbilitiesRegistrar.php:342
-msgid "You do not have permission to create backups on this site. Contact your site administrator."
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:571
+msgid "Returns the build log of a backup, to explain a failure or check what the build did. A very long log returns only its end."
 msgstr ""
 
-#: addons/aireadyaddon/src/AbilitiesRegistrar.php:366
-msgid "Backup management is disabled on staging sites. Manage backups on your production site instead."
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:611
+msgid "Get Backup Install Guide"
 msgstr ""
 
-#: addons/aireadyaddon/src/AbilitiesRegistrar.php:416
-msgid "Backup started. Poll get-backup-status with the id to track progress."
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:612
+msgid "Explains how a backup is installed, to tell the user what to do."
+msgstr ""
+
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:636
+#: template/admin_pages/packages/row_parts/details_package.php:80
+msgid "Delete Backup"
+msgstr ""
+
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:637
+msgid ""
+"Permanently deletes a backup and its files on this server; copies on remote storages are kept. Works only when\n"
+"                sensitive actions are allowed in Duplicator > Settings > General."
+msgstr ""
+
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:673
+msgid "Site Info"
+msgstr ""
+
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:674
+msgid ""
+"Returns an overview of the site and of Duplicator: Duplicator, WordPress, PHP and database versions,\n"
+"                web server, last backup, number of storages; with schedules, how many are active and the next run; with\n"
+"                incremental backups, whether they are on, whether one can run now and why not, the snapshots and the\n"
+"                Duplicator Cloud space."
+msgstr ""
+
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:795
+msgid "Cancel Backup"
+msgstr ""
+
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:796
+msgid ""
+"Stops what a backup is doing now, at the next step of the worker; a backup that finishes before then stays\n"
+"                complete. A backup being created is stopped and its partial files discarded: poll backup-get until its status\n"
+"                is cancelled or complete. A transfer is stopped and the backup goes back to complete, its existing copies kept."
+msgstr ""
+
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:922
+msgid "Backup started. Poll backup-get with the id to track progress."
+msgstr ""
+
+#: addons/aireadyaddon/src/AbilitiesRegistrar.php:947
+msgid "Transfer started. Poll backup-get with the id to track progress."
+msgstr ""
+
+#. translators: %s: Duplicator permission name
+#: addons/aireadyaddon/src/AbilityPermission.php:39
+#, php-format
+msgid "Your account isn't allowed to do this yet. Ask a site administrator to give you the \"%s\" permission in Duplicator."
+msgstr ""
+
+#: addons/aireadyaddon/src/AbilityPermission.php:48
+msgid "Duplicator management is disabled on staging sites. Use your production site instead."
+msgstr ""
+
+#: addons/aireadyaddon/src/AbilityPermission.php:69
+msgid ""
+"Sensitive actions from an AI assistant, such as deleting, changing settings or getting the recovery link,\n"
+"                        are turned off on this site. A site administrator can allow them in Duplicator > Settings > General."
+msgstr ""
+
+#: addons/aireadyaddon/src/AbilityRegistration.php:97
+msgid "Sensitive action: ask the user to confirm before calling it."
+msgstr ""
+
+#: addons/aireadyaddon/src/ActivityLogAbilities.php:44
+msgid "List Activity Log"
+msgstr ""
+
+#. translators: %d: default number of events
+#: addons/aireadyaddon/src/ActivityLogAbilities.php:47
+#, php-format
+msgid ""
+"Returns the newest Activity Log events, %d unless limit says otherwise: backups, deletions, settings changes,\n"
+"                    license and schedule events, with severity and a short description. severity keeps only the events with that\n"
+"                    severity, such as every error. With backup_id it returns the scan and build events of that backup, each\n"
+"                    followed by its steps, to explain what happened to it."
+msgstr ""
+
+#. translators: 1: item type, 2: item id
+#: addons/aireadyaddon/src/EntityAbilities.php:154
+#, php-format
+msgid "Deleted %1$s %2$d."
+msgstr ""
+
+#. translators: %s: item type
+#: addons/aireadyaddon/src/EntityAbilities.php:201
+#, php-format
+msgid "Returns every %1$s with its settings. Pass an id to %1$s-get, %1$s-update or %1$s-delete."
+msgstr ""
+
+#. translators: %s: item type
+#: addons/aireadyaddon/src/EntityAbilities.php:204
+#, php-format
+msgid "Returns every %1$s with its settings. Pass an id to %1$s-get or %1$s-update."
+msgstr ""
+
+#. translators: %s: item type
+#: addons/aireadyaddon/src/EntityAbilities.php:207
+#, php-format
+msgid "Returns every %1$s with its settings. Pass an id to %1$s-get or %1$s-delete."
+msgstr ""
+
+#. translators: %s: item type
+#: addons/aireadyaddon/src/EntityAbilities.php:210
+#, php-format
+msgid "Returns every %1$s with its settings. Pass an id to %1$s-get."
+msgstr ""
+
+#. translators: %s: item type plural
+#: addons/aireadyaddon/src/EntityAbilities.php:214
+#, php-format
+msgid "List %s"
+msgstr ""
+
+#. translators: %s: item type
+#: addons/aireadyaddon/src/EntityAbilities.php:236
+#, php-format
+msgid "Get %s"
+msgstr ""
+
+#. translators: %s: item type
+#: addons/aireadyaddon/src/EntityAbilities.php:238
+#, php-format
+msgid "Returns one %s by id."
+msgstr ""
+
+#. translators: %s: item type
+#: addons/aireadyaddon/src/EntityAbilities.php:252
+#, php-format
+msgid "Delete %s"
+msgstr ""
+
+#. translators: %s: item type
+#: addons/aireadyaddon/src/EntityAbilities.php:255
+#, php-format
+msgid ""
+"Permanently deletes the %s with the given id.\n"
+"                        Works only when sensitive actions are allowed in Duplicator > Settings > General."
+msgstr ""
+
+#. translators: %s: comma separated field names
+#: addons/aireadyaddon/src/EntityAbilities.php:343
+#, php-format
+msgid ""
+"Passing %s works only when sensitive actions are allowed in Duplicator > Settings > General, and is a\n"
+"                        sensitive action: ask the user to confirm before passing it."
+msgstr ""
+
+#. translators: %s: item type
+#: addons/aireadyaddon/src/EntityAbilities.php:365
+#, php-format
+msgid "Create %s"
+msgstr ""
+
+#. translators: %s: item type
+#: addons/aireadyaddon/src/EntityAbilities.php:369
+#, php-format
+msgid "Creates a %1$s. Fields not passed take their default values. Returns the new %1$s."
+msgstr ""
+
+#. translators: %s: item type
+#: addons/aireadyaddon/src/EntityAbilities.php:382
+#, php-format
+msgid "Update %s"
+msgstr ""
+
+#. translators: %s: item type
+#: addons/aireadyaddon/src/EntityAbilities.php:386
+#, php-format
+msgid "Changes the passed fields of the %1$s with the given id; fields not passed keep their current values. Returns the updated %1$s."
+msgstr ""
+
+#. translators: %s: item type
+#: addons/aireadyaddon/src/EntityAbilities.php:407
+#, php-format
+msgid "Copy %s"
+msgstr ""
+
+#. translators: %s: item type
+#: addons/aireadyaddon/src/EntityAbilities.php:411
+#, php-format
+msgid ""
+"Copies the %1$s with the given id, as the admin copy does, then sets the passed fields on the copy;\n"
+"                            without name the copy is named after the original. Returns the new %1$s."
+msgstr ""
+
+#: addons/aireadyaddon/src/GeneralSettingsSection.php:69
+#: addons/aireadyaddon/template/aireadyaddon/settings/general_ai.php:37
+msgid "Allow AI assistants to run sensitive actions"
+msgstr ""
+
+#: addons/aireadyaddon/src/GeneralSettingsSection.php:140
+msgid "The AI settings could not be saved."
+msgstr ""
+
+#: addons/aireadyaddon/src/SettingsAbilities.php:75
+msgid "List Settings"
+msgstr ""
+
+#: addons/aireadyaddon/src/SettingsAbilities.php:76
+msgid ""
+"Returns every Duplicator setting an assistant can change: key, current value, description and the values the server\n"
+"                does not allow. Use it to answer how Duplicator is configured, such as its archive or database engine, email summary\n"
+"                or trace log, rather than answering from memory."
+msgstr ""
+
+#: addons/aireadyaddon/src/SettingsAbilities.php:101
+msgid "Get Setting"
+msgstr ""
+
+#: addons/aireadyaddon/src/SettingsAbilities.php:102
+msgid "Returns one Duplicator setting by key, to answer how Duplicator is configured."
+msgstr ""
+
+#: addons/aireadyaddon/src/SettingsAbilities.php:120
+msgid "Update Settings"
+msgstr ""
+
+#: addons/aireadyaddon/src/SettingsAbilities.php:121
+msgid ""
+"Changes the passed Duplicator settings; the others keep their value. Pass each setting as key: value, or pass\n"
+"                settings as a list of {key, value}, as settings-list returns them. A value the server does not allow is refused.\n"
+"                Works only when sensitive actions are allowed in Duplicator > Settings > General."
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAbilities.php:60
+msgid "Get AutoTune Status"
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAbilities.php:61
+msgid ""
+"Returns the AutoTune session: AutoTune runs test backups to find the build settings that work on this server.\n"
+"                status is none when it never ran; each attempt has its backup, the configuration it tried and its outcome.\n"
+"                The build settings it chose are in settings-list."
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAbilities.php:75
+#: src/Views/AutoTunePageData.php:847
+msgid "Start AutoTune"
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAbilities.php:76
+msgid ""
+"Starts an AutoTune session: it runs test backups on the default local storage, changing the build settings\n"
+"                until a backup succeeds, and pauses the active schedules meanwhile. Poll autotune-status until status is no\n"
+"                longer running. Works only when sensitive actions are allowed in Duplicator > Settings > General."
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAbilities.php:96
+msgid "Abort AutoTune"
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAbilities.php:97
+msgid ""
+"Stops the running AutoTune session and cancels its test backup at the next step of the worker: until then\n"
+"                status stays running with stop_reason set. Poll autotune-status until status is aborted."
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAbilities.php:119
+msgid "Purge Orphaned Backup Files"
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAbilities.php:120
+msgid ""
+"Deletes the backup files in the default local storage that no backup owns, as Tools > General does.\n"
+"                Works only when sensitive actions are allowed in Duplicator > Settings > General."
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAbilities.php:143
+msgid "Clean Temporary Files"
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAbilities.php:144
+msgid "Removes the temporary build files, as Tools > General does. Refused while a backup runs."
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAbilities.php:159
+msgid "Remove Installer Files"
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAbilities.php:160
+msgid ""
+"Removes the installer files left on the site after an installation and purges the caches, as Tools > General\n"
+"                does. manual_purge lists the caches to regenerate by hand."
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAiPage.php:47
+msgid "AI"
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAiPage.php:66
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:109
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:115
+msgid "<b>List</b>, <b>view</b>, <b>create</b> and <b>update</b> them."
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAiPage.php:68
+msgid "<b>List</b>, <b>view</b> and <b>update</b> them."
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAiPage.php:70
+msgid "<b>List</b> and <b>view</b> them."
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAiPage.php:74
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:110
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:116
+msgid "<b>Delete</b> one when allowed in the settings."
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAiPage.php:77
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:111
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:117
+msgid "<b>Copy</b> one, changing the settings you name on the copy."
+msgstr ""
+
+#. translators: %s: required WordPress version, in bold
+#: addons/aireadyaddon/src/ToolsAiPage.php:127
+#, php-format
+msgid "The AI features need %s. Update WordPress to use them."
+msgstr ""
+
+#: addons/aireadyaddon/src/ToolsAiPage.php:128
+msgid "WordPress 6.9 or later"
+msgstr ""
+
+#: addons/aireadyaddon/template/aireadyaddon/settings/general_ai.php:26
+msgid "AI Assistants"
+msgstr ""
+
+#: addons/aireadyaddon/template/aireadyaddon/settings/general_ai.php:41
+msgid ""
+"Sensitive actions delete or change things, or give out the recovery link: deleting backups, schedules, templates\n"
+"            and storages, changing settings and the number of backups a storage keeps, starting AutoTune, purging orphaned\n"
+"            backup files, and setting or reading the recovery point."
+msgstr ""
+
+#. translators: %s: link to Tools > AI
+#: addons/aireadyaddon/template/aireadyaddon/settings/general_ai.php:53
+#, php-format
+msgid "When checked, an assistant can run them; it is asked to confirm each one with you first. %s"
+msgstr ""
+
+#: addons/aireadyaddon/template/aireadyaddon/settings/general_ai.php:57
+msgid "More info and all actions in Tools > AI"
 msgstr ""
 
 #: addons/dupcloudaddon/DupCloudAddon.php:74
+#: src/Package/PackageUtils.php:191
 #: src/Package/TraitPackageStorage.php:65
 #, php-format
 msgid "Could not find storage ID %d!"
@@ -122,122 +497,123 @@ msgid ""
 "                    space available in the %1$s%3$s%2$s storage location."
 msgstr ""
 
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:56
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:223
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:57
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:237
 #: addons/dupcloudaddon/template/dupcloudaddon/configs/general_settings.php:23
 msgid "Duplicator Cloud"
 msgstr ""
 
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:155
-#: src/Models/Storages/AbstractStorageEntity.php:1462
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:168
+#: src/Models/Storages/AbstractStorageEntity.php:1777
 #, php-format
 msgid "Testing %s storage..."
 msgstr ""
 
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:159
-#: src/Models/Storages/AbstractStorageEntity.php:1466
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:172
+#: src/Models/Storages/AbstractStorageEntity.php:1781
 #, php-format
 msgid "Storage %s isn't supported on current server"
 msgstr ""
 
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:164
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:177
 msgid "Check if storage is ready to use."
 msgstr ""
 
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:169
+#. translators: 1: storage type name, 2: why the storage is not ready
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:183
 #, php-format
-msgid "Storage %1$s is not valid message %2$s"
+msgid "Storage %1$s is not ready: %2$s"
 msgstr ""
 
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:176
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:177
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:190
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:191
 msgid "Storage test successful."
 msgstr ""
 
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:181
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:195
 #, php-format
 msgid "Error during storage test: %s"
 msgstr ""
 
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:261
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:275
 #: addons/dupcloudaddon/template/dupcloudaddon/connect/storage_auth.php:134
 msgid "Manage Backups"
 msgstr ""
 
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:279
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:293
 #: addons/dupcloudaddon/template/dupcloudaddon/connect/storage_auth.php:34
 msgid "Explore plans and features"
 msgstr ""
 
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:304
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:318
 msgid "Not connected."
 msgstr ""
 
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:376
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:395
 msgid "No access token provided"
 msgstr ""
 
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:446
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:474
 msgid "Error revoking authorization."
 msgstr ""
 
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:457
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:485
 msgid "Duplicator Cloud is disconnected successfully."
 msgstr ""
 
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:517
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:553
 msgid "Duplicator Cloud Storage was updated."
 msgstr ""
 
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:749
-#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:759
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:797
+#: addons/dupcloudaddon/src/Models/DupCloudStorage.php:807
 #: src/Package/AutoTune/AutoTuneDetector.php:506
 msgid "unknown"
 msgstr ""
 
-#: addons/dupcloudaddon/src/Utils/DupCloudClient.php:182
+#: addons/dupcloudaddon/src/Utils/DupCloudClient.php:194
 msgid "DupCloud rate limit hit for this URL. Please try again later."
 msgstr ""
 
-#: addons/dupcloudaddon/src/Utils/DupCloudClient.php:219
+#: addons/dupcloudaddon/src/Utils/DupCloudClient.php:235
 #, php-format
 msgid "Remote server error code: %s"
 msgstr ""
 
-#: addons/dupcloudaddon/src/Utils/DupCloudClient.php:228
+#: addons/dupcloudaddon/src/Utils/DupCloudClient.php:244
 msgid "Remote server error"
 msgstr ""
 
-#: addons/dupcloudaddon/src/Utils/DupCloudClient.php:235
+#: addons/dupcloudaddon/src/Utils/DupCloudClient.php:251
 #: src/Views/AutoTunePageData.php:562
 msgid "Success"
 msgstr ""
 
-#: addons/dupcloudaddon/src/Utils/DupCloudClient.php:956
+#: addons/dupcloudaddon/src/Utils/DupCloudClient.php:1072
 msgid "Invalid token format. Please ensure you copied the complete token."
 msgstr ""
 
-#: addons/dupcloudaddon/src/Utils/DupCloudClient.php:963
+#: addons/dupcloudaddon/src/Utils/DupCloudClient.php:1079
 msgid "Invalid token. Both license key and authentication token are required."
 msgstr ""
 
-#: addons/dupcloudaddon/src/Utils/DupCloudClient.php:1000
+#: addons/dupcloudaddon/src/Utils/DupCloudClient.php:1116
 msgid "Authentication succeeded but no storage token was provided."
 msgstr ""
 
-#: addons/dupcloudaddon/src/Utils/DupCloudStorageAdapter.php:113
+#: addons/dupcloudaddon/src/Utils/DupCloudStorageAdapter.php:116
 msgid "Remote storage connection failed"
 msgstr ""
 
-#: addons/dupcloudaddon/src/Utils/DupCloudStorageAdapter.php:116
+#: addons/dupcloudaddon/src/Utils/DupCloudStorageAdapter.php:119
 msgid "Storage configuration is invalid"
 msgstr ""
 
-#: addons/dupcloudaddon/src/Utils/DupCloudStorageAdapter.php:119
+#: addons/dupcloudaddon/src/Utils/DupCloudStorageAdapter.php:122
 msgid "Duplicator Cloud storage is inactive. Please check your license status."
 msgstr ""
 
-#: addons/dupcloudaddon/src/Utils/DupCloudStorageAdapter.php:122
+#: addons/dupcloudaddon/src/Utils/DupCloudStorageAdapter.php:125
 msgid "Storage is full"
 msgstr ""
 
@@ -265,7 +641,7 @@ msgid "Connect to Duplicator Cloud Storage."
 msgstr ""
 
 #: addons/dupcloudaddon/template/dupcloudaddon/configs/global_options.php:27
-#: src/Models/Storages/Local/LocalStorage.php:742
+#: src/Models/Storages/Local/LocalStorage.php:754
 msgid "Upload Chunk Size"
 msgstr ""
 
@@ -529,50 +905,50 @@ msgstr ""
 msgid "Priority Support"
 msgstr ""
 
-#: addons/litebase/LiteBase.php:144
+#: addons/litebase/LiteBase.php:147
 #: addons/litebase/src/Controllers/LiteToolsController.php:48
 msgid "Support"
 msgstr ""
 
-#: addons/litebase/LiteBase.php:148
+#: addons/litebase/LiteBase.php:151
 msgid "Docs"
 msgstr ""
 
-#: addons/litebase/LiteBase.php:152
+#: addons/litebase/LiteBase.php:155
 msgid "Migration Services"
 msgstr ""
 
-#: addons/litebase/LiteBase.php:156
+#: addons/litebase/LiteBase.php:159
 msgid "Free Plugins"
 msgstr ""
 
-#: addons/litebase/LiteBase.php:224
+#: addons/litebase/LiteBase.php:227
 msgid "Failed to connect."
 msgstr ""
 
-#: addons/litebase/LiteBase.php:225
+#: addons/litebase/LiteBase.php:228
 msgid "Message: "
 msgstr ""
 
-#: addons/litebase/LiteBase.php:226
+#: addons/litebase/LiteBase.php:229
 msgid "Please try again or contact support if the issue persists."
 msgstr ""
 
-#: addons/litebase/LiteBase.php:232
+#: addons/litebase/LiteBase.php:235
 msgid "Loading..."
 msgstr ""
 
-#: addons/litebase/LiteBase.php:233
-#: addons/litebase/LiteBase.php:244
+#: addons/litebase/LiteBase.php:236
+#: addons/litebase/LiteBase.php:247
 msgid "Failure"
 msgstr ""
 
-#: addons/litebase/LiteBase.php:234
+#: addons/litebase/LiteBase.php:237
 #: addons/litebase/src/Utils/ExtraPlugins/ExtraItem.php:187
 msgid "Active"
 msgstr ""
 
-#: addons/litebase/LiteBase.php:235
+#: addons/litebase/LiteBase.php:238
 #: addons/litebase/template/litebase/about-us/about-info/extra-plugin-item.php:19
 msgid "Activated"
 msgstr ""
@@ -718,6 +1094,8 @@ msgid "Recovery"
 msgstr ""
 
 #: addons/litebase/src/Controllers/LiteToolsController.php:46
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:51
+#: src/Models/TemplateEntity.php:181
 #: template/admin_pages/settings/migrate_settings/import.php:72
 msgid "Templates"
 msgstr ""
@@ -749,6 +1127,7 @@ msgstr ""
 
 #: addons/litebase/src/Controllers/Mocks/MockIncrementalPageController.php:26
 #: addons/litebase/src/Controllers/Mocks/MockIncrementalPageController.php:27
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:57
 msgid "Incremental Backups"
 msgstr ""
 
@@ -843,10 +1222,132 @@ msgstr ""
 msgid "Website Development Instructor"
 msgstr ""
 
+#: addons/litebase/src/LiteAiAbilityIntegration.php:56
+msgid ""
+"Scheduled backups are a Duplicator Pro feature: Duplicator Pro runs backups automatically, hourly, daily, weekly\n"
+"            or monthly, to any storage."
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:61
+msgid ""
+"Backup templates are a Duplicator Pro feature: they save what a backup includes and excludes, such as folders,\n"
+"            file types and tables, to reuse it for backups and schedules."
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:66
+msgid "Recovery points are a Duplicator Pro feature: they restore the site from a backup even when wp-admin is unreachable."
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:72
+msgid "List Schedules"
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:78
+msgid "Create Schedule"
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:84
+msgid "List Templates"
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:90
+msgid "Create Template"
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:96
+msgid "Get Recovery Point"
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:102
+msgid "Set Recovery Point"
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:111
+msgid "In Duplicator Lite it answers with what Duplicator Pro adds and a link: tell the user."
+msgstr ""
+
+#. translators: 1: what the Duplicator Pro feature does, 2: Duplicator Pro upgrade URL
+#: addons/litebase/src/LiteAiAbilityIntegration.php:148
+#, php-format
+msgid "%1$s Learn more: %2$s"
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:168
+msgid ""
+"Duplicator Pro runs backups automatically on a schedule, and keeps a recovery point that restores the site\n"
+"                even when wp-admin is unreachable."
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:175
+msgid ""
+"Duplicator Cloud works in Duplicator Lite; Google Drive, Dropbox, OneDrive, Amazon S3 and FTP/SFTP storages\n"
+"                come with Duplicator Pro."
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:202
+msgid "Backups run automatically on a schedule"
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:203
+msgid "Recovery points that restore the site even when wp-admin is unreachable"
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:204
+msgid "Google Drive, Dropbox, OneDrive, Amazon S3 and FTP/SFTP storages"
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:205
+msgid "Backup templates with file and table exclusions"
+msgstr ""
+
+#: addons/litebase/src/LiteAiAbilityIntegration.php:206
+msgid "Incremental backups that send only the site changes to Duplicator Cloud"
+msgstr ""
+
 #: addons/litebase/src/Menu/PluginActionLink.php:37
 #: addons/litebase/src/Menu/UpgradeMenuEntry.php:40
 #: addons/litebase/template/litebase/storages/table-features.php:30
 msgid "Upgrade to Pro"
+msgstr ""
+
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:39
+msgid "Recovery Point"
+msgstr ""
+
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:45
+msgid "Schedules"
+msgstr ""
+
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:103
+msgid "Create a backup from one of your <b>templates</b>, with its exclusions."
+msgstr ""
+
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:105
+msgid "<b>Get</b> the recovery point and its recovery link."
+msgstr ""
+
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:106
+msgid "<b>Set</b> a full backup as the recovery point."
+msgstr ""
+
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:112
+msgid "<b>Run</b> a schedule now, <b>activate</b> or <b>deactivate</b> it."
+msgstr ""
+
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:120
+msgid "<b>Run</b> an incremental backup now, <b>activate</b> or <b>deactivate</b> incremental backups."
+msgstr ""
+
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:121
+msgid "Set <b>how often</b> they run and <b>how many</b> Duplicator Cloud keeps."
+msgstr ""
+
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:122
+msgid "<b>List</b> them and <b>check</b> whether one can run now."
+msgstr ""
+
+#: addons/litebase/src/Notifications/AiPageProAbilities.php:124
+msgid "<b>Manage more storage types</b>, such as Amazon S3, Google Drive, Dropbox, OneDrive, FTP and SFTP."
 msgstr ""
 
 #: addons/litebase/src/Notifications/MultisiteNotice.php:60
@@ -868,8 +1369,8 @@ msgstr ""
 
 #: addons/litebase/src/Notifications/PackageComponentsLite.php:63
 #: addons/litebase/template/litebase/packages/components-message.php:25
-#: src/Controllers/SettingsPageController.php:964
-#: src/Controllers/SettingsPageController.php:1078
+#: src/Controllers/SettingsPageController.php:606
+#: src/Models/Settings/BackupApiSettings.php:629
 #: template/admin_pages/settings/backup/advanced_settings.php:129
 msgid "Custom"
 msgstr ""
@@ -1972,55 +2473,55 @@ msgstr[1] ""
 msgid "Error deleting logs: %s"
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:278
+#: src/Ajax/ServicesPackage.php:279
 #, php-format
 msgid ""
 "Error occurred. Error message: %1$s<br>\n"
 "Trace: %2$s"
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:369
-#: src/Ajax/ServicesPackage.php:683
-#: src/Ajax/ServicesPackage.php:710
-#: src/Ajax/ServicesPackage.php:754
-#: src/Ajax/ServicesPackage.php:900
-#: src/Ajax/ServicesPackage.php:996
+#: src/Ajax/ServicesPackage.php:370
+#: src/Ajax/ServicesPackage.php:692
+#: src/Ajax/ServicesPackage.php:719
+#: src/Ajax/ServicesPackage.php:763
+#: src/Ajax/ServicesPackage.php:909
+#: src/Ajax/ServicesPackage.php:962
 msgid "Invalid request."
 msgstr ""
 
 #. translators: %s: Backup name
-#: src/Ajax/ServicesPackage.php:380
+#: src/Ajax/ServicesPackage.php:382
 #, php-format
 msgid "Backup %s cannot be deleted."
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:484
+#: src/Ajax/ServicesPackage.php:485
 msgid "Couldn't get Backup."
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:593
+#: src/Ajax/ServicesPackage.php:594
 #: src/Controllers/PackagesPageActions.php:91
 msgid "Backups cannot be removed while an AutoTune session is running."
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:700
+#: src/Ajax/ServicesPackage.php:709
 msgid "File type not supported."
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:704
+#: src/Ajax/ServicesPackage.php:713
 msgid "File doesn't exist"
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:763
+#: src/Ajax/ServicesPackage.php:772
 #, php-format
 msgid "Could not get Backup by ID %s"
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:790
-#: src/Ajax/ServicesPackage.php:796
-#: src/Models/ActivityLog/LogEventBackupCreate.php:459
-#: src/Models/ActivityLog/LogEventBackupCreate.php:506
-#: src/Package/PackageUtils.php:567
+#: src/Ajax/ServicesPackage.php:799
+#: src/Ajax/ServicesPackage.php:805
+#: src/Models/ActivityLog/LogEventBackupCreate.php:480
+#: src/Models/ActivityLog/LogEventBackupCreate.php:527
+#: src/Package/PackageUtils.php:725
 #: src/Utils/Email/EmailSummary.php:261
 #: src/Utils/Email/EmailSummary.php:269
 #: template/admin_pages/activity_log/parts/sub_table_mini.php:51
@@ -2030,16 +2531,16 @@ msgstr ""
 msgid "N/A"
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:804
-#: src/Models/ActivityLog/LogEventBackupCreate.php:406
+#: src/Ajax/ServicesPackage.php:813
+#: src/Models/ActivityLog/LogEventBackupCreate.php:413
 #: src/Models/ActivityLog/LogEventUnknown.php:27
 #: src/Models/Storages/UnknownStorage.php:80
 #: src/Models/Storages/UnknownStorage.php:90
 #: src/Package/BuildRequirements.php:250
 #: src/Package/BuildRequirements.php:276
-#: src/Package/PackageUtils.php:502
-#: src/Package/PackageUtils.php:551
-#: src/Package/PackageUtils.php:615
+#: src/Package/PackageUtils.php:660
+#: src/Package/PackageUtils.php:709
+#: src/Package/PackageUtils.php:773
 #: src/Package/Storage/UploadInfo.php:301
 #: template/admin_pages/activity_log/parts/sub_table_mini.php:60
 #: template/admin_pages/activity_log/parts/table_row.php:36
@@ -2050,40 +2551,35 @@ msgstr ""
 msgid "Unknown"
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:829
+#: src/Ajax/ServicesPackage.php:838
 msgid "No Backup is building."
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:840
+#: src/Ajax/ServicesPackage.php:849
 msgid "Synchronizing with server..."
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:843
+#: src/Ajax/ServicesPackage.php:852
 msgid "Another Backup is presently running."
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:848
+#: src/Ajax/ServicesPackage.php:857
 msgid "Cancellation pending..."
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:914
-#, php-format
-msgid "Could not find Backup ID %d!"
-msgstr ""
-
-#: src/Ajax/ServicesPackage.php:1063
+#: src/Ajax/ServicesPackage.php:1029
 msgid "Invalid action."
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:1067
+#: src/Ajax/ServicesPackage.php:1033
 msgid "Invalid Backup ID."
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:1071
+#: src/Ajax/ServicesPackage.php:1037
 msgid "Backup already exists locally."
 msgstr ""
 
-#: src/Ajax/ServicesPackage.php:1096
+#: src/Ajax/ServicesPackage.php:1062
 msgid "Backup does not exist in any remote storage."
 msgstr ""
 
@@ -2176,7 +2672,7 @@ msgid "Warning"
 msgstr ""
 
 #: src/Controllers/ActivityLogPageController.php:159
-#: src/Models/ActivityLog/LogEventBackupCreate.php:231
+#: src/Models/ActivityLog/LogEventBackupCreate.php:244
 #: src/Models/ActivityLog/LogUtils.php:85
 #: src/Views/AutoTunePageData.php:801
 msgid "Error"
@@ -2202,44 +2698,55 @@ msgstr ""
 msgid "Couldn't set backup for cancelling."
 msgstr ""
 
-#: src/Controllers/PackagesPageController.php:89
+#: src/Controllers/PackagesPageController.php:60
+#: src/Controllers/PackagesPageController.php:61
+#: src/Controllers/PackagesPageController.php:97
+#: src/Controllers/PackagesPageController.php:399
+#: src/Controllers/SettingsPageController.php:90
+#: template/admin_pages/packages/details/details_header.php:48
+#: template/admin_pages/packages/details/details_wpbody_header.php:28
+#: template/mail/email_summary.php:98
+msgid "Backups"
+msgstr ""
+
+#: src/Controllers/PackagesPageController.php:90
 msgid "New Backup"
 msgstr ""
 
-#: src/Controllers/PackagesPageController.php:92
+#: src/Controllers/PackagesPageController.php:93
 msgid "New Backup - Scan"
 msgstr ""
 
-#: src/Controllers/PackagesPageController.php:374
+#: src/Controllers/PackagesPageController.php:375
 msgid "Backup: Not Found"
 msgstr ""
 
-#: src/Controllers/PackagesPageController.php:376
+#: src/Controllers/PackagesPageController.php:377
 #, php-format
 msgid "Backup: %1$s"
 msgstr ""
 
-#: src/Controllers/PackagesPageController.php:391
+#: src/Controllers/PackagesPageController.php:392
 msgid "New"
 msgstr ""
 
-#: src/Controllers/PackagesPageController.php:395
+#: src/Controllers/PackagesPageController.php:396
 msgid "All"
 msgstr ""
 
-#: src/Controllers/PackagesPageController.php:496
+#: src/Controllers/PackagesPageController.php:497
 msgid "lock cannot be acquired"
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:71
-#: src/Controllers/SettingsPageController.php:72
+#: src/Controllers/SettingsPageController.php:69
+#: src/Controllers/SettingsPageController.php:70
 #: template/admin_pages/settings/general/advanced_settings.php:31
 #: template/admin_pages/settings/migrate_settings/import.php:86
 msgid "Settings"
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:91
-#: src/Controllers/ToolsPageController.php:227
+#: src/Controllers/SettingsPageController.php:89
+#: src/Controllers/ToolsPageController.php:222
 #: src/Models/ActivityLog/LogEventSettingsChange.php:257
 #: src/Package/BuildRequirements.php:167
 #: template/admin_pages/packages/details/parts/general_card.php:84
@@ -2247,11 +2754,12 @@ msgstr ""
 msgid "General"
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:93
+#: src/Controllers/SettingsPageController.php:91
 #: src/Controllers/StoragePageController.php:35
 #: src/Controllers/StoragePageController.php:36
 #: src/Controllers/StoragePageController.php:61
 #: src/Models/ActivityLog/LogEventSettingsChange.php:259
+#: src/Models/Storages/AbstractStorageEntity.php:108
 #: template/admin_pages/packages/details/transfer.php:102
 #: template/admin_pages/packages/setup/section_storages.php:21
 #: template/admin_pages/settings/migrate_settings/import.php:61
@@ -2260,179 +2768,78 @@ msgstr ""
 msgid "Storage"
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:94
+#: src/Controllers/SettingsPageController.php:92
 msgid "Import/Export Settings"
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:369
-#: src/Controllers/SettingsPageController.php:875
-#: src/Controllers/SettingsPageController.php:999
-#: src/Core/Options/Rules/CompressionRule.php:48
-#: src/Package/BuildRequirements.php:426
-#: src/Views/AutoTunePageData.php:752
-#: template/admin_pages/packages/details/parts/database_card.php:74
-#: template/admin_pages/packages/details/parts/files_card.php:78
-#: template/admin_pages/packages/details/parts/prefills_card.php:46
-#: template/admin_pages/settings/backup/installer_settings.php:125
-#: template/admin_pages/settings/backup/processing_settings.php:36
-#: template/admin_pages/settings/general/debug_settings.php:34
-msgid "Off"
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:370
-#: src/Core/Options/Rules/CompressionRule.php:48
-#: template/admin_pages/packages/details/parts/database_card.php:74
-#: template/admin_pages/packages/details/parts/files_card.php:78
-#: template/admin_pages/packages/details/parts/prefills_card.php:46
-#: template/admin_pages/settings/general/debug_settings.php:37
-msgid "On"
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:450
-msgid "Can't update general settings"
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:453
+#: src/Controllers/SettingsPageController.php:338
 msgid "General settings updated."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:476
-msgid "Can't update activity log retention settings"
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:545
-msgid "When the backup archive is removed from all storages"
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:546
-msgid "When maximum is reached for Default Local Storage"
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:547
-#: src/Utils/Email/EmailSummary.php:399
-msgid "Never"
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:557
+#: src/Controllers/SettingsPageController.php:361
 msgid "Can't update storage settings."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:559
+#: src/Controllers/SettingsPageController.php:367
 msgid "Storage settings updated."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:588
+#: src/Controllers/SettingsPageController.php:389
 msgid "No import options selected."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:592
+#: src/Controllers/SettingsPageController.php:393
 msgid "No file uploaded."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:598
+#: src/Controllers/SettingsPageController.php:399
 msgid "Couldn't import settings."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:601
+#: src/Controllers/SettingsPageController.php:402
 #, php-format
 msgid "Couldn't import settings. Error: %s"
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:613
+#: src/Controllers/SettingsPageController.php:414
 msgid "Settings imported."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:631
+#: src/Controllers/SettingsPageController.php:432
 msgid "Settings reset to defaults successfully"
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:643
+#: src/Controllers/SettingsPageController.php:444
 msgid "Failed to reset settings."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:665
-msgid "Trace settings have been turned off."
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:672
-msgid "Trace settings have been turned on."
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:678
+#: src/Controllers/SettingsPageController.php:463
 msgid "Trace mode not valid."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:758
-#: src/Controllers/SettingsPageController.php:812
-#: template/admin_pages/settings/backup/archive_settings.php:118
-#: template/admin_pages/settings/backup/database_settings.php:207
-msgid "Multi-Threaded"
+#: src/Controllers/SettingsPageController.php:472
+msgid "Trace settings have been turned on."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:759
-#: src/Controllers/SettingsPageController.php:813
-#: template/admin_pages/settings/backup/archive_settings.php:122
-#: template/admin_pages/settings/backup/database_settings.php:212
-msgid "Single-Threaded"
+#: src/Controllers/SettingsPageController.php:473
+msgid "Trace settings have been turned off."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:876
-#: src/Views/AutoTunePageData.php:745
-#: template/admin_pages/packages/scan/items/setup/hosting_status.php:26
-#: template/admin_pages/packages/scan/items/setup/hosting_status.php:40
-#: template/admin_pages/packages/scan/items/setup/parts/hosting_tooltip_memory.php:7
-#: template/admin_pages/packages/scan/items/setup/parts/hosting_tooltip_timeout.php:7
-#: template/admin_pages/settings/backup/processing_settings.php:46
-msgid "Low"
+#: src/Controllers/SettingsPageController.php:590
+msgid "Backup Settings Saved."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:877
-#: src/Views/AutoTunePageData.php:747
-#: template/admin_pages/settings/backup/processing_settings.php:56
-msgid "Medium"
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:878
-#: src/Views/AutoTunePageData.php:749
-#: template/admin_pages/settings/backup/processing_settings.php:66
-msgid "High"
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:907
-msgid "Standard (installer.php)"
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:908
-msgid "Hashed (more secure)"
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:963
-#: src/Controllers/SettingsPageController.php:1073
+#: src/Controllers/SettingsPageController.php:601
+#: src/Models/Settings/BackupApiSettings.php:628
 #: template/admin_pages/settings/backup/advanced_settings.php:52
 #: template/admin_pages/settings/backup/advanced_settings.php:70
 #: template/admin_pages/settings/backup/advanced_settings.php:126
 msgid "Auto"
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:1000
-msgid "Email notification"
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:1001
-msgid "Automatic cleanup"
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:1053
-msgid "Can't Save Backup Settings"
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:1056
-msgid "Backup Settings Saved."
-msgstr ""
-
-#: src/Controllers/SettingsPageController.php:1074
+#: src/Controllers/SettingsPageController.php:602
 #: src/Core/Options/Rules/EncryptionRule.php:53
-#: src/Models/ActivityLog/LogEventBackupCreate.php:699
+#: src/Models/ActivityLog/LogEventBackupCreate.php:740
 #: src/Package/BuildRequirements.php:455
 #: src/Views/AutoTunePageData.php:719
 #: template/admin_pages/packages/scan/items/database/tables.php:74
@@ -2443,10 +2850,10 @@ msgstr ""
 msgid "Disabled"
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:1075
+#: src/Controllers/SettingsPageController.php:603
 #: src/Core/Options/Rules/EncryptionRule.php:53
-#: src/Models/ActivityLog/LogEventBackupCreate.php:699
-#: src/Models/ActivityLog/LogEventBackupCreate.php:924
+#: src/Models/ActivityLog/LogEventBackupCreate.php:740
+#: src/Models/ActivityLog/LogEventBackupCreate.php:973
 #: src/Package/BuildRequirements.php:455
 #: src/Views/AutoTunePageData.php:719
 #: template/admin_pages/packages/scan/items/archive/main.php:39
@@ -2459,21 +2866,21 @@ msgstr ""
 msgid "Enabled"
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:1076
+#: src/Controllers/SettingsPageController.php:604
 #: template/admin_pages/settings/backup/advanced_settings.php:73
 msgid "HTTP"
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:1077
+#: src/Controllers/SettingsPageController.php:605
 #: template/admin_pages/settings/backup/advanced_settings.php:76
 msgid "HTTPS"
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:1133
+#: src/Controllers/SettingsPageController.php:661
 msgid "Successfully Found"
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:1186
+#: src/Controllers/SettingsPageController.php:714
 #, php-format
 msgctxt "%1$s and %2$s are html anchor tags or link"
 msgid ""
@@ -2481,7 +2888,7 @@ msgid ""
 "                            to resolve this problem. Please check this %1$sFAQ page%2$s for possible solution."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:1201
+#: src/Controllers/SettingsPageController.php:729
 #, php-format
 msgctxt "%1$s and %2$s are html anchor tags or link"
 msgid ""
@@ -2489,7 +2896,7 @@ msgid ""
 "                            Please check file permission to resolve this problem. Please check this %1$sFAQ page%2$s for possible solution."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:1217
+#: src/Controllers/SettingsPageController.php:745
 #, php-format
 msgctxt "%1$s and %2$s are html anchor tags or links"
 msgid ""
@@ -2499,13 +2906,13 @@ msgid ""
 "                        contact your server admin for the correct path. For a list of approved providers that support mysqldump %1$sclick here%2$s."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:1229
+#: src/Controllers/SettingsPageController.php:757
 msgid ""
 "The mysqldump program was not found at its default location.\n"
 "                    To use mysqldump, ask your host to install it or for a custom mysqldump path."
 msgstr ""
 
-#: src/Controllers/SettingsPageController.php:1239
+#: src/Controllers/SettingsPageController.php:767
 #, php-format
 msgctxt "%1$s and %2$s are html anchor tags or links"
 msgid ""
@@ -2531,73 +2938,69 @@ msgstr ""
 msgid "Storage Copied Successfully."
 msgstr ""
 
-#: src/Controllers/ToolsPageController.php:67
-#: src/Controllers/ToolsPageController.php:68
+#: src/Controllers/ToolsPageController.php:62
+#: src/Controllers/ToolsPageController.php:63
 msgid "Tools"
 msgstr ""
 
-#: src/Controllers/ToolsPageController.php:147
+#: src/Controllers/ToolsPageController.php:142
 msgid "AutoTune session aborted."
 msgstr ""
 
-#: src/Controllers/ToolsPageController.php:148
+#: src/Controllers/ToolsPageController.php:143
 msgid "Abort the running AutoTune session?"
 msgstr ""
 
-#: src/Controllers/ToolsPageController.php:149
+#: src/Controllers/ToolsPageController.php:144
 msgid "Start AutoTune? Backup settings will be modified."
 msgstr ""
 
-#: src/Controllers/ToolsPageController.php:150
+#: src/Controllers/ToolsPageController.php:145
 #, php-format
 msgid "Attempt %1$d: %2$s"
 msgstr ""
 
-#: src/Controllers/ToolsPageController.php:151
+#: src/Controllers/ToolsPageController.php:146
 #, php-format
 msgid "Test Backup #%d"
 msgstr ""
 
-#: src/Controllers/ToolsPageController.php:152
+#: src/Controllers/ToolsPageController.php:147
 #, php-format
 msgid "was %s"
 msgstr ""
 
-#: src/Controllers/ToolsPageController.php:153
+#: src/Controllers/ToolsPageController.php:148
 msgid "unchanged"
 msgstr ""
 
-#: src/Controllers/ToolsPageController.php:154
+#: src/Controllers/ToolsPageController.php:149
 msgid "The AutoTune session was aborted"
 msgstr ""
 
-#: src/Controllers/ToolsPageController.php:155
+#: src/Controllers/ToolsPageController.php:150
 msgid "AutoTune could not find a working configuration"
 msgstr ""
 
-#: src/Controllers/ToolsPageController.php:228
-#: src/Package/PackageUtils.php:453
+#: src/Controllers/ToolsPageController.php:223
+#: src/Package/PackageUtils.php:611
 #: template/admin_pages/packages/package_create_button.php:58
 msgid "AutoTune"
 msgstr ""
 
-#: src/Controllers/ToolsPageController.php:229
+#: src/Controllers/ToolsPageController.php:224
 msgid "Server Info"
 msgstr ""
 
-#: src/Controllers/ToolsPageController.php:230
+#: src/Controllers/ToolsPageController.php:225
 msgid "Duplicator Logs"
 msgstr ""
 
-#: src/Controllers/ToolsPageController.php:231
+#: src/Controllers/ToolsPageController.php:226
 msgid "PHP Logs"
 msgstr ""
 
-#: src/Controllers/ToolsPageController.php:232
-msgid "AI"
-msgstr ""
-
-#: src/Controllers/ToolsPageController.php:504
+#: src/Controllers/ToolsPageController.php:441
 msgid "No trace log found"
 msgstr ""
 
@@ -2690,67 +3093,264 @@ msgstr ""
 msgid "You do not have sufficient permissions to access this page."
 msgstr ""
 
-#: src/Core/Exceptions/DupliException.php:127
+#: src/Core/Exceptions/DupliException.php:130
 msgid ""
 "Your hosting account ran out of disk space or reached its storage quota.\n"
 "                Free up space by removing unneeded files or old backups, or contact your\n"
 "                hosting provider to increase the available space, then run the Backup again."
 msgstr ""
 
-#: src/Core/Exceptions/DupliException.php:150
+#: src/Core/Exceptions/DupliException.php:153
 msgid ""
 "A Backup file reached the maximum file size allowed by your hosting server.\n"
 "                This limit is part of the hosting configuration: contact your hosting provider to raise it,\n"
 "                or reduce the Backup size with filters."
 msgstr ""
 
-#: src/Core/MigrationMng.php:364
+#: src/Core/MigrationMng.php:446
 msgid "NOTICE: Safe mode (Basic) was enabled during install, be sure to re-enable all your plugins."
 msgstr ""
 
-#: src/Core/MigrationMng.php:367
+#: src/Core/MigrationMng.php:449
 msgid "NOTICE: Safe mode (Advanced) was enabled during install, be sure to re-enable all your plugins."
 msgstr ""
 
-#: src/Core/MigrationMng.php:444
+#: src/Core/MigrationMng.php:526
 #, php-format
 msgid "Installer file <b>%s</b> removed for security reasons"
 msgstr ""
 
-#: src/Core/MigrationMng.php:449
+#: src/Core/MigrationMng.php:531
 #, php-format
 msgid "Can't remove installer file <b>%s</b>, please remove it for security reasons"
 msgstr ""
 
-#: src/Core/MigrationMng.php:460
+#: src/Core/MigrationMng.php:542
 #, php-format
 msgid "Installer file <b>%s</b> renamed with HASH"
 msgstr ""
 
-#: src/Core/MigrationMng.php:466
+#: src/Core/MigrationMng.php:548
 #, php-format
 msgid "Can't rename installer file <b>%s</b> with HASH, please remove it for security reasons"
 msgstr ""
 
-#: src/Core/MigrationMng.php:499
+#: src/Core/MigrationMng.php:581
 msgid "Original files folder moved in installer backup directory"
 msgstr ""
 
-#: src/Core/MigrationMng.php:504
+#: src/Core/MigrationMng.php:586
 #, php-format
 msgid "Can't move %1$s to %2$s"
 msgstr ""
 
-#: src/Core/MigrationMng.php:522
+#: src/Core/MigrationMng.php:604
 msgid "Installer log"
 msgstr ""
 
-#: src/Core/MigrationMng.php:523
+#: src/Core/MigrationMng.php:605
 msgid "Installer boot log"
 msgstr ""
 
-#: src/Core/MigrationMng.php:524
+#: src/Core/MigrationMng.php:606
 msgid "Original files folder"
+msgstr ""
+
+#: src/Core/Models/Api/AbstractApiEntity.php:206
+#, php-format
+msgid "Unknown or read-only fields: %s."
+msgstr ""
+
+#: src/Core/Models/Api/AbstractApiEntity.php:217
+#, php-format
+msgid "The %s field is required."
+msgstr ""
+
+#: src/Core/Models/Api/AbstractApiSettings.php:91
+#: src/Core/Models/Api/ApiField.php:356
+#, php-format
+msgid "%1$s must be one of: %2$s."
+msgstr ""
+
+#: src/Core/Models/Api/AbstractApiSettings.php:116
+#, php-format
+msgid "%s must be a valid email address."
+msgstr ""
+
+#. translators: %s: comma separated severity values
+#: src/Core/Models/Api/ActivityLogApi.php:58
+#, php-format
+msgid "The severity must be one of: %s."
+msgstr ""
+
+#. translators: %d: maximum number of events
+#. translators: %d: maximum number of backups
+#: src/Core/Models/Api/ActivityLogApi.php:67
+#: src/Package/BackupRequestService.php:747
+#, php-format
+msgid "The limit must be between 1 and %d."
+msgstr ""
+
+#: src/Core/Models/Api/ActivityLogApi.php:99
+#: src/Package/BackupRequestService.php:265
+#: src/Package/BackupRequestService.php:376
+#: src/Package/BackupRequestService.php:444
+#: src/Package/BackupRequestService.php:505
+#: src/Package/BackupRequestService.php:629
+msgid "No backup exists with the given id."
+msgstr ""
+
+#: src/Core/Models/Api/ApiField.php:216
+#: src/Core/Models/Api/ApiField.php:351
+#, php-format
+msgid "%s must be a string."
+msgstr ""
+
+#: src/Core/Models/Api/ApiField.php:224
+#: src/Core/Models/Api/ApiField.php:381
+#, php-format
+msgid "%s must be an integer."
+msgstr ""
+
+#: src/Core/Models/Api/ApiField.php:259
+#, php-format
+msgid "%s must be true or false."
+msgstr ""
+
+#: src/Core/Models/Api/ApiField.php:265
+#, php-format
+msgid "%s must be a list."
+msgstr ""
+
+#: src/Core/Models/Api/ApiField.php:384
+#, php-format
+msgid "%1$s must be at least %2$d."
+msgstr ""
+
+#: src/Core/Models/Api/ApiField.php:387
+#, php-format
+msgid "%1$s must be at most %2$d."
+msgstr ""
+
+#: src/Core/Models/Api/ApiOperation.php:259
+msgid "This operation is not available on this site."
+msgstr ""
+
+#. translators: %s: input name
+#: src/Core/Models/Api/ApiOperation.php:273
+#, php-format
+msgid "%s is required."
+msgstr ""
+
+#: src/Core/Models/Api/AutoTuneApi.php:101
+msgid ""
+"This server cannot run backups in the background, so AutoTune cannot run its test backups.\n"
+"                    Start AutoTune from Tools > AutoTune instead."
+msgstr ""
+
+#: src/Core/Models/Api/AutoTuneApi.php:156
+msgid "AutoTune is not available on this site: managing the settings is disabled."
+msgstr ""
+
+#: src/Core/Models/Api/EntityApi.php:134
+#, php-format
+msgid "%s can't be copied here."
+msgstr ""
+
+#: src/Core/Models/Api/EntityApi.php:181
+#, php-format
+msgid "%s can't be created here."
+msgstr ""
+
+#: src/Core/Models/Api/EntityApi.php:209
+msgid "Pass at least one field to update."
+msgstr ""
+
+#: src/Core/Models/Api/EntityApi.php:234
+#, php-format
+msgid "%s can't be deleted here."
+msgstr ""
+
+#: src/Core/Models/Api/EntityApi.php:288
+#, php-format
+msgid "%s are not available on this site."
+msgstr ""
+
+#: src/Core/Models/Api/EntityApi.php:304
+#: src/Core/Models/Api/SettingsApi.php:231
+msgid "Duplicator could not complete the request. Check the Duplicator logs for details."
+msgstr ""
+
+#: src/Core/Models/Api/EntityApi.php:323
+#, php-format
+msgid "%s can't be updated here."
+msgstr ""
+
+#. translators: 1: comma separated field names, 2: comma separated field names
+#: src/Core/Models/Api/EntityApi.php:354
+#, php-format
+msgid "Unknown or not filterable fields: %1$s. Filter on: %2$s."
+msgstr ""
+
+#: src/Core/Models/Api/EntityApi.php:383
+#, php-format
+msgid "No %1$s exists with id %2$d."
+msgstr ""
+
+#: src/Core/Models/Api/MaintenanceApi.php:40
+msgid "No orphaned backup files were found."
+msgstr ""
+
+#. translators: 1: number of deleted files, 2: number of files that could not be deleted
+#: src/Core/Models/Api/MaintenanceApi.php:44
+#, php-format
+msgid "%1$d orphaned backup files deleted, %2$d could not be deleted."
+msgstr ""
+
+#: src/Core/Models/Api/MaintenanceApi.php:68
+msgid "Another backup process is running. Wait for it to finish and try again."
+msgstr ""
+
+#: src/Core/Models/Api/MaintenanceApi.php:75
+msgid "The temporary files could not be removed: a backup may be running."
+msgstr ""
+
+#: src/Core/Models/Api/MaintenanceApi.php:79
+msgid "The temporary build files were removed."
+msgstr ""
+
+#: src/Core/Models/Api/MaintenanceApi.php:120
+msgid "The Duplicator tools are not available on this site."
+msgstr ""
+
+#: src/Core/Models/Api/MaintenanceApi.php:134
+msgid "Some installer files could not be removed; remove them by hand."
+msgstr ""
+
+#: src/Core/Models/Api/MaintenanceApi.php:137
+msgid "No installer files were found; the caches were purged."
+msgstr ""
+
+#: src/Core/Models/Api/MaintenanceApi.php:139
+msgid "The installer files were removed and the caches purged."
+msgstr ""
+
+#: src/Core/Models/Api/SettingsApi.php:64
+#, php-format
+msgid "No setting is named %s."
+msgstr ""
+
+#: src/Core/Models/Api/SettingsApi.php:87
+msgid "Pass at least one setting to update."
+msgstr ""
+
+#: src/Core/Models/Api/SettingsApi.php:96
+#, php-format
+msgid "Unknown or read-only settings: %s."
+msgstr ""
+
+#: src/Core/Models/Api/SettingsApi.php:220
+msgid "Settings are not available on this site."
 msgstr ""
 
 #: src/Core/Options/OptionsManager.php:114
@@ -2761,7 +3361,7 @@ msgstr ""
 
 #: src/Core/Options/OptionsManager.php:152
 #: src/Core/Options/OptionsManager.php:191
-#: src/Core/Options/OptionsManager.php:851
+#: src/Core/Options/OptionsManager.php:872
 msgid "The backup options configuration is invalid. Check the backup log for details."
 msgstr ""
 
@@ -2774,153 +3374,169 @@ msgstr ""
 msgid "%1$s is not a valid value for the %2$s option."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:123
+#: src/Core/Options/Requirements/RequirementDefs.php:125
 #, php-format
 msgid "PHP function %s"
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:125
+#: src/Core/Options/Requirements/RequirementDefs.php:127
 #, php-format
 msgid "The required PHP function %s doesn't exist."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:144
+#: src/Core/Options/Requirements/RequirementDefs.php:146
 msgid "PHP zlib compression functions"
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:146
+#: src/Core/Options/Requirements/RequirementDefs.php:148
 msgid "The PHP zlib extension (gzdeflate/gzinflate functions) is not available on this server."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:150
+#: src/Core/Options/Requirements/RequirementDefs.php:152
 msgid ""
 "DupArchive requires the PHP zlib extension when compression is enabled.\n"
 "                    Enable zlib, set Archive Compression to Off, or switch to the ZipArchive or Shell Zip engine if available."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:159
+#: src/Core/Options/Requirements/RequirementDefs.php:161
 msgid "PHP ZipArchive class"
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:161
+#: src/Core/Options/Requirements/RequirementDefs.php:163
 msgid "The PHP ZipArchive class doesn't exist on this server."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:162
+#: src/Core/Options/Requirements/RequirementDefs.php:164
 msgid "Enable the PHP zip extension or switch to another Archive Engine."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:167
+#: src/Core/Options/Requirements/RequirementDefs.php:169
 msgid "ZipArchive encryption support"
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:169
+#: src/Core/Options/Requirements/RequirementDefs.php:171
 msgid "This server doesn't support ZipArchive encryption."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:175
+#: src/Core/Options/Requirements/RequirementDefs.php:177
 msgid "Shell zip binary"
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:177
+#: src/Core/Options/Requirements/RequirementDefs.php:179
 msgid "The shell zip binary isn't available on this server."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:178
+#: src/Core/Options/Requirements/RequirementDefs.php:180
 msgid "Enable PHP shell functions and install the zip binary, or switch to another Archive Engine."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:186
+#: src/Core/Options/Requirements/RequirementDefs.php:188
 msgid "PHP OpenSSL module"
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:188
+#: src/Core/Options/Requirements/RequirementDefs.php:190
 msgid "The PHP OpenSSL module isn't enabled on this server."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:194
+#: src/Core/Options/Requirements/RequirementDefs.php:196
 msgid "mysqldump binary"
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:196
+#: src/Core/Options/Requirements/RequirementDefs.php:198
 msgid "The mysqldump binary isn't available on this server."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:197
+#: src/Core/Options/Requirements/RequirementDefs.php:199
 msgid "Set a custom mysqldump path in the database settings or switch to the PHP database dump engine."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:236
+#: src/Core/Options/Requirements/RequirementDefs.php:238
 msgid "64-bit PHP"
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:238
+#: src/Core/Options/Requirements/RequirementDefs.php:240
 msgid ""
 "Your server is running a 32-bit version of PHP.\n"
 "                    Starting with Duplicator 5.0, creating backups requires 64-bit PHP.\n"
 "                    Contact your hosting provider and ask them to enable 64-bit PHP for this site before creating a backup."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:247
+#: src/Core/Options/Requirements/RequirementDefs.php:249
 msgid "Home path readable"
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:259
+#: src/Core/Options/Requirements/RequirementDefs.php:261
 msgid "The site home path can't be opened."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:260
+#: src/Core/Options/Requirements/RequirementDefs.php:262
 msgid "Check the file permissions of the site root directory."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:264
+#: src/Core/Options/Requirements/RequirementDefs.php:266
+msgid "WordPress outside the filesystem root"
+msgstr ""
+
+#: src/Core/Options/Requirements/RequirementDefs.php:268
+msgid ""
+"WordPress is installed in the root directory of the server filesystem.\n"
+"                    Duplicator can't read the site files from there, so the Backup would not contain them."
+msgstr ""
+
+#: src/Core/Options/Requirements/RequirementDefs.php:273
+msgid ""
+"Move the WordPress installation into a subdirectory of the filesystem,\n"
+"                    or ask your hosting provider to serve the site from a directory other than the filesystem root."
+msgstr ""
+
+#: src/Core/Options/Requirements/RequirementDefs.php:281
 msgid "Backups directory writable"
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:267
+#: src/Core/Options/Requirements/RequirementDefs.php:284
 #, php-format
 msgid "The Duplicator Backups directory (%s) isn't writable."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:270
+#: src/Core/Options/Requirements/RequirementDefs.php:287
 msgid "Check the file permissions of the Duplicator Backups directory."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:274
+#: src/Core/Options/Requirements/RequirementDefs.php:291
 msgid "Temp directory writable"
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:277
+#: src/Core/Options/Requirements/RequirementDefs.php:294
 #, php-format
 msgid "The Duplicator temp directory (%s) isn't writable."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:280
+#: src/Core/Options/Requirements/RequirementDefs.php:297
 msgid "Check the file permissions of the Duplicator temp directory."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:284
+#: src/Core/Options/Requirements/RequirementDefs.php:301
 msgid "MySQL minimum version"
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:287
+#: src/Core/Options/Requirements/RequirementDefs.php:304
 #, php-format
 msgid "The MySQL server version is lower than the minimum required version %s."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:293
+#: src/Core/Options/Requirements/RequirementDefs.php:310
 msgid "MySQL string escaping"
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:295
+#: src/Core/Options/Requirements/RequirementDefs.php:312
 msgid "The function mysqli_real_escape_string is not escaping strings as expected."
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:299
+#: src/Core/Options/Requirements/RequirementDefs.php:316
 msgid "No leftover installer files"
 msgstr ""
 
-#: src/Core/Options/Requirements/RequirementDefs.php:301
+#: src/Core/Options/Requirements/RequirementDefs.php:318
 msgid "Installer file(s) from a previous migration exist on the server."
 msgstr ""
 
@@ -2948,6 +3564,28 @@ msgstr ""
 #: src/Core/Options/Rules/CompressionRule.php:36
 #: template/admin_pages/settings/backup/archive_settings.php:202
 msgid "Archive Compression"
+msgstr ""
+
+#: src/Core/Options/Rules/CompressionRule.php:48
+#: src/Models/Settings/GeneralApiSettings.php:176
+#: template/admin_pages/packages/details/parts/database_card.php:74
+#: template/admin_pages/packages/details/parts/files_card.php:78
+#: template/admin_pages/packages/details/parts/prefills_card.php:46
+#: template/admin_pages/settings/general/debug_settings.php:37
+msgid "On"
+msgstr ""
+
+#: src/Core/Options/Rules/CompressionRule.php:48
+#: src/Models/Settings/GeneralApiSettings.php:175
+#: src/Package/BuildRequirements.php:426
+#: src/Views/AutoTunePageData.php:752
+#: template/admin_pages/packages/details/parts/database_card.php:74
+#: template/admin_pages/packages/details/parts/files_card.php:78
+#: template/admin_pages/packages/details/parts/prefills_card.php:46
+#: template/admin_pages/settings/backup/installer_settings.php:125
+#: template/admin_pages/settings/backup/processing_settings.php:36
+#: template/admin_pages/settings/general/debug_settings.php:34
+msgid "Off"
 msgstr ""
 
 #: src/Core/Options/Rules/DbDumpEngineRule.php:38
@@ -3033,24 +3671,24 @@ msgstr[1] ""
 msgid "Duplicator could not read the database table list. Check the database error in the Backup log."
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:148
+#: src/Models/ActivityLog/LogEventBackupCreate.php:161
 msgid "No time limit"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:149
+#: src/Models/ActivityLog/LogEventBackupCreate.php:162
 #, php-format
 msgid "%s sec (not modifiable)"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:151
+#: src/Models/ActivityLog/LogEventBackupCreate.php:164
 msgid "Unable to read"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:152
+#: src/Models/ActivityLog/LogEventBackupCreate.php:165
 msgid "default"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:227
+#: src/Models/ActivityLog/LogEventBackupCreate.php:240
 #: src/Package/Storage/UploadInfo.php:311
 #: src/Package/TraitPackageProgress.php:90
 #: src/Utils/Email/EmailSummary.php:307
@@ -3058,270 +3696,280 @@ msgstr ""
 msgid "Cancelled"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:236
+#: src/Models/ActivityLog/LogEventBackupCreate.php:249
 msgid "(backup log not available)"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:251
-#: src/Models/ActivityLog/LogEventBackupCreate.php:590
-#: src/Models/ActivityLog/LogEventBackupCreate.php:599
-#: src/Models/ActivityLog/LogEventBackupCreate.php:1010
+#: src/Models/ActivityLog/LogEventBackupCreate.php:264
+#: src/Models/ActivityLog/LogEventBackupCreate.php:621
+#: src/Models/ActivityLog/LogEventBackupCreate.php:630
+#: src/Models/ActivityLog/LogEventBackupCreate.php:1059
 #: src/Views/AutoTunePageData.php:696
 msgid "Database Dump"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:254
-#: src/Models/ActivityLog/LogEventBackupCreate.php:605
-#: src/Models/ActivityLog/LogEventBackupCreate.php:1012
+#: src/Models/ActivityLog/LogEventBackupCreate.php:267
+#: src/Models/ActivityLog/LogEventBackupCreate.php:636
+#: src/Models/ActivityLog/LogEventBackupCreate.php:1061
 msgid "File Archive"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:257
+#: src/Models/ActivityLog/LogEventBackupCreate.php:270
 #: template/admin_pages/packages/details/details_header.php:43
 #: template/admin_pages/packages/details/details_wpbody_header.php:49
 #: template/admin_pages/packages/details/parts/general_card.php:74
 msgid "Transfer"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:260
+#: src/Models/ActivityLog/LogEventBackupCreate.php:273
 #: src/Views/AutoTunePageData.php:793
 msgid "Completed"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:400
+#: src/Models/ActivityLog/LogEventBackupCreate.php:407
 msgid "Shell Exec"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:402
+#: src/Models/ActivityLog/LogEventBackupCreate.php:409
 msgid "Zip Archive"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:404
+#: src/Models/ActivityLog/LogEventBackupCreate.php:411
 msgid "Dup Archive"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:542
-#: src/Models/ActivityLog/LogEventBackupCreate.php:585
-#: src/Models/ActivityLog/LogEventBackupCreate.php:636
-#: src/Models/ActivityLog/LogEventBackupCreate.php:1008
-#: src/Models/ActivityLog/LogEventBackupCreate.php:1018
+#: src/Models/ActivityLog/LogEventBackupCreate.php:563
+#: src/Models/ActivityLog/LogEventBackupCreate.php:616
+#: src/Models/ActivityLog/LogEventBackupCreate.php:677
+#: src/Models/ActivityLog/LogEventBackupCreate.php:1057
+#: src/Models/ActivityLog/LogEventBackupCreate.php:1067
 #: src/Package/TraitPackageProgress.php:190
 msgid "Backup Creation"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:566
-#: src/Models/ActivityLog/LogEventBackupCreate.php:1004
+#: src/Models/ActivityLog/LogEventBackupCreate.php:597
+#: src/Models/ActivityLog/LogEventBackupCreate.php:1053
 msgid "Backup Error"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:568
+#: src/Models/ActivityLog/LogEventBackupCreate.php:599
 #: src/Models/ActivityLog/LogEventWebsitesScan.php:132
 #: src/Package/AbstractPackageDeployer.php:1071
 #, php-format
 msgid "Error: %s"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:570
-#: src/Models/ActivityLog/LogEventBackupCreate.php:1006
+#: src/Models/ActivityLog/LogEventBackupCreate.php:601
+#: src/Models/ActivityLog/LogEventBackupCreate.php:1055
 msgid "Backup Cancelled"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:594
+#: src/Models/ActivityLog/LogEventBackupCreate.php:625
 #, php-format
 msgid "Database Dump (%1$d tables, %2$s)"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:603
+#: src/Models/ActivityLog/LogEventBackupCreate.php:634
 #, php-format
 msgid "File Archive (%s)"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:610
+#: src/Models/ActivityLog/LogEventBackupCreate.php:641
 #, php-format
 msgid "Backup Transfer (%1$d/%2$d completed)"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:615
-#: src/Models/ActivityLog/LogEventBackupCreate.php:1014
+#: src/Models/ActivityLog/LogEventBackupCreate.php:646
+#: src/Models/ActivityLog/LogEventBackupCreate.php:1063
 msgid "Backup Transfer"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:622
+#: src/Models/ActivityLog/LogEventBackupCreate.php:653
 #, php-format
 msgid "Backup Completed (%1$s, %2$d storage)"
 msgid_plural "Backup Completed (%1$s, %2$d storages)"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:632
+#: src/Models/ActivityLog/LogEventBackupCreate.php:663
 #, php-format
 msgid "Backup Completed (%s)"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:634
-#: src/Models/ActivityLog/LogEventBackupCreate.php:1016
+#: src/Models/ActivityLog/LogEventBackupCreate.php:665
+#: src/Models/ActivityLog/LogEventBackupCreate.php:1065
 msgid "Backup Completed"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:652
+#: src/Models/ActivityLog/LogEventBackupCreate.php:672
+#, php-format
+msgctxt "1: backup completed text, 2: storage names with the reasons"
+msgid "%1$s. Transfer failed: %2$s"
+msgstr ""
+
+#: src/Models/ActivityLog/LogEventBackupCreate.php:693
 #: src/Models/ActivityLog/LogEventWebsitesScan.php:224
 msgid "Run Type:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:659
+#: src/Models/ActivityLog/LogEventBackupCreate.php:700
 msgid "Requested by:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:667
+#: src/Models/ActivityLog/LogEventBackupCreate.php:708
 msgid "Request Reason:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:675
+#: src/Models/ActivityLog/LogEventBackupCreate.php:716
 msgid "Failure Message:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:682
+#: src/Models/ActivityLog/LogEventBackupCreate.php:723
 msgid "Archive Engine:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:689
+#: src/Models/ActivityLog/LogEventBackupCreate.php:730
 msgid "Database Engine:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:697
+#: src/Models/ActivityLog/LogEventBackupCreate.php:738
 msgid "Client-Side Kickoff:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:705
+#: src/Models/ActivityLog/LogEventBackupCreate.php:746
 msgid "Process Lock:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:713
+#: src/Models/ActivityLog/LogEventBackupCreate.php:754
 msgid "Process Locks Acquired:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:718
+#: src/Models/ActivityLog/LogEventBackupCreate.php:759
 #: template/admin_pages/packages/scan/items/setup/hosting_status.php:59
 msgid "None"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:725
+#: src/Models/ActivityLog/LogEventBackupCreate.php:766
 msgid "Process Lock Errors:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:733
+#: src/Models/ActivityLog/LogEventBackupCreate.php:774
 msgid "PHP Time Limit:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:741
+#: src/Models/ActivityLog/LogEventBackupCreate.php:782
 msgid "PHP Max Memory:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:748
+#: src/Models/ActivityLog/LogEventBackupCreate.php:789
 #: src/Models/ActivityLog/LogEventWebsitesScan.php:231
 #: template/parts/packages/filters/package_components.php:86
 msgid "Components:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:754
+#: src/Models/ActivityLog/LogEventBackupCreate.php:795
 msgid "Execution Time:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:769
+#: src/Models/ActivityLog/LogEventBackupCreate.php:810
 msgid "Storages:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:778
+#: src/Models/ActivityLog/LogEventBackupCreate.php:818
+msgid "Failed transfers:"
+msgstr ""
+
+#: src/Models/ActivityLog/LogEventBackupCreate.php:827
 msgid "Backup Size:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:787
+#: src/Models/ActivityLog/LogEventBackupCreate.php:836
 msgid "Database Stats:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:792
+#: src/Models/ActivityLog/LogEventBackupCreate.php:841
 #, php-format
 msgid "%d tables"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:795
+#: src/Models/ActivityLog/LogEventBackupCreate.php:844
 #, php-format
 msgid "%s SQL"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:807
+#: src/Models/ActivityLog/LogEventBackupCreate.php:856
 msgid "Files/Folders:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:812
+#: src/Models/ActivityLog/LogEventBackupCreate.php:861
 #, php-format
 msgid "%s files"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:815
+#: src/Models/ActivityLog/LogEventBackupCreate.php:864
 #, php-format
 msgid "%s folders"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:837
+#: src/Models/ActivityLog/LogEventBackupCreate.php:886
 msgid "Applied Filters:"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:843
+#: src/Models/ActivityLog/LogEventBackupCreate.php:892
 msgid "Filter Type"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:844
+#: src/Models/ActivityLog/LogEventBackupCreate.php:893
 msgid "Items"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:850
+#: src/Models/ActivityLog/LogEventBackupCreate.php:899
 msgid "Excluded Directories"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:859
+#: src/Models/ActivityLog/LogEventBackupCreate.php:908
 #, php-format
 msgid "... and %d more directories"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:869
+#: src/Models/ActivityLog/LogEventBackupCreate.php:918
 msgid "Excluded Extensions"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:877
+#: src/Models/ActivityLog/LogEventBackupCreate.php:926
 #, php-format
 msgid "... and %d more extensions"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:887
+#: src/Models/ActivityLog/LogEventBackupCreate.php:936
 msgid "Excluded Files"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:896
+#: src/Models/ActivityLog/LogEventBackupCreate.php:945
 #, php-format
 msgid "... and %d more files"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:906
+#: src/Models/ActivityLog/LogEventBackupCreate.php:955
 msgid "Excluded Database Tables"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:913
+#: src/Models/ActivityLog/LogEventBackupCreate.php:962
 #, php-format
 msgid "... and %d more tables"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:923
+#: src/Models/ActivityLog/LogEventBackupCreate.php:972
 msgid "Database Prefix Filter"
 msgstr ""
 
-#: src/Models/ActivityLog/LogEventBackupCreate.php:955
+#: src/Models/ActivityLog/LogEventBackupCreate.php:1004
 #: src/Models/ActivityLog/LogEventWebsitesScan.php:369
 msgid "Error Context:"
 msgstr ""
 
 #. translators: %d: number of log lines shown
-#: src/Models/ActivityLog/LogEventBackupCreate.php:982
+#: src/Models/ActivityLog/LogEventBackupCreate.php:1031
 #, php-format
 msgid "Showing %d line from when the error occurred"
 msgid_plural "Showing %d lines from when the error occurred"
@@ -3807,10 +4455,6 @@ msgstr ""
 msgid "Username or password were not set."
 msgstr ""
 
-#: src/Models/FullBackupTemplate.php:39
-msgid "The default backup template is missing. Deactivate and reactivate Duplicator to restore it."
-msgstr ""
-
 #: src/Models/GlobalEntity.php:1595
 #, php-format
 msgid "Every %1$d hours"
@@ -3898,155 +4542,243 @@ msgstr ""
 msgid ": single-thread"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:68
+#: src/Models/Settings/GeneralApiSettings.php:88
+#, php-format
+msgid "email_summary_frequency must be one of: %s."
+msgstr ""
+
+#: src/Models/Settings/GeneralApiSettings.php:96
+msgid "email_summary_recipients must contain valid email addresses."
+msgstr ""
+
+#: src/Models/Settings/StorageApiSettings.php:146
+msgid "When the backup archive is removed from all storages"
+msgstr ""
+
+#: src/Models/Settings/StorageApiSettings.php:147
+msgid "When maximum is reached for Default Local Storage"
+msgstr ""
+
+#: src/Models/Settings/StorageApiSettings.php:148
+#: src/Utils/Email/EmailSummary.php:399
+msgid "Never"
+msgstr ""
+
+#: src/Models/Storages/AbstractStorageEntity.php:78
 msgid "New Storage"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:411
+#: src/Models/Storages/AbstractStorageEntity.php:109
+#: src/Views/PackageScreen.php:516
+#: template/admin_pages/packages/details/parts/general_card.php:245
+#: template/admin_pages/packages/packages_table_head.php:46
+#: template/admin_pages/packages/row_parts/details_package.php:72
+#: template/admin_pages/storages/parts/edit_toolbar.php:99
+msgid "Storages"
+msgstr ""
+
+#: src/Models/Storages/AbstractStorageEntity.php:175
+msgid ""
+"For security, the connection settings and credentials of a storage can't be created or changed here:\n"
+"            storages are created and connected on the Duplicator > Storage page. Only the name, the notes and\n"
+"            the number of Backups kept can be changed."
+msgstr ""
+
+#: src/Models/Storages/AbstractStorageEntity.php:211
+msgid "The name of this storage can't be changed."
+msgstr ""
+
+#: src/Models/Storages/AbstractStorageEntity.php:223
+msgid "The number of Backups to keep can't be negative."
+msgstr ""
+
+#: src/Models/Storages/AbstractStorageEntity.php:230
 msgid "Storage name is required."
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:549
+#: src/Models/Storages/AbstractStorageEntity.php:271
+#: template/admin_pages/storages/parts/remote_localtion_info.php:72
+#: template/admin_pages/storages/parts/test_button.php:32
+#: template/admin_pages/storages/parts/test_button.php:99
+#: template/admin_pages/storages/parts/test_button.php:103
+msgid "Test Storage"
+msgstr ""
+
+#: src/Models/Storages/AbstractStorageEntity.php:272
+msgid "Test the storage connection by writing and then deleting a test file on it."
+msgstr ""
+
+#. translators: 1: storage name, 2: why the storage can't be used
+#: src/Models/Storages/AbstractStorageEntity.php:281
+#, php-format
+msgid "The storage \"%1$s\" is not ready: %2$s Connect or configure it on the Storage page, then test it again."
+msgstr ""
+
+#. translators: %s: storage name
+#: src/Models/Storages/AbstractStorageEntity.php:308
+#, php-format
+msgid "\"%s\" is a built-in storage that Duplicator creates on installation, so it can't be deleted."
+msgstr ""
+
+#: src/Models/Storages/AbstractStorageEntity.php:794
 #, php-format
 msgid "The Storage %s is not supported on this server."
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:630
+#: src/Models/Storages/AbstractStorageEntity.php:875
 msgid "Connect"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1142
+#. translators: 1: storage name, 2: why the storage can't be used
+#: src/Models/Storages/AbstractStorageEntity.php:1239
+#, php-format
+msgid "The storage \"%1$s\" can't be used now: %2$s Check it on the Storage page."
+msgstr ""
+
+#. translators: %s: storage name
+#: src/Models/Storages/AbstractStorageEntity.php:1249
+#, php-format
+msgid "The backup is not on the storage \"%s\", or the storage could not be reached."
+msgstr ""
+
+#. translators: %s: storage name
+#: src/Models/Storages/AbstractStorageEntity.php:1255
+#, php-format
+msgid "The backup is already on the storage \"%s\"."
+msgstr ""
+
+#: src/Models/Storages/AbstractStorageEntity.php:1457
 #: template/admin_pages/storages/configs/local_default.php:25
 #: template/admin_pages/storages/storage_list.php:106
 #: template/parts/storage/select_list.php:32
 msgid "Location"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1212
+#: src/Models/Storages/AbstractStorageEntity.php:1527
 #, php-format
 msgid "Transferring to %1$s folder:<br/> <i>%2$s</i>"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1218
+#: src/Models/Storages/AbstractStorageEntity.php:1533
 #, php-format
 msgid "Transfer to %1$s folder %2$s is pending"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1224
+#: src/Models/Storages/AbstractStorageEntity.php:1539
 #, php-format
 msgid "Failed to transfer to %1$s folder %2$s"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1230
+#: src/Models/Storages/AbstractStorageEntity.php:1545
 #, php-format
 msgid "Cancelled before it could transfer to %1$s folder %2$s"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1236
+#: src/Models/Storages/AbstractStorageEntity.php:1551
 #, php-format
 msgid "Transferred Backup to %1$s folder %2$s"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1261
+#: src/Models/Storages/AbstractStorageEntity.php:1576
 #, php-format
 msgid "Downloading from %1$s folder:<br/> <i>%2$s</i>"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1267
+#: src/Models/Storages/AbstractStorageEntity.php:1582
 #, php-format
 msgid "Download from %1$s folder %2$s is pending"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1273
+#: src/Models/Storages/AbstractStorageEntity.php:1588
 #, php-format
 msgid "Failed to download from %1$s folder %2$s"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1279
+#: src/Models/Storages/AbstractStorageEntity.php:1594
 #, php-format
 msgid "Cancelled before it could download from %1$s folder %2$s"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1285
+#: src/Models/Storages/AbstractStorageEntity.php:1600
 #, php-format
 msgid "Downloaded Backup from %1$s folder %2$s"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1471
+#: src/Models/Storages/AbstractStorageEntity.php:1786
 #, php-format
 msgid "Storage %s config data isn't valid"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1487
-#: src/Models/Storages/AbstractStorageEntity.php:1512
+#: src/Models/Storages/AbstractStorageEntity.php:1802
+#: src/Models/Storages/AbstractStorageEntity.php:1827
 #, php-format
 msgid "Checking if the temporary file exists \"%1$s\"..."
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1489
+#: src/Models/Storages/AbstractStorageEntity.php:1804
 #, php-format
 msgid "File with the temporary file name already exists, please try again \"%1$s\""
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1493
+#: src/Models/Storages/AbstractStorageEntity.php:1808
 msgid "File with the temporary file name already exists, please try again"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1497
+#: src/Models/Storages/AbstractStorageEntity.php:1812
 #, php-format
 msgid "Creating temporary file \"%1$s\"..."
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1500
+#: src/Models/Storages/AbstractStorageEntity.php:1815
 msgid "There was a problem when storing the temporary file"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1506
-#: src/Models/Storages/AbstractStorageEntity.php:1529
+#: src/Models/Storages/AbstractStorageEntity.php:1821
+#: src/Models/Storages/AbstractStorageEntity.php:1844
 #, php-format
 msgid "Reason: %s"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1508
+#: src/Models/Storages/AbstractStorageEntity.php:1823
 msgid "There was a problem storing the temporary file"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1514
+#: src/Models/Storages/AbstractStorageEntity.php:1829
 #, php-format
 msgid "The temporary file was not found \"%1$s\""
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1518
+#: src/Models/Storages/AbstractStorageEntity.php:1833
 msgid "The temporary file was not found"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1522
+#: src/Models/Storages/AbstractStorageEntity.php:1837
 #, php-format
 msgid "Deleting temporary file \"%1$s\"..."
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1524
+#: src/Models/Storages/AbstractStorageEntity.php:1839
 #, php-format
 msgid "There was a problem when deleting the temporary file \"%1$s\""
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1531
+#: src/Models/Storages/AbstractStorageEntity.php:1846
 msgid "There was a problem deleting the temporary file"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1535
-#: src/Models/Storages/AbstractStorageEntity.php:1536
+#: src/Models/Storages/AbstractStorageEntity.php:1850
+#: src/Models/Storages/AbstractStorageEntity.php:1851
 msgid "Successfully stored and deleted file"
 msgstr ""
 
-#: src/Models/Storages/AbstractStorageEntity.php:1595
-#: src/Models/TemplateEntity.php:391
+#: src/Models/Storages/AbstractStorageEntity.php:1910
+#: src/Models/TemplateEntity.php:687
 #, php-format
 msgid "%1$s - Copy"
 msgstr ""
 
 #: src/Models/Storages/Local/DefaultLocalStorage.php:24
-#: src/Models/TemplateEntity.php:292
+#: src/Models/TemplateEntity.php:578
 #: template/admin_pages/storages/storage_edit.php:72
 #: template/parts/packages/filters/section_installer.php:197
 msgid "Default"
@@ -4060,97 +4792,97 @@ msgstr ""
 msgid "Default Local"
 msgstr ""
 
-#: src/Models/Storages/Local/DefaultLocalStorage.php:190
+#: src/Models/Storages/Local/DefaultLocalStorage.php:200
 msgid "Default local storage updated."
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:169
+#: src/Models/Storages/Local/LocalStorage.php:170
 msgid "Local"
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:238
+#: src/Models/Storages/Local/LocalStorage.php:239
 msgid "Name:"
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:239
+#: src/Models/Storages/Local/LocalStorage.php:240
 #: template/admin_pages/activity_log/log_detail_modal.php:34
 msgid "Type:"
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:241
+#: src/Models/Storages/Local/LocalStorage.php:242
 msgid "Folder:"
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:242
+#: src/Models/Storages/Local/LocalStorage.php:243
 msgid "Note:"
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:244
+#: src/Models/Storages/Local/LocalStorage.php:245
 msgid "By removing this storage all backups inside it will be deleted."
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:278
+#: src/Models/Storages/Local/LocalStorage.php:279
 msgid "Copying to directory:"
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:280
+#: src/Models/Storages/Local/LocalStorage.php:281
 #, php-format
 msgid "Copy to directory %1$s is pending"
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:282
+#: src/Models/Storages/Local/LocalStorage.php:283
 #, php-format
 msgid "Failed to copy to directory %1$s"
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:284
+#: src/Models/Storages/Local/LocalStorage.php:285
 #, php-format
 msgid "Cancelled before it could copy to directory %1$s"
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:286
+#: src/Models/Storages/Local/LocalStorage.php:287
 #, php-format
 msgid "Copied Backup to directory %1$s"
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:367
+#: src/Models/Storages/Local/LocalStorage.php:355
 #, php-format
 msgid "Storage Provider Updated - Folder %1$s."
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:389
+#: src/Models/Storages/Local/LocalStorage.php:408
 msgid "Local storage path can't be empty."
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:393
+#: src/Models/Storages/Local/LocalStorage.php:410
 msgid "This storage path can't be a filesystem or drive root."
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:397
+#: src/Models/Storages/Local/LocalStorage.php:412
 msgid "This storage path can't be used because it is a core WordPress directory or a sub-path of a core directory."
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:404
+#: src/Models/Storages/Local/LocalStorage.php:417
 msgid "A local storage already exists or current folder is a child of another existing storage folder."
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:411
+#: src/Models/Storages/Local/LocalStorage.php:422
 msgid "Selected storage path already exists and isn't empty, select another path."
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:412
+#: src/Models/Storages/Local/LocalStorage.php:423
 msgid "Select another folder or remove all files that are not backup archives."
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:738
+#: src/Models/Storages/Local/LocalStorage.php:750
 msgid "Local Storage"
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:758
+#: src/Models/Storages/Local/LocalStorage.php:770
 msgid "How much should be copied to Local Storages per attempt. Higher=faster but less reliable."
 msgstr ""
 
-#: src/Models/Storages/Local/LocalStorage.php:761
+#: src/Models/Storages/Local/LocalStorage.php:773
 #, php-format
 msgid "Default size %1$dMB. Min size %2$dMB."
 msgstr ""
@@ -4167,47 +4899,47 @@ msgstr ""
 msgid "Storage root path is not writable."
 msgstr ""
 
-#: src/Models/Storages/StoragesUtil.php:83
+#: src/Models/Storages/StoragesUtil.php:84
 msgid "Ready to use"
 msgstr ""
 
-#: src/Models/Storages/StoragesUtil.php:341
+#: src/Models/Storages/StoragesUtil.php:356
 #, php-format
 msgid "Only one %s storage can be created at a time"
 msgstr ""
 
-#: src/Models/Storages/StoragesUtil.php:491
+#: src/Models/Storages/StoragesUtil.php:506
 #: template/admin_pages/storages/storage_list_row.php:23
 msgid "Invalid storage configuration"
 msgstr ""
 
-#: src/Models/Storages/TransferFailureHandler.php:38
+#: src/Models/Storages/TransferFailureHandler.php:42
 msgid "There was a problem downloading the backup from one of the configured storages."
 msgstr ""
 
-#: src/Models/Storages/TransferFailureHandler.php:39
+#: src/Models/Storages/TransferFailureHandler.php:43
 msgid "There was a problem uploading the backup to one of the configured storages."
 msgstr ""
 
-#: src/Models/Storages/TransferFailureHandler.php:42
+#: src/Models/Storages/TransferFailureHandler.php:46
 #, php-format
 msgctxt "1: storage name, 2: storage type name"
 msgid "There was a problem downloading the backup from the storage %1$s (%2$s)."
 msgstr ""
 
-#: src/Models/Storages/TransferFailureHandler.php:47
+#: src/Models/Storages/TransferFailureHandler.php:51
 #, php-format
 msgctxt "1: storage name, 2: storage type name"
 msgid "There was a problem uploading the backup to the storage %1$s (%2$s)."
 msgstr ""
 
-#: src/Models/Storages/TransferFailureHandler.php:60
+#: src/Models/Storages/TransferFailureHandler.php:63
 msgid ""
 "Check the storage configuration, credentials and available space,\n"
-"                        then run the transfer again."
+"                    then run the transfer again."
 msgstr ""
 
-#: src/Models/Storages/TransferFailureHandler.php:66
+#: src/Models/Storages/TransferFailureHandler.php:69
 msgid "Backup Transfer Failed"
 msgstr ""
 
@@ -4216,24 +4948,50 @@ msgstr ""
 msgid "Unknown storage type"
 msgstr ""
 
-#: src/Models/TemplateEntity.php:114
+#: src/Models/TemplateEntity.php:152
 msgid "New Template"
 msgstr ""
 
-#: src/Models/TemplateEntity.php:293
-msgid "The default template."
+#: src/Models/TemplateEntity.php:180
+#: src/Package/PackageUtils.php:605
+msgid "Template"
 msgstr ""
 
-#: src/Models/TemplateEntity.php:358
+#: src/Models/TemplateEntity.php:248
+msgid "The default template can't be deleted."
+msgstr ""
+
+#: src/Models/TemplateEntity.php:346
+msgid "Template name can't be empty."
+msgstr ""
+
+#: src/Models/TemplateEntity.php:351
+msgid "The password and encrypt security modes need a password."
+msgstr ""
+
+#: src/Models/TemplateEntity.php:367
 #: src/Package/TraitPackageTemplate.php:159
 msgid "Select valid secure mode"
 msgstr ""
 
-#: src/Models/TemplateEntity.php:390
+#: src/Models/TemplateEntity.php:397
+#, php-format
+msgid "%1$s must be at most %2$d characters."
+msgstr ""
+
+#: src/Models/TemplateEntity.php:579
+msgid "The default template."
+msgstr ""
+
+#: src/Models/TemplateEntity.php:686
 msgid "Active Build Settings"
 msgstr ""
 
-#: src/Models/TemplateEntity.php:578
+#: src/Models/TemplateEntity.php:848
+msgid "The default backup template is missing. Deactivate and reactivate Duplicator to restore it."
+msgstr ""
+
+#: src/Models/TemplateEntity.php:893
 msgid "[Manual Mode]"
 msgstr ""
 
@@ -4262,7 +5020,7 @@ msgid ""
 "                        Please remove the value from the Archive > Files Tab > Files input box and apply only valid file names."
 msgstr ""
 
-#: src/Package/AbstractPackage.php:910
+#: src/Package/AbstractPackage.php:907
 #, php-format
 msgid "MySQL Server Host: <b>%1$s</b> isn't a valid host"
 msgstr ""
@@ -4271,7 +5029,7 @@ msgstr ""
 #: src/Package/AbstractPackageDeployer.php:214
 #: src/Package/AbstractPackageDeployer.php:296
 #: src/Package/AbstractPackageDeployer.php:1204
-#: src/Utils/ZipArchiveExtended.php:416
+#: src/Utils/ZipArchiveExtended.php:415
 msgid "ZipArchive PHP module is not installed/enabled. The current Backup cannot be opened."
 msgstr ""
 
@@ -4376,36 +5134,36 @@ msgstr ""
 msgid "The backup failed while scanning the site files. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Archive/PackageArchive.php:1019
+#: src/Package/Archive/PackageArchive.php:1015
 msgid "No large files found during this scan."
 msgstr ""
 
-#: src/Package/Archive/PackageArchive.php:1174
+#: src/Package/Archive/PackageArchive.php:1170
 msgid "Core WordPress directories should not be filtered. Use caution when excluding files."
 msgstr ""
 
-#: src/Package/Archive/PackageArchive.php:1189
+#: src/Package/Archive/PackageArchive.php:1185
 msgid "This dir is filtered."
 msgstr ""
 
-#: src/Package/Archive/PackageArchive.php:1191
+#: src/Package/Archive/PackageArchive.php:1187
 msgid "This file is filtered."
 msgstr ""
 
-#: src/Package/Archive/PackageArchiveShellZip.php:46
+#: src/Package/Archive/PackageArchiveShellZip.php:50
 msgid ""
 "The zip process did not complete during the previous request.\n"
 "                    This can happen when the server interrupts the process or the request ends unexpectedly.\n"
 "                    Switching to a different archive engine is recommended for better stability."
 msgstr ""
 
-#: src/Package/Archive/PackageArchiveShellZip.php:171
+#: src/Package/Archive/PackageArchiveShellZip.php:175
 msgid ""
 "The zip process finished but the archive file was not created.\n"
 "                        Run the Backup again; if the problem persists switch to the DupArchive engine."
 msgstr ""
 
-#: src/Package/Archive/PackageArchiveShellZip.php:239
+#: src/Package/Archive/PackageArchiveShellZip.php:244
 msgid ""
 "Some files changed or were deleted while the Backup was running, usually cache\n"
 "                    or temporary files, and could not be included. If you want to be sure nothing\n"
@@ -4413,17 +5171,17 @@ msgid ""
 "                    site is less busy."
 msgstr ""
 
-#: src/Package/Archive/PackageArchiveShellZip.php:253
+#: src/Package/Archive/PackageArchiveShellZip.php:262
 msgid "The shell zip command failed while creating the archive."
 msgstr ""
 
-#: src/Package/Archive/PackageArchiveShellZip.php:314
+#: src/Package/Archive/PackageArchiveShellZip.php:323
 msgid ""
 "The number of files in the archive could not be double-checked on this server.\n"
 "                        No action is needed; to be extra safe, you can test the Backup with a restore."
 msgstr ""
 
-#: src/Package/Archive/PackageArchiveShellZip.php:327
+#: src/Package/Archive/PackageArchiveShellZip.php:336
 msgid ""
 "The created archive is corrupted or incomplete.\n"
 "                        Switching to the DupArchive engine is recommended."
@@ -4615,7 +5373,7 @@ msgid "Authentication"
 msgstr ""
 
 #: src/Package/AutoTune/AutoTuneDetector.php:433
-#: src/Package/PackageUtils.php:442
+#: src/Package/PackageUtils.php:600
 #: src/Utils/Email/EmailSummary.php:260
 msgid "Manual"
 msgstr ""
@@ -4674,81 +5432,85 @@ msgstr ""
 msgid "Raise memory_limit to at least %s in the PHP configuration, or ask the host to do it."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:127
+#: src/Package/AutoTune/AutoTuneManager.php:128
 msgid "AutoTune is being updated by another process."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:133
+#: src/Package/AutoTune/AutoTuneManager.php:131
+msgid "AutoTune could not lock its session. Check the backup log for details."
+msgstr ""
+
+#: src/Package/AutoTune/AutoTuneManager.php:137
 msgid "An AutoTune session is already running."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:161
+#: src/Package/AutoTune/AutoTuneManager.php:165
 msgid "No usable build configuration is available on this server. Review the backup settings."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:187
-#: src/Package/AutoTune/AutoTuneManager.php:660
+#: src/Package/AutoTune/AutoTuneManager.php:191
+#: src/Package/AutoTune/AutoTuneManager.php:665
 msgid "The default backup template is missing."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:214
+#: src/Package/AutoTune/AutoTuneManager.php:219
 msgid "No AutoTune session is running."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:222
+#: src/Package/AutoTune/AutoTuneManager.php:227
 msgid "Session aborted by the user."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:239
+#: src/Package/AutoTune/AutoTuneManager.php:244
 msgid "Cannot restore the settings while the AutoTune session is running."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:528
+#: src/Package/AutoTune/AutoTuneManager.php:533
 msgid "This backup belongs to the running AutoTune session. Abort the session from the AutoTune page to stop it."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:554
-#: src/Package/AutoTune/AutoTuneManager.php:614
-#: src/Package/AutoTune/AutoTuneManager.php:703
+#: src/Package/AutoTune/AutoTuneManager.php:559
+#: src/Package/AutoTune/AutoTuneManager.php:619
+#: src/Package/AutoTune/AutoTuneManager.php:708
 msgid "The test Backup no longer exists."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:577
+#: src/Package/AutoTune/AutoTuneManager.php:582
 msgid "The maximum AutoTune session time was exceeded."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:595
+#: src/Package/AutoTune/AutoTuneManager.php:600
 msgid "The AutoTune session has no attempts."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:649
+#: src/Package/AutoTune/AutoTuneManager.php:654
 msgid "Another backup started during the AutoTune session."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:673
+#: src/Package/AutoTune/AutoTuneManager.php:678
 msgid "The next AutoTune attempt could not be started."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:728
+#: src/Package/AutoTune/AutoTuneManager.php:733
 msgid ""
 "The test Backup could not start because the configuration does not meet the build requirements.\n"
 "                        Check the Backup log for the failed requirements."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:733
+#: src/Package/AutoTune/AutoTuneManager.php:738
 #: src/Views/AutoTunePageData.php:560
 msgid "The test Backup failed without reporting the cause."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:987
+#: src/Package/AutoTune/AutoTuneManager.php:992
 msgid "AutoTune stopped because an internal transition failed."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:1038
+#: src/Package/AutoTune/AutoTuneManager.php:1067
 msgid "One of the AutoTune exclusions is not refusable."
 msgstr ""
 
-#: src/Package/AutoTune/AutoTuneManager.php:1073
+#: src/Package/AutoTune/AutoTuneManager.php:1102
 msgid "The default template encrypts the archive:"
 msgstr ""
 
@@ -4872,42 +5634,135 @@ msgid ""
 "            Please contact the support team."
 msgstr ""
 
-#: src/Package/BackupRequestService.php:95
-msgid "The requested backup type is not supported."
+#. translators: %s: comma separated scope values
+#: src/Package/BackupRequestService.php:159
+#, php-format
+msgid "The scope must be one of: %s."
 msgstr ""
 
-#: src/Package/BackupRequestService.php:105
+#: src/Package/BackupRequestService.php:171
 msgid "The backup request is missing the requesting plugin name."
 msgstr ""
 
-#: src/Package/BackupRequestService.php:113
-msgid "Duplicator cannot create backups on this site."
-msgstr ""
-
-#: src/Package/BackupRequestService.php:121
+#: src/Package/BackupRequestService.php:177
 msgid ""
 "This server cannot run backups in the background.\n"
-"                    Create the backup from the Duplicator admin pages instead."
+"                Create the backup from the Duplicator admin pages instead."
 msgstr ""
 
-#: src/Package/BackupRequestService.php:136
-#: src/Package/PackageUtils.php:107
+#: src/Package/BackupRequestService.php:200
+#: src/Package/PackageUtils.php:113
+#: src/Package/PackageUtils.php:167
 msgid "Another backup is already in progress. Wait for it to finish and try again."
 msgstr ""
 
-#: src/Package/BackupRequestService.php:187
-msgid "No backup exists with the given id."
+#: src/Package/BackupRequestService.php:330
+msgid ""
+"This server cannot run transfers in the background.\n"
+"                Transfer the backup from the Duplicator admin pages instead."
 msgstr ""
 
-#: src/Package/BackupRequestService.php:281
+#: src/Package/BackupRequestService.php:423
+msgid "The backup could not be deleted."
+msgstr ""
+
+#. translators: %d: Backup id
+#: src/Package/BackupRequestService.php:429
+#, php-format
+msgid "Backup %d deleted. Its copies on remote storages are kept."
+msgstr ""
+
+#: src/Package/BackupRequestService.php:454
+msgid "The log of this backup is not available."
+msgstr ""
+
+#: src/Package/BackupRequestService.php:472
+msgid "The log is long: only its end is returned."
+msgstr ""
+
+#: src/Package/BackupRequestService.php:484
+msgid ""
+"To install a backup, download its archive and its installer from the Backups page, or transfer the backup to a storage\n"
+"                and get them from there, and put both files in the folder of the destination site. Then open the installer in a browser\n"
+"                at the URL of that folder, or run it with php from the command line in that folder: php installer.php --help\n"
+"                explains how."
+msgstr ""
+
+#. translators: %d: Backup id
+#: src/Package/BackupRequestService.php:514
+#, php-format
+msgid "Backup %d is already being cancelled."
+msgstr ""
+
+#. translators: 1: Backup id, 2: status
+#: src/Package/BackupRequestService.php:522
+#, php-format
+msgid "Backup %1$d is %2$s: only a queued or running backup can be cancelled."
+msgstr ""
+
+#. translators: %d: Backup id
+#: src/Package/BackupRequestService.php:544
+#, php-format
+msgid "Backup %d is being cancelled: it stops at the next step of the worker. A backup that finishes before then stays complete."
+msgstr ""
+
+#: src/Package/BackupRequestService.php:609
+msgid "The source and destination storages must be different."
+msgstr ""
+
+#. translators: %d: default local storage id
+#: src/Package/BackupRequestService.php:614
+#, php-format
+msgid ""
+"A transfer copies a backup to or from the default local storage (id %d).\n"
+"                    To copy it between two other storages, transfer it to the default local storage first, then from there."
+msgstr ""
+
+#: src/Package/BackupRequestService.php:636
+msgid "Only a complete backup can be transferred."
+msgstr ""
+
+#. translators: %d: template id
+#: src/Package/BackupRequestService.php:667
+#, php-format
+msgid "No Backup template exists with id %d."
+msgstr ""
+
+#. translators: %d: storage id
+#: src/Package/BackupRequestService.php:689
+#, php-format
+msgid "No storage exists with id %d."
+msgstr ""
+
+#. translators: %s: comma separated status values
+#: src/Package/BackupRequestService.php:755
+#, php-format
+msgid "The status must be one of: %s."
+msgstr ""
+
+#. translators: %s: comma separated type values
+#: src/Package/BackupRequestService.php:764
+#, php-format
+msgid "The type must be one of: %s."
+msgstr ""
+
+#: src/Package/BackupRequestService.php:900
+msgid "The copy is no longer on the storage."
+msgstr ""
+
+#: src/Package/BackupRequestService.php:905
+msgid "Deleted storage"
+msgstr ""
+
+#: src/Package/BackupRequestService.php:928
 msgid "This backup contains the database only; site files are not included."
 msgstr ""
 
-#: src/Package/BackupRequestService.php:288
+#: src/Package/BackupRequestService.php:935
 msgid "The backup settings exclude files from this backup."
 msgstr ""
 
-#: src/Package/BackupRequestService.php:310
+#: src/Package/BackupRequestService.php:957
 msgid "Duplicator could not complete the backup request. Check the Duplicator logs for details."
 msgstr ""
 
@@ -5177,12 +6032,12 @@ msgstr ""
 msgid "Archive "
 msgstr ""
 
-#: src/Package/Create/BuildComponents.php:376
+#: src/Package/Create/BuildComponents.php:388
 #, php-format
 msgid "Could not read the contents of the folder \"%1$s\" during the backup scan."
 msgstr ""
 
-#: src/Package/Create/BuildComponents.php:384
+#: src/Package/Create/BuildComponents.php:396
 #, php-format
 msgid ""
 "Duplicator does not need write access to the source folder \"%1$s\", but PHP must be able to read and list it\n"
@@ -5190,7 +6045,7 @@ msgid ""
 "                    fail, ask the host to compare the PHP execution environments used by scheduled and manual Backups."
 msgstr ""
 
-#: src/Package/Create/BuildComponents.php:406
+#: src/Package/Create/BuildComponents.php:418
 #: template/admin_pages/packages/details/parts/database_card.php:31
 #: template/admin_pages/packages/details/parts/database_card.php:63
 #: template/admin_pages/packages/details/parts/general_card.php:72
@@ -5202,41 +6057,41 @@ msgstr ""
 msgid "Database"
 msgstr ""
 
-#: src/Package/Create/BuildComponents.php:408
+#: src/Package/Create/BuildComponents.php:420
 msgid "Core"
 msgstr ""
 
-#: src/Package/Create/BuildComponents.php:410
+#: src/Package/Create/BuildComponents.php:422
 #: template/admin_pages/packages/details/parts/environment_card.php:66
 #: template/admin_pages/packages/packages_scripts.php:108
 msgid "Plugins"
 msgstr ""
 
-#: src/Package/Create/BuildComponents.php:412
+#: src/Package/Create/BuildComponents.php:424
 msgid "Only Active Plugins"
 msgstr ""
 
-#: src/Package/Create/BuildComponents.php:414
+#: src/Package/Create/BuildComponents.php:426
 msgid "Themes"
 msgstr ""
 
-#: src/Package/Create/BuildComponents.php:416
+#: src/Package/Create/BuildComponents.php:428
 msgid "Only Active Themes"
 msgstr ""
 
-#: src/Package/Create/BuildComponents.php:418
+#: src/Package/Create/BuildComponents.php:430
 msgid "Media"
 msgstr ""
 
-#: src/Package/Create/BuildComponents.php:420
+#: src/Package/Create/BuildComponents.php:432
 msgid "Other"
 msgstr ""
 
-#: src/Package/Create/BuildComponents.php:456
+#: src/Package/Create/BuildComponents.php:468
 msgid "Full Site"
 msgstr ""
 
-#: src/Package/Create/BuildComponents.php:459
+#: src/Package/Create/BuildComponents.php:471
 #: template/admin_pages/packages/package_row_complete.php:57
 #: template/admin_pages/packages/package_row_incomplete.php:56
 #: template/admin_pages/packages/scan/items/archive/main.php:37
@@ -5244,7 +6099,7 @@ msgstr ""
 msgid "Database Only"
 msgstr ""
 
-#: src/Package/Create/DbBuildProgress.php:215
+#: src/Package/Create/DbBuildProgress.php:227
 #, php-format
 msgid "The table %s was not found in the database during the export."
 msgstr ""
@@ -5275,66 +6130,66 @@ msgstr ""
 msgid "Could not realign the backup archive during chunk recovery."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:747
+#: src/Package/Create/PackInstaller.php:752
 msgid "An installer file to add to the archive is missing or not readable. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:980
+#: src/Package/Create/PackInstaller.php:985
 msgid "The backup failed while adding the installer files to the archive. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1087
+#: src/Package/Create/PackInstaller.php:1092
 msgid "The backup archive is missing or empty, the installer files cannot be added. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1145
+#: src/Package/Create/PackInstaller.php:1150
 msgid "Could not open the archive file to add the installer files."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1165
+#: src/Package/Create/PackInstaller.php:1170
 msgid "Could not finalize the archive file after adding the installer files."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1193
+#: src/Package/Create/PackInstaller.php:1198
 msgid "ARCHIVE CONSISTENCY TEST: PASS"
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1199
+#: src/Package/Create/PackInstaller.php:1204
 msgid ""
 "It was not possible to double-check that the installer files are inside the archive.\n"
 "                        No action is needed; to be extra safe, you can test the Backup with a restore."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1207
+#: src/Package/Create/PackInstaller.php:1212
 msgid "ARCHIVE CONSISTENCY TEST: FAIL"
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1214
+#: src/Package/Create/PackInstaller.php:1219
 msgid "One or more installer files were not found in the archive. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1220
+#: src/Package/Create/PackInstaller.php:1225
 msgid "Archive doesn't pass consistency check."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1239
+#: src/Package/Create/PackInstaller.php:1249
 msgid "Could not clean the temporary folder for the installer files."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1247
-#: src/Package/Create/PackInstaller.php:1259
+#: src/Package/Create/PackInstaller.php:1257
+#: src/Package/Create/PackInstaller.php:1269
 msgid "Could not create the temporary folder for the installer files."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1272
+#: src/Package/Create/PackInstaller.php:1278
 msgid "Could not copy an installer file to the temporary folder."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1318
+#: src/Package/Create/PackInstaller.php:1339
 msgid "The shell zip command failed while adding the installer files to the archive."
 msgstr ""
 
-#: src/Package/Create/PackInstaller.php:1499
+#: src/Package/Create/PackInstaller.php:1520
 msgid "The backup failed while writing an installer file. Check the backup log for details."
 msgstr ""
 
@@ -5378,44 +6233,44 @@ msgid ""
 "                    Switching to a different SQL engine is recommended for better stability."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1304
+#: src/Package/Database/DatabasePkg.php:1303
 msgid "Could not restrict the permissions of a temporary database export file. Check file and directory permissions."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1465
+#: src/Package/Database/DatabasePkg.php:1472
 msgid "mysqldump is not available on this server. Switch the SQL engine to PHP."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1476
+#: src/Package/Database/DatabasePkg.php:1483
 msgid "Shell mysql dump failed. Last lines of dump file below."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1481
+#: src/Package/Database/DatabasePkg.php:1493
 msgid "The mysqldump database export failed. Try switching the SQL engine to PHP."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1649
+#: src/Package/Database/DatabasePkg.php:1661
 msgid "Could not write to the database export file. Check file and directory permissions."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1699
+#: src/Package/Database/DatabasePkg.php:1713
 msgid "The backup failed because of an invalid database export configuration."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1826
-msgid "The backup failed while compressing the database export. Check the backup log for details."
-msgstr ""
-
-#: src/Package/Database/DatabasePkg.php:1841
-msgid "The compressed database export file is empty. Check the backup log for details."
-msgstr ""
-
-#: src/Package/Database/DatabasePkg.php:1849
+#: src/Package/Database/DatabasePkg.php:1852
 msgid "Could not remove the database export file after compression. Check file and directory permissions."
 msgstr ""
 
-#: src/Package/Database/DatabasePkg.php:1884
-#: src/Package/Database/DatabasePkg.php:1901
+#: src/Package/Database/DatabasePkg.php:1890
+msgid "The backup failed while compressing the database export. Check the backup log for details."
+msgstr ""
+
+#: src/Package/Database/DatabasePkg.php:1905
+msgid "The compressed database export file is empty. Check the backup log for details."
+msgstr ""
+
+#: src/Package/Database/DatabasePkg.php:1940
+#: src/Package/Database/DatabasePkg.php:1957
 msgid "The backup failed while resuming the database export compression. Check the backup log for details."
 msgstr ""
 
@@ -5451,23 +6306,23 @@ msgstr ""
 msgid "The database export could not resolve the file of one of its tables."
 msgstr ""
 
-#: src/Package/Database/Dump/PhpDumpEngine.php:193
+#: src/Package/Database/Dump/PhpDumpEngine.php:195
 msgid "Could not realign the database export file during chunk recovery."
 msgstr ""
 
-#: src/Package/Database/Dump/PhpDumpEngine.php:237
+#: src/Package/Database/Dump/PhpDumpEngine.php:242
 #, php-format
 msgid "Could not read the structure of the database table \"%1$s\" during export."
 msgstr ""
 
-#: src/Package/Database/Dump/PhpDumpEngine.php:248
+#: src/Package/Database/Dump/PhpDumpEngine.php:253
 #, php-format
 msgid ""
 "The WordPress core table \"%1$s\" was removed while the Backup was running,\n"
 "                        so the Backup cannot continue."
 msgstr ""
 
-#: src/Package/Database/Dump/PhpDumpEngine.php:262
+#: src/Package/Database/Dump/PhpDumpEngine.php:267
 #, php-format
 msgid ""
 "The database table \"%1$s\" was removed by another process while the Backup was running.\n"
@@ -5475,21 +6330,17 @@ msgid ""
 "                    when the site is less active."
 msgstr ""
 
-#: src/Package/Database/Dump/TableDumpCheckpoint.php:62
-msgid "Could not create the database export progress file. Check the backup log for details."
-msgstr ""
-
-#: src/Package/Database/Dump/TableDumpCheckpoint.php:264
+#: src/Package/Database/Dump/TableDumpCheckpoint.php:260
 msgid "Could not read the database export progress file. Check the backup log for details."
 msgstr ""
 
-#: src/Package/Database/Dump/TableDumpCheckpoint.php:339
+#: src/Package/Database/Dump/TableDumpCheckpoint.php:335
 msgid ""
 "Duplicator could not serialize its internal database export checkpoint.\n"
 "                    Run the Backup again. If the problem continues, contact support and include the backup log."
 msgstr ""
 
-#: src/Package/Database/Dump/TableDumpCheckpoint.php:369
+#: src/Package/Database/Dump/TableDumpCheckpoint.php:361
 msgid "Could not write the database export progress file. Check the backup log for details."
 msgstr ""
 
@@ -5706,7 +6557,7 @@ msgstr ""
 msgid "Click to increase the Max Build Time to %d minutes."
 msgstr ""
 
-#: src/Package/Failure/LiteSpeedWorkerGuidance.php:63
+#: src/Package/Failure/LiteSpeedWorkerGuidance.php:64
 msgid ""
 "LiteSpeed was detected. This failure may have been caused by LiteSpeed terminating a background worker\n"
 "            after its AJAX connection closed. The configuration below is only a potential solution. It is not guaranteed\n"
@@ -5714,7 +6565,7 @@ msgid ""
 msgstr ""
 
 #. translators: %s: Absolute path to the root .htaccess file
-#: src/Package/Failure/LiteSpeedWorkerGuidance.php:76
+#: src/Package/Failure/LiteSpeedWorkerGuidance.php:77
 #, php-format
 msgid ""
 "Add the suggested configuration to the root <code>.htaccess</code> file at <code>%s</code>, or ask\n"
@@ -5722,14 +6573,14 @@ msgid ""
 "                not modify this file automatically."
 msgstr ""
 
-#: src/Package/Failure/LiteSpeedWorkerGuidance.php:84
+#: src/Package/Failure/LiteSpeedWorkerGuidance.php:85
 msgid ""
 "Duplicator cannot verify an equivalent configuration defined outside the local\n"
 "            <code>.htaccess</code> file. After the configuration has been reviewed, run the Backup again. If the\n"
 "            failure continues, check the Backup log because the interruption may have another cause."
 msgstr ""
 
-#: src/Package/Failure/LiteSpeedWorkerGuidance.php:97
+#: src/Package/Failure/LiteSpeedWorkerGuidance.php:98
 msgid "Troubleshooting Server Time Out Issues"
 msgstr ""
 
@@ -5740,24 +6591,24 @@ msgid ""
 "            terminated background PHP processes or removed Duplicator temporary files."
 msgstr ""
 
-#: src/Package/FullBackupStatus.php:168
+#: src/Package/FullBackupStatus.php:169
 msgid "Database-only backups cannot be used."
 msgstr ""
 
-#: src/Package/FullBackupStatus.php:173
+#: src/Package/FullBackupStatus.php:172
 #, php-format
 msgid "Backup is missing required components: %s"
 msgstr ""
 
-#: src/Package/FullBackupStatus.php:179
+#: src/Package/FullBackupStatus.php:178
 msgid "Backup has filtered WordPress core directories."
 msgstr ""
 
-#: src/Package/FullBackupStatus.php:183
+#: src/Package/FullBackupStatus.php:182
 msgid "Backup has filtered database tables."
 msgstr ""
 
-#: src/Package/FullBackupStatus.php:187
+#: src/Package/FullBackupStatus.php:186
 msgid "Backup has filtered multisite subsites."
 msgstr ""
 
@@ -5797,55 +6648,94 @@ msgstr ""
 msgid "Backup Template Name"
 msgstr ""
 
-#: src/Package/PackageUtils.php:99
+#: src/Package/PackageUtils.php:105
 msgid "A new backup cannot be prepared or started while an AutoTune session is running. Wait for it to finish or abort it from the AutoTune page."
 msgstr ""
 
-#: src/Package/PackageUtils.php:112
+#: src/Package/PackageUtils.php:118
 msgid "A backup cancellation is in progress. Wait for it to finish and try again."
 msgstr ""
 
-#: src/Package/PackageUtils.php:447
-msgid "Template"
+#: src/Package/PackageUtils.php:139
+msgid "Duplicator cannot create backups on this site."
 msgstr ""
 
-#: src/Package/PackageUtils.php:456
+#: src/Package/PackageUtils.php:181
+#, php-format
+msgid "Could not find Backup ID %d!"
+msgstr ""
+
+#: src/Package/PackageUtils.php:185
+msgid "Please select a storage."
+msgstr ""
+
+#: src/Package/PackageUtils.php:196
+msgid "Only a complete Backup with a local archive can be transferred."
+msgstr ""
+
+#: src/Package/PackageUtils.php:260
+msgid "A transfer of this backup is already running. Wait for it to finish and try again."
+msgstr ""
+
+#: src/Package/PackageUtils.php:614
 msgid "API"
 msgstr ""
 
-#: src/Package/PackageUtils.php:572
+#: src/Package/PackageUtils.php:730
 #, php-format
 msgid "%.1f sec"
 msgstr ""
 
-#: src/Package/PackageUtils.php:587
+#: src/Package/PackageUtils.php:745
 msgid "multi-thread"
 msgstr ""
 
-#: src/Package/PackageUtils.php:587
+#: src/Package/PackageUtils.php:745
 msgid "single thread"
 msgstr ""
 
-#: src/Package/Runner.php:438
+#: src/Package/ProtectionStatus.php:73
+msgid "Not protected: this site has no completed backups."
+msgstr ""
+
+#: src/Package/ProtectionStatus.php:98
+msgid "Not protected: no remote storage is set up, so all backups stay on this server."
+msgstr ""
+
+#: src/Package/ProtectionStatus.php:104
+msgid "Not protected: backups exist, but none has a finished copy on remote storage."
+msgstr ""
+
+#. translators: %s: time since the backup, e.g. "2 weeks"
+#: src/Package/ProtectionStatus.php:138
+#, php-format
+msgid "Not protected: the last backup with a remote copy was %s ago."
+msgstr ""
+
+#. translators: 1: time since the backup, e.g. "2 days", 2: storage names
+#: src/Package/ProtectionStatus.php:147
+#, php-format
+msgid "Protected: the last backup with a remote copy was %1$s ago, on %2$s."
+msgstr ""
+
+#: src/Package/ProtectionStatus.php:152
+msgid "It is not a full backup, so part of the site is not in it."
+msgstr ""
+
+#: src/Package/Runner.php:437
 msgid "Backup transfer was cancelled because it exceeded Max Transfer Time."
 msgstr ""
 
-#: src/Package/Runner.php:439
+#: src/Package/Runner.php:438
 msgid "Click button to increase Max Transfer Time."
 msgstr ""
 
-#: src/Package/Runner.php:445
+#: src/Package/Runner.php:444
 msgid "How to resolve schedule build failures"
 msgstr ""
 
-#: src/Package/Runner.php:664
+#: src/Package/Runner.php:663
 msgid "The backup failed validating the scanned files. Check the backup log for details."
-msgstr ""
-
-#: src/Package/Runner.php:744
-#: template/admin_pages/packages/row_parts/package_progress_error.php:58
-#: template/admin_pages/packages/row_parts/package_progress_error.php:63
-msgid "Requirements Failed"
 msgstr ""
 
 #: src/Package/Storage/UploadInfo.php:303
@@ -5870,55 +6760,73 @@ msgstr ""
 msgid "Failed"
 msgstr ""
 
+#: src/Package/Storage/UploadInfo.php:398
+msgid "The transfer was cancelled."
+msgstr ""
+
+#: src/Package/Storage/UploadInfo.php:401
+msgid "The storage refused the download. Check its connection and credentials."
+msgstr ""
+
+#: src/Package/Storage/UploadInfo.php:402
+msgid "The storage refused the upload. Check its credentials and free space."
+msgstr ""
+
 #: src/Package/TemporaryPackageUtils.php:177
 msgid "No backup ready to start was found. The backup may have already been started, check the backups list."
 msgstr ""
 
-#: src/Package/TraitPackageBuild.php:98
+#: src/Package/TraitPackageBuild.php:99
 msgid "Archive encryption is not available on this server. Disable encryption or contact your host."
 msgstr ""
 
-#: src/Package/TraitPackageBuild.php:259
+#: src/Package/TraitPackageBuild.php:260
 msgid "The backup could not be finalized: unable to move the backup files to the final location."
 msgstr ""
 
-#: src/Package/TraitPackageBuild.php:320
+#: src/Package/TraitPackageBuild.php:313
 msgid "The database backup looks incomplete. Check the backup log for details."
 msgstr ""
 
-#: src/Package/TraitPackageBuild.php:334
+#: src/Package/TraitPackageBuild.php:343
 msgid "The installer file is missing or could not be read. Please try to re-create the backup."
 msgstr ""
 
-#: src/Package/TraitPackageBuild.php:342
+#: src/Package/TraitPackageBuild.php:351
 msgid "The installer file is incomplete. Please try to re-create the backup."
 msgstr ""
 
-#: src/Package/TraitPackageBuild.php:356
+#: src/Package/TraitPackageBuild.php:365
 msgid "The backup archive is empty. Check the backup log for details."
 msgstr ""
 
-#: src/Package/TraitPackageBuild.php:367
-#: src/Package/TraitPackageScan.php:285
+#: src/Package/TraitPackageBuild.php:376
+#: src/Package/TraitPackageScan.php:288
 msgid "A temporary file needed by the build was missing."
 msgstr ""
 
-#: src/Package/TraitPackageBuild.php:376
+#: src/Package/TraitPackageBuild.php:385
 #, php-format
 msgid "EXPECTED FILE/DIRECTORY COUNT: %1$s"
 msgstr ""
 
-#: src/Package/TraitPackageBuild.php:377
+#: src/Package/TraitPackageBuild.php:386
 #, php-format
 msgid "ACTUAL FILE/DIRECTORY COUNT: %1$s"
 msgstr ""
 
-#: src/Package/TraitPackageBuild.php:398
+#: src/Package/TraitPackageBuild.php:407
 msgid "The backup archive has fewer files than expected and may be incomplete."
 msgstr ""
 
-#: src/Package/TraitPackageBuild.php:399
+#: src/Package/TraitPackageBuild.php:410
 msgid "The backup archive has more files than expected and may be inconsistent."
+msgstr ""
+
+#: src/Package/TraitPackageBuild.php:644
+#: template/admin_pages/packages/row_parts/package_progress_error.php:58
+#: template/admin_pages/packages/row_parts/package_progress_error.php:63
+msgid "Requirements Failed"
 msgstr ""
 
 #: src/Package/TraitPackageProgress.php:68
@@ -6015,11 +6923,11 @@ msgstr ""
 msgid "Could not encode the scan report. Check the backup log for details."
 msgstr ""
 
-#: src/Package/TraitPackageScan.php:184
+#: src/Package/TraitPackageScan.php:186
 msgid "Could not write the scan report file. Check the backup log for details."
 msgstr ""
 
-#: src/Package/TraitPackageScan.php:296
+#: src/Package/TraitPackageScan.php:299
 msgid "A temporary file needed by the build could not be read."
 msgstr ""
 
@@ -6027,7 +6935,7 @@ msgstr ""
 msgid "Cannot start backup: no valid storage is available. Please check your storage configurations."
 msgstr ""
 
-#: src/Package/TraitPackageStorage.php:384
+#: src/Package/TraitPackageStorage.php:379
 #, php-format
 msgid "The storage \"%1$s\" is not valid. Check its configuration in the Duplicator storage settings, then run the backup again."
 msgstr ""
@@ -6541,13 +7449,13 @@ msgctxt "%s is the site domain"
 msgid "Your Duplicator Summary for %s"
 msgstr ""
 
-#: src/Utils/Lock/LockUtil.php:289
+#: src/Utils/Lock/LockUtil.php:322
 msgid ""
 "The backup cannot start because no process-locking method is available.\n"
 "                Check the backup log for details or contact your hosting provider."
 msgstr ""
 
-#: src/Utils/Logging/DupLog.php:254
+#: src/Utils/Logging/DupLog.php:257
 msgid "No Log"
 msgstr ""
 
@@ -6616,7 +7524,7 @@ msgstr ""
 msgid "A Duplicator backup is in progress. WordPress updates are temporarily blocked to prevent backup corruption. Try again in a few minutes."
 msgstr ""
 
-#: src/Utils/ZipArchiveExtended.php:425
+#: src/Utils/ZipArchiveExtended.php:424
 msgid "Cannot open the Backup archive file."
 msgstr ""
 
@@ -6836,6 +7744,25 @@ msgstr ""
 msgid "%d MB"
 msgstr ""
 
+#: src/Views/AutoTunePageData.php:745
+#: template/admin_pages/packages/scan/items/setup/hosting_status.php:26
+#: template/admin_pages/packages/scan/items/setup/hosting_status.php:40
+#: template/admin_pages/packages/scan/items/setup/parts/hosting_tooltip_memory.php:7
+#: template/admin_pages/packages/scan/items/setup/parts/hosting_tooltip_timeout.php:7
+#: template/admin_pages/settings/backup/processing_settings.php:46
+msgid "Low"
+msgstr ""
+
+#: src/Views/AutoTunePageData.php:747
+#: template/admin_pages/settings/backup/processing_settings.php:56
+msgid "Medium"
+msgstr ""
+
+#: src/Views/AutoTunePageData.php:749
+#: template/admin_pages/settings/backup/processing_settings.php:66
+msgid "High"
+msgstr ""
+
 #: src/Views/AutoTunePageData.php:797
 msgid "Timed out"
 msgstr ""
@@ -6850,10 +7777,6 @@ msgstr ""
 
 #: src/Views/AutoTunePageData.php:841
 msgid "Abort Session"
-msgstr ""
-
-#: src/Views/AutoTunePageData.php:847
-msgid "Start AutoTune"
 msgstr ""
 
 #: src/Views/AutoTunePageData.php:853
@@ -7003,23 +7926,23 @@ msgid "Backup created with warnings"
 msgstr ""
 
 #: src/Views/PackageScreen.php:282
-#: template/parts/packages/filters/section_security.php:164
+#: template/parts/packages/filters/section_security.php:165
 msgid "Archive encryption enabled"
 msgstr ""
 
 #: src/Views/PackageScreen.php:286
-#: template/parts/packages/filters/section_security.php:168
+#: template/parts/packages/filters/section_security.php:169
 msgid "Installer password protection"
 msgstr ""
 
 #: src/Views/PackageScreen.php:291
-#: template/parts/packages/filters/section_security.php:172
+#: template/parts/packages/filters/section_security.php:173
 msgid "No backup protection"
 msgstr ""
 
 #: src/Views/PackageScreen.php:299
 #: template/admin_pages/packages/details/parts/general_card.php:236
-#: template/parts/packages/filters/section_security.php:37
+#: template/parts/packages/filters/section_security.php:38
 msgid "Security"
 msgstr ""
 
@@ -7054,14 +7977,6 @@ msgstr ""
 
 #: src/Views/PackageScreen.php:492
 msgid "DupArchive format"
-msgstr ""
-
-#: src/Views/PackageScreen.php:516
-#: template/admin_pages/packages/details/parts/general_card.php:245
-#: template/admin_pages/packages/packages_table_head.php:46
-#: template/admin_pages/packages/row_parts/details_package.php:72
-#: template/admin_pages/storages/parts/edit_toolbar.php:99
-msgid "Storages"
 msgstr ""
 
 #: src/Views/PackageScreen.php:529
@@ -7144,7 +8059,11 @@ msgstr ""
 msgid "Activity Date:"
 msgstr ""
 
-#: template/admin_pages/activity_log/log_detail_modal.php:46
+#: template/admin_pages/activity_log/log_detail_modal.php:47
+msgid "Via:"
+msgstr ""
+
+#: template/admin_pages/activity_log/log_detail_modal.php:54
 msgid "Duplicator Version:"
 msgstr ""
 
@@ -7195,12 +8114,12 @@ msgstr ""
 msgid "Duration"
 msgstr ""
 
-#: template/admin_pages/activity_log/parts/sub_table_mini.php:71
+#: template/admin_pages/activity_log/parts/sub_table_mini.php:74
 #, php-format
 msgid "Total: %s"
 msgstr ""
 
-#: template/admin_pages/activity_log/parts/table_row.php:52
+#: template/admin_pages/activity_log/parts/table_row.php:55
 #: template/admin_pages/packages/details/details_header.php:34
 #: template/admin_pages/packages/details/details_wpbody_header.php:38
 #: template/admin_pages/packages/details/transfer.php:51
@@ -7429,22 +8348,22 @@ msgstr ""
 
 #: template/admin_pages/packages/details/parts/general_card.php:31
 #: template/admin_pages/packages/scan/items/setup/security.php:27
-#: template/parts/packages/filters/section_security.php:56
-#: template/parts/packages/filters/section_security.php:63
+#: template/parts/packages/filters/section_security.php:57
+#: template/parts/packages/filters/section_security.php:64
 msgid "No protection"
 msgstr ""
 
 #: template/admin_pages/packages/details/parts/general_card.php:35
 #: template/admin_pages/packages/scan/items/setup/security.php:31
-#: template/parts/packages/filters/section_security.php:76
-#: template/parts/packages/filters/section_security.php:83
+#: template/parts/packages/filters/section_security.php:77
+#: template/parts/packages/filters/section_security.php:84
 msgid "Installer password"
 msgstr ""
 
 #: template/admin_pages/packages/details/parts/general_card.php:39
 #: template/admin_pages/packages/scan/items/setup/security.php:35
-#: template/parts/packages/filters/section_security.php:97
-#: template/parts/packages/filters/section_security.php:104
+#: template/parts/packages/filters/section_security.php:98
+#: template/parts/packages/filters/section_security.php:105
 msgid "Archive encryption"
 msgstr ""
 
@@ -7813,15 +8732,19 @@ msgstr ""
 msgid "Removing Backups, Please Wait..."
 msgstr ""
 
-#: template/admin_pages/packages/packages_scripts.php:258
+#: template/admin_pages/packages/packages_scripts.php:239
+msgid "Unable to delete the Backups."
+msgstr ""
+
+#: template/admin_pages/packages/packages_scripts.php:257
 msgid "Cancelling..."
 msgstr ""
 
-#: template/admin_pages/packages/packages_scripts.php:278
+#: template/admin_pages/packages/packages_scripts.php:277
 msgid "Got an error or a warning"
 msgstr ""
 
-#: template/admin_pages/packages/packages_scripts.php:290
+#: template/admin_pages/packages/packages_scripts.php:289
 msgid "[Backup Build Log]"
 msgstr ""
 
@@ -8066,21 +8989,12 @@ msgstr ""
 msgid "Go to Backup transfer screen"
 msgstr ""
 
-#: template/admin_pages/packages/row_parts/details_package.php:59
-#: template/admin_pages/packages/row_parts/details_package.php:64
-msgid "Transfer Backup"
-msgstr ""
-
 #: template/admin_pages/packages/row_parts/details_package.php:62
 msgid "Transfer Backups requires the use of built-in default storage!"
 msgstr ""
 
 #: template/admin_pages/packages/row_parts/details_package.php:70
 msgid "Show the storage locations of this Backup"
-msgstr ""
-
-#: template/admin_pages/packages/row_parts/details_package.php:80
-msgid "Delete Backup"
 msgstr ""
 
 #: template/admin_pages/packages/row_parts/details_package.php:90
@@ -9428,7 +10342,7 @@ msgid "No basic authentication detected."
 msgstr ""
 
 #: template/admin_pages/settings/backup/advanced_settings.php:156
-#: template/parts/packages/filters/section_security.php:112
+#: template/parts/packages/filters/section_security.php:113
 msgid "Password"
 msgstr ""
 
@@ -9512,6 +10426,16 @@ msgstr ""
 #: template/admin_pages/settings/backup/archive_settings.php:114
 #: template/admin_pages/settings/backup/database_settings.php:202
 msgid "Process Mode"
+msgstr ""
+
+#: template/admin_pages/settings/backup/archive_settings.php:118
+#: template/admin_pages/settings/backup/database_settings.php:207
+msgid "Multi-Threaded"
+msgstr ""
+
+#: template/admin_pages/settings/backup/archive_settings.php:122
+#: template/admin_pages/settings/backup/database_settings.php:212
+msgid "Single-Threaded"
 msgstr ""
 
 #: template/admin_pages/settings/backup/archive_settings.php:126
@@ -9781,7 +10705,7 @@ msgid "Installer Cleanup"
 msgstr ""
 
 #: template/admin_pages/settings/backup/installer_settings.php:115
-#: template/parts/packages/filters/section_security.php:35
+#: template/parts/packages/filters/section_security.php:36
 msgid "Mode"
 msgstr ""
 
@@ -10254,7 +11178,9 @@ msgid "Use IPv4 only"
 msgstr ""
 
 #: template/admin_pages/settings/storage/storage_ssl.php:87
-msgid "To use IPv4 only, which can help if your host has a broken IPv6 setup (currently only supported by Google Drive)"
+msgid ""
+"To use IPv4 only, which can help if your host has a broken IPv6 setup\n"
+"            (supported by Duplicator Cloud, Amazon S3 and S3-compatible storages, Dropbox and Google Drive)"
 msgstr ""
 
 #: template/admin_pages/storages/configs/local.php:30
@@ -10361,13 +11287,6 @@ msgstr ""
 msgid "backup not found"
 msgstr ""
 
-#: template/admin_pages/storages/parts/remote_localtion_info.php:72
-#: template/admin_pages/storages/parts/test_button.php:32
-#: template/admin_pages/storages/parts/test_button.php:99
-#: template/admin_pages/storages/parts/test_button.php:103
-msgid "Test Storage"
-msgstr ""
-
 #: template/admin_pages/storages/parts/storage_error.php:26
 msgid "Oops, there was a problem..."
 msgstr ""
@@ -10404,7 +11323,7 @@ msgstr ""
 msgid "Copy error details"
 msgstr ""
 
-#: template/admin_pages/storages/parts/storage_type_select.php:46
+#: template/admin_pages/storages/parts/storage_type_select.php:45
 msgid "Select"
 msgstr ""
 
@@ -11210,36 +12129,36 @@ msgstr ""
 msgid "Additional inputs can be entered at install time."
 msgstr ""
 
-#: template/parts/packages/filters/section_security.php:24
+#: template/parts/packages/filters/section_security.php:25
 msgid "Caution:"
 msgstr ""
 
-#: template/parts/packages/filters/section_security.php:25
+#: template/parts/packages/filters/section_security.php:26
 msgid ""
 "Passwords are case-sensitive and cannot be recovered. Without the password,\n"
 "            the data inside an encrypted Backup cannot be restored, so store the password\n"
 "            in a safe place, such as a password manager."
 msgstr ""
 
-#: template/parts/packages/filters/section_security.php:57
+#: template/parts/packages/filters/section_security.php:58
 msgid ""
 "Backup archives are not encrypted and anyone can run the installer:\n"
 "                        whoever gets the files can read their contents and restore the site. Keep them in a safe place!"
 msgstr ""
 
-#: template/parts/packages/filters/section_security.php:77
+#: template/parts/packages/filters/section_security.php:78
 msgid ""
 "The Backup archive is not encrypted, but running the installer requires a password.\n"
 "                        File contents remain readable by anyone who gets them."
 msgstr ""
 
-#: template/parts/packages/filters/section_security.php:98
+#: template/parts/packages/filters/section_security.php:99
 msgid ""
 "The Backup archive is encrypted with your password: the most secure option,\n"
 "                        with the highest level of protection for your data."
 msgstr ""
 
-#: template/parts/packages/filters/section_security.php:140
+#: template/parts/packages/filters/section_security.php:141
 msgid "The security mode 'Archive encryption' option above is currently disabled on this server."
 msgstr ""
 

@@ -362,7 +362,7 @@ class ParamForm extends ParamItem
      *
      * @return ParamOption[]
      */
-    protected function getOptions()
+    public function getOptions()
     {
         if (!isset($this->formAttr['options'])) {
             return [];

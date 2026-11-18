@@ -82,7 +82,10 @@ class FileJsonPersistanceAdapter extends AbstractPersistanceAdapter
 
             return true;
         } catch (Throwable $e) {
-            DupLog::traceError('Persistance write error: ' . $e->getMessage());
+            // The installer ships this library without the plugin logger
+            if (class_exists(DupLog::class)) {
+                DupLog::traceError('Persistance write error: ' . $e->getMessage());
+            }
             return false;
         }
     }

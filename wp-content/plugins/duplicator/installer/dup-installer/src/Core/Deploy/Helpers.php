@@ -149,27 +149,55 @@ class Helpers
      * @param mysqli $dbh        Database connection
      * @param string $basePrefix WordPress Tables Prefix
      *
-     * @return string[]
+     * @return ?string[] The super admins, empty on a single site, null on a multisite whose site_admins can't be read
      *
      * @throws Exception
      */
-    public static function getSuperAdminUsernames(\mysqli $dbh, string $basePrefix): array
+    public static function getSuperAdminUsernames(\mysqli $dbh, string $basePrefix): ?array
     {
-        $result            = [];
-        $siteMetaTableName = "{$basePrefix}sitemeta";
-
-        if (InstState::isNewSiteIsMultisite() && DUPX_DB_Functions::getInstance()->tablesExist($siteMetaTableName)) {
-            $sql                = "SELECT meta_value FROM {$siteMetaTableName} WHERE meta_key = 'site_admins'";
-            $superAdminsResults = DUPX_DB::queryToArray($dbh, $sql);
-
-            if (isset($superAdminsResults[0][0])) {
-                if (!SnapUtil::safeUnserialize($superAdminsResults[0][0], $result) || !is_array($result)) {
-                    throw new Exception('Invalid site_admins value in ' . $siteMetaTableName . ': expected a serialized array');
-                }
-                Log::info('SUPER ADMIN USERS: ' . print_r($result, true));
-            }
+        if (!InstState::isNewSiteIsMultisite()) {
+            return [];
         }
 
+        $siteMetaTableName = "{$basePrefix}sitemeta";
+        if (!DUPX_DB_Functions::getInstance()->tablesExist($siteMetaTableName)) {
+            return null;
+        }
+
+        $sql                = "SELECT meta_value FROM {$siteMetaTableName} WHERE meta_key = 'site_admins'";
+        $superAdminsResults = DUPX_DB::queryToArray($dbh, $sql);
+        if (!isset($superAdminsResults[0][0])) {
+            return null;
+        }
+
+        if (!SnapUtil::safeUnserialize($superAdminsResults[0][0], $result) || !is_array($result)) {
+            throw new Exception('Invalid site_admins value in ' . $siteMetaTableName . ': expected a serialized array');
+        }
+        Log::info('SUPER ADMIN USERS: ' . print_r($result, true));
+
         return $result;
+    }
+
+    /**
+     * New site_admins value with a user added to the super admins read from the database
+     *
+     * A value that could not be read is refused: writing a list with the new user only would drop the existing
+     * super admins.
+     *
+     * @param ?string[] $superAdmins Super admin user names, as getSuperAdminUsernames() returns them
+     * @param string    $userName    User name to add
+     *
+     * @return string The serialized value to store
+     *
+     * @throws Exception When the site_admins value could not be read
+     */
+    public static function getSiteAdminsWithUser(?array $superAdmins, string $userName): string
+    {
+        if ($superAdmins === null) {
+            throw new Exception('Invalid site_admins value: expected a serialized array, can\'t add super admin ' . $userName);
+        }
+        $superAdmins[] = $userName;
+
+        return serialize($superAdmins);
     }
 }

@@ -17,6 +17,7 @@ use Duplicator\Models\Storages\StoragesUtil;
 use Duplicator\Models\FixesEntity;
 use Duplicator\Core\Options\OptionsManager;
 use Duplicator\Package\AbstractPackage;
+use Duplicator\Package\BackupRequestService;
 use Duplicator\Package\PackageUtils;
 use Duplicator\Package\Runner;
 use Duplicator\Package\TemporaryPackageUtils;
@@ -598,6 +599,9 @@ class PackagesPageController extends AbstractMenuPageController
      */
     public static function canDeleteBackup(AbstractPackage $package): bool
     {
+        if (BackupRequestService::getDeleteRefusal($package) !== null) {
+            return false;
+        }
         /**
          * Filter whether the Backup screens offer Delete and the delete endpoint accepts the Backup
          *

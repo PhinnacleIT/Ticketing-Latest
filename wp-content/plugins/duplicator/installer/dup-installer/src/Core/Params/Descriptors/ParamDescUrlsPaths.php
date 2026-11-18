@@ -73,6 +73,8 @@ final class ParamDescUrlsPaths implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
             [// ITEM ATTRIBUTES
+                'description'      => 'URL the site answers on; set it with --url',
+                'cliParam'         => true,
                 'default'          => $newHomeUrl,
                 'sanitizeCallback' => [
                     ParamsDescriptors::class,
@@ -137,6 +139,8 @@ final class ParamDescUrlsPaths implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
             [// ITEM ATTRIBUTES
+                'description'      => 'Folder the site is installed in; default: the installer folder',
+                'cliParam'         => true,
                 'default'          => $newMainPath,
                 'sanitizeCallback' => [
                     ParamsDescriptors::class,

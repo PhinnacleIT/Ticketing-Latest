@@ -83,6 +83,36 @@ class SnapUtil
     }
 
     /**
+     * Run a call, trying it again after each failure the retry check accepts
+     *
+     * @template T
+     *
+     * @param callable(): T                $call        The call
+     * @param int                          $maxTries    Tries, the first one included
+     * @param int                          $pauseUs     Pause before another try, in microseconds
+     * @param callable(Exception,int):bool $shouldRetry Gets the failure and the number of the try that failed,
+     *                                                  returns whether to try again. Not asked after the last try.
+     *
+     * @return T What the call returns
+     *
+     * @throws Exception The failure the retry check refused, or the failure of the last try
+     */
+    public static function withRetries(callable $call, int $maxTries, int $pauseUs, callable $shouldRetry)
+    {
+        for ($try = 1;; $try++) {
+            try {
+                return $call();
+            } catch (Exception $e) {
+                if ($try >= $maxTries || !$shouldRetry($e, $try)) {
+                    throw $e;
+                }
+
+                usleep($pauseUs);
+            }
+        }
+    }
+
+    /**
      * Return a percentage
      *
      * @param float $startingPercent  Low Percentage Limit
@@ -759,28 +789,6 @@ class SnapUtil
     }
 
     /**
-     * Implemented array_key_first
-     *
-     * @link https://www.php.net/manual/en/function.array-key-first.php
-     *
-     * @param mixed[] $arr array input
-     *
-     * @return int|string|null
-     */
-    public static function arrayKeyFirst($arr)
-    {
-        if (!function_exists('array_key_first')) {
-            foreach ($arr as $key => $unused) {
-                return $key;
-            }
-            return null;
-        } else {
-            // phpcs:ignore PHPCompatibility.FunctionUse.NewFunctions.array_key_firstFound
-            return array_key_first($arr);
-        }
-    }
-
-    /**
      * Get number of bit supported by PHP
      *
      * @return string
@@ -897,23 +905,14 @@ class SnapUtil
         $min = (int) $min;
         $max = (int) $max;
         // Use PHP's CSPRNG, or a compatible method
-        static $use_random_int_functionality = null;
-        if (is_null($use_random_int_functionality)) {
-            $use_random_int_functionality = function_exists('random_int');
-        }
+        static $use_random_int_functionality = true;
         if ($use_random_int_functionality) {
             try {
                 $_max = (0 != $max) ? $max : $max_random_number;
                 // rand() can accept arguments in either order, PHP cannot.
                 $_max = max($min, $_max);
                 $_min = min($min, $_max);
-                // phpcs:ignore PHPCompatibility.FunctionUse.NewFunctions.random_intFound
-                $val = random_int($_min, $_max);
-                if (false !== $val) { // @phpstan-ignore-line
-                    return abs(intval($val));
-                } else { // @phpstan-ignore-line
-                    $use_random_int_functionality = false;
-                }
+                return abs(random_int($_min, $_max));
             } catch (Throwable $e) {
                 $use_random_int_functionality = false;
             }

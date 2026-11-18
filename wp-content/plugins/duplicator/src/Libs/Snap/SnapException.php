@@ -63,8 +63,7 @@ class SnapException extends Exception
 
         if (SnapIO::isDiskFullError($reason)) {
             $code = self::CODE_DISK_FULL;
-        } elseif (stripos($reason, 'File too large') !== false || preg_match('/errno=27\b/', $reason) === 1) {
-            // EFBIG: the errno is matched too because the description can be localized
+        } elseif (SnapIO::isFileTooLargeError($reason)) {
             $code = self::CODE_FILE_TOO_LARGE;
         }
 

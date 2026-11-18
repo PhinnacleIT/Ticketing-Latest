@@ -30,6 +30,7 @@ class RequirementDefs
     const REQ_MYSQLDUMP_BINARY      = 'mysqldump_binary';
     const REQ_PHP_64BIT             = 'php_64bit';
     const REQ_HOME_READABLE         = 'home_readable';
+    const REQ_WP_ROOT_NOT_FS_ROOT   = 'wp_root_not_fs_root';
     const REQ_SSDIR_WRITABLE        = 'ssdir_writable';
     const REQ_SSTMP_WRITABLE        = 'sstmp_writable';
     const REQ_MYSQL_MIN_VERSION     = 'mysql_min_version';
@@ -86,6 +87,7 @@ class RequirementDefs
         $ids = [
             self::REQ_PHP_64BIT,
             self::REQ_HOME_READABLE,
+            self::REQ_WP_ROOT_NOT_FS_ROOT,
             self::REQ_SSDIR_WRITABLE,
             self::REQ_SSTMP_WRITABLE,
             self::REQ_MYSQL_MIN_VERSION,
@@ -258,6 +260,21 @@ class RequirementDefs
                 },
                 static fn(): string => __('The site home path can\'t be opened.', 'duplicator'),
                 static fn(): string => __('Check the file permissions of the site root directory.', 'duplicator')
+            ),
+            new Requirement(
+                self::REQ_WP_ROOT_NOT_FS_ROOT,
+                static fn(): string => __('WordPress outside the filesystem root', 'duplicator'),
+                static fn(): bool => !WpArchiveUtils::isFilesystemRootInstall(),
+                static fn(): string => __(
+                    'WordPress is installed in the root directory of the server filesystem.
+                    Duplicator can\'t read the site files from there, so the Backup would not contain them.',
+                    'duplicator'
+                ),
+                static fn(): string => __(
+                    'Move the WordPress installation into a subdirectory of the filesystem,
+                    or ask your hosting provider to serve the site from a directory other than the filesystem root.',
+                    'duplicator'
+                )
             ),
             new Requirement(
                 self::REQ_SSDIR_WRITABLE,

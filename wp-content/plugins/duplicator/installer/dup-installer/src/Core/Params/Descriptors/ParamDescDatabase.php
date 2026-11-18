@@ -84,6 +84,8 @@ final class ParamDescDatabase implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
             [
+                'description'      => 'Database host, with :port when needed',
+                'cliParam'         => true,
                 'persistence'      => true,
                 'default'          => 'localhost',
                 'sanitizeCallback' => [
@@ -114,6 +116,8 @@ final class ParamDescDatabase implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
             [
+                'description'      => 'Database name',
+                'cliParam'         => true,
                 'persistence'      => true,
                 'default'          => '',
                 'sanitizeCallback' => [
@@ -145,6 +149,8 @@ final class ParamDescDatabase implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
             [
+                'description'      => 'Database user',
+                'cliParam'         => true,
                 'persistence'      => true,
                 'default'          => '',
                 'sanitizeCallback' => [
@@ -177,6 +183,8 @@ final class ParamDescDatabase implements DescriptorInterface
             ParamFormPass::TYPE_STRING,
             ParamFormPass::FORM_TYPE_PWD_TOGGLE,
             [
+                'description'      => 'Database password',
+                'cliParam'         => true,
                 'persistence'      => true,
                 'default'          => '',
                 'sanitizeCallback' => [
@@ -210,7 +218,6 @@ final class ParamDescDatabase implements DescriptorInterface
                         MYSQLI_CLIENT_SSL,
                     ];
                     if (defined("MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT")) {
-                        // phpcs:ignore PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
                         $result[] = MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT;
                     }
                     return $result;
@@ -223,6 +230,8 @@ final class ParamDescDatabase implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_SELECT,
             [
+                'description'      => 'Charset of the tables; default: the charset of the source site',
+                'cliParam'         => true,
                 'default'          => $archiveConfig->getWpConfigDefineValue('DB_CHARSET', ''),
                 'sanitizeCallback' => [
                     SnapUtil::class,
@@ -251,6 +260,8 @@ final class ParamDescDatabase implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_SELECT,
             [
+                'description'      => 'Collation of the tables; default: the collation of the source site',
+                'cliParam'         => true,
                 'default'          => $archiveConfig->getWpConfigDefineValue('DB_COLLATE', ''),
                 'sanitizeCallback' => [
                     SnapUtil::class,
@@ -282,6 +293,8 @@ final class ParamDescDatabase implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
             [
+                'description'      => 'Prefix of the WordPress tables; default: the prefix of the source site',
+                'cliParam'         => true,
                 'default'          => \DUPX_ArchiveConfig::getInstance()->wp_tableprefix,
                 'sanitizeCallback' => [
                     SnapUtil::class,
@@ -314,7 +327,11 @@ final class ParamDescDatabase implements DescriptorInterface
             PrmMng::PARAM_DB_VIEW_CREATION,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            ['default' => true],
+            [
+                'default'     => true,
+                'description' => 'Create the database views of the Backup',
+                'cliParam'    => true,
+            ],
             [
                 'label'         => 'Objects:',
                 'checkboxLabel' => 'Enable View Creation',
@@ -325,7 +342,11 @@ final class ParamDescDatabase implements DescriptorInterface
             PrmMng::PARAM_DB_PROC_CREATION,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            ['default' => true],
+            [
+                'default'     => true,
+                'description' => 'Create the stored procedures of the Backup',
+                'cliParam'    => true,
+            ],
             [
                 'label'         => ' ',
                 'checkboxLabel' => 'Enable Stored Procedure Creation',
@@ -336,7 +357,11 @@ final class ParamDescDatabase implements DescriptorInterface
             PrmMng::PARAM_DB_FUNC_CREATION,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            ['default' => true],
+            [
+                'default'     => true,
+                'description' => 'Create the database functions of the Backup',
+                'cliParam'    => true,
+            ],
             [
                 'label'         => ' ',
                 'checkboxLabel' => 'Enable Function Creation',
@@ -347,7 +372,11 @@ final class ParamDescDatabase implements DescriptorInterface
             PrmMng::PARAM_DB_REMOVE_DEFINER,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            ['default' => false],
+            [
+                'default'     => false,
+                'description' => 'Remove the DEFINER declarations of views, procedures and functions',
+                'cliParam'    => true,
+            ],
             [
                 'label'         => ' ',
                 'checkboxLabel' => 'Remove security DEFINER declarations',

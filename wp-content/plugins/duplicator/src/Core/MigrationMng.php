@@ -21,7 +21,9 @@ use Duplicator\Utils\Email\EmailSummary;
 use Duplicator\Utils\UsageStatistics\Telemetry\TelemetryState;
 use Duplicator\Core\UniqueId;
 use Duplicator\Views\AdminNotices;
+use Exception;
 use Throwable;
+use WP_User;
 use VendorDuplicator\Amk\JsonSerialize\JsonSerialize;
 
 /**
@@ -34,6 +36,9 @@ class MigrationMng
     const FIRST_LOGIN_OPTION             = 'dupli_opt_first_login_after_install';
     const MIGRATION_DATA_OPTION          = 'dupli_opt_migration_data';
     const CLEAN_INSTALL_REPORT_OPTION    = 'dupli_opt_clean_install_report';
+
+    /** @var int Priority of the auto clean of the first login hook: last, as it redirects */
+    private const AUTO_CLEAN_PRIORITY = 99999;
 
     /**
      * messages to be displayed in the successful migration box
@@ -79,7 +84,84 @@ class MigrationMng
         add_action(self::HOOK_FIRST_LOGIN_AFTER_INSTALL, [self::class, 'saveCleanupReport'], 100);
 
         // LAST BEACAUSE MAKE A WP_REDIRECT
-        add_action(self::HOOK_FIRST_LOGIN_AFTER_INSTALL, [self::class, 'autoCleanFileAfterInstall'], 99999);
+        add_action(self::HOOK_FIRST_LOGIN_AFTER_INSTALL, [self::class, 'autoCleanFileAfterInstall'], self::AUTO_CLEAN_PRIORITY);
+    }
+
+    /**
+     * Run the actions of the first administrator login after a command line installation, without a login: the
+     * installer calls it from a PHP process that loaded the installed site in the admin, and it runs them as an
+     * administrator, so it refuses any other context. The browser is redirected to the Tools page to remove the
+     * installer files, here they are removed directly.
+     *
+     * @return array<string,bool> Removal result of each installer file, empty when the installation keeps them
+     */
+    public static function finalizeCliInstall(): array
+    {
+        if (PHP_SAPI !== 'cli') {
+            throw new Exception('The installation is finalized here only from the command line.');
+        }
+        if (!self::isFirstLoginAfterInstallOption()) {
+            throw new Exception('The installation is already finalized.');
+        }
+        if (!self::setFinalizeUser()) {
+            throw new Exception('No administrator can finalize the installation.');
+        }
+
+        $migrationData = self::getMigrationData();
+        remove_action(self::HOOK_FIRST_LOGIN_AFTER_INSTALL, [self::class, 'autoCleanFileAfterInstall'], self::AUTO_CLEAN_PRIORITY);
+        update_option(AdminNotices::OPTION_KEY_MIGRATION_SUCCESS_NOTICE, true);
+        do_action(self::HOOK_FIRST_LOGIN_AFTER_INSTALL, $migrationData);
+
+        if ($migrationData->cleanInstallerFiles == false) {
+            return [];
+        }
+        return self::removeInstallerFiles()['files'];
+    }
+
+    /**
+     * Remove the installer files and purge the caches, as the Tools page does after the installation; the migration
+     * success notice goes away when every file is removed
+     *
+     * @return array{files:array<string,bool>,purge:string[]} Removal result of each file, cache purge messages
+     */
+    public static function removeInstallerFiles(): array
+    {
+        $files = self::cleanMigrationFiles();
+        $purge = self::purgeCaches();
+        if (!in_array(false, $files, true)) {
+            delete_option(AdminNotices::OPTION_KEY_MIGRATION_SUCCESS_NOTICE);
+        }
+        return [
+            'files' => $files,
+            'purge' => $purge,
+        ];
+    }
+
+    /**
+     * Set as current user the administrator the installation is finalized as: the first one who passes the first login
+     * check, so who holds the Duplicator capability; administrators by ID, super admins on a multisite
+     *
+     * @return bool Whether an administrator was found
+     */
+    private static function setFinalizeUser(): bool
+    {
+        if (is_multisite()) {
+            $users = array_filter(array_map(fn($login) => get_user_by('login', $login), get_super_admins()));
+        } else {
+            $users = get_users([
+                'role'    => 'administrator',
+                'orderby' => 'ID',
+            ]);
+        }
+
+        foreach ($users as $user) {
+            wp_set_current_user($user->ID);
+            if (self::isFirstLoginAfterInstall()) {
+                return true;
+            }
+        }
+        wp_set_current_user(0);
+        return false;
     }
 
     /**

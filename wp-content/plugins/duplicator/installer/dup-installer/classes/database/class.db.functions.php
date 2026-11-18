@@ -158,11 +158,10 @@ class DUPX_DB_Functions
                     $dbuser,
                     $dbpass,
                     $dbname,
-                    MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT // phpcs:ignore PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
+                    MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT
                 )
             ) != false
         ) {
-            // phpcs:ignore PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
             $dbflag                         = MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT;
             $wpConfigFalgsVal['inWpConfig'] = true;
             $wpConfigFalgsVal['value']      = [$dbflag];
@@ -310,7 +309,8 @@ class DUPX_DB_Functions
                 $default   = filter_var($row[3], FILTER_VALIDATE_BOOLEAN);
                 $compiled  = filter_var($row[4], FILTER_VALIDATE_BOOLEAN);
 
-                if (!$compiled) {
+                // Collations that apply to several charsets, such as the MariaDB UCA 14.0 ones, have no charset
+                if (!$compiled || $charset === null) {
                     continue;
                 }
 
@@ -328,6 +328,7 @@ class DUPX_DB_Functions
             }
 
             $result->free();
+            $this->addFullCollationNames();
 
             ksort($this->charsetData);
             foreach (array_keys($this->charsetData) as $charset) {
@@ -335,6 +336,37 @@ class DUPX_DB_Functions
             }
         }
         return $this->charsetData;
+    }
+
+    /**
+     * Add the collations MariaDB names after their charset, such as utf8mb4_uca1400_ai_ci: SHOW COLLATION lists them
+     * once, under their short name and without a charset, while tables use the full name
+     *
+     * @return void
+     */
+    private function addFullCollationNames(): void
+    {
+        $hasFullNames = DUPX_DB::queryColumnToArray(
+            $this->dbh,
+            "SELECT COUNT(*) FROM `information_schema`.`COLUMNS` WHERE `TABLE_SCHEMA` = 'information_schema' " .
+            "AND `TABLE_NAME` = 'COLLATION_CHARACTER_SET_APPLICABILITY' AND `COLUMN_NAME` = 'FULL_COLLATION_NAME'"
+        );
+        if ((int) ($hasFullNames[0] ?? 0) === 0) {
+            return;
+        }
+
+        $rows = DUPX_DB::queryToArray(
+            $this->dbh,
+            "SELECT `CHARACTER_SET_NAME`, `FULL_COLLATION_NAME` FROM `information_schema`.`COLLATION_CHARACTER_SET_APPLICABILITY`"
+        );
+        foreach ($rows as [$charset, $collation]) {
+            if (isset($this->charsetData[$charset])) {
+                $this->charsetData[$charset]['collations'][] = $collation;
+            }
+        }
+        foreach (array_keys($this->charsetData) as $charset) {
+            $this->charsetData[$charset]['collations'] = array_values(array_unique($this->charsetData[$charset]['collations']));
+        }
     }
 
     /**

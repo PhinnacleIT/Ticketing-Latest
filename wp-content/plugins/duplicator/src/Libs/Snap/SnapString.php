@@ -334,6 +334,18 @@ class SnapString
     }
 
     /**
+     * Join a string wrapped across source lines into one line, collapsing whitespace runs to single spaces.
+     *
+     * @param string $text Text to join
+     *
+     * @return string
+     */
+    public static function oneLine(string $text): string
+    {
+        return trim((string) preg_replace('/\s+/', ' ', $text));
+    }
+
+    /**
      * Returns true if the string contains UTF8 characters
      *
      * @see http://php.net/manual/en/function.mb-detect-encoding.php
@@ -353,5 +365,26 @@ class SnapString
             |[\xF1-\xF3][\x80-\xBF]{3}                  # planes 4-15
             |\xF4[\x80-\x8F][\x80-\xBF]{2}    # plane 16
             )+%xs', $string) === 1);
+    }
+
+    /**
+     * Decodes a string only when it is entirely valid base64 that encodes back to itself
+     *
+     * @param string $string The string to decode
+     *
+     * @return ?string decoded string, null if the string is not base64
+     */
+    public static function decodeBase64(string $string): ?string
+    {
+        if (preg_match('/^[a-zA-Z0-9\/\r\n+]*={0,2}$/', $string) !== 1) {
+            return null;
+        }
+
+        $decoded = base64_decode($string, true);
+        if ($decoded === false || base64_encode($decoded) !== $string) {
+            return null;
+        }
+
+        return $decoded;
     }
 }

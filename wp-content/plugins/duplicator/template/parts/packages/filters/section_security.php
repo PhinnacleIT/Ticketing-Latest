@@ -1,6 +1,7 @@
 <?php
 
 use Duplicator\Installer\Package\ArchiveDescriptor;
+use Duplicator\Models\TemplateEntity;
 use Duplicator\Package\SettingsUtils;
 
 defined("ABSPATH") or die("");
@@ -119,7 +120,7 @@ $encryptAvaliable   = SettingsUtils::isArchiveEncryptionAvailable($unavaliableMe
                     name="secure-pass"
                     required="required"
                     size="50"
-                    maxlength="150"
+                    maxlength="<?php echo (int) TemplateEntity::PASSWORD_MAX_LENGTH; ?>"
                     value="<?php echo esc_attr($securePass); ?>"
                 >
                 <button type="button" >

@@ -588,9 +588,12 @@ SQL;
         // Strip dynamic flags that must be recalculated every save.
         // Shape flags are dynamic too: components can change between saves, and getShapeFlag()
         // sets exactly one of the four below — strip them all here to enforce mutual exclusivity.
+        // The format flags follow the archive format, which the build options can change after the first save.
         $this->flags = array_values(array_diff(
             $this->flags,
             [
+                AbstractPackage::FLAG_ZIP_ARCHIVE,
+                AbstractPackage::FLAG_DUP_ARCHIVE,
                 AbstractPackage::FLAG_HAVE_LOCAL,
                 AbstractPackage::FLAG_HAVE_REMOTE,
                 AbstractPackage::FLAG_FULL_BACKUP,
@@ -600,7 +603,7 @@ SQL;
             ]
         ));
 
-        // Core one-time flags (addFlag deduplicates — safe to call every time)
+        // Core flags (addFlag deduplicates — safe to call every time)
         $this->addFlag($this->Archive->Format == 'ZIP' ? AbstractPackage::FLAG_ZIP_ARCHIVE : AbstractPackage::FLAG_DUP_ARCHIVE);
 
         // Exactly one shape flag per package

@@ -36,6 +36,8 @@ final class ParamDescGeneric implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
             [
+                'description'      => 'Permissions of the files, in octal, such as 644',
+                'cliParam'         => true,
                 'default'          => '644',
                 'sanitizeCallback' => [
                     SnapUtil::class,
@@ -58,7 +60,9 @@ final class ParamDescGeneric implements DescriptorInterface
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_SWITCH,
             [
-                'default' => !SnapServer::isWindows(),
+                'description' => 'Set the permissions of every extracted file to file_perms_value',
+                'cliParam'    => true,
+                'default'     => !SnapServer::isWindows(),
             ],
             [
                 'status'         => SnapServer::isWindows() ? ParamForm::STATUS_SKIP : ParamForm::STATUS_ENABLED,
@@ -76,6 +80,8 @@ final class ParamDescGeneric implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
             [
+                'description'      => 'Permissions of the folders, in octal, such as 755',
+                'cliParam'         => true,
                 'default'          => '755',
                 'sanitizeCallback' => [
                     SnapUtil::class,
@@ -98,7 +104,9 @@ final class ParamDescGeneric implements DescriptorInterface
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_SWITCH,
             [
-                'default' => !SnapServer::isWindows(),
+                'description' => 'Set the permissions of every extracted folder to dir_perms_value',
+                'cliParam'    => true,
+                'default'     => !SnapServer::isWindows(),
             ],
             [
                 'status'         => SnapServer::isWindows() ? ParamForm::STATUS_SKIP : ParamForm::STATUS_ENABLED,
@@ -145,6 +153,8 @@ final class ParamDescGeneric implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_RADIO,
             [
+                'description'  => 'Date of the extracted files',
+                'cliParam'     => true,
                 'default'      => 'current',
                 'acceptValues' => [
                     'current',
@@ -167,6 +177,8 @@ final class ParamDescGeneric implements DescriptorInterface
             ParamForm::TYPE_INT,
             ParamForm::FORM_TYPE_RADIO,
             [
+                'description'  => 'Detail of the installer log',
+                'cliParam'     => true,
                 'default'      => Log::LV_DEFAULT,
                 'acceptValues' => [
                     Log::LV_DEFAULT,
@@ -191,7 +203,11 @@ final class ParamDescGeneric implements DescriptorInterface
             PrmMng::PARAM_REMOVE_RENDUNDANT,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            ['default' => false],
+            [
+                'default'     => false,
+                'description' => 'Remove the disabled plugins and themes',
+                'cliParam'    => true,
+            ],
             [
                 'label'          => 'Cleanup:',
                 'checkboxLabel'  => 'Remove disabled plugins/themes',
@@ -236,7 +252,11 @@ final class ParamDescGeneric implements DescriptorInterface
             PrmMng::PARAM_AUTO_CLEAN_INSTALLER_FILES,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            ['default' => true],
+            [
+                'default'     => true,
+                'description' => 'Remove the installer files once the installation is finalized',
+                'cliParam'    => true,
+            ],
             [
                 'label'         => 'CLean installation files',
                 'renderLabel'   => false,

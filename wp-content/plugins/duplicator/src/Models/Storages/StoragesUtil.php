@@ -2,6 +2,7 @@
 
 namespace Duplicator\Models\Storages;
 
+use Duplicator\Core\Models\Api\EntityApi;
 use Duplicator\Utils\Logging\DupLog;
 use Duplicator\Package\Storage\UploadInfo;
 use Duplicator\Libs\Snap\SnapIO;
@@ -234,6 +235,20 @@ class StoragesUtil
         do_action('duplicator_register_storage_types');
         add_action('duplicator_before_update_crypt_setting', [self::class, 'beforeCryptUpdateSettings']);
         add_action('duplicator_after_update_crypt_setting', [self::class, 'afterCryptUpdateSettings']);
+        add_filter(EntityApi::ENTITIES_FILTER, [self::class, 'addApiEntity']);
+    }
+
+    /**
+     * Expose storages through the entity API
+     *
+     * @param string[] $classes Entity classes
+     *
+     * @return string[]
+     */
+    public static function addApiEntity(array $classes): array
+    {
+        $classes[] = AbstractStorageEntity::class;
+        return $classes;
     }
 
     /**

@@ -91,7 +91,37 @@ jQuery(document).ready(function ($) {
         });
     });
 
+    // Dashboard widget refresh: paused while the tab is hidden, stopped after repeated failures
+    var dupDashboardInterval = 30000;
+    var dupDashboardMaxFailures = 3;
+    var dupDashboardFailures = 0;
+    var dupDashboardTimer = null;
+    var dupDashboardInFlight = false;
+    var dupDashboardDueAt = 0;
+
+    function dupDashboardSchedule(delay) {
+        clearTimeout(dupDashboardTimer);
+        dupDashboardTimer = null;
+        dupDashboardDueAt = Date.now() + delay;
+        // A hidden tab schedules nothing: the visibility handler resumes the refresh
+        if (document.hidden) {
+            return;
+        }
+        dupDashboardTimer = setTimeout(dupDashboardUpdate, delay);
+    }
+
+    function dupDashboardFailure() {
+        dupDashboardFailures++;
+        // An expired session or nonce keeps failing: stop instead of polling forever
+        if (dupDashboardFailures >= dupDashboardMaxFailures) {
+            return;
+        }
+        dupDashboardSchedule(dupDashboardInterval * Math.pow(2, dupDashboardFailures));
+    }
+
     function dupDashboardUpdate() {
+        dupDashboardTimer = null;
+        dupDashboardInFlight = true;
         jQuery.ajax({
             type: "POST",
             url: dupli_global_data.ajaxurl,
@@ -100,29 +130,46 @@ jQuery(document).ready(function ($) {
                 action: 'duplicator_dashboad_widget_info',
                 nonce: dupli_global_data.nonce_dashboard_widged_info
             },
-            success: function (result, textStatus, jqXHR) {
-                if (result.success) {
-                    $('#duplicator_dashboard_widget .dup-last-backup-info').html(result.data.funcData.lastBackupInfo);
-
-                    if (result.data.funcData.isBackupCreationBlocked) {
-                        $('#duplicator_dashboard_widget #dupli-create-new').addClass('disabled');
-                    } else {
-                        $('#duplicator_dashboard_widget #dupli-create-new').removeClass('disabled');
-                    }
+            success: function (result) {
+                if (!result || !result.success) {
+                    dupDashboardFailure();
+                    return;
                 }
+
+                dupDashboardFailures = 0;
+                $('#duplicator_dashboard_widget .dup-last-backup-info').html(result.data.funcData.lastBackupInfo);
+
+                if (result.data.funcData.isBackupCreationBlocked) {
+                    $('#duplicator_dashboard_widget #dupli-create-new').addClass('disabled');
+                } else {
+                    $('#duplicator_dashboard_widget #dupli-create-new').removeClass('disabled');
+                }
+                dupDashboardSchedule(dupDashboardInterval);
             },
-            complete: function() {
-                setTimeout(
-                    function(){
-                        dupDashboardUpdate();
-                    }, 
-                    5000
-                );
+            error: function () {
+                dupDashboardFailure();
+            },
+            complete: function () {
+                dupDashboardInFlight = false;
             }
         });
     }
-    
+
     if ($('#duplicator_dashboard_widget').length) {
-        dupDashboardUpdate();
+        $(document).on('visibilitychange', function () {
+            if (document.hidden) {
+                clearTimeout(dupDashboardTimer);
+                dupDashboardTimer = null;
+            } else if (
+                !dupDashboardInFlight &&
+                dupDashboardTimer === null &&
+                dupDashboardFailures < dupDashboardMaxFailures
+            ) {
+                // Keep the delay that was due, the interval or a failure backoff, instead of refreshing at once
+                dupDashboardSchedule(Math.max(0, dupDashboardDueAt - Date.now()));
+            }
+        });
+        // The server rendered the current state with the page: the first refresh waits one interval
+        dupDashboardSchedule(dupDashboardInterval);
     }
 });

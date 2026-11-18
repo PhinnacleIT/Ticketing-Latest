@@ -352,12 +352,20 @@ class OptionsManager
      * The only write to the rules' storage is the environment-failure
      * correction described above; every other resolution is side-effect free.
      *
-     * @param AbstractPackage $package The package the gate runs for
+     * A caller can request values for this package only: they replace the stored values in the evaluation,
+     * follow the same availability and fallback rules, and never write the stored settings.
+     *
+     * @param AbstractPackage       $package         The package the gate runs for
+     * @param array<string, scalar> $requestedValues Option key => value requested for this package instead of the stored one
+     * @param ?int                  $zipArchiveMode  ZipArchive mode requested for this package, null for the stored one
      *
      * @return ConfigValidation
      */
-    public function validatePackageConfig(AbstractPackage $package): ConfigValidation
-    {
+    public function validatePackageConfig(
+        AbstractPackage $package,
+        array $requestedValues = [],
+        ?int $zipArchiveMode = null
+    ): ConfigValidation {
         $validation = new ConfigValidation();
 
         if ($package->getBuildOptions() !== null) {
@@ -377,10 +385,15 @@ class OptionsManager
 
             $rule = $this->getOption($optionKey);
 
-            // Encryption is selected on the package/template, not globally.
-            $current = $optionKey === EncryptionRule::OPTION_KEY ?
-                $package->Archive->isArchiveEncrypt() :
-                $rule->getCurrentValue();
+            $isRequested = array_key_exists($optionKey, $requestedValues);
+            if ($isRequested) {
+                $current = $requestedValues[$optionKey];
+            } elseif ($optionKey === EncryptionRule::OPTION_KEY) {
+                // Encryption is selected on the package/template, not globally.
+                $current = $package->Archive->isArchiveEncrypt();
+            } else {
+                $current = $rule->getCurrentValue();
+            }
 
             $evaluationConfig = $config;
             if ($optionKey === EncryptionRule::OPTION_KEY) {
@@ -401,7 +414,14 @@ class OptionsManager
             if ($fallback !== null) {
                 $isPackageExclusionOnly = in_array($current, $rule->getValues(), true) &&
                     count($availability->getFailedRequirements($current)) === 0;
-                if (!$isPackageExclusionOnly) {
+                if ($isRequested) {
+                    DupLog::info(sprintf(
+                        'BACKUP OPTION "%1$s" REQUESTED FOR THIS BACKUP: "%2$s" IS NOT AVAILABLE, SWITCHED TO "%3$s"',
+                        $rule->getLabel(),
+                        $rule->getValueLabel($current),
+                        $rule->getValueLabel($fallback)
+                    ));
+                } elseif (!$isPackageExclusionOnly) {
                     // Environment requirement failure or invalid stored value:
                     // correct the stored setting too, so the settings reflect
                     // what the builds actually use.
@@ -422,12 +442,13 @@ class OptionsManager
         }
 
         if ($validation->isValid()) {
-            $global = GlobalEntity::getInstance();
+            $global           = GlobalEntity::getInstance();
+            $zipArchiveMode ??= $global->getZipArchiveMode();
             $package->freezeBuildOptions(new PackageBuildOptions(
                 (int) $config[ArchiveEngineRule::OPTION_KEY],
                 (bool) $config[CompressionRule::OPTION_KEY],
                 (string) $config[DbDumpEngineRule::OPTION_KEY],
-                $global->getZipArchiveMode(),
+                $zipArchiveMode,
                 $global->getPhpDumpMode()
             ));
             DupLog::trace(sprintf(
@@ -436,7 +457,7 @@ class OptionsManager
                 (int) $config[ArchiveEngineRule::OPTION_KEY],
                 ((bool) $config[CompressionRule::OPTION_KEY] ? 'on' : 'off'),
                 (string) $config[DbDumpEngineRule::OPTION_KEY],
-                $global->getZipArchiveMode(),
+                $zipArchiveMode,
                 $global->getPhpDumpMode()
             ));
         }

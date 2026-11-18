@@ -43,6 +43,9 @@ if ($isMainEvent) {
         <span class="link-style dup-log-view-btn" data-log-id="<?php echo (int) $log->getId(); ?>">
             <?php echo esc_html($log->getTitle()); ?>
         </span>
+        <?php if ($log->getVia() !== '') : ?>
+            <span class="dup-log-via"><?php echo esc_html($log->getVia()); ?></span>
+        <?php endif; ?>
     </td>
     <td class="column-description">
         <?php echo esc_html($log->getShortDescription()); ?>

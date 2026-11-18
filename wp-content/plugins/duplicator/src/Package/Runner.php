@@ -24,7 +24,6 @@ use Duplicator\Core\Constants;
 use Duplicator\Core\Exceptions\DupliException;
 use Duplicator\Core\Controllers\ControllersManager;
 use Duplicator\Core\Options\OptionsManager;
-use Duplicator\Core\Options\Requirements\ConfigValidation;
 use Duplicator\Libs\Snap\SnapUtil;
 use Duplicator\Libs\Snap\SnapWP;
 use Duplicator\Models\DynamicGlobalEntity;
@@ -712,13 +711,7 @@ final class Runner
 
                 SnapUtil::ignoreUserAbort(false);
             } else {
-                self::logValidationFailures($validation);
-                if (!$package->hasFlag(AbstractPackage::FLAG_AUTO_TUNE)) {
-                    FixesEntity::getInstance()->add(
-                        BuildFailureRemedies::resolveRequirementsFailure($package, $validation)
-                    );
-                }
-                $package->setStatus(AbstractPackage::STATUS_REQUIREMENTS_FAILED);
+                $package->requirementsFail($validation);
             }
 
             // Free index manager file lock
@@ -729,19 +722,5 @@ final class Runner
 
         // Close logs
         DupLog::close();
-    }
-
-    /**
-     * Log the failures that block the build: the failed baseline requirements
-     * and the options whose stored value is not available
-     *
-     * @param ConfigValidation $validation The failed validation
-     *
-     * @return void
-     */
-    private static function logValidationFailures(ConfigValidation $validation): void
-    {
-        DupLog::error(__('Requirements Failed', 'duplicator'), implode("\n", $validation->getLogLines()));
-        DupLog::traceError('Requirements didn\'t pass so can\'t perform backup!');
     }
 }

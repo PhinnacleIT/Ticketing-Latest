@@ -736,17 +736,13 @@ class PackageArchive
      *
      * @param string $extensions A list of file extension names to parse
      *
-     * @return string   Returns a cleanup up ";" separated string of extension names
+     * @return string   Returns the distinct extension names, each followed by ";", or an empty string
      */
     public static function parseExtensionFilter($extensions = ""): string
     {
-        $filter_exts = "";
-        if (!empty($extensions) && $extensions != ";") {
-            $filter_exts = str_replace([' ', '.'], '', $extensions);
-            $filter_exts = str_replace(",", ";", $filter_exts);
-            $filter_exts = SnapString::appendOnce($extensions, ";");
-        }
-        return $filter_exts;
+        $cleaned = str_replace([' ', '.', ','], ['', '', ';'], (string) $extensions);
+        $list    = array_unique(array_filter(explode(';', $cleaned), static fn(string $ext): bool => $ext !== ''));
+        return (count($list) > 0 ? implode(';', $list) . ';' : '');
     }
 
     /**

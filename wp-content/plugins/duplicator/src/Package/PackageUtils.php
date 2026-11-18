@@ -3,10 +3,12 @@
 namespace Duplicator\Package;
 
 use DateTime;
+use Duplicator\Core\CapMng;
 use Duplicator\Core\Options\OptionsManager;
 use Duplicator\Core\Options\Rules\ArchiveEngineRule;
 use Duplicator\Core\Options\Rules\DbDumpEngineRule;
 use Duplicator\Models\GlobalEntity;
+use Duplicator\Utils\Lock\LockUtil;
 use Duplicator\Utils\Logging\DupLog;
 use Duplicator\Package\DupPackage;
 use Duplicator\Models\TemplateEntity;
@@ -20,8 +22,12 @@ use Duplicator\Libs\WpUtils\WpDbUtils;
 use Duplicator\Package\Archive\PackageArchive;
 use Duplicator\Package\AutoTune\AutoTuneSessionEntity;
 use Duplicator\Models\DynamicGlobalEntity;
+use Duplicator\Models\ActivityLog\LogEventOrphanCleanup;
 use Duplicator\Models\ActivityLog\LogUtils;
 use Duplicator\Models\FixesEntity;
+use Duplicator\Models\Storages\AbstractStorageEntity;
+use Duplicator\Models\Storages\StoragesUtil;
+use WP_Error;
 
 class PackageUtils
 {
@@ -114,6 +120,158 @@ class PackageUtils
         }
 
         return false;
+    }
+
+    /**
+     * Check whether the site does not allow Backup creation at all.
+     *
+     * @param ?string $message Translated reason when disabled, null otherwise
+     *
+     * @return bool True when Backup creation is disabled on this site
+     */
+    public static function isBackupCreationDisabledOnSite(?string &$message = null): bool
+    {
+        $message = null;
+        if (CapMng::isCapAvailableOnSite(CapMng::CAP_CREATE)) {
+            return false;
+        }
+
+        $message = __('Duplicator cannot create backups on this site.', 'duplicator');
+        return true;
+    }
+
+    /**
+     * Validate and start a manual transfer of a Backup to storages.
+     *
+     * The core checks run before the Backup log is opened; addon checks run per storage and can still refuse.
+     * A refused transfer leaves the stored Backup unchanged. Download mode skips the complete-local-Backup
+     * requirement because the archive lives on the remote storage.
+     *
+     * @param int   $packageId  Backup id
+     * @param int[] $storageIds Destination storage ids
+     * @param bool  $isDownload True to download the Backup from the storages instead
+     *
+     * @return true|WP_Error
+     */
+    public static function startManualTransfer(int $packageId, array $storageIds, bool $isDownload = false)
+    {
+        $running = self::getRunningTransferError($packageId);
+        if ($running !== null) {
+            return $running;
+        }
+
+        // The guard check and the status change run under the process lock, so concurrent requests can't both pass it
+        if (LockUtil::lockProcessOrThrowWaiting() === false) {
+            return new WP_Error(
+                'duplicator_backup_conflict',
+                __('Another backup is already in progress. Wait for it to finish and try again.', 'duplicator'),
+                ['status' => 409]
+            );
+        }
+
+        try {
+            // A transfer counts as a running Backup, so it respects the Backup creation guard.
+            if (self::isBackupCreationBlocked($blockMessage)) {
+                DupLog::trace("Transfer for Backup {$packageId} blocked: {$blockMessage}");
+                return new WP_Error('duplicator_backup_conflict', (string) $blockMessage, ['status' => 409]);
+            }
+
+            $package = DupPackage::getById($packageId);
+            if (!$package instanceof DupPackage) {
+                return self::invalidTransfer(sprintf(__('Could not find Backup ID %d!', 'duplicator'), $packageId));
+            }
+
+            if ($storageIds === []) {
+                return self::invalidTransfer(__('Please select a storage.', 'duplicator'));
+            }
+
+            $storages = [];
+            foreach ($storageIds as $storageId) {
+                if (($storages[$storageId] = AbstractStorageEntity::getById($storageId)) === false) {
+                    return self::invalidTransfer(sprintf(__('Could not find storage ID %d!', 'duplicator'), $storageId));
+                }
+            }
+
+            if (!$isDownload && ($package->getStatus() !== AbstractPackage::STATUS_COMPLETE || !$package->haveLocalStorage())) {
+                return self::invalidTransfer(__('Only a complete Backup with a local archive can be transferred.', 'duplicator'));
+            }
+
+            // Checked on the storages before anything changes: the source holds the Backup, the destination does not.
+            // A download copies from the storage to the default local storage, an upload the other way.
+            $defaultStorage = StoragesUtil::getDefaultStorage();
+            foreach ($storages as $storage) {
+                $refusal = $storage->getTransferRefusal($package, $isDownload) ?? $defaultStorage->getTransferRefusal($package, !$isDownload);
+                if ($refusal !== null) {
+                    return self::invalidTransfer($refusal);
+                }
+            }
+
+            DupLog::open($package->getNameHash(), false);
+            $info  = "\n";
+            $info .= "********************************************************************************\n";
+            $info .= "********************************************************************************\n";
+            $info .= "PACKAGE MANUAL TRANSFER REQUESTED: " . @date("Y-m-d H:i:s") . "\n";
+            $info .= "********************************************************************************\n";
+            $info .= "********************************************************************************\n\n";
+            DupLog::infoTrace($info);
+
+            $transferOffset = count($package->upload_infos);
+            foreach ($storageIds as $storageId) {
+                $result = $package->addUploadInfo($storageId, $isDownload);
+                if ($result instanceof WP_Error && $result->has_errors()) {
+                    return self::invalidTransfer($result->get_error_message());
+                }
+
+                DupLog::infoTrace(
+                    'Storage adding to the Backup "' . $package->getName() .
+                        ' [Package Id: ' . $packageId . ']":: Storage Id: "' . $storageId .
+                        '" Storage Name: "' . esc_html($storages[$storageId]->getName()) .
+                        '" Storage Type: "' . esc_html($storages[$storageId]->getStypeName()) . '"'
+                );
+            }
+
+            FixesEntity::getInstance()->clear();
+            do_action('duplicator_manual_transfer_start', $package, $transferOffset);
+            $package->timer_start = microtime(true);
+            $package->setStatus(AbstractPackage::STATUS_STORAGE_PROCESSING);
+
+            return true;
+        } finally {
+            LockUtil::unlockProcess();
+        }
+    }
+
+    /**
+     * The refusal of a new transfer of a Backup that is being transferred, which the creation guard would describe as
+     * another backup in progress
+     *
+     * @param int $packageId Backup id
+     *
+     * @return ?WP_Error Null when the Backup is not being transferred
+     */
+    public static function getRunningTransferError(int $packageId): ?WP_Error
+    {
+        $package = DupPackage::getById($packageId);
+        if (!$package instanceof DupPackage || $package->getStatus() !== AbstractPackage::STATUS_STORAGE_PROCESSING) {
+            return null;
+        }
+        return new WP_Error(
+            'duplicator_backup_conflict',
+            __('A transfer of this backup is already running. Wait for it to finish and try again.', 'duplicator'),
+            ['status' => 409]
+        );
+    }
+
+    /**
+     * Build the invalid-argument error of a manual transfer.
+     *
+     * @param string $message Error message
+     *
+     * @return WP_Error
+     */
+    private static function invalidTransfer(string $message): WP_Error
+    {
+        return new WP_Error('duplicator_invalid_argument', $message, ['status' => 400]);
     }
 
     /**
@@ -370,7 +528,7 @@ class PackageUtils
                 SnapIO::rrmdir($file);
             }
         } else {
-            // Remove scan files that are 24 hours old
+            // Remove scan files older than the temporary cleanup age
             $dir = DUPLICATOR_SSDIR_PATH_TMP . "/*_scan.json";
             foreach (glob($dir) as $file) {
                 if (filemtime($file) <= time() - Constants::TEMP_CLEANUP_SECONDS) {
@@ -379,7 +537,7 @@ class PackageUtils
             }
         }
 
-        // Clean up extras directory if it is still hanging around
+        // Clean up the shared extras directory of older versions if it is still hanging around
         $extras_directory = SnapIO::safePath(DUPLICATOR_SSDIR_PATH_TMP) . '/extras';
         if (file_exists($extras_directory)) {
             try {
@@ -633,6 +791,56 @@ class PackageUtils
             return '';
         }
         return $options->getDbBuildMode();
+    }
+
+    /**
+     * Delete the orphaned Backup files, recording the deleted ones in the Activity Log
+     *
+     * @return array<string,bool> Whether each orphaned file, by full path, was deleted
+     */
+    public static function purgeOrphanedPackageFiles(): array
+    {
+        $result       = [];
+        $deletedFiles = [];
+        $totalSize    = 0;
+        foreach (self::getOrphanedPackageFiles() as $filepath) {
+            $fileSize          = @filesize($filepath);
+            $deleted           = (is_writable($filepath) && SnapIO::callWithPhpErrorCapture(static fn(): bool => unlink($filepath)) === true);
+            $result[$filepath] = $deleted;
+            if ($deleted) {
+                $deletedFiles[] = basename($filepath);
+                $totalSize     += ($fileSize !== false ? $fileSize : 0);
+            }
+        }
+
+        if (count($deletedFiles) > 0) {
+            try {
+                LogEventOrphanCleanup::create(count($deletedFiles), $totalSize, $deletedFiles);
+            } catch (Exception $e) {
+                DupLog::traceError('Failed to create orphan cleanup log event: ' . $e->getMessage());
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Empty the temporary folder under the process lock, so no build loses its files
+     *
+     * @return ?bool Whether the folder was emptied, null when the process lock is busy or unavailable
+     */
+    public static function tmpCleanupAllLocked(): ?bool
+    {
+        if (!LockUtil::lockProcess()) {
+            DupLog::infoTrace('Full temporary cleanup skipped because the process lock is busy or unavailable.');
+            return null;
+        }
+
+        try {
+            return self::tmpCleanup(true);
+        } finally {
+            LockUtil::unlockProcess();
+        }
     }
 
     /**

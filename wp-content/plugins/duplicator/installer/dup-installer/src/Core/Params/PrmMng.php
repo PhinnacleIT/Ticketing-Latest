@@ -6,6 +6,7 @@ use Duplicator\Installer\Core\Bootstrap;
 use Duplicator\Installer\Core\Hooks\HooksMng;
 use Duplicator\Installer\Utils\Log\Log;
 use Duplicator\Installer\Core\Params\Items\ParamForm;
+use Duplicator\Installer\Core\Params\Items\ParamFormPass;
 use Duplicator\Installer\Core\Params\Descriptors\ParamsDescriptors;
 use Duplicator\Installer\Core\Params\Items\ParamItem;
 use Duplicator\Installer\Utils\InstDescMng;
@@ -278,6 +279,26 @@ class PrmMng
         $this->paramsHtmlInfo[] = '***** INIT PARAMS WITH STD VALUlES';
 
         return true;
+    }
+
+    /**
+     * Parameters installer.php --info shows among the ones the command line can set
+     *
+     * @return array<string,ParamItem|ParamForm> Parameters by key
+     */
+    public function getCliParams(): array
+    {
+        return array_filter($this->params, fn($param): bool => $param->isCliParam());
+    }
+
+    /**
+     * Parameters whose value is a password, which the installer never shows
+     *
+     * @return array<string,ParamFormPass> Parameters by key
+     */
+    public function getPasswordParams(): array
+    {
+        return array_filter($this->params, fn($param): bool => $param instanceof ParamFormPass);
     }
 
     /**

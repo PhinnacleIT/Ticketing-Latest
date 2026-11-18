@@ -543,7 +543,12 @@ class DynamicGlobalEntity extends AbstractEntity implements ModelMigrateSettings
      */
     public function getSkipDataExport(): array
     {
-        return apply_filters('duplicator_dynamic_skip_data_export', [self::PACKAGE_CHECK_TS_KEY]);
+        return apply_filters(
+            'duplicator_dynamic_skip_data_export',
+            [
+                self::PACKAGE_CHECK_TS_KEY,
+            ]
+        );
     }
 
     /**

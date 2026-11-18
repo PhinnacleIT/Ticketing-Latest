@@ -145,9 +145,9 @@ class BuildComponents extends PComponents
             'files' => [],
         ];
         $absRootPaths  = SnapWP::getWpCoreFilesListInFolder();
-        $paths['dirs'] = array_map(fn($item): string => WpArchiveUtils::getArchiveListPaths('abs') . '/' . $item, $absRootPaths['dirs']);
+        $paths['dirs'] = array_map(fn($item): string => $this->getRootPath() . '/' . $item, $absRootPaths['dirs']);
 
-        $paths['files'] = array_map(fn($item): string => WpArchiveUtils::getArchiveListPaths('abs') . '/' . $item, $absRootPaths['files']);
+        $paths['files'] = array_map(fn($item): string => $this->getRootPath() . '/' . $item, $absRootPaths['files']);
 
         foreach (SnapWP::getWPContentCoreDirs() as $dir) {
             $paths['dirs'][] = WpArchiveUtils::getArchiveListPaths('wpcontent') . '/' . $dir;
@@ -300,11 +300,13 @@ class BuildComponents extends PComponents
             'files' => [],
         ];
 
-        $absPath   = WpArchiveUtils::getArchiveListPaths('abs');
+        $absPath   = $this->getRootPath();
         $corePaths = SnapWP::getWpCoreFilesListInFolder();
-        if (($absItems = $this->scanDirectory($absPath)) === false) {
+        // The filesystem root is normalized to an empty path; the child paths below stay correct with it
+        $listPath = ($absPath === '' ? '/' : $absPath);
+        if (($absItems = $this->scanDirectory($listPath)) === false) {
             throw $this->createDirectoryScanException(
-                $absPath,
+                $listPath,
                 'SCAN ERROR: Could not read the WordPress root folder contents.'
             );
         }
@@ -328,6 +330,16 @@ class BuildComponents extends PComponents
         }
 
         return $paths;
+    }
+
+    /**
+     * WordPress root path in the archive paths form, empty for the filesystem root
+     *
+     * @return string
+     */
+    protected function getRootPath(): string
+    {
+        return WpArchiveUtils::getArchiveListPaths('abs');
     }
 
     /**

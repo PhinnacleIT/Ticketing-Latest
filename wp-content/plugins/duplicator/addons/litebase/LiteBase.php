@@ -17,6 +17,7 @@ use Duplicator\Addons\LiteBase\Menu\PluginActionLink;
 use Duplicator\Addons\LiteBase\Menu\UpgradeMenuEntry;
 use Duplicator\Addons\LiteBase\Settings\ConnectController;
 use Duplicator\Addons\LiteBase\Notifications\DashboardRecommendedPlugin;
+use Duplicator\Addons\LiteBase\Notifications\AiPageProAbilities;
 use Duplicator\Addons\LiteBase\Notifications\AiPageWpVibeCta;
 use Duplicator\Addons\LiteBase\Notifications\MediaCleanupScanUpsell;
 use Duplicator\Addons\LiteBase\Notifications\EmailSubscribeForm;
@@ -58,6 +59,8 @@ class LiteBase extends AbstractAddonCore
         DashboardRecommendedPlugin::init();
         MediaCleanupScanUpsell::init();
         AiPageWpVibeCta::init();
+        AiPageProAbilities::init();
+        LiteAiAbilityIntegration::init();
         EmailSubscribeForm::init();
         FirstBackupSubscribeBanner::init();
         PackageComponentsLite::init();

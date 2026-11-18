@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Duplicator\Addons\DupCloudAddon\Models;
 
 use Duplicator\Models\DynamicGlobalEntity;
+use Duplicator\Models\GlobalEntity;
 use Duplicator\Utils\Logging\DupLog;
 use Duplicator\Addons\DupCloudAddon\Utils\DupCloudClient;
 use Duplicator\Addons\DupCloudAddon\Utils\DupCloudStorageAdapter;
@@ -120,6 +121,18 @@ class DupCloudStorage extends AbstractStorageEntity implements StorageAuthInterf
     }
 
     /**
+     * Close an open upload that no backup runs any more
+     *
+     * @param string $uploadUuid The upload UUID
+     *
+     * @return bool True if closed or the cloud has no such upload any more, false otherwise
+     */
+    public function abandonUpload(string $uploadUuid): bool
+    {
+        return $this->getAdapter()->abandonUpload($uploadUuid);
+    }
+
+    /**
      * Get default config
      *
      * @return array<string,scalar>
@@ -166,7 +179,8 @@ class DupCloudStorage extends AbstractStorageEntity implements StorageAuthInterf
             $adapter      = $this->getAdapter();
             if ($adapter->isValid($validMessage) == false) {
                 $message = sprintf(
-                    __('Storage %1$s is not valid message %2$s', 'duplicator'),
+                    /* translators: 1: storage type name, 2: why the storage is not ready */
+                    __('Storage %1$s is not ready: %2$s', 'duplicator'),
                     static::getStypeName(),
                     $validMessage
                 );
@@ -348,7 +362,12 @@ class DupCloudStorage extends AbstractStorageEntity implements StorageAuthInterf
      */
     public function authorize(string $token): bool
     {
-        $adapter = new DupCloudStorageAdapter($token);
+        $adapter = new DupCloudStorageAdapter(
+            $token,
+            0,
+            DupCloudClient::BACKUP_TYPE_STANDARD,
+            GlobalEntity::getInstance()->isIpv4Only()
+        );
 
         $userInfo = $adapter->getUserInfo();
 
@@ -377,14 +396,23 @@ class DupCloudStorage extends AbstractStorageEntity implements StorageAuthInterf
             return false;
         }
 
-        $this->name  = SnapUtil::sanitizeTextInput(SnapUtil::INPUT_REQUEST, 'name', '');
-        $this->notes = SnapUtil::sanitizeDefaultInput(SnapUtil::INPUT_REQUEST, 'notes', '');
-
         try {
+            // Some pages connect the storage without its name field; it then keeps its name
+            $values = ['notes' => SnapUtil::sanitizeDefaultInput(SnapUtil::INPUT_REQUEST, 'notes', '')];
+            $name   = SnapUtil::sanitizeDefaultInput(SnapUtil::INPUT_REQUEST, 'name', '');
+            if ($name !== '') {
+                $values['name'] = $name;
+            }
+            $this->setFromArray($values);
+
             // Check if this is a compound token (new method) or direct token (legacy)
             if (strpos($accessToken, '.') !== false && strpos($accessToken, '|') !== false) {
                 // New compound token authentication (contains both . and |)
-                $client = new DupCloudClient();
+                $client = new DupCloudClient(
+                    '',
+                    DupCloudClient::BACKUP_TYPE_STANDARD,
+                    GlobalEntity::getInstance()->isIpv4Only()
+                );
 
                 // Get site identifier
                 $siteIdentifier = UniqueId::getInstance()->getIdentifier();
@@ -500,6 +528,16 @@ class DupCloudStorage extends AbstractStorageEntity implements StorageAuthInterf
     }
 
     /**
+     * The Duplicator Cloud storage keeps its name
+     *
+     * @return bool
+     */
+    protected static function isNameEditable(): bool
+    {
+        return false;
+    }
+
+    /**
      * Update data from http request, this method don't save data, just update object properties
      *
      * @param string $message Message
@@ -512,10 +550,18 @@ class DupCloudStorage extends AbstractStorageEntity implements StorageAuthInterf
             return false;
         }
 
-        $this->config['max_packages'] = SnapUtil::sanitizeIntInput(SnapUtil::INPUT_REQUEST, 'dupcloud_max_files', 10);
-
         $message = __('Duplicator Cloud Storage was updated.', 'duplicator');
         return true;
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    protected function getRequestValues(): array
+    {
+        return parent::getRequestValues() + [
+            'max_backups' => SnapUtil::sanitizeIntInput(SnapUtil::INPUT_REQUEST, 'dupcloud_max_files', 10),
+        ];
     }
 
     /**
@@ -528,7 +574,9 @@ class DupCloudStorage extends AbstractStorageEntity implements StorageAuthInterf
         if ($this->adapter === null) {
             $this->adapter = new DupCloudStorageAdapter(
                 (string) $this->config['accessToken'],
-                (int) $this->config['max_packages']
+                (int) $this->config['max_packages'],
+                DupCloudClient::BACKUP_TYPE_STANDARD,
+                GlobalEntity::getInstance()->isIpv4Only()
             );
         }
 

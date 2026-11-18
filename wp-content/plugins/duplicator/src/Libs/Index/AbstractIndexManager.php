@@ -56,43 +56,45 @@ abstract class AbstractIndexManager
                 }
                 $created = true;
             } else {
-                throw new DupliException(
-                    'Index file does not exist: ' . $this->path,
-                    DupliException::CODE_INDEX_FILE_MISSING
-                );
-            }
-        } elseif (filesize($this->path) === 0) {
-            // An empty file is only a new index when creation was explicitly requested.
-            if ($create) {
-                if (!SnapIO::touch($this->path)) {
-                    throw SnapException::fromLastError("Couldn't create index file " . $this->path . '.');
-                }
-                $created = true;
-            } else {
-                throw new DupliException(
-                    'Index file is empty: ' . $this->path,
-                    DupliException::CODE_INDEX_FILE_EMPTY
-                );
+                throw self::indexFileException('Index file does not exist: ' . $this->path, false);
             }
         }
 
-        $this->getHandle();
+        // Emptiness is read on the locked handle, as the header loading reads it, so a save in progress
+        // elsewhere is waited for instead of being taken for a truncated index
+        $handle  = $this->getHandle();
+        $stat    = fstat($handle);
+        $isEmpty = ($stat !== false && $stat['size'] === 0);
+        // An empty file is only a new index when creation was explicitly requested
+        $created = $created || ($isEmpty && $create);
+        // Otherwise a worker died during the save, which truncates the index before rewriting it
+        $restoreEmpty = $isEmpty && !$created;
         if ($created) {
             // If the file was created, we need to lock it exclusively to create the header
             $this->setExclusiveLock();
         }
 
-        try {
-            $this->loadHeader();
-        } catch (Exception $e) {
-            // The index is corrupted (e.g. a worker died mid-write leaving it unclosed).
-            // Recover from the backup written at the last checkpoint, if one exists.
-            DupLog::infoTrace("[CHUNK RECOVERY] Index file corrupted, trying backup: " . $e->getMessage());
-            if ($created || !$this->restoreFromBackup()) {
-                DupLog::infoTrace("[CHUNK RECOVERY] Index FAILED: no usable backup");
-                throw $e;
+        if ($restoreEmpty) {
+            // An empty file would load as a new empty header: restore the last checkpoint instead
+            self::trace("[CHUNK RECOVERY] Index file empty, restoring the backup");
+            if (!$this->restoreFromBackup()) {
+                self::trace("[CHUNK RECOVERY] Index FAILED: no usable backup");
+                throw self::indexFileException('Index file is empty: ' . $this->path, true);
             }
-            DupLog::infoTrace("[CHUNK RECOVERY] Index restored from backup");
+            self::trace("[CHUNK RECOVERY] Index restored from backup");
+        } else {
+            try {
+                $this->loadHeader();
+            } catch (Exception $e) {
+                // The index is corrupted (e.g. a worker died mid-write leaving it unclosed).
+                // Recover from the backup written at the last checkpoint, if one exists.
+                self::trace("[CHUNK RECOVERY] Index file corrupted, trying backup: " . $e->getMessage());
+                if ($created || !$this->restoreFromBackup()) {
+                    self::trace("[CHUNK RECOVERY] Index FAILED: no usable backup");
+                    throw $e;
+                }
+                self::trace("[CHUNK RECOVERY] Index restored from backup");
+            }
         }
 
         if (!$this->header) {
@@ -373,7 +375,7 @@ abstract class AbstractIndexManager
             $this->setSharedLock();
             $this->removeBackup();
         } catch (Throwable $e) {
-            DupLog::traceError('Error closing index file: ' . $e->getMessage());
+            self::trace('Error closing index file: ' . $e->getMessage(), true);
             throw new Exception("Error closing index file: " . $e->getMessage(), 0, $e);
         } finally {
             $this->flush();
@@ -392,16 +394,17 @@ abstract class AbstractIndexManager
         $tmpPath    = $backupPath . '.tmp';
 
         if (!SnapIO::copy($this->path, $tmpPath, true)) {
-            DupLog::traceError('Could not create index backup temp file: ' . $tmpPath);
+            self::trace('Could not create index backup temp file: ' . $tmpPath, true);
             SnapIO::rm($tmpPath);
             return;
         }
 
         if (!SnapIO::rename($tmpPath, $backupPath, true)) {
             $error = error_get_last();
-            DupLog::traceError(
+            self::trace(
                 'Could not swap index backup into place: ' . $backupPath .
-                ($error === null ? '' : ' Reason: ' . $error['message'])
+                ($error === null ? '' : ' Reason: ' . $error['message']),
+                true
             );
             SnapIO::rm($tmpPath);
         }
@@ -465,6 +468,49 @@ abstract class AbstractIndexManager
     }
 
     /**
+     * Exception for an index file that cannot be opened, with its plugin failure code when the plugin runs
+     *
+     * @param string $message Raw message
+     * @param bool   $isEmpty True for an empty index file, false for a missing one
+     *
+     * @return Exception
+     */
+    private static function indexFileException(string $message, bool $isEmpty): Exception
+    {
+        // The installer ships this library without the plugin exception class
+        if (!class_exists(DupliException::class)) {
+            return new Exception($message);
+        }
+
+        return new DupliException(
+            $message,
+            $isEmpty ? DupliException::CODE_INDEX_FILE_EMPTY : DupliException::CODE_INDEX_FILE_MISSING
+        );
+    }
+
+    /**
+     * Write a message to the plugin trace log; the installer ships this library without the plugin logger,
+     * so there the message is skipped and only the exceptions report the failure
+     *
+     * @param string $message Message
+     * @param bool   $isError True to log it as an error
+     *
+     * @return void
+     */
+    private static function trace(string $message, bool $isError = false): void
+    {
+        if (!class_exists(DupLog::class)) {
+            return;
+        }
+
+        if ($isError) {
+            DupLog::traceError($message);
+        } else {
+            DupLog::infoTrace($message);
+        }
+    }
+
+    /**
      * Destructor
      *
      * @return void
@@ -477,7 +523,7 @@ abstract class AbstractIndexManager
             } catch (Throwable $e) {
                 // A write already failed by an explicit save() is retried here: its exception must not
                 // replace the one in flight nor become a fatal error at the end of the request
-                DupLog::traceError('Index file not saved on destruct: ' . $e->getMessage());
+                self::trace('Index file not saved on destruct: ' . $e->getMessage(), true);
             }
 
             if (flock($this->handle, LOCK_UN) === false) {

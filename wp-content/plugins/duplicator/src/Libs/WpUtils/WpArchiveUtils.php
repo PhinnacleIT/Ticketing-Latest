@@ -107,13 +107,32 @@ class WpArchiveUtils
      */
     public static function stripOriginalBasePaths(string $text): string
     {
+        $paths = self::getOriginalPaths();
+
+        return self::stripBasePaths($text, [$paths['wpcontent'], $paths['abs'], $paths['home']]);
+    }
+
+    /**
+     * Remove base paths, in their configured and symlink-resolved forms, from a text
+     *
+     * @param string   $text          Text that may contain absolute paths
+     * @param string[] $originalPaths Base paths to remove
+     *
+     * @return string The text with backslashes normalized and those paths made relative
+     */
+    public static function stripBasePaths(string $text, array $originalPaths): string
+    {
         $text = str_replace('\\', '/', $text);
 
-        $paths = self::getOriginalPaths();
         $bases = [];
-        foreach ([$paths['wpcontent'], $paths['abs'], $paths['home']] as $original) {
-            $bases[] = SnapIO::safePathTrailingslashit($original, false);
-            $bases[] = SnapIO::safePathTrailingslashit($original, true);
+        foreach ($originalPaths as $original) {
+            foreach ([false, true] as $real) {
+                $base = SnapIO::safePathTrailingslashit($original, $real);
+                // The filesystem root as base would remove every separator
+                if ($base !== '/') {
+                    $bases[] = $base;
+                }
+            }
         }
 
         $bases = array_unique($bases);
@@ -127,7 +146,8 @@ class WpArchiveUtils
     }
 
     /**
-     * Return the wordpress original dir paths.
+     * Return the WordPress dir paths in the normalized form the archive lists use: no trailing slash,
+     * so the filesystem root is the empty string.
      *
      * @param string|null $pathKey path key
      *
@@ -136,6 +156,20 @@ class WpArchiveUtils
     public static function getArchiveListPaths(?string $pathKey = null)
     {
         return SnapWP::getNormalizedWpPaths($pathKey, GlobalEntity::getInstance()->isHomePathAsAbsolute());
+    }
+
+    /**
+     * True when the site home or the WordPress root is the filesystem root, which the file scan cannot walk
+     *
+     * @param array<string,string>|null $paths Archive list paths, null for the current site
+     *
+     * @return bool
+     */
+    public static function isFilesystemRootInstall(?array $paths = null): bool
+    {
+        $paths = $paths ?? (array) self::getArchiveListPaths();
+
+        return $paths['home'] === '' || $paths['abs'] === '';
     }
 
     /**

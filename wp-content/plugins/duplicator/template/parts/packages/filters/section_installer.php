@@ -39,7 +39,7 @@ $ui_css_installer = (UiViewState::getValue('dupli-pack-installer-panel') ? 'disp
         </button>
     </div>
     <div class="dup-box-panel" id="dupli-pack-installer-panel" style="<?php echo esc_attr($ui_css_installer); ?>">
-        <?php do_action('duplicator_backup_installer_section_before'); ?>
+        <?php do_action('duplicator_backup_installer_section_before', $template); ?>
 
         <div class="dup-package-hdr-1">
             <?php esc_html_e("Prefills", 'duplicator') ?>&nbsp;

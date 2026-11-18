@@ -2,6 +2,7 @@
 
 namespace Duplicator\Installer\Bootstrap;
 
+use Duplicator\Installer\Cli\CliEnvironment;
 use Duplicator\Installer\Utils\SecureCsrf;
 use Duplicator\Libs\DupArchive\DupArchive;
 use Duplicator\Libs\DupArchive\DupArchiveExpandBasicEngine;
@@ -792,7 +793,7 @@ class BootstrapRunner
             } else {
                 $this->log("SAPI: litespeed");
             }
-            if (version_compare(phpversion(), '5.5') >= 0 && (!$is_apache || 'litespeed' === $sapi_type)) {
+            if (!$is_apache || 'litespeed' === $sapi_type) {
                 $ini_data = [];
                 foreach ($php_ini_data as $php_ini_key => $php_ini_val) {
                     $ini_data[] = $php_ini_key . ' = ' . $php_ini_val;
@@ -1379,7 +1380,8 @@ class BootstrapRunner
      */
     private function getArchiveFilePath()
     {
-        if (($archiveInput = filter_input(INPUT_GET, 'archive', FILTER_SANITIZE_SPECIAL_CHARS)) != false) {
+        $archiveInput = CliEnvironment::getArchiveLocation() ?? filter_input(INPUT_GET, 'archive', FILTER_SANITIZE_SPECIAL_CHARS);
+        if ($archiveInput != false) {
             // The parameter provides only the archive location; the file name always
             // comes from the embedded ARCHIVE_FILENAME constant, never from the request.
             $archiveDir       = is_dir($archiveInput) ? $archiveInput : dirname($archiveInput);

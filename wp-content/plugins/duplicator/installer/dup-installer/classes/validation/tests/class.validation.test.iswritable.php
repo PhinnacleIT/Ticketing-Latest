@@ -13,6 +13,7 @@ defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
 use Duplicator\Installer\Core\InstState;
 use Duplicator\Installer\Core\Params\PrmMng;
+use Duplicator\Installer\Utils\Log\Log;
 use Duplicator\Libs\Index\FileIndexManager;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapWP;
@@ -27,6 +28,9 @@ class DUPX_Validation_test_iswritable extends DUPX_Validation_abstract_item
     /** @var mixed[] */
     protected $phpPerms = [];
 
+    /** @var string Error of the Backup index read, empty when the index was read */
+    protected $indexError = '';
+
     /**
      * Runs Test
      *
@@ -35,6 +39,15 @@ class DUPX_Validation_test_iswritable extends DUPX_Validation_abstract_item
      */
     protected function runTest(): int
     {
+        try {
+            DUPX_Package::getIndexManager();
+        } catch (Exception $e) {
+            // The folders to check come from the Backup index: an unreadable index is not a permissions problem
+            Log::logException($e, Log::LV_DEFAULT, 'BACKUP INDEX READ FAILED:');
+            $this->indexError = $e->getMessage();
+            return self::LV_FAIL;
+        }
+
         $this->faildDirPerms = $this->checkWritePermissions();
         $testPass            = (count($this->faildDirPerms) == 0);
 
@@ -160,6 +173,17 @@ class DUPX_Validation_test_iswritable extends DUPX_Validation_abstract_item
     public function getTitle(): string
     {
         return 'Permissions: General';
+    }
+
+    protected function failContent()
+    {
+        if ($this->indexError === '') {
+            return parent::failContent();
+        }
+
+        return dupxTplRender('parts/validation/tests/backup-index-error', [
+            'indexError' => $this->indexError,
+        ], false);
     }
 
     protected function hwarnContent()

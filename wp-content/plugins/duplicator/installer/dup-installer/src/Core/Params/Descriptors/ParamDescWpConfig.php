@@ -42,7 +42,11 @@ final class ParamDescWpConfig implements DescriptorInterface
             PrmMng::PARAM_GEN_WP_AUTH_KEY,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
-            ['default' => false],
+            [
+                'default'     => false,
+                'description' => 'Generate new authentication keys and salts in wp-config.php',
+                'cliParam'    => true,
+            ],
             [
                 'label'         => 'Auth Keys:',
                 'checkboxLabel' => 'Generate New Unique Authentication Keys and Salts',

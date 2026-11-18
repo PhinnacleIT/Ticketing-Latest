@@ -4,6 +4,7 @@ namespace Duplicator\Addons\DupCloudAddon\Utils;
 
 use Duplicator\Addons\DupCloudAddon\Exceptions\PresignedUrlExpiredException;
 use Duplicator\Addons\DupCloudAddon\Utils\DupCloudClient;
+use Duplicator\Core\Exceptions\StorageTransferAbortException;
 use Duplicator\Models\Storages\StoragePathInfo;
 use Duplicator\Utils\Logging\DupLog;
 use Duplicator\Libs\Snap\SnapIO;
@@ -43,17 +44,19 @@ class DupCloudStorageAdapter extends AbstractStorageAdapter
      * @param string $accessToken The access accessKey
      * @param int    $maxBackups  The max backups
      * @param string $backupType  The backup type advertised by the underlying client
+     * @param bool   $ipv4Only    If true, every request connects over IPv4 only
      *
      * @return void
      */
     public function __construct(
         string $accessToken = '',
         int $maxBackups = 0,
-        string $backupType = DupCloudClient::BACKUP_TYPE_STANDARD
+        string $backupType = DupCloudClient::BACKUP_TYPE_STANDARD,
+        bool $ipv4Only = false
     ) {
         $this->accessToken = $accessToken;
         $this->maxBackups  = $maxBackups;
-        $this->client      = new DupCloudClient($accessToken, $backupType);
+        $this->client      = new DupCloudClient($accessToken, $backupType, $ipv4Only);
     }
 
     /**
@@ -571,6 +574,9 @@ class DupCloudStorageAdapter extends AbstractStorageAdapter
                 }
                 DupLog::infoTrace('Upload completed on Duplicator Cloud [UploadUuid: ' . $extraData['UploadUuid'] . ']');
             }
+        } catch (StorageTransferAbortException $e) {
+            // Core fails the transfer at once on it, so it must not end up as a plain failed chunk
+            throw $e;
         } catch (Exception $e) {
             DupLog::infoTrace('DupCloudStorageAdapter::realCopyToStorage: ' . $e->getMessage());
             DupLog::infoTraceException($e, 'DupCloudStorageAdapter::realCopyToStorage: ');
@@ -795,7 +801,7 @@ class DupCloudStorageAdapter extends AbstractStorageAdapter
      *
      * @param string $backupName The backup name to cancel
      *
-     * @return bool True if cancelled, false otherwise
+     * @return bool True if failed or the cloud has no upload to fail, false otherwise
      */
     public function failUploadByName(string $backupName): bool
     {
@@ -806,6 +812,10 @@ class DupCloudStorageAdapter extends AbstractStorageAdapter
 
             return $this->client->failUploadByName($backupName);
         } catch (Exception $e) {
+            if ($e->getCode() === 404) {
+                DupLog::infoTrace('Duplicator Cloud has no upload of ' . $backupName . ' to fail');
+                return true;
+            }
             DupLog::infoTraceException($e, 'DupCloudStorageAdapter::failUpload');
             return false;
         }
@@ -837,7 +847,7 @@ class DupCloudStorageAdapter extends AbstractStorageAdapter
      *
      * @param string $uploadUuid The upload UUID to cancel
      *
-     * @return bool True if cancelled, false otherwise
+     * @return bool True if failed or the cloud has no upload to fail, false otherwise
      */
     public function failUpload(string $uploadUuid): bool
     {
@@ -848,7 +858,33 @@ class DupCloudStorageAdapter extends AbstractStorageAdapter
 
             return $this->client->failUpload($uploadUuid);
         } catch (Exception $e) {
+            if ($e->getCode() === 404) {
+                DupLog::infoTrace('Duplicator Cloud has no upload ' . $uploadUuid . ' to fail');
+                return true;
+            }
             DupLog::infoTraceException($e, 'DupCloudStorageAdapter::failUpload');
+            return false;
+        }
+    }
+
+    /**
+     * Close an open upload that no backup runs any more
+     *
+     * @param string $uploadUuid The upload UUID
+     *
+     * @return bool True if closed or the cloud has no such upload any more, false otherwise
+     */
+    public function abandonUpload(string $uploadUuid): bool
+    {
+        try {
+            $this->client->abandonUpload($uploadUuid);
+            return true;
+        } catch (Exception $e) {
+            if ($e->getCode() === 404) {
+                DupLog::infoTrace('Duplicator Cloud has no upload ' . $uploadUuid . ' to abandon');
+                return true;
+            }
+            DupLog::infoTraceException($e, 'DupCloudStorageAdapter::abandonUpload [HTTP ' . $e->getCode() . ']');
             return false;
         }
     }

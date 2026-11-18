@@ -42,6 +42,14 @@ $log = $tplMng->getDataValueObjRequired('log', AbstractLogEvent::class);
                     <?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($log->getCreatedAt()))); ?>
                 </span>
             </div>
+            <?php if ($log->getVia() !== '') : ?>
+            <div class="dup-log-type-wrapper">
+                <strong><?php esc_html_e('Via:', 'duplicator'); ?></strong>
+                <span class="dup-log-type">
+                    <?php echo esc_html(implode(' · ', array_filter([$log->getVia(), $log->getViaClient()]))); ?>
+                </span>
+            </div>
+            <?php endif; ?>
             <div class="dup-log-type-wrapper">
                 <strong><?php esc_html_e('Duplicator Version:', 'duplicator'); ?></strong>
                 <span class="dup-log-type">

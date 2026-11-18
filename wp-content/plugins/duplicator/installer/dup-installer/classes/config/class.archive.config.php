@@ -501,7 +501,8 @@ class DUPX_ArchiveConfig extends ArchiveDescriptor
         if (($newPath = self::getNewSubString($parsedOldMain['path'], $parsedNewMain['path'], $parsedSubOld['path'])) === false) {
             return false;
         }
-        $parsedSubNew['path'] = $newPath;
+        // A sub URL equal to the main URL keeps its form, without a trailing slash
+        $parsedSubNew['path'] = rtrim($newPath, '/');
         return SnapURL::buildUrl($parsedSubNew);
     }
 

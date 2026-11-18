@@ -6,7 +6,6 @@
 
 namespace Duplicator\Controllers;
 
-use Duplicator\Core\Addons\AddonsManager;
 use Duplicator\Core\MigrationMng;
 use Duplicator\Core\CapMng;
 use Duplicator\Core\Controllers\ControllersManager;
@@ -17,20 +16,17 @@ use Duplicator\Core\Views\TplMng;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapUtil;
 use Duplicator\Libs\Snap\SnapWP;
-use Duplicator\Models\ActivityLog\LogEventOrphanCleanup;
 use Duplicator\Models\DynamicGlobalEntity;
 use Duplicator\Models\StaticGlobal;
 use Duplicator\Package\ClientSideKick;
 use Duplicator\Package\DupPackage;
 use Duplicator\Package\PackageUtils;
 use Duplicator\Utils\AsyncSetupActions;
-use Duplicator\Utils\Lock\LockUtil;
 use Duplicator\Utils\Logging\DupLog;
 use Duplicator\Utils\Logging\PhpLogMng;
 use Duplicator\Utils\Logging\TraceLogMng;
 use Duplicator\Views\AdminNotices;
 use Duplicator\Views\AutoTunePageData;
-use Exception;
 
 class ToolsPageController extends AbstractMenuPageController
 {
@@ -44,7 +40,6 @@ class ToolsPageController extends AbstractMenuPageController
     const L2_SLUG_SERVER_INFO = 'server-info';
     const L2_SLUG_LOGS        = 'logs';
     const L2_SLUG_PHP_LOGS    = 'php-logs';
-    const L2_SLUG_AI          = 'ai';
 
     const ACTION_PURGE_ORPHANS   = 'purge-orphans';
     const ACTION_CLEAN_CACHE     = 'tmp-cache';
@@ -229,7 +224,6 @@ class ToolsPageController extends AbstractMenuPageController
         $subMenus[] = new SubMenuItem(self::L2_SLUG_SERVER_INFO, __('Server Info', 'duplicator'), '', true, 20);
         $subMenus[] = new SubMenuItem(self::L2_SLUG_LOGS, __('Duplicator Logs', 'duplicator'), '', true, 30);
         $subMenus[] = new SubMenuItem(self::L2_SLUG_PHP_LOGS, __('PHP Logs', 'duplicator'), '', true, 40);
-        $subMenus[] = new SubMenuItem(self::L2_SLUG_AI, __('AI', 'duplicator'), '', true, 45);
 
         return $subMenus;
     }
@@ -259,42 +253,12 @@ class ToolsPageController extends AbstractMenuPageController
      */
     public function actionPurgeOrphans(): array
     {
-        $orphaned_filepaths = PackageUtils::getOrphanedPackageFiles();
+        $files = PackageUtils::purgeOrphanedPackageFiles();
 
-        $result = [
-            'purgeOrphansFiles'   => [],
-            'purgeOrphansSuccess' => true,
+        return [
+            'purgeOrphansFiles'   => $files,
+            'purgeOrphansSuccess' => !in_array(false, $files, true),
         ];
-
-        $deletedFiles = [];
-        $totalSize    = 0;
-
-        foreach ($orphaned_filepaths as $filepath) {
-            // Get file size before deletion
-            $fileSize = @filesize($filepath);
-
-            // Try to delete the file
-            $deleted = (is_writable($filepath) && unlink($filepath));
-            $result['purgeOrphansFiles'][$filepath] = $deleted;
-
-            if ($deleted) {
-                $deletedFiles[] = basename($filepath);
-                $totalSize     += ($fileSize !== false ? $fileSize : 0);
-            } else {
-                $result['purgeOrphansSuccess'] = false;
-            }
-        }
-
-        // Create Activity Log entry if any files were deleted
-        if (count($deletedFiles) > 0) {
-            try {
-                LogEventOrphanCleanup::create(count($deletedFiles), $totalSize, $deletedFiles);
-            } catch (Exception $e) {
-                DupLog::traceError('Failed to create orphan cleanup log event: ' . $e->getMessage());
-            }
-        }
-
-        return $result;
     }
 
     /**
@@ -304,18 +268,7 @@ class ToolsPageController extends AbstractMenuPageController
      */
     public function actionCleanCache(): array
     {
-        if (!LockUtil::lockProcess()) {
-            DupLog::infoTrace('Full temporary cleanup skipped because the process lock is busy or unavailable.');
-            return ['tmpCleanUpSuccess' => false];
-        }
-
-        try {
-            return [
-                'tmpCleanUpSuccess' => PackageUtils::tmpCleanup(true),
-            ];
-        } finally {
-            LockUtil::unlockProcess();
-        }
+        return ['tmpCleanUpSuccess' => (PackageUtils::tmpCleanupAllLocked() === true)];
     }
 
     /**
@@ -327,6 +280,7 @@ class ToolsPageController extends AbstractMenuPageController
     {
         return ['phpLogCleared' => PhpLogMng::clearLog()];
     }
+
 
     /**
      * Re-run the server capability tests (process lock mode and loopback kickoff)
@@ -366,29 +320,18 @@ class ToolsPageController extends AbstractMenuPageController
      */
     public function actionInstaller(): array
     {
-        $files       = MigrationMng::cleanMigrationFiles();
-        $removeError = false;
+        // Read before the removal, which deletes it
+        $isMigrationSuccessNotice = get_option(AdminNotices::OPTION_KEY_MIGRATION_SUCCESS_NOTICE);
+        $removal                  = MigrationMng::removeInstallerFiles();
 
-        foreach ($files as $success) {
-            if ($success ==  false) {
-                $removeError = true;
-            }
-        }
-
-        $result = [
-            'isMigrationSuccessNotice' => get_option(AdminNotices::OPTION_KEY_MIGRATION_SUCCESS_NOTICE),
+        return [
+            'isMigrationSuccessNotice' => $isMigrationSuccessNotice,
             'isInstallerCleanup'       => true,
-            'installerCleanupFiles'    => $files,
-            'installerCleanupError'    => $removeError,
-            'installerCleanupPurge'    => MigrationMng::purgeCaches(),
+            'installerCleanupFiles'    => $removal['files'],
+            'installerCleanupError'    => in_array(false, $removal['files'], true),
+            'installerCleanupPurge'    => $removal['purge'],
             'installerManualNotices'   => MigrationMng::getManualPurgeNotices(),
         ];
-
-        if ($removeError == false) {
-            delete_option(AdminNotices::OPTION_KEY_MIGRATION_SUCCESS_NOTICE);
-        }
-
-        return $result;
     }
 
     /**
@@ -451,12 +394,6 @@ class ToolsPageController extends AbstractMenuPageController
                 TplMng::getInstance()->render(
                     'admin_pages/tools/php_logs',
                     self::getPhpLogsPageData()
-                );
-                break;
-            case self::L2_SLUG_AI:
-                TplMng::getInstance()->render(
-                    'admin_pages/tools/ai',
-                    ['abilitiesAvailable' => AddonsManager::getInstance()->isAddonEnabled('AiReadyAddon')]
                 );
                 break;
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Duplicator\Core\Exceptions;
 
+use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\TraitFactoryExceptionOrigin;
 use Exception;
 use Throwable;
@@ -99,10 +100,12 @@ class DupliException extends Exception
     const CODE_OPTIONS_INVALID_FILTER_RESULT = 191;
 
     const CODE_AUTOTUNE_SESSION_SAVE_FAILED = 200;
+    const CODE_AUTOTUNE_CONFLICT            = 201;
 
-    const CODE_STORAGE_RETRY_LIMIT     = 210;
-    const CODE_STORAGE_FINALIZE_FAILED = 211;
-    const CODE_STORAGE_TRANSFER_FAILED = 212;
+    const CODE_STORAGE_RETRY_LIMIT      = 210;
+    const CODE_STORAGE_FINALIZE_FAILED  = 211;
+    const CODE_STORAGE_TRANSFER_FAILED  = 212;
+    const CODE_STORAGE_TRANSFER_ABORTED = 213;
 
     /** @var int[] Core codes for expected, recognized conditions classified as handled severity */
     private const HANDLED_CODES = [
@@ -164,6 +167,8 @@ class DupliException extends Exception
      * Builds the exception enriched with the reason of the last PHP error, appended to the
      * first message line (the telemetry fingerprint). Call it right after the failed operation.
      * Keep install-specific values such as paths on the detail lines after a newline.
+     * When the reason reports exhausted disk space or quota, or the maximum file size, the
+     * canonical diskFull() or fileTooLarge() failure is returned, chaining the enriched one.
      *
      * @param string $message     Raw English text for log/telemetry hash, never localized
      * @param int    $code        One of the CODE_* constants
@@ -188,6 +193,28 @@ class DupliException extends Exception
 
         $exception = new self($message, $code, $userMessage);
         $exception->useFactoryCallerOrigin(__FILE__);
+
+        return self::classifyByReason($exception, $reason);
+    }
+
+    /**
+     * Returns the canonical diskFull() or fileTooLarge() failure, chaining the given exception,
+     * when the reason of a failed write reports exhausted disk space or quota, or the maximum
+     * file size; otherwise returns the given exception unchanged.
+     *
+     * @param self   $exception The specific failure
+     * @param string $reason    The PHP error message that explains the failure
+     *
+     * @return self
+     */
+    public static function classifyByReason(self $exception, string $reason): self
+    {
+        if (SnapIO::isDiskFullError($reason)) {
+            return self::diskFull($exception);
+        }
+        if (SnapIO::isFileTooLargeError($reason)) {
+            return self::fileTooLarge($exception);
+        }
 
         return $exception;
     }

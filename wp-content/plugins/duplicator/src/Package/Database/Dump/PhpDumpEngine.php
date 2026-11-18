@@ -7,8 +7,10 @@ namespace Duplicator\Package\Database\Dump;
 use Duplicator\Core\Exceptions\DupliException;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapLog;
+use Duplicator\Libs\Snap\SnapString;
 use Duplicator\Libs\Snap\SnapWP;
 use Duplicator\Utils\Logging\DupLog;
+use mysqli;
 use wpdb;
 
 /**
@@ -226,12 +228,15 @@ final class PhpDumpEngine extends AbstractDumpEngine
         }
 
         DupLog::infoTrace("DB ERROR: Could not get the CREATE query for the table {$table}. " . $wpdb->last_error);
+        $dbh         = $wpdb->dbh ?? null;
+        $errorNumber = ($connectionAvailable && $dbh instanceof mysqli) ? mysqli_errno($dbh) : 0;
         $tableExists = $connectionAvailable
             ? $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table)))
             : null;
         if (!$connectionAvailable || $wpdb->last_error !== '' || $tableExists !== null) {
             throw new DupliException(
-                'DB ERROR: Could not get the CREATE query for a table.',
+                'DB ERROR: Could not get the CREATE query for a table' .
+                ($errorNumber > 0 ? ", error {$errorNumber} (" . SnapString::spellDigits($errorNumber) . ').' : '.'),
                 DupliException::CODE_DB_CREATE_QUERY_FAILED,
                 sprintf(
                     __('Could not read the structure of the database table "%1$s" during export.', 'duplicator'),

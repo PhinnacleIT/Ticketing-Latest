@@ -235,9 +235,8 @@ $baseStorageEditURL = StoragePageController::getInstance()->getMenuLink(
                     }
                     return '';
                 },
-                function(result, data, funcData, textStatus, jqXHR) {
-                    DupliJs.addAdminMessage(okMsgContent, 'notice');
-                    return '';
+                function(result, data) {
+                    return data && data.message ? DupliJs.escapeHtml(data.message) : '<?php echo esc_js(__('Unable to delete the Backups.', 'duplicator')); ?>';
                 }
             );
         }

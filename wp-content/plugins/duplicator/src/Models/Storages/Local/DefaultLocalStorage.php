@@ -175,6 +175,16 @@ class DefaultLocalStorage extends LocalStorage
     }
 
     /**
+     * The default storage keeps its name
+     *
+     * @return bool
+     */
+    protected static function isNameEditable(): bool
+    {
+        return false;
+    }
+
+    /**
      * Update data from http request, this method don't save data, just update object properties
      *
      * @param string $message Message
@@ -183,12 +193,25 @@ class DefaultLocalStorage extends LocalStorage
      */
     public function updateFromHttpRequest(&$message = ''): bool
     {
-        // Don't call parent, default properties are not editable
-        $this->notes                  = SnapUtil::sanitizeDefaultInput(SnapUtil::INPUT_REQUEST, 'notes', '');
-        $this->config['max_packages'] = SnapUtil::sanitizeIntInput(SnapUtil::INPUT_REQUEST, 'max_default_store_files', 20);
+        if ((parent::updateFromHttpRequest($message) === false)) {
+            return false;
+        }
 
         $message = __('Default local storage updated.', 'duplicator');
         return true;
+    }
+
+    /**
+     * The default storage form posts only the notes and the number of Backups kept
+     *
+     * @return array<string,mixed>
+     */
+    protected function getRequestValues(): array
+    {
+        return [
+            'notes'       => SnapUtil::sanitizeDefaultInput(SnapUtil::INPUT_REQUEST, 'notes', ''),
+            'max_backups' => SnapUtil::sanitizeIntInput(SnapUtil::INPUT_REQUEST, 'max_default_store_files', 20),
+        ];
     }
 
     /**
@@ -235,18 +258,18 @@ class DefaultLocalStorage extends LocalStorage
             /** @var wpdb $wpdb*/
             global $wpdb;
 
-            $escapedList = array_map(
-                fn($path) => esc_sql(basename($path)),
-                $packagesList
-            );
-
-            // Purge Backup record logic
-            $table       = AbstractPackage::getTableName();
-            $max_created = $wpdb->get_var(
-                "SELECT max(created) FROM `" . $table . "` WHERE `archive_name` IN ('" . implode("', '", $escapedList) . "')"
-            );
-            $sql         = $wpdb->prepare("DELETE FROM " . $table . " WHERE created <= %s AND status >= %d", $max_created, AbstractPackage::STATUS_COMPLETE);
-            $wpdb->query($sql);
+            // The records of the purged archives only: a Backup kept by the retention stays
+            $names        = array_map('basename', $packagesList);
+            $placeholders = implode(', ', array_fill(0, count($names), '%s'));
+            $table        = AbstractPackage::getTableName();
+            $ids          = array_map('intval', $wpdb->get_col($wpdb->prepare(
+                "SELECT `id` FROM `" . $table . "` WHERE `archive_name` IN (" . $placeholders . ") AND `status` >= %d",
+                array_merge($names, [AbstractPackage::STATUS_COMPLETE])
+            )));
+            if (count($ids) > 0) {
+                $wpdb->query("DELETE FROM `" . $table . "` WHERE `id` IN (" . implode(',', $ids) . ")");
+                do_action('duplicator_packages_after_bulk_delete', $ids);
+            }
         } catch (Throwable $e) {
             DupLog::infoTraceException($e, "FAIL: purge Backup for storage " . $this->name . '[ID: ' . $this->id . '] type:' . static::getStypeName());
             return false;

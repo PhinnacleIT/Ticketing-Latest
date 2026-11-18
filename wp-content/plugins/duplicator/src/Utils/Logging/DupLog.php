@@ -45,11 +45,12 @@ class DupLog
     /**
      * Open a log file connection for writing to the Backup log file
      *
-     * @param string $nameHash The Name of the log file to create
+     * @param string $nameHash         The Name of the log file to create
+     * @param bool   $initErrorHandler Also install the Duplicator error handler for the rest of the request
      *
      * @return bool
      */
-    public static function open(string $nameHash): bool
+    public static function open(string $nameHash, bool $initErrorHandler = true): bool
     {
         if (strlen($nameHash) == 0) {
             throw new Exception("A name value is required to open a file log.");
@@ -60,7 +61,9 @@ class DupLog
             return false;
         } else {
             // By initializing the error_handler on opening the log, I am sure that when a Backup is processed, the handler is active.
-            ErrorHandler::init();
+            if ($initErrorHandler) {
+                ErrorHandler::init();
+            }
             return true;
         }
     }

@@ -9,6 +9,15 @@ use Duplicator\Installer\Core\Params\PrmMng;
  */
 final class DUPX_Ctrl_S4
 {
+    /** @var array<string,int> Sections of the final report, with the lowest level of the notices it shows */
+    const NOTICES_MIN_LEVELS = [
+        'general'        => DUPX_NOTICE_ITEM::NOTICE,
+        'files'          => DUPX_NOTICE_ITEM::NOTICE,
+        'database'       => DUPX_NOTICE_ITEM::SOFT_WARNING,
+        'search_replace' => DUPX_NOTICE_ITEM::NOTICE,
+        'plugins'        => DUPX_NOTICE_ITEM::NOTICE,
+    ];
+
     /**
      * Update the final report
      *
@@ -30,14 +39,11 @@ final class DUPX_Ctrl_S4
     public static function getNoticesCount(): array
     {
         $nManager = DUPX_NOTICE_MANAGER::getInstance();
-
-        return [
-            'general'        => $nManager->countFinalReportNotices('general', DUPX_NOTICE_ITEM::NOTICE, '>='),
-            'files'          => $nManager->countFinalReportNotices('files', DUPX_NOTICE_ITEM::NOTICE, '>='),
-            'database'       => $nManager->countFinalReportNotices('database', DUPX_NOTICE_ITEM::NOTICE, '>'),
-            'search_replace' => $nManager->countFinalReportNotices('search_replace', DUPX_NOTICE_ITEM::NOTICE, '>='),
-            'plugins'        => $nManager->countFinalReportNotices('plugins', DUPX_NOTICE_ITEM::NOTICE, '>='),
-        ];
+        $result   = [];
+        foreach (self::NOTICES_MIN_LEVELS as $section => $minLevel) {
+            $result[$section] = $nManager->countFinalReportNotices($section, $minLevel, '>=');
+        }
+        return $result;
     }
 
     /**

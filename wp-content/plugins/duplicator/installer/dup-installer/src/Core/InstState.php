@@ -2,6 +2,7 @@
 
 namespace Duplicator\Installer\Core;
 
+use Duplicator\Installer\Cli\CliInstaller;
 use Duplicator\Installer\Core\Deploy\ServerConfigs;
 use Duplicator\Installer\Core\Security;
 use Duplicator\Installer\Utils\Log\Log;
@@ -36,6 +37,7 @@ class InstState
     const LOGIC_MODE_OVERWRITE      = 'OVERWRITE';
     const LOGIC_MODE_BRIDGE         = 'BRIDGE';
     const LOGIC_MODE_RESTORE_BACKUP = 'RESTORE_BACKUP';
+    const LOGIC_MODE_CLI            = 'CLI';
 
     /**
      * install types
@@ -892,6 +894,9 @@ class InstState
         }
         if (self::isRestoreBackup()) {
             $modes[] = self::LOGIC_MODE_RESTORE_BACKUP;
+        }
+        if (CliInstaller::isActive()) {
+            $modes[] = self::LOGIC_MODE_CLI;
         }
         return $modes;
     }

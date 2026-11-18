@@ -279,7 +279,7 @@ $alert6->initAlert();
                     function(result, data) {
                         if (data && data.message && data.message !== '') {
                             <?php $alert5->showAlert(); ?>
-                            $("#<?php echo esc_js($alert5->getID()); ?>_message").html(data.message);
+                            $("#<?php echo esc_js($alert5->getID()); ?>_message").text(data.message);
                         } else {
                             <?php $alert2->showAlert(); ?>
                         }

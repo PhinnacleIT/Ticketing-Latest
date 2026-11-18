@@ -45,6 +45,8 @@ final class ParamDescEngines implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_SELECT,
             [
+                'description'  => 'What to do with the files already in the site folder before the extraction',
+                'cliParam'     => true,
                 'default'      => DUPX_Extraction::ACTION_DO_NOTHING,
                 'acceptValues' => [
                     DUPX_Extraction::ACTION_DO_NOTHING,
@@ -82,6 +84,8 @@ final class ParamDescEngines implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_SELECT,
             [
+                'description'  => 'Files of the archive that are not extracted',
+                'cliParam'     => true,
                 'default'      => DUPX_Extraction::FILTER_NONE,
                 'acceptValues' => [
                     DUPX_Extraction::FILTER_NONE,
@@ -125,6 +129,8 @@ final class ParamDescEngines implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_SELECT,
             [
+                'description'      => 'How the archive is extracted',
+                'cliParam'         => true,
                 'default'          => $engineOptions['default'],
                 'acceptValues'     => $engineOptions['acceptValues'],
                 'sanitizeCallback' => function ($value) {
@@ -173,6 +179,8 @@ final class ParamDescEngines implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_SELECT,
             [
+                'description'  => 'What to do with the database',
+                'cliParam'     => true,
                 'default'      => DUPX_DBInstall::DBACTION_EMPTY,
                 'acceptValues' => [
                     DUPX_DBInstall::DBACTION_CREATE,
@@ -225,6 +233,8 @@ final class ParamDescEngines implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_SELECT,
             [
+                'description'  => 'How the database is installed',
+                'cliParam'     => true,
                 'default'      => DUPX_DBInstall::ENGINE_CHUNK,
                 'acceptValues' => [
                     DUPX_DBInstall::ENGINE_CHUNK,
@@ -268,7 +278,9 @@ final class ParamDescEngines implements DescriptorInterface
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_CHECKBOX,
             [
-                'default' => in_array($oldHomePath, self::AUTO_SKIP_PATH_REPLACE_LIST),
+                'description' => 'Do not replace the source path in the database',
+                'cliParam'    => true,
+                'default'     => in_array($oldHomePath, self::AUTO_SKIP_PATH_REPLACE_LIST),
             ],
             [
                 'label'         => 'Skip path replace:',

@@ -7,6 +7,7 @@ use Duplicator\Installer\Core\Deploy\CleanUp;
 use Duplicator\Installer\Core\Deploy\Database\DbCleanup;
 use Duplicator\Installer\Core\Deploy\Database\DbReplace;
 use Duplicator\Installer\Core\Deploy\Database\DbUtils;
+use Duplicator\Installer\Core\Deploy\Helpers;
 use Duplicator\Installer\Core\Deploy\Plugins\PluginsManager;
 use Duplicator\Installer\Core\Deploy\ServerConfigs;
 use Duplicator\Installer\Core\Deploy\Standalone;
@@ -681,15 +682,8 @@ final class DUPX_S3_Funcs
 
             //Add super admin permissions
             if (InstState::isNewSiteIsMultisite()) {
-                $site_admins_query = DUPX_DB::mysqli_query($this->dbh, "SELECT meta_value FROM `" . $escapedTablePrefix . "sitemeta` WHERE meta_key = 'site_admins'");
-                $site_admins       = mysqli_fetch_row($site_admins_query);
-                if (!SnapUtil::safeUnserialize($site_admins[0], $site_admins_array) || !is_array($site_admins_array)) {
-                    throw new Exception('Invalid site_admins value: expected a serialized array, can\'t add super admin ' . $wpUserName);
-                }
-
-                array_push($site_admins_array, $wpUserName);
-
-                $site_admins_serialized = mysqli_real_escape_string($this->dbh, serialize($site_admins_array));
+                $site_admins_list       = Helpers::getSuperAdminUsernames($this->dbh, PrmMng::getInstance()->getValue(PrmMng::PARAM_DB_TABLE_PREFIX));
+                $site_admins_serialized = mysqli_real_escape_string($this->dbh, Helpers::getSiteAdminsWithUser($site_admins_list, $wpUserName));
 
                 DUPX_DB::mysqli_query($this->dbh, "UPDATE `" . $escapedTablePrefix . "sitemeta` SET meta_value = '{$site_admins_serialized}' WHERE meta_key = 'site_admins'");
                 // Adding permission for each sub-site to the newly created user

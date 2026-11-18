@@ -62,6 +62,9 @@ $logs = $tplMng->getDataValueArrayRequired('logs');
                     </td>
                     <td class="column-title">
                         <?php echo esc_html($currentLog->getTitle()); ?>
+                        <?php if ($currentLog->getVia() !== '') : ?>
+                            <span class="dup-log-via"><?php echo esc_html($currentLog->getVia()); ?></span>
+                        <?php endif; ?>
                     </td>
                     <td class="column-description">
                         <?php echo esc_html($currentLog->getShortDescription()); ?>

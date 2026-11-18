@@ -177,11 +177,14 @@ trait TraitPackageScan
             );
         }
 
-        if (SnapIO::atomicWrite([$scanPath => $json]) === false) {
+        try {
+            SnapIO::atomicWriteOrThrow([$scanPath => $json]);
+        } catch (Throwable $e) {
             throw new DupliException(
-                'Problem writing scan file',
+                'Problem writing scan file. ' . $e->getMessage(),
                 DupliException::CODE_SCAN_WRITE_FAILED,
-                __('Could not write the scan report file. Check the backup log for details.', 'duplicator')
+                __('Could not write the scan report file. Check the backup log for details.', 'duplicator'),
+                $e
             );
         }
 

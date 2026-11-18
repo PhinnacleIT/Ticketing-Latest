@@ -2,6 +2,7 @@
 
 namespace Duplicator\Installer\Core;
 
+use Duplicator\Installer\Cli\CliInstaller;
 use Duplicator\Installer\Core\Addons\InstAddonsManager;
 use Duplicator\Installer\Core\Deploy\Database\DbGunzip;
 use Duplicator\Installer\Core\Deploy\ServerConfigs;
@@ -504,7 +505,11 @@ class Bootstrap
             return;
         }
 
-        if (($error = error_get_last())) {
+        if (($error = error_get_last()) && CliInstaller::isActive()) {
+            fwrite(STDERR, 'Fatal error: ' . $error['message'] . ' in ' . $error['file'] . ':' . $error['line'] . "\n");
+            return;
+        }
+        if ($error) {
             ?>
             <h1>BOOT SHUTDOWN FATAL ERROR</H1>
             <pre><?php

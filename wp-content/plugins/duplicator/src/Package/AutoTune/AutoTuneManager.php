@@ -124,16 +124,20 @@ final class AutoTuneManager
     {
         $lock = self::createLock();
         if (!$lock->lock()) {
-            throw new Exception(__('AutoTune is being updated by another process.', 'duplicator'));
+            if ($lock->getStatus() === SqlLock::STATUS_BUSY) {
+                throw self::conflict(__('AutoTune is being updated by another process.', 'duplicator'));
+            }
+            DupLog::infoTrace('AUTOTUNE: start lock error | ' . ($lock->getLastLockError() ?? 'unknown SQL lock failure'));
+            throw new Exception(__('AutoTune could not lock its session. Check the backup log for details.', 'duplicator'));
         }
 
         try {
             $session = AutoTuneSessionEntity::reloadInstance();
             if ($session->isRunning()) {
-                throw new Exception(__('An AutoTune session is already running.', 'duplicator'));
+                throw self::conflict(__('An AutoTune session is already running.', 'duplicator'));
             }
             if (PackageUtils::isBackupCreationBlocked($blockMessage)) {
-                throw new Exception((string) $blockMessage);
+                throw self::conflict((string) $blockMessage);
             }
 
             // Check backup requirements before starting the AutoTune session.
@@ -194,7 +198,8 @@ final class AutoTuneManager
             self::launchAttempt($session, $startConfig, $template);
         } catch (Throwable $e) {
             DupLog::infoTraceException($e, 'AUTOTUNE: session START FAILED');
-            if (isset($session) && $session->isRunning()) {
+            // A conflict is raised before this start creates a session: a running one belongs to another start
+            if (!self::isConflict($e) && isset($session) && $session->isRunning()) {
                 self::closeAfterError($session, $e, self::STOP_START_FAILED);
             }
             throw $e;
@@ -211,7 +216,7 @@ final class AutoTuneManager
     public static function abort(): void
     {
         if (!AutoTuneSessionEntity::getInstance()->isRunning()) {
-            throw new Exception(__('No AutoTune session is running.', 'duplicator'));
+            throw self::conflict(__('No AutoTune session is running.', 'duplicator'));
         }
 
         self::recordAndAdvance(function (AutoTuneSessionEntity $session): bool {
@@ -993,6 +998,30 @@ final class AutoTuneManager
                 $error->getMessage() . ' | close: ' . $closeError->getMessage()
             );
         }
+    }
+
+    /**
+     * A refusal caused by the current AutoTune or Backup state: the same request can succeed later
+     *
+     * @param string $message Translated refusal message
+     *
+     * @return DupliException
+     */
+    private static function conflict(string $message): DupliException
+    {
+        return new DupliException($message, DupliException::CODE_AUTOTUNE_CONFLICT, $message);
+    }
+
+    /**
+     * Whether a start or abort failure is a conflict refusal
+     *
+     * @param Throwable $error The failure
+     *
+     * @return bool
+     */
+    public static function isConflict(Throwable $error): bool
+    {
+        return $error instanceof DupliException && $error->getCode() === DupliException::CODE_AUTOTUNE_CONFLICT;
     }
 
     /** @return SqlLock AutoTune advancement lock */

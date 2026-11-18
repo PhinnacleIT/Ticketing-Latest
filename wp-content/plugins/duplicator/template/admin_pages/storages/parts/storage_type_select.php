@@ -4,7 +4,6 @@
  * Duplicator messages sections
  */
 
-use Duplicator\Core\Addons\AddonsManager;
 use Duplicator\Models\Storages\AbstractStorageEntity;
 
 defined("ABSPATH") or die("");
@@ -168,62 +167,6 @@ $isEditMode    = $tplMng->getDataValueBool('isEditMode');
             $('#dup-storage-form').parsley();
         };
 
-        DupliJs.Storage.Autofill = function (mode) {
-        <?php if (AddonsManager::getInstance()->isAddonEnabled('AmazonS3Addon')) : ?>
-            switch (parseInt(mode)) {
-                case <?php echo (int) \Duplicator\Addons\AmazonS3Addon\Models\BackblazeStorage::getSType(); ?>:
-                case <?php echo (int) \Duplicator\Addons\AmazonS3Addon\Models\DreamStorage::getSType(); ?>:
-                    autoFillRegion(mode, 1);
-                    break;
-                case <?php echo (int) \Duplicator\Addons\AmazonS3Addon\Models\VultrStorage::getSType(); ?>:
-                case <?php echo (int) \Duplicator\Addons\AmazonS3Addon\Models\DigitalOceanStorage::getSType(); ?>:
-                    autoFillRegion(mode, 0);
-                    break;
-                case <?php echo (int) \Duplicator\Addons\AmazonS3Addon\Models\WasabiStorage::getSType(); ?>:
-                    let wasabiRegion   = $("#s3_region_" + mode);
-                    let wasabiEndpoint = $("#s3_endpoint_" + mode);
-
-                    wasabiRegion.change(function(e) {
-                        if (wasabiEndpoint.val().length > 0) {
-                            return;
-                        }
-
-                        let regionVal = $(this).val();
-                        if (regionVal.length > 0) {
-                            wasabiEndpoint.val("s3." + regionVal + ".wasabisys.com");
-                        } else {
-                            wasabiEndpoint.val("");
-                        }
-                    });
-                    break;
-            }
-
-            function autoFillRegion(type, regionPos) {
-                let region      = $("#s3_region_" + type);
-                let endpoint    = $("#s3_endpoint_" + type);
-
-                endpoint.change(function(e) {
-                    bindEndpointToRegion(region, endpoint, regionPos);
-                });
-            }
-
-            function bindEndpointToRegion(region, endpoint, pos) {
-                if (region.val().length > 0) {
-                    return;
-                }
-
-                if (endpoint.val().length > 0) {
-                    let regionStr = endpoint.val().replace(/.*:\/\//g,'').split(".")[pos];
-                    region.val(regionStr);
-                } else {
-                    region.val("");
-                }
-            }
-        <?php else : ?>
-            return;
-        <?php endif; ?>
-        }
-
         // GENERAL STORAGE LOGIC
         DupliJs.Storage.ChangeMode = function (animateOverride = 400) {
             const mode = $('#dup-storage-mode-fixed').length > 0
@@ -257,7 +200,6 @@ $isEditMode    = $tplMng->getDataValueBool('isEditMode');
             providerConfigNode.show(animateOverride);
 
             DupliJs.Storage.BindParsley(providerConfigNode);
-            DupliJs.Storage.Autofill(mode);
         }
 
         $('#dup-storage-form').parsley();

@@ -754,9 +754,9 @@ class DatabasePkg
         $dumped   = array_flip($progress->tablesToDump);
 
         foreach ($progress->countCheckData['tables'] as $table => $tableInfo) {
-            if (!isset($dumped[$table]) || $tableInfo['count'] === null || $tableInfo['start'] === null) {
+            if (!isset($dumped[$table]) || $tableInfo['count'] === null || $tableInfo['start'] === null || $tableInfo['end'] === null) {
                 // No data file, or no counts to compare: the engine can't count the rows it
-                // wrote, or the dump of the table never started
+                // wrote, the dump of the table never started, or a row count query failed
                 continue;
             }
 
@@ -1207,9 +1207,9 @@ class DatabasePkg
      * @param string[] $ignoreTables      tables to skip
      * @param string[] $ignoreOptionFlags command option flags not to be added
      *
-     * @return int The result of the mysql dump
+     * @return int The exit status of mysqldump
      *
-     * @throws DupliException When the option file cannot be written
+     * @throws DupliException When the option file or the SQL file cannot be written
      */
     protected function mysqlDumpWriteCmd(
         string $exePath,
@@ -1226,12 +1226,8 @@ class DatabasePkg
 
         $optionFile = count($ignoreTables) > 0 ? $this->writeIgnoreTablesOptionFile($ignoreTables) : '';
         try {
-            $fileHandle = $this->openSqlFile();
-            if (! $fileHandle) {
-                return 1;
-            }
-
-            $hadWriteError    = false;
+            $fileHandle       = $this->openSqlFile();
+            $writeError       = null;
             $hasSeenFirstLine = false;
 
             $exitCode = Shell::runCommandStream(
@@ -1239,7 +1235,7 @@ class DatabasePkg
                 function (string $line) use (
                     $fileHandle,
                     &$hasSeenFirstLine,
-                    &$hadWriteError,
+                    &$writeError,
                     $shouldRewriteTables,
                     $tableRenameMap,
                     $queryFixPatterns
@@ -1248,7 +1244,7 @@ class DatabasePkg
                         $line,
                         $fileHandle,
                         $hasSeenFirstLine,
-                        $hadWriteError,
+                        $writeError,
                         $shouldRewriteTables,
                         $tableRenameMap,
                         $queryFixPatterns
@@ -1257,7 +1253,10 @@ class DatabasePkg
             );
 
             fclose($fileHandle);
-            return $hadWriteError ? 1 : (int) $exitCode;
+            if ($writeError !== null) {
+                throw self::buildWriteException('mysqldump output', $this->getStorePath(), $writeError);
+            }
+            return (int) $exitCode;
         } finally {
             if ($optionFile !== '') {
                 SnapIO::unlink($optionFile);
@@ -1335,14 +1334,16 @@ class DatabasePkg
     /**
      * Open the target SQL file for appending
      *
-     * @return resource|false File handle for the target SQL file or false on failure
+     * @return resource File handle for the target SQL file
+     *
+     * @throws DupliException When the file cannot be opened
      */
     private function openSqlFile()
     {
         $path   = $this->getStorePath();
-        $handle = @fopen($path, 'a');
-        if (! $handle) {
-            DupLog::error('Cannot open SQL file', $path);
+        $handle = SnapIO::callWithPhpErrorCapture(static fn() => fopen($path, 'a'));
+        if ($handle === false) {
+            throw self::buildWriteException('mysqldump output', $path);
         }
         return $handle;
     }
@@ -1353,7 +1354,7 @@ class DatabasePkg
      * @param string                                     $line                The line to process
      * @param resource                                   $fileHandle          The file handle to write to
      * @param bool                                       $hasSeenFirstLine    Whether the first line has been seen
-     * @param bool                                       $hadWriteError       Whether a write error has occurred
+     * @param ?string                                    $writeError          Reason of the first failed write, null while none failed
      * @param bool                                       $shouldRewriteTables Whether to rewrite table names
      * @param array<string,string>                       $tableRenameMap      Map of original table names to case-sensitive versions
      * @param array{search: string[], replace: string[]} $queryFixPatterns    Map of search patterns to replace patterns
@@ -1364,11 +1365,16 @@ class DatabasePkg
         string $line,
         $fileHandle,
         bool &$hasSeenFirstLine,
-        bool &$hadWriteError,
+        ?string &$writeError,
         bool $shouldRewriteTables,
         array $tableRenameMap,
         array $queryFixPatterns
     ): void {
+        // The dump is already incomplete: the rest of the stream is drained without writing
+        if ($writeError !== null) {
+            return;
+        }
+
         // Skip initial warnings on the very first line
         if (! $hasSeenFirstLine) {
             $hasSeenFirstLine = true;
@@ -1389,10 +1395,11 @@ class DatabasePkg
             $line
         );
 
-        // Write the line out
-        if (fwrite($fileHandle, $line) === false) {
-            DupLog::error('fwrite failed', $this->getStorePath());
-            $hadWriteError = true;
+        // Write the line out, a short write is a failure too
+        $written = SnapIO::callWithPhpErrorCapture(static fn() => fwrite($fileHandle, $line));
+        if ($written === false || $written < strlen($line)) {
+            $error      = error_get_last();
+            $writeError = $error !== null ? $error['message'] : 'short write: ' . (int) $written . ' of ' . strlen($line) . ' bytes';
         }
     }
 
@@ -1475,8 +1482,13 @@ class DatabasePkg
                 );
                 DupLog::error(__('Shell mysql dump failed. Last lines of dump file below.', 'duplicator'), $lastLines);
 
+                $serverError = '';
+                if (preg_match('/(?:mysqldump: Error|Got error:) (\d+)/', $lastLines, $matches) === 1) {
+                    $serverError = ", server error {$matches[1]} (" . SnapString::spellDigits((int) $matches[1]) . ")";
+                }
+
                 throw new DupliException(
-                    "Shell mysqldump failed with exit code {$mysqlResult} (" . SnapString::spellDigits($mysqlResult) . ").",
+                    "Shell mysqldump failed with exit code {$mysqlResult} (" . SnapString::spellDigits($mysqlResult) . "){$serverError}.",
                     DupliException::CODE_MYSQLDUMP_FAILED,
                     __('The mysqldump database export failed. Try switching the SQL engine to PHP.', 'duplicator')
                 );
@@ -1628,25 +1640,27 @@ class DatabasePkg
     }
 
     /**
-     * @param string $label    Short label for what was being written
-     * @param string $filePath The file path that failed
+     * @param string  $label    Short label for what was being written
+     * @param string  $filePath The file path that failed
+     * @param ?string $reason   Reason of the failure, null to read the last PHP error
      *
      * @return DupliException
      */
-    private static function buildWriteException(string $label, string $filePath): DupliException
+    private static function buildWriteException(string $label, string $filePath, ?string $reason = null): DupliException
     {
-        $error  = error_get_last();
-        $reason = $error !== null ? $error['message'] : 'unknown';
+        if ($reason === null) {
+            $error  = error_get_last();
+            $reason = $error !== null ? $error['message'] : 'unknown';
+        }
         DupLog::error("DB export write failed ({$label})", "Path: {$filePath}, reason: {$reason}");
 
-        if (SnapIO::isDiskFullError($reason)) {
-            return DupliException::diskFull();
-        }
-
-        return new DupliException(
-            "file_put_contents failed while writing {$label} to {$filePath}",
-            DupliException::CODE_MYSQLDUMP_FILE_WRITE_FAILED,
-            __('Could not write to the database export file. Check file and directory permissions.', 'duplicator')
+        return DupliException::classifyByReason(
+            new DupliException(
+                "file_put_contents failed while writing {$label} to {$filePath}",
+                DupliException::CODE_MYSQLDUMP_FILE_WRITE_FAILED,
+                __('Could not write to the database export file. Check file and directory permissions.', 'duplicator')
+            ),
+            $reason
         );
     }
 
@@ -1741,9 +1755,10 @@ class DatabasePkg
      * Advance the gzip compression of the dump by one chunk and finalize when complete
      *
      * Resumable: the dump files are gzipped one at a time, db_build_progress keeps the
-     * index of the file being compressed and the byte offset reached in it. Each source
-     * file is unlinked as soon as its gzipped copy is verified, so the gzipped copy of
-     * the whole dump is never held next to the uncompressed one.
+     * index of the file being compressed and the byte offset reached in it, and saves it
+     * before returning. A source file is removed only after the progress that records its
+     * gzipped copy is saved, so a worker stopped in between resumes on an existing file;
+     * the sources it leaves behind are removed on the next call.
      *
      * Designed to be invoked from a dedicated build step rather than from the DB build flow.
      *
@@ -1756,49 +1771,98 @@ class DatabasePkg
     public function compressDump(int $timeout = self::DUMP_CHUNK_WORKER_TIME): void
     {
         $progress = $this->Package->db_build_progress;
+        if ($this->isPerTableDump()) {
+            $map     = $this->getDumpFileMap();
+            $sources = $map->getFiles();
+            $targets = $map->getCompressedFiles();
+        } else {
+            $sources = [$this->getStorePath()];
+            $targets = [$this->getCompressedStorePath()];
+        }
+        $fileNumber = count($sources);
+
+        // Leftovers of a worker stopped between the progress save and the removal
+        self::removeCompressedSources(array_slice($sources, 0, $progress->compressionDone ? $fileNumber : $progress->compressedFileIndex));
         if ($progress->compressionDone) {
             return;
         }
 
-        if (!$this->isPerTableDump()) {
-            if ($this->compressDumpFile($this->getStorePath(), $this->getCompressedStorePath(), $timeout)) {
-                $progress->compressionDone = true;
-            }
-            return;
-        }
-
-        $map        = $this->getDumpFileMap();
-        $sources    = $map->getFiles();
-        $targets    = $map->getCompressedFiles();
-        $deadline   = $timeout < 0 ? INF : microtime(true) + $timeout;
-        $fileNumber = count($sources);
-
+        $deadline  = $timeout < 0 ? INF : microtime(true) + $timeout;
+        $lastSave  = microtime(true);
+        $completed = [];
         while ($progress->compressedFileIndex < $fileNumber) {
             $index     = $progress->compressedFileIndex;
             $remaining = $timeout < 0 ? -1 : (int) max(0, $deadline - microtime(true));
             if (!$this->compressDumpFile($sources[$index], $targets[$index], $remaining)) {
-                return;
+                break;
             }
 
+            $completed[] = $sources[$index];
             $progress->compressedFileIndex++;
             $progress->compressedOffset = 0;
             $progress->compressedSize   = 0;
+            if ($progress->compressedFileIndex >= $fileNumber) {
+                $progress->compressionDone = true;
+                break;
+            }
+            if ((microtime(true) - $lastSave) >= AbstractPackage::PROGRESS_UPDATE_INTERVAL_SEC) {
+                $this->saveAndRemoveCompressedSources($completed);
+                $completed = [];
+                $lastSave  = microtime(true);
+            }
             if (microtime(true) >= $deadline) {
-                return;
+                break;
             }
         }
 
-        $progress->compressionDone = true;
+        $this->saveAndRemoveCompressedSources($completed);
     }
 
     /**
-     * Advance the gzip compression of one dump file, unlinking the source once complete
+     * Save the progress that records the gzipped copies, then remove their sources
+     *
+     * @param string[] $sources Dump files whose gzipped copy is complete
+     *
+     * @return void
+     *
+     * @throws DupliException When a source can't be removed
+     */
+    private function saveAndRemoveCompressedSources(array $sources): void
+    {
+        $this->Package->update();
+        self::removeCompressedSources($sources);
+    }
+
+    /**
+     * Remove the dump files the saved progress records as compressed: a source left behind would end up in the archive
+     *
+     * @param string[] $sources Dump files
+     *
+     * @return void
+     *
+     * @throws DupliException When a source can't be removed
+     */
+    private static function removeCompressedSources(array $sources): void
+    {
+        foreach ($sources as $source) {
+            if (is_file($source) && @unlink($source) === false) {
+                throw new DupliException(
+                    "Can't remove source SQL dump after compression: {$source}",
+                    DupliException::CODE_DB_COMPRESSION_FAILED,
+                    __('Could not remove the database export file after compression. Check file and directory permissions.', 'duplicator')
+                );
+            }
+        }
+    }
+
+    /**
+     * Advance the gzip compression of one dump file
      *
      * @param string $sourcePath dump file to compress
      * @param string $targetPath gzipped copy to write
      * @param int    $timeout    Soft deadline in seconds for the SnapGzip loop, -1 for no limit
      *
-     * @return bool true when the file is fully compressed and its source removed
+     * @return bool true when the gzipped copy is complete and verified
      *
      * @throws DupliException On any I/O or compression failure
      */
@@ -1839,14 +1903,6 @@ class DatabasePkg
                 "Compressed SQL dump is empty: {$targetPath}",
                 DupliException::CODE_DB_COMPRESSION_FAILED,
                 __('The compressed database export file is empty. Check the backup log for details.', 'duplicator')
-            );
-        }
-
-        if (@unlink($sourcePath) === false) {
-            throw new DupliException(
-                "Can't remove source SQL dump after compression: {$sourcePath}",
-                DupliException::CODE_DB_COMPRESSION_FAILED,
-                __('Could not remove the database export file after compression. Check file and directory permissions.', 'duplicator')
             );
         }
 

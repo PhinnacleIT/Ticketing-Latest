@@ -164,18 +164,17 @@ class FullBackupStatus
     {
         $messages = [];
 
+        // A database-only backup lacks the files by definition: its missing components and core folders add nothing
         if (!empty($reasons['db_only'])) {
             $messages[] = __('Database-only backups cannot be used.', 'duplicator');
-        }
-
-        if (!empty($reasons['missing_components'])) {
+        } elseif (!empty($reasons['missing_components'])) {
             $messages[] = sprintf(
                 __('Backup is missing required components: %s', 'duplicator'),
-                implode(', ', $reasons['missing_components'])
+                implode(', ', array_map([BuildComponents::class, 'getLabel'], $reasons['missing_components']))
             );
         }
 
-        if (!empty($reasons['filtered_wp_dirs'])) {
+        if (empty($reasons['db_only']) && !empty($reasons['filtered_wp_dirs'])) {
             $messages[] = __('Backup has filtered WordPress core directories.', 'duplicator');
         }
 

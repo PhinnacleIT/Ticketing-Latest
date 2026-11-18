@@ -676,7 +676,8 @@ class DUPX_DBInstall extends AbstractJsonSerializable
     protected function dbClose()
     {
         if (!is_null($this->dbh)) {
-            mysqli_close($this->dbh);
+            // The connection belongs to DUPX_DB_Functions, which may have closed it already
+            DUPX_DB_Functions::getInstance()->closeDbConnection();
             $this->dbh = null;
         }
     }

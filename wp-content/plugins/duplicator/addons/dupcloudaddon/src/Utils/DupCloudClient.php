@@ -2,13 +2,17 @@
 
 namespace Duplicator\Addons\DupCloudAddon\Utils;
 
+use CurlHandle;
 use Duplicator\Utils\Logging\DupLog;
 use Duplicator\Addons\DupCloudAddon\Exceptions\PresignedUrlExpiredException;
 use Duplicator\Addons\DupCloudAddon\Utils\RemoteStorageInfo;
+use Duplicator\Core\Exceptions\StorageTransferAbortException;
+use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapString;
 use Duplicator\Models\Storages\StoragePathInfo;
 use Error;
 use Exception;
+use VendorDuplicator\WpOrg\Requests\Hooks;
 use VendorDuplicator\WpOrg\Requests\Requests;
 
 class DupCloudClient
@@ -48,19 +52,26 @@ class DupCloudClient
     private string $storageToken = '';
     /** @var string backup type advertised on every request */
     private string $backupType = self::BACKUP_TYPE_STANDARD;
+    /** @var bool If true, every request connects over IPv4 only */
+    private bool $ipv4Only = false;
 
     /**
      * Class constructor
      *
      * @param string $storageToken The storage token
      * @param string $backupType   The backup type advertised on every request
+     * @param bool   $ipv4Only     If true, every request connects over IPv4 only
      *
      * @return void
      */
-    public function __construct(string $storageToken = '', string $backupType = self::BACKUP_TYPE_STANDARD)
-    {
+    public function __construct(
+        string $storageToken = '',
+        string $backupType = self::BACKUP_TYPE_STANDARD,
+        bool $ipv4Only = false
+    ) {
         $this->storageToken = $storageToken;
         $this->backupType   = $backupType;
+        $this->ipv4Only     = $ipv4Only;
     }
 
     /**
@@ -164,13 +175,14 @@ class DupCloudClient
         array $data = [],
         array $options = []
     ): array {
-        $url    = self::getApiUrl($path);
-        $result = [
+        $url     = self::getApiUrl($path);
+        $result  = [
             'success'  => false,
             'httpCode' => -1,
             'data'     => [],
             'message'  => '',
         ];
+        $request = [];
 
         try {
             if (DupCloudRateLimitHandler::isBlocked($url)) {
@@ -194,8 +206,12 @@ class DupCloudClient
                 'headers' => $headers,
                 'data'    => $data,
             ];
+            // Logged on failure: the storage token must not reach the logs
+            if (isset($request['headers']['Authorization'])) {
+                $request['headers']['Authorization'] = 'Bearer [hidden]';
+            }
 
-            $response           = Requests::request(self::getApiUrl($path), $headers, $data, $type, $options);
+            $response           = Requests::request($url, $headers, $data, $type, $this->getOptions($options));
             $result['success']  = false;
             $result['httpCode'] = $response->status_code;
             $bodyDecoded        = !empty($response->body) ? $response->decode_body() : [];
@@ -251,6 +267,30 @@ class DupCloudClient
         return $result;
     }
 
+    /**
+     * Get the Requests options for a request: the given options plus the client defaults.
+     *
+     * @param array<string,mixed> $options Request options
+     *
+     * @return array<string,mixed>
+     */
+    private function getOptions(array $options = []): array
+    {
+        if ($this->ipv4Only) {
+            // Requests has no IP resolve option, so the hook sets it on the cURL handle; other transports ignore it
+            $hooks = new Hooks();
+            $hooks->register(
+                'curl.before_send',
+                /** @param resource|CurlHandle $handle */
+                static function ($handle): void {
+                    curl_setopt($handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+                }
+            );
+            $options['hooks'] = $hooks;
+        }
+
+        return $options;
+    }
 
     /**
      * Checks if the Cloud is available and ready to use.
@@ -351,6 +391,8 @@ class DupCloudClient
      * @param array<stirng, mixed> $backupDetails The backup details
      *
      * @return array{'uuid': string, 'url': string}
+     *
+     * @throws StorageTransferAbortException If another upload is open on the website: no later try can start it
      */
     public function startUpload($backupDetails)
     {
@@ -372,6 +414,9 @@ class DupCloudClient
         );
         if (!$result['success']) {
             DupLog::traceObject('Failed to start upload to website', $result);
+            if ($result['httpCode'] === 409) {
+                throw new StorageTransferAbortException('Duplicator Cloud refused to start the upload: another upload is open on the website.');
+            }
             throw new Exception($result['message']);
         }
 
@@ -414,7 +459,7 @@ class DupCloudClient
      * @param string $backupName The backup name to cancel
      *
      * @return bool True on success
-     * @throws Exception If the request fails or backup name is invalid
+     * @throws Exception If the request fails or backup name is invalid, with the HTTP code as the exception code
      */
     public function failUploadByName(string $backupName): bool
     {
@@ -436,7 +481,7 @@ class DupCloudClient
 
         if (!$result['success']) {
             DupLog::traceObject('Failed to fail upload for backup ' . $backupName, $result);
-            throw new Exception($result['message']);
+            throw new Exception($result['message'], $result['httpCode']);
         }
 
         return true;
@@ -482,7 +527,7 @@ class DupCloudClient
      * @param string $uuid The backup upload UUID to cancel
      *
      * @return bool True on success
-     * @throws Exception If the request fails or UUID/token invalid
+     * @throws Exception If the request fails or UUID/token invalid, with the HTTP code as the exception code
      */
     public function failUpload(string $uuid): bool
     {
@@ -504,10 +549,43 @@ class DupCloudClient
 
         if (!$result['success']) {
             DupLog::traceObject('Failed to fail upload ' . $uuid, $result);
-            throw new Exception($result['message']);
+            throw new Exception($result['message'], $result['httpCode']);
         }
 
         return true;
+    }
+
+    /**
+     * Close an open upload that no backup runs any more, so the website can start a new one
+     *
+     * @param string $uuid The upload UUID
+     *
+     * @return void
+     *
+     * @throws Exception If the token or UUID is missing, or the request fails, with the HTTP code as the exception code
+     */
+    public function abandonUpload(string $uuid): void
+    {
+        if (strlen($this->storageToken) === 0) {
+            throw new Exception('No storage token provided', 401);
+        }
+
+        if (strlen($uuid) === 0) {
+            throw new Exception('Upload UUID is required');
+        }
+
+        $result = $this->request(
+            'website/upload/' . rawurlencode($uuid) . '/abandon',
+            Requests::POST,
+            [],
+            [],
+            ['timeout' => self::BACKUP_REQUEST_TIMEOUT]
+        );
+
+        if (!$result['success']) {
+            DupLog::trace('Failed to abandon upload ' . $uuid . ': HTTP ' . $result['httpCode'] . ' ' . $result['message']);
+            throw new Exception($result['message'], $result['httpCode']);
+        }
     }
 
     /**
@@ -671,7 +749,7 @@ class DupCloudClient
             $headers,
             $content, // @phpstan-ignore-line
             Requests::PUT,
-            ['timeout' => 300]
+            $this->getOptions(['timeout' => 300])
         );
         if (!$response->success) {
             DupLog::traceObject('Failed to upload file to pre-signed URL', $response);
@@ -713,7 +791,7 @@ class DupCloudClient
             $uploadData['url'],
             [],
             $content,
-            ['timeout' => 300]
+            $this->getOptions(['timeout' => 300])
         );
 
         if ($response->status_code !== 200) {
@@ -730,6 +808,8 @@ class DupCloudClient
      * @param array<string, mixed> $backupDetails The backup details
      *
      * @return array{uuid: string, urls: array<int, string>} URLs indexed by part number (starting from 1)
+     *
+     * @throws StorageTransferAbortException If another upload is open on the website: no later try can start it
      */
     public function startMultipart($backupDetails): array
     {
@@ -753,6 +833,9 @@ class DupCloudClient
 
         if (!$result['success']) {
             DupLog::traceObject('Failed to start multipart upload', $result);
+            if ($result['httpCode'] === 409) {
+                throw new StorageTransferAbortException('Duplicator Cloud refused to start the upload: another upload is open on the website.');
+            }
             throw new Exception($result['message']);
         }
 
@@ -786,7 +869,7 @@ class DupCloudClient
             [],
             $content,
             Requests::PUT,
-            ['timeout' => 300]
+            $this->getOptions(['timeout' => 300])
         );
 
         if ($response->status_code !== 200) {
@@ -895,7 +978,7 @@ class DupCloudClient
         $response = Requests::get(
             $url,
             $headers,
-            ['timeout' => 300]
+            $this->getOptions(['timeout' => 300])
         );
 
         if ($length < 0 && $response->status_code !== 200) {
@@ -907,6 +990,39 @@ class DupCloudClient
         }
 
         return $response->body;
+    }
+
+    /**
+     * Download a whole file from a presigned URL, streaming it to disk
+     *
+     * @param string $url      The presigned URL
+     * @param string $destPath The destination path, overwritten if it exists
+     *
+     * @return void
+     *
+     * @throws Exception If the download fails; no file is left behind
+     */
+    public function directDownload(string $url, string $destPath): void
+    {
+        try {
+            $response = Requests::get(
+                $url,
+                [],
+                $this->getOptions([
+                    'timeout'  => 300,
+                    'filename' => $destPath,
+                ])
+            );
+        } catch (Exception $e) {
+            SnapIO::unlink($destPath);
+            throw $e;
+        }
+
+        if ($response->status_code !== 200) {
+            // The error body was written to the destination
+            SnapIO::unlink($destPath);
+            throw new Exception('Failed to download file (HTTP ' . $response->status_code . ')');
+        }
     }
 
     /**
@@ -1100,7 +1216,7 @@ class DupCloudClient
      *
      * @return array<string, mixed> Snapshot data (may be flag-only on a 404) or empty array
      *
-     * @throws Exception If the token is missing or the request fails with a non-404 error.
+     * @throws Exception If the token is missing or the request fails with a non-404 error, with the HTTP code as the exception code.
      */
     public function getSnapshotMeta(): array
     {
@@ -1123,7 +1239,7 @@ class DupCloudClient
             }
 
             DupLog::trace('Failed to get snapshot: ' . $result['message']);
-            throw new Exception($result['message']);
+            throw new Exception($result['message'], $result['httpCode']);
         }
 
         return $result['data'];

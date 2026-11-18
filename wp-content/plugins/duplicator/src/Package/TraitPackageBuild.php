@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Duplicator\Package;
 
 use Duplicator\Core\Exceptions\DupliException;
+use Duplicator\Core\Options\Requirements\ConfigValidation;
 use Duplicator\Libs\Snap\SnapException;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapServer;
@@ -302,23 +303,31 @@ trait TraitPackageBuild
         DupLog::info("INTEGRITY CHECKS:");
         DupLog::info("********************************************************************************");
         //------------------------
-        //SQL CHECK:  File should be at minimum 5K.  A base WP install with only Create tables is about 9K.
+        //SQL CHECK: the dump must reach a minimum size, lower when table filters are on.
         //The raw dump was validated pre-compression (EOF marker + size); here we verify every gzipped
         //artifact exists and the captured uncompressed size still meets the threshold.
         $sql_temp_size = (int) $this->Database->Size;
         $sql_easy_size = SnapString::byteSize($sql_temp_size);
 
-        if (
-            in_array(BuildComponents::COMP_DB, $this->components) &&
-            (!$this->compressedDumpFilesArePresent() ||
+        if (in_array(BuildComponents::COMP_DB, $this->components)) {
+            $userMessage = __('The database backup looks incomplete. Check the backup log for details.', 'duplicator');
+            if (!$this->compressedDumpFilesArePresent()) {
+                throw new DupliException(
+                    'SQL file not complete: a compressed dump file is missing or empty.',
+                    DupliException::CODE_INTEGRITY_DB_INCOMPLETE,
+                    $userMessage
+                );
+            }
+            if (
                 (!$this->Database->FilterOn && $sql_temp_size < DUPLICATOR_MIN_SIZE_DBFILE_WITHOUT_FILTERS) ||
-                ($this->Database->FilterOn && $this->Database->info->tablesFinalCount > 0 && $sql_temp_size < DUPLICATOR_MIN_SIZE_DBFILE_WITH_FILTERS))
-        ) {
-            throw new DupliException(
-                "SQL file not complete. The file looks too small ($sql_temp_size bytes) or the compressed dump was not produced.",
-                DupliException::CODE_INTEGRITY_DB_INCOMPLETE,
-                __('The database backup looks incomplete. Check the backup log for details.', 'duplicator')
-            );
+                ($this->Database->FilterOn && $this->Database->info->tablesFinalCount > 0 && $sql_temp_size < DUPLICATOR_MIN_SIZE_DBFILE_WITH_FILTERS)
+            ) {
+                throw new DupliException(
+                    "SQL file not complete: the recorded dump size is below the minimum ($sql_temp_size bytes).",
+                    DupliException::CODE_INTEGRITY_DB_INCOMPLETE,
+                    $userMessage
+                );
+            }
         }
 
         DupLog::info("SQL FILE: {$sql_easy_size}");
@@ -378,12 +387,11 @@ trait TraitPackageBuild
             $this->ExeSize = $exe_easy_size;
             $this->ZipSize = $zip_easy_size;
             /* ------- ZIP Filecount Check -------- */
-            // Any zip of over 500 files should be within 2% - this is probably too loose but it will catch gross errors
+            // Only checked above a minimum entry count, with a loose tolerance meant to catch gross errors
             DupLog::trace("Expected filecount = $expected_filecount and archive filecount=" . $this->Archive->file_count);
             if ($expected_filecount > 500) {
                 $straight_ratio = ($this->Archive->file_count > 0 ? (float) $expected_filecount / (float) $this->Archive->file_count : 0);
-                // RSR NEW
-                $warning_count = $scanReport->ARC->UnreadableFileCount + $scanReport->ARC->UnreadableDirCount;
+                $warning_count  = $scanReport->ARC->UnreadableFileCount + $scanReport->ARC->UnreadableDirCount;
                 DupLog::trace("Unread counts) unreadfile:{$scanReport->ARC->UnreadableFileCount} unreaddir:{$scanReport->ARC->UnreadableDirCount}");
                 $warning_ratio = ((float) ($expected_filecount + $warning_count)) / (float) $this->Archive->file_count;
                 DupLog::trace(
@@ -394,15 +402,15 @@ trait TraitPackageBuild
                 if (($straight_ratio < 0.90) || ($straight_ratio > 1.01)) {
                     // Has to exceed both the straight as well as the warning ratios
                     if (($warning_ratio < 0.90) || ($warning_ratio > 1.01)) {
-                        $userMessage = $this->Archive->file_count < $expected_filecount
-                            ? __('The backup archive has fewer files than expected and may be incomplete.', 'duplicator')
-                            : __('The backup archive has more files than expected and may be inconsistent.', 'duplicator');
+                        if ($this->Archive->file_count < $expected_filecount) {
+                            $message     = 'Archive has fewer entries than expected (%1$d vs %2$d).';
+                            $userMessage = __('The backup archive has fewer files than expected and may be incomplete.', 'duplicator');
+                        } else {
+                            $message     = 'Archive has more entries than expected (%1$d vs %2$d).';
+                            $userMessage = __('The backup archive has more files than expected and may be inconsistent.', 'duplicator');
+                        }
                         throw new DupliException(
-                            sprintf(
-                                'File count in archive vs expected suggests a bad archive (%1$d vs %2$d).',
-                                $this->Archive->file_count,
-                                $expected_filecount
-                            ),
+                            sprintf($message, $this->Archive->file_count, $expected_filecount),
                             DupliException::CODE_INTEGRITY_FILE_COUNT_MISMATCH,
                             $userMessage
                         );
@@ -546,7 +554,7 @@ trait TraitPackageBuild
             return;
         }
 
-        $package->update();
+        // compressDump() already saved its progress
         $stopCallback();
     }
 
@@ -622,6 +630,23 @@ trait TraitPackageBuild
 
         $package->runBuildComplete();
         $package->build_progress->finalized = true;
+    }
+
+    /**
+     * Stop the Backup because the pre-backup configuration check failed
+     *
+     * @param ConfigValidation $validation The failed validation
+     *
+     * @return void
+     */
+    public function requirementsFail(ConfigValidation $validation): void
+    {
+        DupLog::error(__('Requirements Failed', 'duplicator'), implode("\n", $validation->getLogLines()));
+        DupLog::traceError('Requirements didn\'t pass so can\'t perform backup!');
+        if (!$this->hasFlag(AbstractPackage::FLAG_AUTO_TUNE)) {
+            FixesEntity::getInstance()->add(BuildFailureRemedies::resolveRequirementsFailure($this, $validation));
+        }
+        $this->setStatus(AbstractPackage::STATUS_REQUIREMENTS_FAILED);
     }
 
     /**

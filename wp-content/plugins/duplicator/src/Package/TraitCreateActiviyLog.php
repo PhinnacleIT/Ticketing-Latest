@@ -46,6 +46,16 @@ trait TraitCreateActiviyLog
     }
 
     /**
+     * Get the id of the main scan activity log event, 0 when none was created
+     *
+     * @return int
+     */
+    public function getMainScanLogId(): int
+    {
+        return $this->mainScanLogId;
+    }
+
+    /**
      * Get the id of the event that represents this Backup in the Activity Log: the main build event,
      * or the main scan event when the Backup stopped before building; 0 when none was created
      *

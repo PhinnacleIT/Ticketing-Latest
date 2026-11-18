@@ -4,6 +4,7 @@ namespace Duplicator\Libs\Index;
 
 use Duplicator\Libs\Binary\BinaryFormat;
 use Duplicator\Libs\Binary\BinaryIO;
+use Duplicator\Libs\Snap\SnapException;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapUtil;
 use Exception;
@@ -165,8 +166,11 @@ class IndexList
             throw new Exception("Couldn't seek to start before copy to main");
         }
 
-        if (($copied = stream_copy_to_stream($this->handle, $toHandle)) !== $this->expectedSize) {
-            throw new Exception("copyToMain: Couldn't copy index list contents expected $this->expectedSize bytes but copied $copied bytes");
+        $copied = SnapIO::callWithPhpErrorCapture(fn() => stream_copy_to_stream($this->handle, $toHandle));
+        if ($copied !== $this->expectedSize) {
+            throw SnapException::fromLastError(
+                "copyToMain: Couldn't copy index list contents expected $this->expectedSize bytes but copied " . (int) $copied . ' bytes'
+            );
         }
 
         return $copied;
@@ -192,8 +196,11 @@ class IndexList
             throw new Exception("Couldn't rewind index list before copying into it.");
         }
 
-        if (($copied = stream_copy_to_stream($fromHandle, $this->handle, $length, $offset)) !== $length) {
-            throw new Exception("Couldn't copy index list contents from main file. Expected $length bytes but copied $copied bytes");
+        $copied = SnapIO::callWithPhpErrorCapture(fn() => stream_copy_to_stream($fromHandle, $this->handle, $length, $offset));
+        if ($copied !== $length) {
+            throw SnapException::fromLastError(
+                "Couldn't copy index list contents from main file. Expected $length bytes but copied " . (int) $copied . ' bytes'
+            );
         }
 
         $this->count        = $count;

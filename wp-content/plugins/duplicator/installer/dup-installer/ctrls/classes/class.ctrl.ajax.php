@@ -107,6 +107,13 @@ final class DUPX_Ctrl_ajax
         Log::setThrowExceptionOnError(true);
 
         try {
+            // The CSRF token is not an authorization: every action except the password check requires the unlocked installer
+            if (
+                $action !== self::ACTION_PWD_CHECK &&
+                Security::getInstance()->getSecurityType() !== Security::SECURITY_NONE
+            ) {
+                throw new Exception('Installer security check required');
+            }
             DUPX_Template::getInstance()->setTemplate(PrmMng::getInstance()->getValue(PrmMng::PARAM_TEMPLATE));
             $jsonResult['actionData'] = self::actions($action);
         } catch (Exception $e) {
@@ -152,13 +159,13 @@ final class DUPX_Ctrl_ajax
     }
 
     /**
-     * ajax actions
+     * Run an installer action, for the AJAX controller and the command line installer
      *
      * @param string $action action name
      *
      * @return mixed
      */
-    protected static function actions(?string $action)
+    public static function actions(?string $action)
     {
         $actionData = null;
 

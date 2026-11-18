@@ -2,6 +2,7 @@
 
 namespace Duplicator\Models\Storages\Local;
 
+use Duplicator\Core\Models\Api\EntityApiException;
 use Duplicator\Models\GlobalEntity;
 use Duplicator\Package\Create\PackInstaller;
 use Duplicator\Utils\Logging\DupLog;
@@ -349,19 +350,6 @@ class LocalStorage extends AbstractStorageEntity
         if ((parent::updateFromHttpRequest($message) === false)) {
             return false;
         }
-        $this->config['filter_protection'] = SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, '_local_filter_protection');
-        $this->config['max_packages']      = SnapUtil::sanitizeIntInput(SnapUtil::INPUT_REQUEST, 'local_max_files', 10);
-
-
-        if (SnapServer::isWindows()) {
-            $newFolder = self::getSanitizedInputFolder('_local_storage_folder', 'none');
-        } else {
-            $newFolder = self::getSanitizedInputFolder('_local_storage_folder', 'add');
-        }
-
-        if ($this->updateFolderCheck($newFolder, $message) === false) {
-            return false;
-        }
 
         $message = sprintf(
             __('Storage Provider Updated - Folder %1$s.', 'duplicator'),
@@ -372,48 +360,72 @@ class LocalStorage extends AbstractStorageEntity
     }
 
     /**
-     * Update folder
+     * @return array<string,mixed>
+     */
+    protected function getRequestValues(): array
+    {
+        return parent::getRequestValues() + [
+            'filter_protection' => SnapUtil::sanitizeBoolInput(SnapUtil::INPUT_REQUEST, '_local_filter_protection'),
+            'max_backups'       => SnapUtil::sanitizeIntInput(SnapUtil::INPUT_REQUEST, 'local_max_files', 10),
+            'storage_folder'    => SnapUtil::sanitizeTextInput(SnapUtil::INPUT_REQUEST, '_local_storage_folder', ''),
+        ];
+    }
+
+    /**
+     * Set the passed values with the local storage rules: the folder protection and the storage folder,
+     * then the general values
+     *
+     * @param array<string,mixed> $values Values by field name
+     *
+     * @return void
+     */
+    protected function setFromArray(array $values): void
+    {
+        if (array_key_exists('filter_protection', $values)) {
+            $this->config['filter_protection'] = (bool) $values['filter_protection'];
+        }
+        if (array_key_exists('storage_folder', $values)) {
+            $this->setStorageFolder(self::sanitizeFolder((string) $values['storage_folder'], SnapServer::isWindows() ? 'none' : 'add'));
+        }
+
+        parent::setFromArray($values);
+    }
+
+    /**
+     * Set the storage folder, refusing a folder that can't hold the Backups
      *
      * @param string $newFolder New folder
-     * @param string $message   Error message
      *
-     * @return bool
+     * @return void
      */
-    protected function updateFolderCheck($newFolder, &$message = ''): bool
+    private function setStorageFolder(string $newFolder): void
     {
         if ($this->config['storage_folder'] === $newFolder) {
-            return true;
+            return;
         }
         $this->config['storage_folder'] = $newFolder;
         if (strlen($this->config['storage_folder']) == 0) {
             $message = __('Local storage path can\'t be empty.', 'duplicator');
-            return false;
-        }
-        if (SnapIO::isRootPath($this->config['storage_folder'])) {
+        } elseif (SnapIO::isRootPath($this->config['storage_folder'])) {
             $message = __('This storage path can\'t be a filesystem or drive root.', 'duplicator');
-            return false;
-        }
-        if (PathUtil::isPathInCoreDirs($this->config['storage_folder'])) {
+        } elseif (PathUtil::isPathInCoreDirs($this->config['storage_folder'])) {
             $message = __(
                 'This storage path can\'t be used because it is a core WordPress directory or a sub-path of a core directory.',
                 'duplicator'
             );
-            return false;
-        }
-        if ($this->isPathRepeated()) {
+        } elseif ($this->isPathRepeated()) {
             $message = __(
                 'A local storage already exists or current folder is a child of another existing storage folder.',
                 'duplicator'
             );
-            return false;
-        }
-        if (!self::haveExtraFilesInFolder($this->config['storage_folder'])) {
+        } elseif (!self::haveExtraFilesInFolder($this->config['storage_folder'])) {
             $message = __('Selected storage path already exists and isn\'t empty, select another path.', 'duplicator') . ' ' .
                 __('Select another folder or remove all files that are not backup archives.', 'duplicator');
-            return false;
+        } else {
+            return;
         }
 
-        return true;
+        throw new EntityApiException(EntityApiException::CODE_INVALID_ARGUMENT, $message);
     }
 
     /**

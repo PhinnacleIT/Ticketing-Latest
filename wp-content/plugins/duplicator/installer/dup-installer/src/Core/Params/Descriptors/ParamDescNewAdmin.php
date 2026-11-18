@@ -11,6 +11,7 @@ use Duplicator\Installer\Core\Params\Items\ParamItem;
 use Duplicator\Installer\Core\Params\Items\ParamForm;
 use Duplicator\Installer\Core\Params\Items\ParamFormPass;
 use Duplicator\Libs\Snap\SnapUtil;
+use DUPX_Constants;
 
 /**
  * class where all parameters are initialized. Used by the param manager
@@ -30,7 +31,11 @@ final class ParamDescNewAdmin implements DescriptorInterface
             PrmMng::PARAM_WP_ADMIN_CREATE_NEW,
             ParamForm::TYPE_BOOL,
             ParamForm::FORM_TYPE_SWITCH,
-            ['default' => false],
+            [
+                'default'     => false,
+                'description' => 'Create a new administrator with wp_username, wp_password and wp_mail',
+                'cliParam'    => true,
+            ],
             [
                 'label'         => 'Create New User:',
                 'status'        => function ($paramObj): string {
@@ -49,6 +54,8 @@ final class ParamDescNewAdmin implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
             [
+                'description'      => 'Username of the new administrator, ' . DUPX_Constants::MIN_NEW_USERNAME_LEN . ' or more characters',
+                'cliParam'         => true,
                 'default'          => '',
                 'sanitizeCallback' => [
                     SnapUtil::class,
@@ -59,8 +66,8 @@ final class ParamDescNewAdmin implements DescriptorInterface
                         return true;
                     }
 
-                    if (strlen($value) < 4) {
-                        $paramObj->setInvalidMessage('Must have 4 or more characters');
+                    if (strlen($value) < DUPX_Constants::MIN_NEW_USERNAME_LEN) {
+                        $paramObj->setInvalidMessage('Must have ' . DUPX_Constants::MIN_NEW_USERNAME_LEN . ' or more characters');
                         return false;
                     }
 
@@ -75,8 +82,8 @@ final class ParamDescNewAdmin implements DescriptorInterface
                 'label'   => 'Username:',
                 'classes' => 'new-admin-field',
                 'attr'    => [
-                    'title'       => '4 characters minimum',
-                    'placeholder' => "(4 or more characters)",
+                    'title'       => DUPX_Constants::MIN_NEW_USERNAME_LEN . ' characters minimum',
+                    'placeholder' => '(' . DUPX_Constants::MIN_NEW_USERNAME_LEN . ' or more characters)',
                 ],
             ]
         );
@@ -86,6 +93,8 @@ final class ParamDescNewAdmin implements DescriptorInterface
             ParamFormPass::TYPE_STRING,
             ParamFormPass::FORM_TYPE_PWD_TOGGLE,
             [
+                'description'      => 'Password of the new administrator, ' . DUPX_Constants::MIN_NEW_PASSWORD_LEN . ' or more characters',
+                'cliParam'         => true,
                 'default'          => \DUPX_ArchiveConfig::getInstance()->cpnl_pass,
                 'sanitizeCallback' => [
                     SnapUtil::class,
@@ -96,8 +105,8 @@ final class ParamDescNewAdmin implements DescriptorInterface
                         return true;
                     }
 
-                    if (strlen($value) <  \DUPX_Constants::MIN_NEW_PASSWORD_LEN) {
-                        $paramObj->setInvalidMessage('Must have ' . \DUPX_Constants::MIN_NEW_PASSWORD_LEN . ' or more characters');
+                    if (strlen($value) <  DUPX_Constants::MIN_NEW_PASSWORD_LEN) {
+                        $paramObj->setInvalidMessage('Must have ' . DUPX_Constants::MIN_NEW_PASSWORD_LEN . ' or more characters');
                         return false;
                     }
 
@@ -115,8 +124,8 @@ final class ParamDescNewAdmin implements DescriptorInterface
                     'new-admin-field',
                 ],
                 'attr'    => [
-                    'placeholder' => '(' . \DUPX_Constants::MIN_NEW_PASSWORD_LEN . ' or more characters)',
-                    'title'       => \DUPX_Constants::MIN_NEW_PASSWORD_LEN . ' characters minimum',
+                    'placeholder' => '(' . DUPX_Constants::MIN_NEW_PASSWORD_LEN . ' or more characters)',
+                    'title'       => DUPX_Constants::MIN_NEW_PASSWORD_LEN . ' characters minimum',
                 ],
             ]
         );
@@ -126,6 +135,8 @@ final class ParamDescNewAdmin implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_TEXT,
             [
+                'description'      => 'Email of the new administrator',
+                'cliParam'         => true,
                 'default'          => '',
                 'sanitizeCallback' => [
                     SnapUtil::class,

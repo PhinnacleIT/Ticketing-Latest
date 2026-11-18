@@ -34,6 +34,9 @@ final class ParamDescConfigs implements DescriptorInterface
             ParamForm::TYPE_INT,
             ParamForm::FORM_TYPE_RADIO,
             [
+                'description'  => 'Installation type; the values depend on the Backup and on where it is installed. '
+                    . 'Without it the installer chooses as the wizard does',
+                'cliParam'     => true,
                 'default'      => InstState::TYPE_NOT_SET,
                 'acceptValues' => [
                     self::class,
@@ -56,6 +59,8 @@ final class ParamDescConfigs implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_SELECT,
             [
+                'description'  => 'What to do with wp-config.php',
+                'cliParam'     => true,
                 'default'      => 'modify',
                 'acceptValues' => [
                     'modify',
@@ -95,6 +100,8 @@ final class ParamDescConfigs implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_SELECT,
             [
+                'description'  => 'What to do with the .htaccess file',
+                'cliParam'     => true,
                 'default'      => 'new',
                 'acceptValues' => [
                     'new',
@@ -130,6 +137,8 @@ final class ParamDescConfigs implements DescriptorInterface
             ParamForm::TYPE_STRING,
             ParamForm::FORM_TYPE_SELECT,
             [
+                'description'  => 'What to do with web.config, .user.ini and php.ini',
+                'cliParam'     => true,
                 'default'      => 'new',
                 'acceptValues' => [
                     'new',

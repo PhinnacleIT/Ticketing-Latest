@@ -10,13 +10,19 @@ use Duplicator\Utils\Logging\DupLog;
 use Duplicator\Package\DupPackage;
 use Duplicator\Package\Storage\UploadInfo;
 use DateTime;
+use Duplicator\Core\CapMng;
 use Duplicator\Core\Constants;
 use Duplicator\Core\Models\AbstractEntity;
+use Duplicator\Core\Models\Api\AbstractApiEntity;
+use Duplicator\Core\Models\Api\ApiAction;
+use Duplicator\Core\Models\Api\ApiField;
+use Duplicator\Core\Models\Api\EntityApiException;
 use Duplicator\Core\Models\TraitEntitySerializationEncryption;
 use Duplicator\Core\Models\TraitGenericModelList;
 use Duplicator\Core\Views\TplMng;
 use Duplicator\Libs\Snap\SnapIO;
 use Duplicator\Libs\Snap\SnapURL;
+use Duplicator\Libs\Snap\SnapString;
 use Duplicator\Libs\Snap\SnapUtil;
 use Duplicator\Package\AbstractPackage;
 use Duplicator\Utils\Crypt\CryptBlowfish;
@@ -25,11 +31,12 @@ use Duplicator\Utils\Settings\ModelMigrateSettingsInterface;
 use Duplicator\Package\Storage\StorageTransferChunkFiles;
 use Exception;
 use Duplicator\Core\Exceptions\DupliException;
+use Duplicator\Core\Exceptions\StorageTransferAbortException;
 use Throwable;
 use ReflectionClass;
 use VendorDuplicator\Amk\JsonSerialize\JsonSerialize;
 
-abstract class AbstractStorageEntity extends AbstractEntity implements ModelMigrateSettingsInterface
+abstract class AbstractStorageEntity extends AbstractApiEntity implements ModelMigrateSettingsInterface
 {
     use TraitGenericModelList;
     use TraitEntitySerializationEncryption;
@@ -44,6 +51,9 @@ abstract class AbstractStorageEntity extends AbstractEntity implements ModelMigr
     const BACKUP_RECORDS_REMOVE_ALL     = 0;
     const BACKUP_RECORDS_REMOVE_DEFAULT = 1;
     const BACKUP_RECORDS_REMOVE_NEVER   = 2;
+
+    /** @var string Filter that lets addons keep Backups out of a storage's retention: archive names, storage */
+    const PURGE_KEEP_FILTER = 'duplicator_storage_purge_keep';
 
     /** @var array<int,string> Class list registered */
     private static $storageTypes = [];
@@ -79,6 +89,227 @@ abstract class AbstractStorageEntity extends AbstractEntity implements ModelMigr
     public static function getType(): string
     {
         return 'Storage_Entity';
+    }
+
+    /**
+     * @return string
+     */
+    public static function apiSlug(): string
+    {
+        return 'storage';
+    }
+
+    /**
+     * @return array{singular:string,plural:string}
+     */
+    public static function apiLabels(): array
+    {
+        return [
+            'singular' => __('Storage', 'duplicator'),
+            'plural'   => __('Storages', 'duplicator'),
+        ];
+    }
+
+    /**
+     * @return string
+     */
+    public static function apiCapability(): string
+    {
+        return CapMng::CAP_STORAGE;
+    }
+
+    /**
+     * Every storage whose type is shown in the storage list
+     *
+     * @param AbstractEntity $entity Instance loaded by id or listed
+     *
+     * @return bool
+     */
+    public static function apiExposes(AbstractEntity $entity): bool
+    {
+        return $entity instanceof self && !$entity::isHidden();
+    }
+
+    /**
+     * Read-only fields; the storage configuration and credentials are never exposed
+     *
+     * @return ApiField[]
+     */
+    public static function apiFields(): array
+    {
+        return [
+            new ApiField('name', ApiField::TYPE_STRING, 'Storage name; some storages, such as the default one, keep a fixed name.'),
+            (new ApiField('type', ApiField::TYPE_STRING, 'Storage type name.'))
+                ->readOnly(),
+            (new ApiField('location', ApiField::TYPE_STRING, 'Where the storage keeps the Backups.'))
+                ->readOnly(),
+            new ApiField('notes', ApiField::TYPE_STRING, 'Storage notes.'),
+            (new ApiField(
+                'max_backups',
+                ApiField::TYPE_INTEGER,
+                'Number of Backups the storage keeps; 0 keeps all. Lowering it removes the oldest Backups from the storage, '
+                . 'remote ones included, the next time retention runs.'
+            ))
+                ->range(0)
+                ->destructive(),
+            (new ApiField('is_default', ApiField::TYPE_BOOLEAN, 'Whether this is the default local storage, which can\'t be deleted.'))
+                ->readOnly(),
+        ];
+    }
+
+    /**
+     * A storage can't exist without its connection, which the entity API never sets
+     *
+     * @return bool
+     */
+    public static function apiCanCreate(): bool
+    {
+        return false;
+    }
+
+    /**
+     * @return string
+     */
+    public static function apiWriteNotice(): string
+    {
+        return SnapString::oneLine(__(
+            'For security, the connection settings and credentials of a storage can\'t be created or changed here:
+            storages are created and connected on the Duplicator > Storage page. Only the name, the notes and
+            the number of Backups kept can be changed.',
+            'duplicator'
+        ));
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    protected function toArray(): array
+    {
+        return [
+            'name'        => $this->getName(),
+            'type'        => static::getStypeName(),
+            'location'    => $this->getLocationString(),
+            'notes'       => $this->getNotes(),
+            'max_backups' => $this->getMaxPackages(),
+            'is_default'  => static::isDefault(),
+        ];
+    }
+
+    /**
+     * Set the general values shared by every storage type: name, notes and the number of Backups kept.
+     * The connection settings and credentials are set only by each type from its form, never through the entity API.
+     *
+     * @param array<string,mixed> $values Values by field name
+     *
+     * @return void
+     */
+    protected function setFromArray(array $values): void
+    {
+        if (array_key_exists('name', $values)) {
+            $name = SnapUtil::sanitizeNSCharsNewlineTrim((string) $values['name']);
+            if ($name !== $this->name && $this->getId() > 0 && !static::isNameEditable()) {
+                throw new EntityApiException(EntityApiException::CODE_INVALID_ARGUMENT, __('The name of this storage can\'t be changed.', 'duplicator'));
+            }
+            $this->name = $name;
+        }
+        if (array_key_exists('notes', $values)) {
+            $this->notes = SnapUtil::sanitizeNSChars((string) $values['notes']);
+        }
+        if (array_key_exists('max_backups', $values)) {
+            $maxBackups = (int) $values['max_backups'];
+            if ($maxBackups < 0) {
+                throw new EntityApiException(
+                    EntityApiException::CODE_INVALID_ARGUMENT,
+                    __('The number of Backups to keep can\'t be negative.', 'duplicator')
+                );
+            }
+            $this->config['max_packages'] = $maxBackups;
+        }
+
+        if (strlen($this->name) === 0) {
+            throw new EntityApiException(EntityApiException::CODE_INVALID_ARGUMENT, __('Storage name is required.', 'duplicator'));
+        }
+    }
+
+    /**
+     * Whether an existing storage of this type can be renamed
+     *
+     * @return bool
+     */
+    protected static function isNameEditable(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Set general values read from the storage form, reporting a refused value as the form message
+     *
+     * @param array<string,mixed> $values  Values by field name
+     * @param string              $message Set to the refusal message
+     *
+     * @return bool False when a value is refused
+     */
+    protected function setFromRequestValues(array $values, string &$message): bool
+    {
+        try {
+            $this->setFromArray($values);
+        } catch (EntityApiException $e) {
+            $message = $e->getMessage();
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @return ApiAction[]
+     */
+    public static function apiActions(): array
+    {
+        return [
+            new ApiAction(
+                'test',
+                __('Test Storage', 'duplicator'),
+                __('Test the storage connection by writing and then deleting a test file on it.', 'duplicator'),
+                static function (self $storage): array {
+                    $message = '';
+                    if (!$storage->isValid($message)) {
+                        // Not configured or not connected: say so instead of reporting a failed test
+                        throw new EntityApiException(
+                            EntityApiException::CODE_UNAVAILABLE,
+                            sprintf(
+                                /* translators: 1: storage name, 2: why the storage can't be used */
+                                __('The storage "%1$s" is not ready: %2$s Connect or configure it on the Storage page, then test it again.', 'duplicator'),
+                                $storage->getName(),
+                                rtrim(wp_strip_all_tags($message), '.') . '.'
+                            )
+                        );
+                    }
+                    if (!$storage->test($message)) {
+                        throw new EntityApiException(EntityApiException::CODE_FAILED, $message);
+                    }
+                    return ['message' => $message];
+                }
+            ),
+        ];
+    }
+
+    /**
+     * Refuse deleting a storage the user can't delete, such as the default one
+     *
+     * @return void
+     */
+    public function apiCheckDelete(): void
+    {
+        if (!$this->isDeletable()) {
+            throw new EntityApiException(
+                EntityApiException::CODE_CONFLICT,
+                sprintf(
+                    /* translators: %s: storage name */
+                    __('"%s" is a built-in storage that Duplicator creates on installation, so it can\'t be deleted.', 'duplicator'),
+                    $this->getName()
+                )
+            );
+        }
     }
 
     /**
@@ -404,30 +635,44 @@ abstract class AbstractStorageEntity extends AbstractEntity implements ModelMigr
      */
     public function updateFromHttpRequest(&$message = ''): bool
     {
-        $this->adapter = null; // Reset the adapter on update
-        $this->name    = SnapUtil::sanitizeTextInput(SnapUtil::INPUT_REQUEST, 'name', '');
-
-        if (strlen($this->name) == 0) {
-            $message = __('Storage name is required.', 'duplicator');
-            return false;
-        }
-
-        $this->notes = SnapUtil::sanitizeDefaultInput(SnapUtil::INPUT_REQUEST, 'notes', '');
-
-        return true;
+        $this->resetAdapter();
+        return $this->setFromRequestValues($this->getRequestValues(), $message);
     }
 
     /**
-     * Sanitize storage folder
+     * Drop the cached adapter, so the next use reads the current settings
      *
-     * @param string $inputKey Input key
-     * @param string $root     add,remove,none (add root, remove root, do nothing)
+     * @return void
+     */
+    protected function resetAdapter(): void
+    {
+        $this->adapter = null;
+    }
+
+    /**
+     * The values of the storage form by setFromArray() key; each type adds the fields of its form
+     *
+     * @return array<string,mixed>
+     */
+    protected function getRequestValues(): array
+    {
+        return [
+            'name'  => SnapUtil::sanitizeDefaultInput(SnapUtil::INPUT_REQUEST, 'name', ''),
+            'notes' => SnapUtil::sanitizeDefaultInput(SnapUtil::INPUT_REQUEST, 'notes', ''),
+        ];
+    }
+
+    /**
+     * Sanitize a storage folder
+     *
+     * @param string $folder Folder
+     * @param string $root   add,remove,none (add root, remove root, do nothing)
      *
      * @return string
      */
-    protected static function getSanitizedInputFolder(string $inputKey, string $root = 'none'): string
+    protected static function sanitizeFolder(string $folder, string $root = 'none'): string
     {
-        $folder = SnapUtil::sanitizeTextInput(SnapUtil::INPUT_REQUEST, $inputKey, '');
+        $folder = SnapUtil::sanitizeNSCharsNewlineTrim($folder);
         $folder = SnapIO::safePathUntrailingslashit($folder);
         $folder = trim(stripslashes($folder));
         $folder = ltrim($folder, '/\\');
@@ -774,6 +1019,7 @@ abstract class AbstractStorageEntity extends AbstractEntity implements ModelMigr
             }
         }
 
+        $this->getAdapter()->clearLastError();
         switch ($storageUpload->start()) {
             case StorageTransferChunkFiles::CHUNK_COMPLETE:
                 DupLog::infoTrace("UPLOAD IN CHUNKS COMPLETED\n-----------------------------------------\n");
@@ -783,7 +1029,7 @@ abstract class AbstractStorageEntity extends AbstractEntity implements ModelMigr
 
                 if ($this->config['max_packages'] > 0) {
                     DupLog::trace('Purge old local Backups');
-                    $this->purgeOldPackages();
+                    $this->purgeOldPackages([$package->Archive->getFileName()]);
                 }
                 do_action('duplicator_upload_complete', $upload_info);
                 break;
@@ -802,7 +1048,7 @@ abstract class AbstractStorageEntity extends AbstractEntity implements ModelMigr
             case StorageTransferChunkFiles::CHUNK_ERROR:
             default:
                 DupLog::infoTrace('Local upload in chunks, upload error: ' . $storageUpload->getLastErrorMessage());
-                $upload_info->increaseFailureCount($storageUpload->getFailure());
+                $this->handleChunkFailure($upload_info, $storageUpload->getFailure());
         }
         $package->update();
     }
@@ -879,6 +1125,7 @@ abstract class AbstractStorageEntity extends AbstractEntity implements ModelMigr
             $this->getUploadChunkTimeout()
         );
 
+        $this->getAdapter()->clearLastError();
         switch ($storageDownload->start()) {
             case StorageTransferChunkFiles::CHUNK_COMPLETE:
                 DupLog::infoTrace("DOWNLOAD FROM REMOTE IN CHUNKS COMPLETED\n-----------------------------------------\n");
@@ -907,9 +1154,33 @@ abstract class AbstractStorageEntity extends AbstractEntity implements ModelMigr
             case StorageTransferChunkFiles::CHUNK_ERROR:
             default:
                 DupLog::infoTrace('Local download in chunks, download error: ' . $storageDownload->getLastErrorMessage());
-                $upload_info->increaseFailureCount($storageDownload->getFailure());
+                $this->handleChunkFailure($upload_info, $storageDownload->getFailure());
         }
         $package->update();
+    }
+
+    /**
+     * Keep the reason the adapter recorded, then count a failed chunk towards the retry limit,
+     * or fail the transfer at once when the adapter aborted it
+     *
+     * @param UploadInfo $upload_info the upload info
+     * @param ?Throwable $failure     the exception the chunk threw, null when it only returned false
+     *
+     * @return void
+     */
+    private function handleChunkFailure(UploadInfo $upload_info, ?Throwable $failure): void
+    {
+        if (($reason = $this->getAdapter()->getLastError()) !== '') {
+            $upload_info->setStatusMessageDetails($reason);
+        }
+
+        if ($failure instanceof StorageTransferAbortException) {
+            DupLog::infoTrace("Transfer aborted without retry [Storage Id: $this->id]");
+            $upload_info->uploadFailed($failure);
+            return;
+        }
+
+        $upload_info->increaseFailureCount($failure);
     }
 
     /**
@@ -948,6 +1219,42 @@ abstract class AbstractStorageEntity extends AbstractEntity implements ModelMigr
         }
 
         return true;
+    }
+
+    /**
+     * Why the storage can't take part in a transfer of the Backup, checked on the storage before the transfer starts:
+     * the storage must be usable (configured and connected), a source must hold the Backup archive, a destination must not
+     *
+     * @param AbstractPackage $package  The Backup
+     * @param bool            $asSource True when the Backup is copied from this storage, false when copied to it
+     *
+     * @return ?string Translated reason, null when the transfer can start
+     */
+    public function getTransferRefusal(AbstractPackage $package, bool $asSource): ?string
+    {
+        $validMessage = '';
+        if (!$this->isValid($validMessage)) {
+            return sprintf(
+                /* translators: 1: storage name, 2: why the storage can't be used */
+                __('The storage "%1$s" can\'t be used now: %2$s Check it on the Storage page.', 'duplicator'),
+                $this->getName(),
+                rtrim(wp_strip_all_tags($validMessage), '.') . '.'
+            );
+        }
+        $hasPackage = $this->hasPackage($package);
+        if ($asSource && !$hasPackage) {
+            // hasPackage() can't tell a missing archive from a storage it can't reach
+            return sprintf(
+                /* translators: %s: storage name */
+                __('The backup is not on the storage "%s", or the storage could not be reached.', 'duplicator'),
+                $this->getName()
+            );
+        }
+        if (!$asSource && $hasPackage) {
+            /* translators: %s: storage name */
+            return sprintf(__('The backup is already on the storage "%s".', 'duplicator'), $this->getName());
+        }
+        return null;
     }
 
     /**
@@ -998,6 +1305,14 @@ abstract class AbstractStorageEntity extends AbstractEntity implements ModelMigr
             if ($this->config['max_packages'] <= 0) {
                 return [];
             }
+
+            /**
+             * Archive names of the Backups the retention of this storage must keep
+             *
+             * @param string[]              $exclude Archive names already kept
+             * @param AbstractStorageEntity $storage The storage being purged
+             */
+            $exclude = apply_filters(self::PURGE_KEEP_FILTER, $exclude, $this);
 
             DupLog::infoTrace("Attempting to purge old Backups at " . $this->name . '[ID: ' . $this->id . '] type: ' . static::getSTypeName());
 

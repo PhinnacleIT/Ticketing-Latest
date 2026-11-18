@@ -418,6 +418,16 @@ final class DUPX_NOTICE_MANAGER
     }
 
     /**
+     * Final report notices
+     *
+     * @return DUPX_NOTICE_ITEM[]
+     */
+    public function getFinalReportNotices(): array
+    {
+        return $this->finalReporNotices;
+    }
+
+    /**
      * sort final report notice from priority and notice level
      *
      * @return void

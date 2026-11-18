@@ -376,8 +376,30 @@ class UploadInfo
             DupLog::trace($message);
         }
 
-        $message_details = $this->status_message_details == '' ? '' : " ($this->status_message_details)";
+        $message_details = $this->status_message_details == '' ? '' : ' (' . esc_html($this->status_message_details) . ')';
         return "$message$message_details";
+    }
+
+    /**
+     * Get why a failed or cancelled transfer stopped, in plain text
+     *
+     * @return string The reason the storage gave, a generic one when it gave none, empty for any other status
+     */
+    public function getFailureReason(): string
+    {
+        $status = $this->getStatus();
+        if ($status !== self::STATUS_FAILED && $status !== self::STATUS_CANCELLED) {
+            return '';
+        }
+        if ($this->status_message_details !== '') {
+            return $this->status_message_details;
+        }
+        if ($status === self::STATUS_CANCELLED) {
+            return __('The transfer was cancelled.', 'duplicator');
+        }
+        return $this->isDownloadFromRemote()
+            ? __('The storage refused the download. Check its connection and credentials.', 'duplicator')
+            : __('The storage refused the upload. Check its credentials and free space.', 'duplicator');
     }
 
     /**
@@ -466,6 +488,9 @@ class UploadInfo
 
         $this->stop();
         $failure = $failure ?? new DupliException('Storage transfer failed.', DupliException::CODE_STORAGE_TRANSFER_FAILED);
+        if ($failure instanceof DupliException && $failure->hasUserMessage()) {
+            $this->status_message_details = $failure->getUserMessage();
+        }
         do_action('duplicator_transfer_failed', $this, $failure);
 
         $this->failed = true;
@@ -513,5 +538,18 @@ class UploadInfo
     public function packageExists(): bool
     {
         return $this->packageExists;
+    }
+
+    /**
+     * Return true if this upload left a finished copy of the Backup on remote storage
+     *
+     * @return bool
+     */
+    public function isRemoteCopy(): bool
+    {
+        return $this->isRemote() &&
+            $this->packageExists() &&
+            $this->hasCompleted(true) &&
+            !$this->isDownloadFromRemote();
     }
 }
