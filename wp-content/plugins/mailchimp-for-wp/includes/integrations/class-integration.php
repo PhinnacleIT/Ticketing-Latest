@@ -73,16 +73,17 @@ abstract class MC4WP_Integration
     protected function get_default_options()
     {
         return [
-            'css'               => 0,
-            'double_optin'      => 1,
-            'enabled'           => 0,
-            'implicit'          => 0,
-            'label'             => __('Sign me up for the newsletter!', 'mailchimp-for-wp'),
-            'lists'             => [],
-            'precheck'          => 0,
-            'replace_interests' => 0,
-            'update_existing'   => 0,
-            'wrap_p'            => 1,
+            'css'                      => 0,
+            'double_optin'             => 1,
+            'enabled'                  => 0,
+            'implicit'                 => 0,
+            'label'                    => __('Sign me up for the newsletter!', 'mailchimp-for-wp'),
+            'lists'                    => [],
+            'precheck'                 => 0,
+            'replace_interests'        => 0,
+            'update_existing'          => 0,
+            'update_only_empty_fields' => 0,
+            'wrap_p'                   => 1,
         ];
     }
 
@@ -343,12 +344,24 @@ abstract class MC4WP_Integration
 
         // get lists from request, if set.
         if (! empty($data['_mc4wp_lists'])) {
-            $lists = $data['_mc4wp_lists'];
+            $requested_lists = $data['_mc4wp_lists'];
 
             // ensure lists is an array
-            if (! is_array($lists)) {
-                $lists = explode(',', $lists);
-                $lists = array_map('trim', $lists);
+            if (! is_array($requested_lists)) {
+                $requested_lists = explode(',', (string) $requested_lists);
+                $requested_lists = array_map('trim', $requested_lists);
+            }
+
+            // only accept lists that are selected in the integration settings
+            $requested_lists = array_filter(
+                $requested_lists,
+                function ($list_id) use ($lists) {
+                    return is_string($list_id) && in_array($list_id, (array) $lists, true);
+                }
+            );
+
+            if (! empty($requested_lists)) {
+                $lists = array_values($requested_lists);
             }
         }
 
@@ -430,9 +443,10 @@ abstract class MC4WP_Integration
             'ip_signup'         => mc4wp_get_request_ip_address(),
             'email_type'        => mc4wp_get_email_type(),
             'options'           => [
-                'double_optin'      => $this->options['double_optin'],
-                'update_existing'   => $this->options['update_existing'],
-                'replace_interests' => $this->options['replace_interests'],
+                'double_optin'            => $this->options['double_optin'],
+                'update_existing'         => $this->options['update_existing'],
+                'update_only_empty_fields' => $this->options['update_only_empty_fields'],
+                'replace_interests'       => $this->options['replace_interests'],
             ],
         ];
 
@@ -512,7 +526,7 @@ abstract class MC4WP_Integration
                 continue;
             }
 
-            $result = $mailchimp->list_subscribe($list_id, $subscriber->email_address, $subscriber->to_array(), $options['update_existing'], $options['replace_interests']);
+            $result = $mailchimp->list_subscribe($list_id, $subscriber->email_address, $subscriber->to_array(), $options['update_existing'], $options['replace_interests'], $options['update_only_empty_fields']);
         }
 
         // if result failed, show error message
