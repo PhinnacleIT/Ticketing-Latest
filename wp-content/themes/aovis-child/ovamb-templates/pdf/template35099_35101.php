@@ -71,26 +71,26 @@ $ticket = $args['ticket'];
 						</div>
 						<div style="color: <?php echo $ticket['color_content_ticket']; ?>">
 							<!-- Ticket Number -->
-							<?php if(substr($ticket['seat'],0,2)=='Op') {echo 'General';} elseif(substr($ticket['seat'],0,2)=='VP') {echo 'VIP';} elseif(substr($ticket['seat'],0,2)=='SP') {echo 'Sponsor';} ?>
+							<?php if(substr($ticket['seat'],0,2)=='SV') {echo 'SVIP';} elseif(substr($ticket['seat'],0,2)=='VP') {echo 'VIP';} elseif(substr($ticket['seat'],0,2)=='SP') {echo 'Sponsor';} elseif(substr($ticket['seat'],0,2)=='GA') {echo 'General Admission';} ?>
 						</div>
 					</td>
 
 					<td>
-					<div style="color: <?php echo $ticket['color_label_ticket']; ?>">
-							<b><?php esc_html_e( 'Row: ', 'moviebooking' ); ?></b>
+						<div style="color: <?php echo $ticket['color_label_ticket']; ?>">
+							<b><?php esc_html_e( 'Position: ', 'moviebooking' ); ?></b>
 						</div>
 						<div style="color: <?php echo $ticket['color_content_ticket']; ?>">
 							<!-- Ticket Number -->
-							<?php if(substr($ticket['seat'],0,2)=='Op') {echo 'Free Seating';} else {echo substr($ticket['seat'],strrpos($ticket['seat'], '-')+1,1);}  ?>
+							<?php if(substr($ticket['seat'],strrpos($ticket['seat'], '-')+1,1)=='C') {echo 'Center';} elseif(substr($ticket['seat'],strrpos($ticket['seat'], '-')+1,1)=='L') {echo 'Left';} elseif(substr($ticket['seat'],strrpos($ticket['seat'], '-')+1,1)=='R') {echo 'Right';}  ?>
 						</div>
 					</td>
 					<td>
 					<div style="color: <?php echo $ticket['color_label_ticket']; ?>">
-							<b><?php esc_html_e( 'Seat Number: ', 'moviebooking' ); ?></b>
+							<b><?php esc_html_e( 'Row and Seat Number: ', 'moviebooking' ); ?></b>
 						</div>
 						<div style="color: <?php echo $ticket['color_content_ticket']; ?>">
 							<!-- Ticket Number -->
-							<?php if(substr($ticket['seat'],0,2)=='Op') {echo 'Free Seating';} else {echo substr($ticket['seat'],strrpos($ticket['seat'], '-')+2);}  ?>
+							<?php if(substr($ticket['seat'],0,2)=='Op') {echo 'Free Seating';} else {echo substr($ticket['seat'],strrpos($ticket['seat'], '-')+1);}  ?>
 						</div>
 					</td>
 				</tr>				
